@@ -34,45 +34,42 @@ public:
 
     virtual OBFrameType getType();
 
-    virtual OBFormat getFormat();
-    virtual void     setFormat(const OBFormat format);
-    virtual uint32_t getFps();
-    virtual void     setFps(const uint32_t fps);
-    virtual uint32_t getNumber();
-    virtual void     setNumber(const uint32_t number);
-    virtual uint32_t getDataSize();
-    virtual void     setDataSize(uint32_t dataSize);
-    virtual uint8_t *getData();
-    virtual void     updateData(const uint8_t *data, uint32_t dataSize);
-    virtual uint64_t getTimeStamp();
-    virtual uint64_t getTimeStampUs();
-    virtual void     setTimeStampUs(const uint64_t ts);
-    virtual uint64_t getSystemTimeStamp();
-    virtual uint64_t getSystemTimeStampUs();
-    virtual void     setSystemTimeStampUs(const uint64_t ts);
-    virtual uint64_t getGlobalTimeStampUs();
-    virtual void     setGlobalTimeStampUS(const uint64_t ts);
-    virtual uint32_t getWidth();
-    virtual void     setWidth(uint32_t width);
-    virtual uint32_t getHeight();
-    virtual void     setHeight(uint32_t height);
-    virtual uint32_t getStride();
-    virtual void     setStride(uint32_t stride);
-    virtual uint32_t getBytesPerPixel();
+    virtual OBFormat       getFormat() const;
+    virtual void           setFormat(const OBFormat format);
+    virtual uint32_t       getFps() const;
+    virtual void           setFps(const uint32_t fps);
+    virtual uint32_t       getNumber() const;
+    virtual void           setNumber(const uint32_t number);
+    virtual uint32_t       getDataSize() const;
+    virtual void           setDataSize(uint32_t dataSize);
+    virtual const uint8_t *getData() const;
+    virtual void           updateData(const uint8_t *data, uint32_t dataSize);
+    virtual double         getTimeStampMsec() const;
+    virtual void           setTimeStampMsec(double ts);
+    virtual double         getSystemTimeStampMsec() const;
+    virtual void           setSystemTimeStampMsec(double ts);
+    virtual double         getGlobalTimeStampMsec() const;
+    virtual void           setGlobalTimeStampMsec(double ts);
+    virtual uint32_t       getWidth() const;
+    virtual void           setWidth(uint32_t width);
+    virtual uint32_t       getHeight() const;
+    virtual void           setHeight(uint32_t height);
+    virtual uint32_t       getStride() const;
+    virtual void           setStride(uint32_t stride);
+    virtual uint32_t       getBytesPerPixel() const;
 
-    virtual uint32_t getMetadataSize() const;
-    virtual void     updateMetadata(const uint8_t *metadata, uint32_t metadataSize);
-    virtual uint8_t *getMetadata();
+    virtual uint32_t       getMetadataSize() const;
+    virtual void           updateMetadata(const uint8_t *metadata, uint32_t metadataSize);
+    virtual const uint8_t *getMetadata() const;
 
     virtual void    registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers);
-    virtual bool    hasMetadata(OBFrameMetadataType type);
-    virtual int64_t getMetadataValue(OBFrameMetadataType type);
+    virtual bool    hasMetadata(OBFrameMetadataType type) const;
+    virtual int64_t getMetadataValue(OBFrameMetadataType type) const;
 
     virtual std::shared_ptr<const StreamProfile> getStreamProfile() const;
     virtual void                                 setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile);
 
-    virtual void           copyInfo(std::shared_ptr<Frame> sourceFrame);
-    std::shared_ptr<Frame> convertTo(OBFrameType tarFrameType);
+    virtual void copyInfo(std::shared_ptr<Frame> sourceFrame);
 
     template <typename T> bool               is();
     template <typename T> std::shared_ptr<T> as() {
@@ -90,9 +87,9 @@ protected:
     uint32_t                                       dataSize_            = 0;
     uint32_t                                       fps_                 = 0;
     uint32_t                                       number_              = 0;
-    uint64_t                                       timeStampUsec_       = 0;
-    uint64_t                                       systemTimeStampUsec_ = 0;
-    uint64_t                                       globalTimeStampUsec_ = 0;
+    double                                         timeStampMsec_       = 0;
+    double                                         systemTimeStampMsec_ = 0;
+    double                                         globalTimeStampMsec_ = 0;
     OBFormat                                       format_              = OB_FORMAT_UNKNOWN;
     uint32_t                                       width_               = 0;
     uint32_t                                       height_              = 0;
@@ -105,8 +102,8 @@ protected:
     const OBFrameType type_;  // Determined during construction, it is an inherent property of the object and cannot be changed.
 
 private:
-    uint8_t           *frameData_;
-    uint32_t           dataBufSize_;
+    uint8_t const     *frameData_;
+    const uint32_t     dataBufSize_;
     FrameBufferReclaim customBufferReclaim_;
 };
 

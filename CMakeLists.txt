@@ -44,6 +44,8 @@ if(MSVC)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/${OB_CURRENT_OS}/release/lib")
 endif()
 
+include(cmake/compiler_flags.cmake)
+
 # set include directories
 set(OB_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/include)
 set(OB_UTILS_DIRS ${CMAKE_CURRENT_LIST_DIR}/src/utils)

@@ -91,7 +91,7 @@ public:
         uint8_t *bufferPtr = acquireBuffer();
         if(bufferPtr != nullptr) {
             static uint16_t align       = FRAME_DATA_ALIGN_IN_BYTE;
-            uint8_t         alignOffset = (align - (uint64_t)(bufferPtr + frameObjSize_) % align) % align;
+            uint16_t        alignOffset = (align - (uint64_t)(bufferPtr + frameObjSize_) % align) % align;
 
             // 1. placement new -> new(ptr)Target()
             // 2. Custom deletion function construction of shared_ptr

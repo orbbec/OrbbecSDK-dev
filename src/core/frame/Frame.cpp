@@ -21,7 +21,7 @@ OBFrameType Frame::getType() {
     return type_;
 }
 
-OBFormat Frame::getFormat() {
+OBFormat Frame::getFormat() const {
     return format_;
 }
 
@@ -29,7 +29,7 @@ void Frame::setFormat(const OBFormat format) {
     format_ = format;
 }
 
-uint32_t Frame::getFps() {
+uint32_t Frame::getFps() const {
     return fps_;
 }
 
@@ -37,7 +37,7 @@ void Frame::setFps(const uint32_t fps) {
     fps_ = fps;
 }
 
-uint32_t Frame::getNumber() {
+uint32_t Frame::getNumber() const {
     return number_;
 }
 
@@ -45,7 +45,7 @@ void Frame::setNumber(const uint32_t number) {
     number_ = number;
 }
 
-uint32_t Frame::getDataSize() {
+uint32_t Frame::getDataSize() const {
     return dataSize_;
 }
 
@@ -53,7 +53,7 @@ void Frame::setDataSize(uint32_t dataSize) {
     dataSize_ = dataSize;
 }
 
-uint8_t *Frame::getData() {
+const uint8_t *Frame::getData() const {
     return frameData_;
 }
 
@@ -62,42 +62,34 @@ void Frame::updateData(const uint8_t *data, uint32_t dataSize) {
         throw memory_exception(utils::to_string() << "Update data size(" << dataSize << ") > data buffer size! (" << dataBufSize_ << ")");
     }
     dataSize_ = dataSize;
-    memcpy(frameData_, data, dataSize);
+    memcpy(const_cast<uint8_t *>(frameData_), data, dataSize);
 }
 
-uint64_t Frame::getTimeStamp() {
-    return timeStampUsec_ / 1000.0;
+double Frame::getTimeStampMsec() const {
+    return timeStampMsec_;
 }
 
-uint64_t Frame::getTimeStampUs() {
-    return timeStampUsec_;
+void Frame::setTimeStampMsec(double ts) {
+    timeStampMsec_ = ts;
 }
 
-void Frame::setTimeStampUs(const uint64_t ts) {
-    timeStampUsec_ = ts;
+double Frame::getSystemTimeStampMsec() const {
+    return systemTimeStampMsec_;
 }
 
-uint64_t Frame::getSystemTimeStamp() {
-    return systemTimeStampUsec_ / 1000.0;
+void Frame::setSystemTimeStampMsec(double ts) {
+    systemTimeStampMsec_ = ts;
 }
 
-uint64_t Frame::getSystemTimeStampUs() {
-    return systemTimeStampUsec_;
+double Frame::getGlobalTimeStampMsec() const {
+    return globalTimeStampMsec_;
 }
 
-void Frame::setSystemTimeStampUs(const uint64_t ts) {
-    systemTimeStampUsec_ = ts;
+void Frame::setGlobalTimeStampMsec(double ts) {
+    globalTimeStampMsec_ = ts;
 }
 
-uint64_t Frame::getGlobalTimeStampUs() {
-    return globalTimeStampUsec_;
-}
-
-void Frame::setGlobalTimeStampUS(const uint64_t ts) {
-    globalTimeStampUsec_ = ts;
-}
-
-uint32_t Frame::getWidth() {
+uint32_t Frame::getWidth() const {
     return width_;
 }
 
@@ -105,7 +97,7 @@ void Frame::setWidth(uint32_t width) {
     width_ = width;
 }
 
-uint32_t Frame::getHeight() {
+uint32_t Frame::getHeight() const {
     return height_;
 }
 
@@ -113,26 +105,27 @@ void Frame::setHeight(uint32_t height) {
     height_ = height;
 }
 
-uint32_t Frame::getStride() {
-    if(stride_ == 0) {
+uint32_t Frame::getStride() const {
+    auto stride = stride_;
+    if(stride == 0) {
         switch(format_) {
         case OB_FORMAT_Y8:
         case OB_FORMAT_BA81:
-            stride_ = width_;
+            stride = width_;
             break;
         case OB_FORMAT_Y10:
-            stride_ = width_ * 8 / 10;
+            stride = width_ * 8 / 10;
             break;
         case OB_FORMAT_Y11:
-            stride_ = width_ * 8 / 11;
+            stride = width_ * 8 / 11;
             break;
         case OB_FORMAT_Y12:
         case OB_FORMAT_NV12:
         case OB_FORMAT_YV12:
-            stride_ = width_ * 8 / 12;
+            stride = width_ * 8 / 12;
             break;
         case OB_FORMAT_Y14:
-            stride_ = width_ * 8 / 14;
+            stride = width_ * 8 / 14;
             break;
         case OB_FORMAT_Y16:
         case OB_FORMAT_Z16:
@@ -141,24 +134,24 @@ uint32_t Frame::getStride() {
         case OB_FORMAT_BYR2:
         case OB_FORMAT_RW16:
         case OB_FORMAT_DISP16:
-            stride_ = width_ * 2;
+            stride = width_ * 2;
             break;
         case OB_FORMAT_RGB:
         case OB_FORMAT_BGR:
-            stride_ = width_ * 3;
+            stride = width_ * 3;
             break;
         case OB_FORMAT_POINT:
-            stride_ = width_ * 12;
+            stride = width_ * 12;
             break;
         case OB_FORMAT_RGB_POINT:
-            stride_ = width_ * 24;
+            stride = width_ * 24;
             break;
         default:
             throw std::runtime_error("Get stride bytes failed! Unsupported operation for codec format and (semi-)planar packed format object");
             break;
         }
     }
-    return stride_;
+    return stride;
 }
 
 void Frame::setStride(uint32_t stride) {
@@ -179,7 +172,7 @@ void Frame::updateMetadata(const uint8_t *metadata, uint32_t metadataSize) {
     memcpy(metadata_, metadata, metadataSize);
 }
 
-uint8_t *Frame::getMetadata() {
+const uint8_t *Frame::getMetadata() const {
     return metadata_;
 }
 
@@ -187,7 +180,7 @@ void Frame::registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContaine
     metadataPhasers_ = parsers;
 }
 
-bool Frame::hasMetadata(OBFrameMetadataType type) {
+bool Frame::hasMetadata(OBFrameMetadataType type) const {
     if(!metadataPhasers_) {
         return false;
     }
@@ -198,7 +191,7 @@ bool Frame::hasMetadata(OBFrameMetadataType type) {
     return parser->isSupported(metadata_, metadataSize_);
 }
 
-int64_t Frame::getMetadataValue(OBFrameMetadataType type) {
+int64_t Frame::getMetadataValue(OBFrameMetadataType type) const {
     if(!metadataPhasers_) {
         throw unsupported_operation_exception(utils::to_string() << "Unsupported metadata type: " << type);
     }
@@ -214,7 +207,7 @@ void Frame::setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile)
     streamProfile_ = streamProfile;
 }
 
-uint32_t Frame::getBytesPerPixel() {
+uint32_t Frame::getBytesPerPixel() const {
     // bytes-per-pixel value
     uint32_t nBytesPerPixel = 0;
     switch(format_) {
@@ -268,13 +261,14 @@ uint32_t Frame::getBytesPerPixel() {
 }
 
 void Frame::copyInfo(const std::shared_ptr<Frame> sourceFrame) {
-    // type_ = sourceFrame->type_; //type is determined during construction. It is an inherent property of the object and cannot be changed.
+    // type is determined during construction. It is an inherent property of the object and cannot be changed.
+    // type_ = sourceFrame->type_;
 
     fps_                 = sourceFrame->fps_;
     number_              = sourceFrame->number_;
-    timeStampUsec_       = sourceFrame->timeStampUsec_;
-    systemTimeStampUsec_ = sourceFrame->systemTimeStampUsec_;
-    globalTimeStampUsec_ = sourceFrame->globalTimeStampUsec_;
+    timeStampMsec_       = sourceFrame->timeStampMsec_;
+    systemTimeStampMsec_ = sourceFrame->systemTimeStampMsec_;
+    globalTimeStampMsec_ = sourceFrame->globalTimeStampMsec_;
     format_              = sourceFrame->format_;
     width_               = sourceFrame->width_;
     height_              = sourceFrame->height_;
@@ -285,35 +279,6 @@ void Frame::copyInfo(const std::shared_ptr<Frame> sourceFrame) {
     metadataSize_ = sourceFrame->metadataSize_;
     memcpy(metadata_, sourceFrame->metadata_, metadataSize_);
     metadataPhasers_ = sourceFrame->metadataPhasers_;
-}
-
-std::shared_ptr<Frame> Frame::convertTo(OBFrameType tarFrameType) {
-    // Convert the object type, but the buffer and buffer recycling function need to be transferred
-    std::shared_ptr<Frame> targetFrame;
-    if(!is<VideoFrame>()) {
-        throw unsupported_operation_exception("Unsupported source Type yet!");
-    }
-    switch(tarFrameType) {
-    case OB_FRAME_DEPTH:
-        targetFrame = std::make_shared<DepthFrame>(frameData_, dataBufSize_, customBufferReclaim_);
-        break;
-    case OB_FRAME_IR:
-        targetFrame = std::make_shared<IRFrame>(frameData_, dataBufSize_, customBufferReclaim_);
-        break;
-    case OB_FRAME_COLOR:
-        targetFrame = std::make_shared<ColorFrame>(frameData_, dataBufSize_, customBufferReclaim_);
-        break;
-    default:
-        throw unsupported_operation_exception("Unsupported target Type yet!");
-        break;
-    }
-
-    targetFrame->copyInfo(shared_from_this());
-
-    customBufferReclaim_ = []() {
-        // do nothing;
-    };
-    return targetFrame;
 }
 
 uint32_t Frame::getDataBufSize() const {
@@ -578,7 +543,10 @@ std::shared_ptr<Frame> FrameSet::getFrame(int index) {
     std::shared_ptr<Frame> frame;
     uint32_t               itemSize = sizeof(std::shared_ptr<Frame>);
     auto                   itemCnt  = getDataBufSize() / itemSize;
-    auto                   pItem    = getData();
+    if(index >= (int)itemCnt) {
+        throw invalid_value_exception("FrameSet::getFrame() index out of range");
+    }
+    auto pItem = getData();
     pItem += itemSize * index;
     std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)pItem;
     frame                          = *pFrame;
@@ -639,8 +607,8 @@ void FrameSet::clearAllFrame() {
 void FrameSet::foreachFrame(ForeachBack foreachBack) {
     uint32_t itemSize = sizeof(std::shared_ptr<Frame>);
     auto     itemCnt  = getDataBufSize() / itemSize;
-    auto     pItem    = getData();
-    for(int i = 0; i < itemCnt; i++) {
+    auto     pItem    = const_cast<uint8_t *>(getData());
+    for(uint32_t i = 0; i < itemCnt; i++) {
         if(foreachBack(pItem)) {
             break;
         }
@@ -676,18 +644,18 @@ uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t hei
         maxFrameDataSize = height * width * 2;
         break;
     case OB_FORMAT_Y10:
-        maxFrameDataSize = height * width * 10 / 8 + 0.5;
+        maxFrameDataSize = (uint32_t)((float)height * width * 10.0f / 8.0f + 0.5);
         break;
     case OB_FORMAT_Y11:
-        maxFrameDataSize = height * width * 11 / 8 + 0.5;
+        maxFrameDataSize = (uint32_t)((float)height * width * 11.0f / 8.0f + 0.5);
         break;
     case OB_FORMAT_Y12:
     case OB_FORMAT_NV12:
     case OB_FORMAT_YV12:
-        maxFrameDataSize = height * width * 12 / 8 + 0.5;
+        maxFrameDataSize = (uint32_t)((float)height * width * 12.0f / 8.0f + 0.5);
         break;
     case OB_FORMAT_Y14:
-        maxFrameDataSize = height * width * 14 / 8 + 0.5;
+        maxFrameDataSize = (uint32_t)((float)height * width * 14.0f / 8.0f + 0.5);
         break;
     case OB_FORMAT_RGBA:
     case OB_FORMAT_BGRA:

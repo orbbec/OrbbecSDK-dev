@@ -21,7 +21,7 @@ if(MSVC)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /wd4819")
     set(LBS_TRY_USE_AVX true)
-    add_definitions(-D_UNICODE)
+    add_definitions(-D_UNICODE -D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 set(DOTNET_VERSION_LIBRARY

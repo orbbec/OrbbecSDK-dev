@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.1.15)
 
+set(OB_INTERFACE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/interface")
+
+add_subdirectory(shared) # utils, logger, etc.
 add_subdirectory(core) # core library
-add_subdirectory(utils)
 add_subdirectory(platform)
 add_subdirectory(device)
 add_subdirectory(pipeline)
@@ -15,9 +17,16 @@ if(MSVC)
 endif()
 
 if(BUILD_SHARED_LIBS)
-    add_library(${CMAKE_PROJECT_NAME} SHARED "" ${ORBBEC_VERSIONINFO_RC})
+    add_library(openobsdk SHARED "" ${ORBBEC_VERSIONINFO_RC})
     add_definitions(-DOB_EXPORTS)
 else()
-    add_library(${CMAKE_PROJECT_NAME} STATIC "" ${ORBBEC_VERSIONINFO_RC})
+    add_library(openobsdk STATIC "" ${ORBBEC_VERSIONINFO_RC})
     add_definitions(-DOB_STATIC)
 endif()
+
+target_sources(openobsdk PUBLIC ${CMAKE_CURRENT_LIST_DIR}/Context.hpp ${CMAKE_CURRENT_LIST_DIR}/Context.cpp)
+target_link_libraries(openobsdk PUBLIC ob::shared ob::core)
+
+add_library(ob::openobsdk ALIAS openobsdk)
+ob_source_group(ob::openobsdk)
+

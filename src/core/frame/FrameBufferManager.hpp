@@ -43,11 +43,11 @@ inline double byteToMB(uint64_t sizeInByte) {
     return (double)sizeInByte / 1024.0 / 1024.0;
 }
 
-class AbstractFrameBufferManager : public IFrameBufferManager {
+class FrameBufferManagerBase : public IFrameBufferManager {
 public:
-    AbstractFrameBufferManager(uint32_t frameDataBufferSize, uint32_t frameObjSize);
+    FrameBufferManagerBase(uint32_t frameDataBufferSize, uint32_t frameObjSize);
 
-    virtual ~AbstractFrameBufferManager() noexcept;
+    virtual ~FrameBufferManagerBase() noexcept;
     virtual void     reclaimBuffer(void *buffer) override;
     virtual void     releaseIdleBuffer() override;
     virtual uint32_t getFrameDataBufferSize() override {
@@ -72,10 +72,10 @@ private:
 };
 
 class FrameMemoryPool;
-template <typename T> class FrameBufferManager : public AbstractFrameBufferManager, public std::enable_shared_from_this<FrameBufferManager<T>> {
+template <typename T> class FrameBufferManager : public FrameBufferManagerBase, public std::enable_shared_from_this<FrameBufferManager<T>> {
 private:
     // Must be created through FrameMemoryPool to ensure that all FrameBufferManager objects are managed by FrameMemoryPool
-    FrameBufferManager(uint32_t frameDataBufferSize) : AbstractFrameBufferManager(frameDataBufferSize, sizeof(T)) {
+    FrameBufferManager(uint32_t frameDataBufferSize) : FrameBufferManagerBase(frameDataBufferSize, sizeof(T)) {
         LOG_DEBUG("FrameBufferManager created! frame type:{0}, obj addr:0x{1:x}, frame obj total size:{2:.3f}MB", typeid(T).name(), uint64_t(this),
                   byteToMB(frameTotalSize_));
     }

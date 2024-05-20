@@ -9,7 +9,7 @@
 namespace ob {
 namespace core {
 
-struct weak_stream_profile_compare {
+struct StreamProfileWeakPtrCompare {
     bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
         auto sharedA = a.lock();
         auto sharedB = b.lock();
@@ -40,10 +40,10 @@ private:
     StreamIntrinsicsManager();
 
 private:
-    std::map<std::weak_ptr<const StreamProfile>, OBCameraIntrinsic, weak_stream_profile_compare>  videoStreamIntrinsics_;
-    std::map<std::weak_ptr<const StreamProfile>, OBCameraDistortion, weak_stream_profile_compare> videoStreamDistortion_;
-    std::map<std::weak_ptr<const StreamProfile>, OBGyroIntrinsic, weak_stream_profile_compare>    gyroStreamIntrinsics_;
-    std::map<std::weak_ptr<const StreamProfile>, OBAccelIntrinsic, weak_stream_profile_compare>   accelStreamIntrinsics_;
+    std::map<std::weak_ptr<const StreamProfile>, OBCameraIntrinsic, StreamProfileWeakPtrCompare>  videoStreamIntrinsics_;
+    std::map<std::weak_ptr<const StreamProfile>, OBCameraDistortion, StreamProfileWeakPtrCompare> videoStreamDistortion_;
+    std::map<std::weak_ptr<const StreamProfile>, OBGyroIntrinsic, StreamProfileWeakPtrCompare>    gyroStreamIntrinsics_;
+    std::map<std::weak_ptr<const StreamProfile>, OBAccelIntrinsic, StreamProfileWeakPtrCompare>   accelStreamIntrinsics_;
 
     std::mutex mutex_;
 };

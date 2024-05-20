@@ -32,42 +32,31 @@ public:
     Frame(uint8_t *data, uint32_t dataBufSize, OBFrameType type, FrameBufferReclaim customBufferReclaim = nullptr);
     virtual ~Frame() noexcept;
 
-    virtual OBFrameType getType();
+    OBFrameType getType();
 
-    virtual OBFormat       getFormat() const;
-    virtual void           setFormat(const OBFormat format);
-    virtual uint32_t       getFps() const;
-    virtual void           setFps(const uint32_t fps);
-    virtual uint32_t       getNumber() const;
-    virtual void           setNumber(const uint32_t number);
-    virtual uint32_t       getDataSize() const;
-    virtual void           setDataSize(uint32_t dataSize);
-    virtual const uint8_t *getData() const;
-    virtual void           updateData(const uint8_t *data, uint32_t dataSize);
-    virtual double         getTimeStampMsec() const;
-    virtual void           setTimeStampMsec(double ts);
-    virtual double         getSystemTimeStampMsec() const;
-    virtual void           setSystemTimeStampMsec(double ts);
-    virtual double         getGlobalTimeStampMsec() const;
-    virtual void           setGlobalTimeStampMsec(double ts);
-    virtual uint32_t       getWidth() const;
-    virtual void           setWidth(uint32_t width);
-    virtual uint32_t       getHeight() const;
-    virtual void           setHeight(uint32_t height);
-    virtual uint32_t       getStride() const;
-    virtual void           setStride(uint32_t stride);
-    virtual uint32_t       getBytesPerPixel() const;
+    uint32_t       getNumber() const;
+    void           setNumber(const uint32_t number);
+    uint32_t       getDataSize() const;
+    const uint8_t *getData() const;
+    void           updateData(const uint8_t *data, uint32_t dataSize);
+    uint64_t       getTimeStampUsec() const;
+    void           setTimeStampUsec(uint64_t ts);
+    uint64_t       getSystemTimeStampUsec() const;
+    void           setSystemTimeStampUsec(uint64_t ts);
+    uint64_t       getGlobalTimeStampUsec() const;
+    void           setGlobalTimeStampUsec(uint64_t ts);
 
-    virtual uint32_t       getMetadataSize() const;
-    virtual void           updateMetadata(const uint8_t *metadata, uint32_t metadataSize);
-    virtual const uint8_t *getMetadata() const;
+    uint32_t       getMetadataSize() const;
+    void           updateMetadata(const uint8_t *metadata, uint32_t metadataSize);
+    const uint8_t *getMetadata() const;
 
-    virtual void    registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers);
-    virtual bool    hasMetadata(OBFrameMetadataType type) const;
-    virtual int64_t getMetadataValue(OBFrameMetadataType type) const;
+    void    registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers);
+    bool    hasMetadata(OBFrameMetadataType type) const;
+    int64_t getMetadataValue(OBFrameMetadataType type) const;
 
-    virtual std::shared_ptr<const StreamProfile> getStreamProfile() const;
-    virtual void                                 setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile);
+    std::shared_ptr<const StreamProfile> getStreamProfile() const;
+    void                                 setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile);
+    OBFormat                             getFormat() const;  // get from stream profile
 
     virtual void copyInfo(std::shared_ptr<Frame> sourceFrame);
 
@@ -85,15 +74,10 @@ protected:
 
 protected:
     uint32_t                                       dataSize_            = 0;
-    uint32_t                                       fps_                 = 0;
     uint32_t                                       number_              = 0;
-    double                                         timeStampMsec_       = 0;
-    double                                         systemTimeStampMsec_ = 0;
-    double                                         globalTimeStampMsec_ = 0;
-    OBFormat                                       format_              = OB_FORMAT_UNKNOWN;
-    uint32_t                                       width_               = 0;
-    uint32_t                                       height_              = 0;
-    uint32_t                                       stride_              = 0;
+    uint64_t                                       timeStampUsec_       = 0;
+    uint64_t                                       systemTimeStampUsec_ = 0;
+    uint64_t                                       globalTimeStampUsec_ = 0;
     uint32_t                                       metadataSize_        = 0;
     uint8_t                                        metadata_[256];
     std::shared_ptr<IFrameMetadataParserContainer> metadataPhasers_ = nullptr;
@@ -111,22 +95,21 @@ class VideoFrame : public Frame {
 public:
     VideoFrame(uint8_t *data, uint32_t dataBufSize, OBFrameType type, FrameBufferReclaim customBufferReclaim = nullptr);
 
-    virtual void setFormat(const OBFormat format) override;
+    uint32_t getWidth() const;
+    uint32_t getHeight() const;
+    uint32_t getFps() const;
 
-    virtual uint8_t  getScrDataSize() const;
-    virtual void     updateScrData(const uint8_t *scrData, uint8_t scrDataSize);
-    virtual uint8_t *getScrData();
+    void     setStride(uint32_t stride);
+    uint32_t getStride() const;
 
-    virtual uint8_t getPixelAvailableBitSize() const;
-    virtual void    setPixelAvailableBitSize(uint8_t bitSize);
+    uint8_t getPixelAvailableBitSize() const;
+    void    setPixelAvailableBitSize(uint8_t bitSize);
 
     virtual void copyInfo(std::shared_ptr<Frame> sourceFrame) override;
 
 protected:
-    uint8_t availableBitSize_;
-
-    uint8_t scrDataSize_;
-    uint8_t scrData_[12];
+    uint8_t  availableBitSize_;  // available bit size of each pixel
+    uint32_t stride_ = 0;
 };
 
 class ColorFrame : public VideoFrame {
@@ -166,18 +149,18 @@ class PointsFrame : public Frame {
 public:
     PointsFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
 
-    void  setPositionValueScale(float valueScale);
-    float getPositionValueScale() const;
+    void  setCoordinateValueScale(float valueScale);
+    float getCoordinateValueScale() const;
 
 private:
-    float valueScale_;
+    float coordValueScale_;  // coordinate value scale, multiply by this value to get actual coordinate value in mm
 };
 
 class AccelFrame : public Frame {
 public:
     typedef struct {
-        float accelData[3];  // Acceleration values ​​in three directions (xyz), unit: g
-        float temp;          // Celsius
+        float accelData[3];  // Acceleration values ​​in three directions (xyz), unit: g (9.80665 m/s^2)
+        float temp;          // Temperature in Celsius
     } OBAccelFrameData;
 
 public:
@@ -190,8 +173,8 @@ public:
 class GyroFrame : public Frame {
 public:
     typedef struct {
-        float gyroData[3];  // Acceleration values ​​in three directions (xyz), unit: dps
-        float temp;         // Celsius
+        float gyroData[3];  // Acceleration values ​​in three directions (xyz), unit: dps (degrees per second)
+        float temp;         // Temperature in Celsius
     } OBGyroFrameData;
 
 public:
@@ -199,11 +182,6 @@ public:
 
     OBGyroValue value();
     float       temperature();
-};
-
-class RawPhaseFrame : public VideoFrame {
-public:
-    RawPhaseFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
 };
 
 class FrameSet : public Frame {
@@ -225,11 +203,7 @@ public:
     std::shared_ptr<Frame> getFrame(int index);
 
     // It is recommended to use the rvalue reference interface. If you really need it, you can uncomment the following
-    // void pushFrame(OBFrameType type, std::shared_ptr<Frame> frame);
-
-    // Note that when using pushFrame(frame->type(), std::move(frame)), some compilers will first execute std::move(frame) after compilation.
-    // Execute frame->type() again, causing the program to crash when frame->type()
-    void pushFrame(OBFrameType type, std::shared_ptr<Frame> &&frame);  // todo: delete this function
+    // void pushFrame(std::shared_ptr<Frame> frame);
     void pushFrame(std::shared_ptr<Frame> &&frame);
     void clearAllFrame();
 
@@ -241,8 +215,7 @@ template <typename T> bool Frame::is() {
     switch(type_) {
 
     case OB_FRAME_VIDEO:
-        return (typeid(T) == typeid(IRFrame) || typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(ColorFrame) || typeid(T) == typeid(RawPhaseFrame)
-                || typeid(T) == typeid(VideoFrame));
+        return (typeid(T) == typeid(IRFrame) || typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(ColorFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_IR:
         return (typeid(T) == typeid(IRFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_IR_LEFT:
@@ -261,15 +234,11 @@ template <typename T> bool Frame::is() {
         return (typeid(T) == typeid(FrameSet));
     case OB_FRAME_POINTS:
         return (typeid(T) == typeid(PointsFrame));
-    case OB_FRAME_RAW_PHASE:
-        return (typeid(T) == typeid(RawPhaseFrame) || typeid(T) == typeid(VideoFrame));
     default:
         break;
     }
     return false;
 }
-
-uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t height);
 
 }  // namespace core
 }  // namespace ob

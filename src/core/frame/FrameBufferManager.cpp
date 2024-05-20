@@ -62,21 +62,21 @@ void FrameMemoryAllocator::deallocate(uint8_t *ptr, size_t size) {
               byteToMB(maxSize_));
 }
 
-AbstractFrameBufferManager::AbstractFrameBufferManager(uint32_t frameDataBufferSize, uint32_t frameObjSize)
+FrameBufferManagerBase::FrameBufferManagerBase(uint32_t frameDataBufferSize, uint32_t frameObjSize)
     : frameDataBufferSize_(frameDataBufferSize), frameObjSize_(frameObjSize) {
     frameTotalSize_ = frameDataBufferSize_ + frameObjSize_ + FRAME_DATA_ALIGN_IN_BYTE - 1;  // 多申请FRAME_DATA_ALIGN_IN_BYTE-1, 方便偏移数据部分地址，实现对齐
 }
 
-AbstractFrameBufferManager::~AbstractFrameBufferManager() noexcept {
+FrameBufferManagerBase::~FrameBufferManagerBase() noexcept {
     std::unique_lock<std::recursive_mutex> lock_(mutex_);
     while(!availableFrameBuffers_.empty()) {
         FrameMemoryAllocator::getInstance()->deallocate(availableFrameBuffers_.front(), frameTotalSize_);
         availableFrameBuffers_.erase(availableFrameBuffers_.begin());
     }
-    LOG_DEBUG("AbstractFrameBufferManager destroyed! manager type:{0},  obj addr:0x{1:x}", typeid(*this).name(), uint64_t(this));
+    LOG_DEBUG("FrameBufferManagerBase destroyed! manager type:{0},  obj addr:0x{1:x}", typeid(*this).name(), uint64_t(this));
 }
 
-uint8_t *AbstractFrameBufferManager::acquireBuffer() {
+uint8_t *FrameBufferManagerBase::acquireBuffer() {
     std::unique_lock<std::recursive_mutex> lock_(mutex_);
     uint8_t                               *bufferPtr = nullptr;
     if(!availableFrameBuffers_.empty()) {
@@ -100,12 +100,12 @@ uint8_t *AbstractFrameBufferManager::acquireBuffer() {
     return bufferPtr;
 }
 
-std::unique_lock<std::recursive_mutex> AbstractFrameBufferManager::lockBuffers() {
+std::unique_lock<std::recursive_mutex> FrameBufferManagerBase::lockBuffers() {
     std::unique_lock<std::recursive_mutex> lock_(mutex_);
     return std::move(lock_);
 }
 
-void AbstractFrameBufferManager::reclaimBuffer(void *buffer) {
+void FrameBufferManagerBase::reclaimBuffer(void *buffer) {
     std::unique_lock<std::recursive_mutex> lock_(mutex_);
     availableFrameBuffers_.push_back((uint8_t *)buffer);
 
@@ -116,7 +116,7 @@ void AbstractFrameBufferManager::reclaimBuffer(void *buffer) {
         availableFrameBuffers_.erase(availableFrameBuffers_.begin());
     }
 }
-void AbstractFrameBufferManager::releaseIdleBuffer() {
+void FrameBufferManagerBase::releaseIdleBuffer() {
     std::unique_lock<std::recursive_mutex> lock_(mutex_);
     while(!availableFrameBuffers_.empty()) {
         // 当availableFrameBuffers_ 足够多时及时及时释放内存

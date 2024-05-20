@@ -1,5 +1,5 @@
 #include "FrameMemoryPool.hpp"
-
+#include "CoreTypeHelper.hpp"
 #include <sstream>
 
 namespace ob {
@@ -26,7 +26,7 @@ void FrameMemoryPool::setMaxFrameMemorySize(uint64_t sizeInMB) {
     FrameMemoryAllocator::getInstance()->setMaxFrameMemorySize(sizeInMB);
 }
 
-void FrameMemoryPool::enableReuseFrameBufferManager(bool enable) {
+void FrameMemoryPool::activateFrameBufferManagerReuse(bool enable) {
     reuseFrameBufferManager = enable;
 }
 
@@ -87,11 +87,6 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
         frameBufMgr = std::shared_ptr<FrameBufferManager<FrameSet>>(new FrameBufferManager<FrameSet>(maxDataSize));
         LOG_DEBUG("Frameset bufferManager created!");
         break;
-    case OB_FRAME_RAW_PHASE:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<RawPhaseFrame>>(new FrameBufferManager<RawPhaseFrame>(maxDataSize));
-        LOG_DEBUG("RawPhaseFrame bufferManager created!");
-        break;
-
     default:
         std::ostringstream oss_msg;
         oss_msg << "Unsupported Frame Type to create buffer manager! frameType: " << type;
@@ -133,7 +128,7 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
 }
 
 std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, OBFormat format, uint32_t width, uint32_t height) {
-    auto maxDataSize = calcVideoFrameMaxDataSize(format, width, height);
+    auto maxDataSize = type_helper::calcVideoFrameMaxDataSize(format, width, height);
     return createFrameBufferManager(type, maxDataSize);
 }
 

@@ -22,19 +22,10 @@ OBFrameType Frame::getType() {
 }
 
 OBFormat Frame::getFormat() const {
-    return format_;
-}
-
-void Frame::setFormat(const OBFormat format) {
-    format_ = format;
-}
-
-uint32_t Frame::getFps() const {
-    return fps_;
-}
-
-void Frame::setFps(const uint32_t fps) {
-    fps_ = fps;
+    if(!streamProfile_) {
+        return OB_FORMAT_UNKNOWN;
+    }
+    return streamProfile_->getFormat();
 }
 
 uint32_t Frame::getNumber() const {
@@ -49,10 +40,6 @@ uint32_t Frame::getDataSize() const {
     return dataSize_;
 }
 
-void Frame::setDataSize(uint32_t dataSize) {
-    dataSize_ = dataSize;
-}
-
 const uint8_t *Frame::getData() const {
     return frameData_;
 }
@@ -65,96 +52,117 @@ void Frame::updateData(const uint8_t *data, uint32_t dataSize) {
     memcpy(const_cast<uint8_t *>(frameData_), data, dataSize);
 }
 
-double Frame::getTimeStampMsec() const {
-    return timeStampMsec_;
+uint64_t Frame::getTimeStampUsec() const {
+    return timeStampUsec_;
 }
 
-void Frame::setTimeStampMsec(double ts) {
-    timeStampMsec_ = ts;
+void Frame::setTimeStampUsec(uint64_t ts) {
+    timeStampUsec_ = ts;
 }
 
-double Frame::getSystemTimeStampMsec() const {
-    return systemTimeStampMsec_;
+uint64_t Frame::getSystemTimeStampUsec() const {
+    return systemTimeStampUsec_;
 }
 
-void Frame::setSystemTimeStampMsec(double ts) {
-    systemTimeStampMsec_ = ts;
+void Frame::setSystemTimeStampUsec(uint64_t ts) {
+    systemTimeStampUsec_ = ts;
 }
 
-double Frame::getGlobalTimeStampMsec() const {
-    return globalTimeStampMsec_;
+uint64_t Frame::getGlobalTimeStampUsec() const {
+    return globalTimeStampUsec_;
 }
 
-void Frame::setGlobalTimeStampMsec(double ts) {
-    globalTimeStampMsec_ = ts;
+void Frame::setGlobalTimeStampUsec(uint64_t ts) {
+    globalTimeStampUsec_ = ts;
 }
 
-uint32_t Frame::getWidth() const {
-    return width_;
+uint32_t VideoFrame::getFps() const {
+    if(!streamProfile_) {
+        throw invalid_value_exception("Error: This frame dose not have a stream profile!");
+    }
+    if(!streamProfile_->is<const VideoStreamProfile>()) {
+        throw invalid_value_exception("Error! A VideoFrame contain a non-video stream profile!");
+    }
+    return streamProfile_->as<const VideoStreamProfile>()->getFps();
 }
 
-void Frame::setWidth(uint32_t width) {
-    width_ = width;
+uint32_t VideoFrame::getWidth() const {
+    if(!streamProfile_) {
+        throw invalid_value_exception("Error: This frame dose not have a stream profile!");
+    }
+    if(!streamProfile_->is<const VideoStreamProfile>()) {
+        throw invalid_value_exception("Error! A VideoFrame contain a non-video stream profile!");
+    }
+    return streamProfile_->as<const VideoStreamProfile>()->getWidth();
 }
 
-uint32_t Frame::getHeight() const {
-    return height_;
+uint32_t VideoFrame::getHeight() const {
+    if(!streamProfile_) {
+        throw invalid_value_exception("Error: This frame dose not have a stream profile!");
+    }
+    if(!streamProfile_->is<const VideoStreamProfile>()) {
+        throw invalid_value_exception("Error! A VideoFrame contain a non-video stream profile!");
+    }
+    return streamProfile_->as<const VideoStreamProfile>()->getHeight();
 }
 
-void Frame::setHeight(uint32_t height) {
-    height_ = height;
-}
-
-uint32_t Frame::getStride() const {
-    auto stride = stride_;
-    if(stride == 0) {
-        switch(format_) {
-        case OB_FORMAT_Y8:
-        case OB_FORMAT_BA81:
-            stride = width_;
-            break;
-        case OB_FORMAT_Y10:
-            stride = width_ * 8 / 10;
-            break;
-        case OB_FORMAT_Y11:
-            stride = width_ * 8 / 11;
-            break;
-        case OB_FORMAT_Y12:
-        case OB_FORMAT_NV12:
-        case OB_FORMAT_YV12:
-            stride = width_ * 8 / 12;
-            break;
-        case OB_FORMAT_Y14:
-            stride = width_ * 8 / 14;
-            break;
-        case OB_FORMAT_Y16:
-        case OB_FORMAT_Z16:
-        case OB_FORMAT_YUYV:
-        case OB_FORMAT_UYVY:
-        case OB_FORMAT_BYR2:
-        case OB_FORMAT_RW16:
-        case OB_FORMAT_DISP16:
-            stride = width_ * 2;
-            break;
-        case OB_FORMAT_RGB:
-        case OB_FORMAT_BGR:
-            stride = width_ * 3;
-            break;
-        case OB_FORMAT_POINT:
-            stride = width_ * 12;
-            break;
-        case OB_FORMAT_RGB_POINT:
-            stride = width_ * 24;
-            break;
-        default:
-            throw std::runtime_error("Get stride bytes failed! Unsupported operation for codec format and (semi-)planar packed format object");
-            break;
-        }
+uint32_t calculateStrideBytes(uint32_t width, OBFormat format) {
+    uint32_t stride = 0;
+    switch(format) {
+    case OB_FORMAT_Y8:
+    case OB_FORMAT_BA81:
+        stride = width;
+        break;
+    case OB_FORMAT_Y10:
+        stride = width * 8 / 10;
+        break;
+    case OB_FORMAT_Y11:
+        stride = width * 8 / 11;
+        break;
+    case OB_FORMAT_Y12:
+    case OB_FORMAT_NV12:
+    case OB_FORMAT_YV12:
+        stride = width * 8 / 12;
+        break;
+    case OB_FORMAT_Y14:
+        stride = width * 8 / 14;
+        break;
+    case OB_FORMAT_Y16:
+    case OB_FORMAT_Z16:
+    case OB_FORMAT_YUYV:
+    case OB_FORMAT_UYVY:
+    case OB_FORMAT_BYR2:
+    case OB_FORMAT_RW16:
+    case OB_FORMAT_DISP16:
+        stride = width * 2;
+        break;
+    case OB_FORMAT_RGB:
+    case OB_FORMAT_BGR:
+        stride = width * 3;
+        break;
+    case OB_FORMAT_POINT:
+        stride = width * 12;
+        break;
+    case OB_FORMAT_RGB_POINT:
+        stride = width * 24;
+        break;
+    default:
+        throw std::runtime_error("Get stride bytes failed! Unsupported operation for codec format and (semi-)planar packed format object");
+        break;
     }
     return stride;
 }
 
-void Frame::setStride(uint32_t stride) {
+uint32_t VideoFrame::getStride() const {
+    if(stride_ > 0) {
+        return stride_;
+    }
+    auto format = getFormat();
+    auto width  = getWidth();
+    return calculateStrideBytes(width, format);
+}
+
+void VideoFrame::setStride(uint32_t stride) {
     stride_ = stride;
 }
 
@@ -207,72 +215,14 @@ void Frame::setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile)
     streamProfile_ = streamProfile;
 }
 
-uint32_t Frame::getBytesPerPixel() const {
-    // bytes-per-pixel value
-    uint32_t nBytesPerPixel = 0;
-    switch(format_) {
-    case OB_FORMAT_Y8:
-    case OB_FORMAT_BA81:
-        nBytesPerPixel = sizeof(uint8_t);
-        break;
-    case OB_FORMAT_Y10:
-        nBytesPerPixel = sizeof(uint8_t) * 2;
-        break;
-    case OB_FORMAT_Y11:
-        nBytesPerPixel = sizeof(uint8_t) * 2;
-        break;
-    case OB_FORMAT_Y12:
-    case OB_FORMAT_NV12:
-    case OB_FORMAT_YV12:
-        nBytesPerPixel = sizeof(uint8_t) * 2;
-        break;
-    case OB_FORMAT_Y14:
-        nBytesPerPixel = sizeof(uint8_t) * 2;
-        break;
-    case OB_FORMAT_Y16:
-    case OB_FORMAT_Z16:
-    case OB_FORMAT_YUYV:
-    case OB_FORMAT_UYVY:
-    case OB_FORMAT_BYR2:
-    case OB_FORMAT_RW16:
-    case OB_FORMAT_DISP16:
-        nBytesPerPixel = sizeof(uint8_t) * 2;
-        break;
-    case OB_FORMAT_RGB:
-    case OB_FORMAT_BGR:
-        nBytesPerPixel = sizeof(uint8_t) * 3;
-        break;
-    case OB_FORMAT_RGBA:
-    case OB_FORMAT_BGRA:
-        nBytesPerPixel = sizeof(uint8_t) * 4;
-        break;
-    case OB_FORMAT_POINT:
-        nBytesPerPixel = sizeof(uint8_t) * 12;
-        break;
-    case OB_FORMAT_RGB_POINT:
-        nBytesPerPixel = sizeof(uint8_t) * 24;
-        break;
-    default:
-        throw std::runtime_error("Get bytes per pixel value failed!");
-        break;
-    }
-
-    return nBytesPerPixel;
-}
-
 void Frame::copyInfo(const std::shared_ptr<Frame> sourceFrame) {
     // type is determined during construction. It is an inherent property of the object and cannot be changed.
     // type_ = sourceFrame->type_;
 
-    fps_                 = sourceFrame->fps_;
     number_              = sourceFrame->number_;
-    timeStampMsec_       = sourceFrame->timeStampMsec_;
-    systemTimeStampMsec_ = sourceFrame->systemTimeStampMsec_;
-    globalTimeStampMsec_ = sourceFrame->globalTimeStampMsec_;
-    format_              = sourceFrame->format_;
-    width_               = sourceFrame->width_;
-    height_              = sourceFrame->height_;
-    stride_              = sourceFrame->stride_;
+    timeStampUsec_       = sourceFrame->timeStampUsec_;
+    systemTimeStampUsec_ = sourceFrame->systemTimeStampUsec_;
+    globalTimeStampUsec_ = sourceFrame->globalTimeStampUsec_;
     dataSize_            = sourceFrame->dataSize_;
     streamProfile_       = sourceFrame->streamProfile_;
 
@@ -287,65 +237,6 @@ uint32_t Frame::getDataBufSize() const {
 
 VideoFrame::VideoFrame(uint8_t *data, uint32_t dataBufSize, OBFrameType type, FrameBufferReclaim customBufferReclaim)
     : Frame(data, dataBufSize, type, customBufferReclaim), availableBitSize_(0) {}
-
-void VideoFrame::setFormat(const OBFormat format) {
-    format_ = format;
-    if(availableBitSize_ == 0) {
-        switch(format_) {
-        case OB_FORMAT_Y8:
-        case OB_FORMAT_BA81:
-            availableBitSize_ = 8;
-            break;
-        case OB_FORMAT_Y10:
-            availableBitSize_ = 10;
-            break;
-        case OB_FORMAT_Y11:
-            availableBitSize_ = 11;
-            break;
-        case OB_FORMAT_Y12:
-        case OB_FORMAT_YV12:
-        case OB_FORMAT_NV12:
-            availableBitSize_ = 12;
-            break;
-        case OB_FORMAT_Y14:
-            availableBitSize_ = 14;
-            break;
-        case OB_FORMAT_RLE:
-            availableBitSize_ = 14;  // todo: RLE may not be packaged in 14bit
-            break;
-        case OB_FORMAT_RVL:
-            availableBitSize_ = 16;
-            break;
-        case OB_FORMAT_Y16:
-        case OB_FORMAT_Z16:
-        case OB_FORMAT_YUYV:
-        case OB_FORMAT_UYVY:
-        case OB_FORMAT_BYR2:
-        case OB_FORMAT_RW16:
-        case OB_FORMAT_DISP16:
-            availableBitSize_ = 16;  // The actual number of effective digits varies from device to device and requires Frame external settings.
-            break;
-        default:
-            break;
-        }
-    }
-}
-
-uint8_t VideoFrame::getScrDataSize() const {
-    return scrDataSize_;
-}
-
-void VideoFrame::updateScrData(const uint8_t *scrData, uint8_t scrDataSize) {
-    if(scrDataSize > 0 && scrData == nullptr) {
-        LOG_WARN("scrData is null!");
-    }
-    scrDataSize_ = scrDataSize;
-    memcpy(scrData_, scrData, scrDataSize);
-}
-
-uint8_t *VideoFrame::getScrData() {
-    return scrData_;
-}
 
 uint8_t VideoFrame::getPixelAvailableBitSize() const {
     if(availableBitSize_ == 0) {
@@ -362,7 +253,9 @@ void VideoFrame::setPixelAvailableBitSize(uint8_t bitSize) {
 void VideoFrame::copyInfo(std::shared_ptr<Frame> sourceFrame) {
     Frame::copyInfo(sourceFrame);
     if(sourceFrame->is<VideoFrame>()) {
-        availableBitSize_ = sourceFrame->as<VideoFrame>()->availableBitSize_;
+        auto vf = sourceFrame->as<VideoFrame>();
+        availableBitSize_ = vf->availableBitSize_;
+        stride_ = vf->stride_;
     }
 }
 
@@ -389,20 +282,22 @@ void DepthFrame::copyInfo(std::shared_ptr<Frame> sourceFrame) {
 
 IRFrame::IRFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim, OBFrameType frameType)
     : VideoFrame(data, dataBufSize, frameType, customBufferReclaim) {}
+
 IRLeftFrame::IRLeftFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
     : IRFrame(data, dataBufSize, customBufferReclaim, OB_FRAME_IR_LEFT) {}
+
 IRRightFrame::IRRightFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
     : IRFrame(data, dataBufSize, customBufferReclaim, OB_FRAME_IR_RIGHT) {}
 
 PointsFrame::PointsFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
     : Frame(data, dataBufSize, OB_FRAME_POINTS, customBufferReclaim) {}
 
-void PointsFrame::setPositionValueScale(float valueScale) {
-    valueScale_ = valueScale;
+void PointsFrame::setCoordinateValueScale(float valueScale) {
+    coordValueScale_ = valueScale;
 }
 
-float PointsFrame::getPositionValueScale() const {
-    return valueScale_;
+float PointsFrame::getCoordinateValueScale() const {
+    return coordValueScale_;
 }
 
 AccelFrame::AccelFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
@@ -427,8 +322,6 @@ float GyroFrame ::temperature() {
     return ((OBGyroFrameData *)getData())->temp;
 }
 
-RawPhaseFrame::RawPhaseFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
-    : VideoFrame(data, dataBufSize, OB_FRAME_RAW_PHASE, customBufferReclaim) {}
 
 FrameSet::FrameSet(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim) : Frame(data, dataBufSize, OB_FRAME_SET, customBufferReclaim) {}
 
@@ -558,24 +451,6 @@ std::shared_ptr<Frame> FrameSet::getFrame(int index) {
 // pushFrame(std::move(frame));
 // }
 
-// Note that when using pushFrame(frame->type(), std::move(frame)), some compilers will first execute std::move(frame) after compilation.
-// Executing frame->type() again will cause the program to crash when frame->type() is executed.
-void FrameSet::pushFrame(OBFrameType type, std::shared_ptr<Frame> &&frame) {
-    foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == type) {
-            (*pFrame).reset();
-            *pFrame = nullptr;
-            // LOG( ERROR ) << "The reason for dropping frames is to wait for another frame. Drop Frame type=" << type;
-        }
-        if(!(*pFrame)) {
-            *pFrame = frame;
-            return true;
-        }
-        return false;
-    });
-}
-
 void FrameSet::pushFrame(std::shared_ptr<Frame> &&frame) {
     OBFrameType type = frame->getType();
     foreachFrame([&](void *item) {
@@ -614,64 +489,6 @@ void FrameSet::foreachFrame(ForeachBack foreachBack) {
         }
         pItem += itemSize;
     }
-}
-
-uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t height) {
-    uint32_t maxFrameDataSize = height * width * 3;
-    switch(format) {
-    case OB_FORMAT_NV21:
-    case OB_FORMAT_I420:
-        maxFrameDataSize = height * width * 3 / 2;
-        break;
-    case OB_FORMAT_MJPG:
-    case OB_FORMAT_H264:
-    case OB_FORMAT_H265:
-    case OB_FORMAT_HEVC:
-    case OB_FORMAT_Y8:
-    case OB_FORMAT_BA81:
-        maxFrameDataSize = height * width;
-        break;
-    case OB_FORMAT_YUYV:
-    case OB_FORMAT_UYVY:
-    case OB_FORMAT_YUY2:
-    case OB_FORMAT_Y16:
-    case OB_FORMAT_BYR2:
-    case OB_FORMAT_RW16:
-    case OB_FORMAT_Z16:
-    case OB_FORMAT_RLE:
-    case OB_FORMAT_RVL:
-    case OB_FORMAT_DISP16:
-        maxFrameDataSize = height * width * 2;
-        break;
-    case OB_FORMAT_Y10:
-        maxFrameDataSize = (uint32_t)((float)height * width * 10.0f / 8.0f + 0.5);
-        break;
-    case OB_FORMAT_Y11:
-        maxFrameDataSize = (uint32_t)((float)height * width * 11.0f / 8.0f + 0.5);
-        break;
-    case OB_FORMAT_Y12:
-    case OB_FORMAT_NV12:
-    case OB_FORMAT_YV12:
-        maxFrameDataSize = (uint32_t)((float)height * width * 12.0f / 8.0f + 0.5);
-        break;
-    case OB_FORMAT_Y14:
-        maxFrameDataSize = (uint32_t)((float)height * width * 14.0f / 8.0f + 0.5);
-        break;
-    case OB_FORMAT_RGBA:
-    case OB_FORMAT_BGRA:
-        maxFrameDataSize = width * height * 4;
-        break;
-    case OB_FORMAT_RGB:
-    case OB_FORMAT_BGR:
-        maxFrameDataSize = width * height * 3;
-        break;
-    default:
-        LOG_WARN("Unknown video frame format!");
-        maxFrameDataSize = width * height * 3;
-        break;
-    }
-
-    return maxFrameDataSize;
 }
 
 }  // namespace core

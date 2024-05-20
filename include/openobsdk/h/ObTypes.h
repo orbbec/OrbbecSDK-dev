@@ -198,9 +198,9 @@ typedef enum {
     OB_FRAME_SET       = 5,  /**< Frame collection (internally contains a variety of data frames) */
     OB_FRAME_POINTS    = 6,  /**< Point cloud frame */
     OB_FRAME_GYRO      = 7,  /**< Gyroscope data frame */
-    OB_FRAME_IR_LEFT   = 8,  /**< Left IR frame */
-    OB_FRAME_IR_RIGHT  = 9,  /**< Right IR frame */
-    OB_FRAME_RAW_PHASE = 10, /**< Rawphase frame*/
+    OB_FRAME_IR_LEFT   = 8,  /**< Left IR frame for stereo camera */
+    OB_FRAME_IR_RIGHT  = 9,  /**< Right IR frame for stereo camera */
+    OB_FRAME_RAW_PHASE = 10, /**< Raw Phase frame*/
 } OBFrameType,
     ob_frame_type;
 

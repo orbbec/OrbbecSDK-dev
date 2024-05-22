@@ -3,10 +3,23 @@ cmake_minimum_required(VERSION 3.1.15)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-project( OpenOrbbecSDK VERSION 0.0.1 LANGUAGES CXX C)
+project(
+    OpenOrbbecSDK
+    VERSION 0.0.1
+    LANGUAGES CXX C)
+
+# install prefix
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
 # set project options
 include(cmake/options.cmake)
+if(INSTALL_MODULE_FILTER)
+    set(INSTALL_MODULE_CORE ON)
+endif()
+
+if(INSTALL_MODULE_CORE)
+    set(INSTALL_MODULE_SHARED ON)
+endif()
 
 # include macros
 include(cmake/macros.cmake)
@@ -47,11 +60,11 @@ endif()
 include(cmake/compiler_flags.cmake)
 
 # set include directories
-set(OB_INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/include)
-set(OB_UTILS_DIRS ${CMAKE_CURRENT_LIST_DIR}/src/utils)
+set(OB_PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
+set(OB_UTILS_DIR ${CMAKE_CURRENT_LIST_DIR}/src/utils)
+set(OB_3RDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/3rdparty)
 
 add_subdirectory(src)
-add_subdirectory(3rdparty/spdlog)
 
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)

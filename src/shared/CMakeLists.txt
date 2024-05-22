@@ -7,13 +7,19 @@ add_library(shared STATIC)
 set_target_properties(shared PROPERTIES VERSION ${CMAKE_PROJECT_VERSION})
 
 # add the shared library sources
-file(GLOB_RECURSE CORE_SOURCES "*.cpp" EXCLUDE )
-file(GLOB_RECURSE CORE_HEADERS "*.hpp" EXCLUDE)
-target_sources(shared PRIVATE ${CORE_SOURCES} ${CORE_HEADERS})
+file(GLOB_RECURSE SOURCE_FILES "*.cpp" EXCLUDE)
+file(GLOB_RECURSE HEADERS_FILES "*.hpp" EXCLUDE)
+target_sources(shared PRIVATE ${SOURCE_FILES} ${HEADERS_FILES})
 
+add_subdirectory(${OB_3RDPARTY_DIR}/spdlog spdlog)
 target_link_libraries(shared PUBLIC spdlog::spdlog)
-target_include_directories(shared PUBLIC ${OB_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(shared PUBLIC "$<BUILD_INTERFACE:${OB_PUBLIC_HEADERS_DIR}>" "$<INSTALL_INTERFACE:include>"
+                                         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" "$<INSTALL_INTERFACE:include>")
 
 add_library(ob::shared ALIAS shared)
 ob_source_group(ob::shared)
 set_target_properties(shared PROPERTIES FOLDER "shared")
+
+if(INSTALL_MODULE_SHARED)
+    ob_install_module(shared ${CMAKE_CURRENT_SOURCE_DIR})
+endif()

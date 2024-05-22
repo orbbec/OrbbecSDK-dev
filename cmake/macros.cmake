@@ -198,7 +198,7 @@ macro(ob_add_target_property libname property property_value)
 endmacro()
 
 macro(ob_source_group target)
-    get_target_property(LBS_FILES ${target}  SOURCES)
+    get_target_property(LBS_FILES ${target} SOURCES)
 
     list(APPEND LBS_HEADERS ${LBS_FILES})
     list(APPEND LBS_SOURCES ${LBS_FILES})
@@ -217,6 +217,28 @@ macro(ob_source_group target)
         get_filename_component(_file_path "${_relative_file}" PATH)
         message(STATUS "file path: ${_file_path}:${_relative_file}")
         string(REPLACE "/" "\\" _file_path_msvc "${_file_path}")
-        source_group( "${_file_path_msvc}" FILES "${_relative_file}")
+        source_group("${_file_path_msvc}" FILES "${_relative_file}")
     endforeach()
+endmacro()
+
+macro(ob_install_module module_name public_header_dir)
+    install(
+        TARGETS ${module_name}
+        EXPORT ${module_name}Target
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+
+    install(
+        DIRECTORY ${public_header_dir}/
+        DESTINATION include
+        FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.hpp")
+
+    install(
+        EXPORT ${module_name}Target
+        NAMESPACE ob::
+        DESTINATION lib/cmake/${module_name})
+
 endmacro()

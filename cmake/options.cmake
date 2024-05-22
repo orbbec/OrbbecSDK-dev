@@ -11,3 +11,7 @@ option(BUILD_NET_PORT "build NET source ports" ON)
 option(BUILD_ANDROID "Build Android " OFF)
 option(BUILD_LINUX_ARM64 "Build linux arm64, will use ARM64 toolchains on linux platform " OFF)
 option(BUILD_LINUX_ARM32 "Build linux arm32, will use ARM32 toolchains on linux platform" OFF)
+
+option(INSTALL_MODULE_CORE "Install core module" OFF)
+option(INSTALL_MODULE_SHARED "Install shared module" OFF)
+option(INSTALL_MODULE_FILTER "Install filter module" OFF)

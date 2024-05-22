@@ -58,9 +58,19 @@ OBExtrinsic inverseExtrinsics(const OBExtrinsic &extrinsics) {
     return invExtrinsic;
 }
 
+static std::mutex instanceMutex;
+static std::shared_ptr<StreamExtrinsicsManager> instance;
 std::shared_ptr<StreamExtrinsicsManager> StreamExtrinsicsManager::getInstance() {
-    static std::shared_ptr<StreamExtrinsicsManager> instance = std::shared_ptr<StreamExtrinsicsManager>(new StreamExtrinsicsManager());
+    std::unique_lock<std::mutex> lock(instanceMutex);
+    if(!instance) {
+        instance = std::shared_ptr<StreamExtrinsicsManager>(new StreamExtrinsicsManager());
+    }
     return instance;
+}
+
+void StreamExtrinsicsManager::destroyInstance() {
+    std::unique_lock<std::mutex> lock(instanceMutex);
+    getInstance().reset();
 }
 
 StreamExtrinsicsManager::StreamExtrinsicsManager() : nextId_(0) {}

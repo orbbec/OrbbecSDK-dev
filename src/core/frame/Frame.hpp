@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "IFrameMetadataParser.hpp"
+#include "interface/IFrameMetadataParser.hpp"
 #include "stream/StreamProfile.hpp"
 #include "exception/OBException.hpp"
 

@@ -23,13 +23,10 @@ struct FrameBufferManagerInfoCompare {
 };
 
 class FrameMemoryPool {
-private:
-    FrameMemoryPool();
-
 public:
     ~FrameMemoryPool();
     static std::shared_ptr<FrameMemoryPool> getInstance();
-    static void                             releaseInstance();
+    static void                             destroyInstance();
     static void                             setMaxFrameMemorySize(uint64_t sizeInMB);
     static void                             activateFrameBufferManagerReuse(bool enable);
 
@@ -38,6 +35,9 @@ public:
     std::shared_ptr<IFrameBufferManager> createFrameBufferManager(OBFrameType type, OBFormat format, uint32_t width, uint32_t height);
 
     void freeIdleMemory();
+
+private:
+    FrameMemoryPool();
 
 private:
     std::map<FrameBufferManagerInfo, std::shared_ptr<IFrameBufferManager>, FrameBufferManagerInfoCompare> bufMgrMap_;

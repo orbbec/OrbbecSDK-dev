@@ -12,6 +12,8 @@ namespace core {
 class StreamExtrinsicsManager {
 public:
     static std::shared_ptr<StreamExtrinsicsManager> getInstance();
+    static void destroyInstance();
+
     ~StreamExtrinsicsManager() noexcept;
 
     void registerExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to, const OBExtrinsic &extrinsics);

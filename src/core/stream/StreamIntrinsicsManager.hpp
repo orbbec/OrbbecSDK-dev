@@ -25,6 +25,8 @@ struct StreamProfileWeakPtrCompare {
 class StreamIntrinsicsManager {
 public:
     static std::shared_ptr<StreamIntrinsicsManager> getInstance();
+    static void destroyInstance();
+
     ~StreamIntrinsicsManager() noexcept;
 
     void               registerVideoStreamIntrinsics(std::shared_ptr<const StreamProfile> profile, const OBCameraIntrinsic &intrinsics);

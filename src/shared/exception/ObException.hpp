@@ -4,7 +4,6 @@
 #include <exception>
 #include <typeinfo>
 #include "logger/Logger.hpp"
-#include "openobsdk/hpp/Types.hpp"
 
 namespace ob {
 class ob_exception : public std::exception {

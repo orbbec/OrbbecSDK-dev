@@ -4,9 +4,18 @@
 namespace ob {
 namespace core {
 
+static std::mutex                               instanceMutex;
+static std::shared_ptr<StreamIntrinsicsManager> instance;
 std::shared_ptr<StreamIntrinsicsManager> StreamIntrinsicsManager::getInstance() {
-    static std::shared_ptr<StreamIntrinsicsManager> instance = std::shared_ptr<StreamIntrinsicsManager>(new StreamIntrinsicsManager());
+    std::unique_lock<std::mutex> lock(instanceMutex);
+    if(!instance) {
+        instance = std::shared_ptr<StreamIntrinsicsManager>(new StreamIntrinsicsManager());
+    }
     return instance;
+}
+
+void StreamIntrinsicsManager::destroyInstance() {
+    getInstance().reset();
 }
 
 StreamIntrinsicsManager::StreamIntrinsicsManager() {}
@@ -42,7 +51,7 @@ OBCameraIntrinsic StreamIntrinsicsManager::getVideoStreamIntrinsics(std::shared_
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
-    for(const auto& pair : videoStreamIntrinsics_) {
+    for(const auto &pair: videoStreamIntrinsics_) {
         if(pair.first.lock() == profile) {
             return pair.second;
         }
@@ -80,7 +89,7 @@ OBCameraDistortion StreamIntrinsicsManager::getVideoStreamDistortion(std::shared
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
-    for(const auto& pair : videoStreamDistortion_) {
+    for(const auto &pair: videoStreamDistortion_) {
         if(pair.first.lock() == profile) {
             return pair.second;
         }
@@ -118,7 +127,7 @@ OBGyroIntrinsic StreamIntrinsicsManager::getGyroStreamIntrinsics(std::shared_ptr
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
-    for(const auto& pair : gyroStreamIntrinsics_) {
+    for(const auto &pair: gyroStreamIntrinsics_) {
         if(pair.first.lock() == profile) {
             return pair.second;
         }
@@ -156,7 +165,7 @@ OBAccelIntrinsic StreamIntrinsicsManager::getAccelStreamIntrinsics(std::shared_p
     }
 
     std::lock_guard<std::mutex> lock(mutex_);
-    for(const auto& pair : accelStreamIntrinsics_) {
+    for(const auto &pair: accelStreamIntrinsics_) {
         if(pair.first.lock() == profile) {
             return pair.second;
         }

@@ -5,8 +5,8 @@
 namespace ob {
 namespace core {
 
-std::mutex                       instanceMutex;
-std::shared_ptr<FrameMemoryPool> instance;
+std::mutex                       static instanceMutex;
+std::shared_ptr<FrameMemoryPool> static instance;
 bool                             reuseFrameBufferManager = true;
 
 std::shared_ptr<FrameMemoryPool> FrameMemoryPool::getInstance() {
@@ -17,7 +17,7 @@ std::shared_ptr<FrameMemoryPool> FrameMemoryPool::getInstance() {
     return instance;
 }
 
-void FrameMemoryPool::releaseInstance() {
+void FrameMemoryPool::destroyInstance() {
     std::unique_lock<std::mutex> lk(instanceMutex);
     instance.reset();
 }
@@ -38,9 +38,9 @@ FrameMemoryPool::~FrameMemoryPool() {
     bufMgrMap_.clear();
 }
 
-std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, uint32_t maxDataSize) {
+std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, uint32_t frameBufferSize) {
     std::unique_lock<std::mutex> lock(bufMgrMapMutex_);
-    FrameBufferManagerInfo       info = { type, maxDataSize };
+    FrameBufferManagerInfo       info = { type, frameBufferSize };
 
     if(reuseFrameBufferManager) {
         auto iter = bufMgrMap_.find(info);
@@ -52,39 +52,39 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {
     case OB_FRAME_DEPTH:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<DepthFrame>>(new FrameBufferManager<DepthFrame>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<DepthFrame>>(new FrameBufferManager<DepthFrame>(frameBufferSize));
         LOG_DEBUG("DepthFrame bufferManager created!");
         break;
     case OB_FRAME_IR_LEFT:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<IRLeftFrame>>(new FrameBufferManager<IRLeftFrame>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<IRLeftFrame>>(new FrameBufferManager<IRLeftFrame>(frameBufferSize));
         LOG_DEBUG("IRFrame bufferManager created!");
         break;
     case OB_FRAME_IR_RIGHT:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<IRRightFrame>>(new FrameBufferManager<IRRightFrame>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<IRRightFrame>>(new FrameBufferManager<IRRightFrame>(frameBufferSize));
         LOG_DEBUG("IRFrame bufferManager created!");
         break;
     case OB_FRAME_IR:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<IRFrame>>(new FrameBufferManager<IRFrame>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<IRFrame>>(new FrameBufferManager<IRFrame>(frameBufferSize));
         LOG_DEBUG("IRFrame bufferManager created!");
         break;
     case OB_FRAME_COLOR:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<ColorFrame>>(new FrameBufferManager<ColorFrame>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<ColorFrame>>(new FrameBufferManager<ColorFrame>(frameBufferSize));
         LOG_DEBUG("ColorFrame bufferManager created!");
         break;
     case OB_FRAME_GYRO:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<GyroFrame>>(new FrameBufferManager<GyroFrame>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<GyroFrame>>(new FrameBufferManager<GyroFrame>(frameBufferSize));
         LOG_DEBUG("GyroFrame bufferManager created!");
         break;
     case OB_FRAME_ACCEL:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<AccelFrame>>(new FrameBufferManager<AccelFrame>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<AccelFrame>>(new FrameBufferManager<AccelFrame>(frameBufferSize));
         LOG_DEBUG("AccelFrame bufferManager created!");
         break;
     case OB_FRAME_POINTS:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<PointsFrame>>(new FrameBufferManager<PointsFrame>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<PointsFrame>>(new FrameBufferManager<PointsFrame>(frameBufferSize));
         LOG_DEBUG("PointsFrame bufferManager created!");
         break;
     case OB_FRAME_SET:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<FrameSet>>(new FrameBufferManager<FrameSet>(maxDataSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<FrameSet>>(new FrameBufferManager<FrameSet>(frameBufferSize));
         LOG_DEBUG("Frameset bufferManager created!");
         break;
     default:
@@ -128,8 +128,8 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
 }
 
 std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, OBFormat format, uint32_t width, uint32_t height) {
-    auto maxDataSize = type_helper::calcVideoFrameMaxDataSize(format, width, height);
-    return createFrameBufferManager(type, maxDataSize);
+    auto frameBufferSize = type_helper::calcVideoFrameMaxDataSize(format, width, height);
+    return createFrameBufferManager(type, frameBufferSize);
 }
 
 void FrameMemoryPool::freeIdleMemory() {

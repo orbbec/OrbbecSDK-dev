@@ -4,4 +4,7 @@ This folder contains libraries and headers of a few very popular third-party lib
 
 The libraries included in this folder are:
 
-- spdlog: A very fast and easy-to-use logging library. [(link)](https://github.com/gabime/spdlog)
+| Library | Description | License | Link |
+|---------|-------------|------|---|
+| libusb | A cross-platform library for USB device access | LGPL-2.1 | <https://github.com/libusb/libusb> |
+| spdlog v1.11.0 | A fast C++ logging library | MIT | <https://github.com/gabime/spdlog> |

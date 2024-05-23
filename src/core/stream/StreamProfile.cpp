@@ -4,8 +4,7 @@
 
 #include "frame/Frame.hpp"
 
-namespace libobsensor{
-namespace core {
+namespace libobsensor {
 
 StreamProfile::StreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format) : owner_(owner), type_(type), format_(format){};
 
@@ -92,9 +91,8 @@ std::shared_ptr<StreamProfile> VideoStreamProfile::clone() const {
     return sp;
 }
 
-AccelStreamProfile::AccelStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, OBAccelFullScaleRange fullScaleRange,
-                                       OBAccelSampleRate sampleRate)
-    : StreamProfile{ owner, type, format }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate){};
+AccelStreamProfile::AccelStreamProfile(std::weak_ptr<ISensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate)
+    : StreamProfile{ owner, OB_STREAM_ACCEL, OB_FORMAT_ACCEL }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate){};
 
 OBAccelFullScaleRange AccelStreamProfile::getFullScaleRange() const {
     return fullScaleRange_;
@@ -109,19 +107,18 @@ void AccelStreamProfile::bindIntrinsic(const OBAccelIntrinsic &intrinsic) {
 }
 
 OBAccelIntrinsic AccelStreamProfile::getIntrinsic() const {
-   return StreamIntrinsicsManager::getInstance()->getAccelStreamIntrinsics(shared_from_this());
+    return StreamIntrinsicsManager::getInstance()->getAccelStreamIntrinsics(shared_from_this());
 }
 
 std::shared_ptr<StreamProfile> AccelStreamProfile::clone() const {
-    auto sp = std::make_shared<AccelStreamProfile>(owner_, type_, format_, fullScaleRange_, sampleRate_);
+    auto sp = std::make_shared<AccelStreamProfile>(owner_, fullScaleRange_, sampleRate_);
     sp->bindIntrinsic(getIntrinsic());
     sp->bindSameExtrinsicTo(shared_from_this());
     return sp;
 }
 
-GyroStreamProfile::GyroStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, OBGyroFullScaleRange fullScaleRange,
-                                     OBGyroSampleRate sampleRate)
-    : StreamProfile{ owner, type, format }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate){};
+GyroStreamProfile::GyroStreamProfile(std::weak_ptr<ISensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate)
+    : StreamProfile{ owner, OB_STREAM_GYRO, OB_FORMAT_GYRO }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate){};
 
 OBGyroFullScaleRange GyroStreamProfile::getFullScaleRange() const {
     return fullScaleRange_;
@@ -140,7 +137,7 @@ OBGyroIntrinsic GyroStreamProfile::getIntrinsic() const {
 }
 
 std::shared_ptr<StreamProfile> GyroStreamProfile::clone() const {
-    auto sp = std::make_shared<GyroStreamProfile>(owner_, type_, format_, fullScaleRange_, sampleRate_);
+    auto sp = std::make_shared<GyroStreamProfile>(owner_, fullScaleRange_, sampleRate_);
     sp->bindIntrinsic(getIntrinsic());
     sp->bindSameExtrinsicTo(shared_from_this());
     return sp;
@@ -196,5 +193,4 @@ std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(con
     return matchProfileList;
 }
 
-}  // namespace core
-}  // namespace ob
+}  // namespace libobsensor

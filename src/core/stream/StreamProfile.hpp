@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace libobsensor{
-namespace core {
+
 class ISensor;
 
 class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
@@ -72,7 +72,7 @@ protected:
 
 class AccelStreamProfile : public StreamProfile {
 public:
-    AccelStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
+    AccelStreamProfile(std::weak_ptr<ISensor> owner,  OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
 
     OBAccelFullScaleRange          getFullScaleRange() const;
     OBAccelSampleRate              getSampleRate() const;
@@ -87,7 +87,7 @@ protected:
 
 class GyroStreamProfile : public StreamProfile {
 public:
-    GyroStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
+    GyroStreamProfile(std::weak_ptr<ISensor> owner,  OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
 
     OBGyroFullScaleRange           getFullScaleRange() const;
     OBGyroSampleRate               getSampleRate() const;
@@ -132,5 +132,5 @@ std::vector<std::shared_ptr<const AccelStreamProfile>> matchAccelStreamProfile(c
 std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(const StreamProfileList &profileList, OBGyroFullScaleRange fullScaleRange,
                                                                              OBGyroSampleRate sampleRate);
 
-}//namespace core
+
 }//namespace ob

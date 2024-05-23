@@ -1,7 +1,7 @@
 #include "CoreTypeHelper.hpp"
 #include "exception/ObException.hpp"
 
-namespace libobsensor{
+namespace libobsensor {
 namespace type_helper {
 
 uint32_t getBytesPerPixel(OBFormat format) {
@@ -115,5 +115,57 @@ uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t hei
     return maxFrameDataSize;
 }
 
+OBFrameType mapStreamTypeToFrameType(OBStreamType type) {
+    switch(type) {
+    case OB_STREAM_VIDEO:
+        return OB_FRAME_VIDEO;
+    case OB_STREAM_IR:
+        return OB_FRAME_IR;
+    case OB_STREAM_COLOR:
+        return OB_FRAME_COLOR;
+    case OB_STREAM_DEPTH:
+        return OB_FRAME_DEPTH;
+    case OB_STREAM_ACCEL:
+        return OB_FRAME_ACCEL;
+    case OB_STREAM_GYRO:
+        return OB_FRAME_GYRO;
+    case OB_STREAM_IR_LEFT:
+        return OB_FRAME_IR_LEFT;
+    case OB_STREAM_IR_RIGHT:
+        return OB_FRAME_IR_RIGHT;
+    case OB_STREAM_RAW_PHASE:
+        return OB_FRAME_RAW_PHASE;
+    default:
+        break;
+    }
+    return OB_FRAME_UNKNOWN;
+}
+
+OBStreamType mapFrameTypeToStreamType(OBFrameType type) {
+    switch(type) {
+    case OB_FRAME_VIDEO:
+        return OB_STREAM_VIDEO;
+    case OB_FRAME_IR:
+        return OB_STREAM_IR;
+    case OB_FRAME_COLOR:
+        return OB_STREAM_COLOR;
+    case OB_FRAME_DEPTH:
+        return OB_STREAM_DEPTH;
+    case OB_FRAME_ACCEL:
+        return OB_STREAM_ACCEL;
+    case OB_FRAME_GYRO:
+        return OB_STREAM_GYRO;
+    case OB_FRAME_IR_LEFT:
+        return OB_STREAM_IR_LEFT;
+    case OB_FRAME_IR_RIGHT:
+        return OB_STREAM_IR_RIGHT;
+    case OB_FRAME_RAW_PHASE:
+        return OB_STREAM_RAW_PHASE;
+    default:
+        break;
+    }
+    return OB_STREAM_UNKNOWN;
+}
+
 }  // namespace type_helper
-}  // namespace ob
+}  // namespace libobsensor

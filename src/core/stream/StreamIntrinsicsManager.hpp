@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace libobsensor{
-namespace core {
+
 
 struct StreamProfileWeakPtrCompare {
     bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
@@ -50,5 +50,5 @@ private:
     std::mutex mutex_;
 };
 
-}  // namespace core
+
 }  // namespace ob

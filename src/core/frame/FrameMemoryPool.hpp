@@ -5,12 +5,11 @@
 #include <string>
 #include "FrameBufferManager.hpp"
 
-namespace libobsensor{
-namespace core {
+namespace libobsensor {
 
 struct FrameBufferManagerInfo {
     OBFrameType frameType;
-    uint32_t    maxFrameDataSize;
+    size_t      maxFrameDataSize;
 };
 
 struct FrameBufferManagerInfoCompare {
@@ -30,7 +29,7 @@ public:
     static void                             setMaxFrameMemorySize(uint64_t sizeInMB);
     static void                             activateFrameBufferManagerReuse(bool enable);
 
-    std::shared_ptr<IFrameBufferManager> createFrameBufferManager(OBFrameType type, uint32_t maxDataSize);
+    std::shared_ptr<IFrameBufferManager> createFrameBufferManager(OBFrameType type, size_t frameBufferSize);
     std::shared_ptr<IFrameBufferManager> createFrameBufferManager(OBFrameType type, std::shared_ptr<const StreamProfile> streamProfile);
     std::shared_ptr<IFrameBufferManager> createFrameBufferManager(OBFrameType type, OBFormat format, uint32_t width, uint32_t height);
 
@@ -45,5 +44,4 @@ private:
     std::vector<std::weak_ptr<IFrameBufferManager>>                                                       bufMgrWeakList_;
 };
 
-}  // namespace core
-}  // namespace ob
+}  // namespace libobsensor

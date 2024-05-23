@@ -14,7 +14,7 @@
 #include <typeinfo>
 
 namespace libobsensor{
-namespace core {
+
 
 class FrameSet;
 class PointsFrame;
@@ -25,18 +25,18 @@ class IRFrame;
 class AccelFrame;
 class GyroFrame;
 
-using FrameBufferReclaim = std::function<void(void)>;
+using FrameBufferReclaimFunc = std::function<void(void)>;
 
 class Frame : public std::enable_shared_from_this<Frame> {
 public:
-    Frame(uint8_t *data, uint32_t dataBufSize, OBFrameType type, FrameBufferReclaim customBufferReclaim = nullptr);
+    Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     virtual ~Frame() noexcept;
 
     OBFrameType getType();
 
-    uint32_t       getNumber() const;
-    void           setNumber(const uint32_t number);
-    uint32_t       getDataSize() const;
+    uint64_t       getNumber() const;
+    void           setNumber(const uint64_t number);
+    size_t       getDataSize() const;
     const uint8_t *getData() const;
     void           updateData(const uint8_t *data, uint32_t dataSize);
     uint64_t       getTimeStampUsec() const;
@@ -46,7 +46,7 @@ public:
     uint64_t       getGlobalTimeStampUsec() const;
     void           setGlobalTimeStampUsec(uint64_t ts);
 
-    uint32_t       getMetadataSize() const;
+    size_t       getMetadataSize() const;
     void           updateMetadata(const uint8_t *metadata, uint32_t metadataSize);
     const uint8_t *getMetadata() const;
 
@@ -70,15 +70,15 @@ public:
     }
 
 protected:
-    uint32_t getDataBufSize() const;
+    size_t getDataBufSize() const;
 
 protected:
-    uint32_t                                       dataSize_            = 0;
-    uint32_t                                       number_              = 0;
+    size_t                                       dataSize_            = 0;
+    uint64_t                                       number_              = 0;
     uint64_t                                       timeStampUsec_       = 0;
     uint64_t                                       systemTimeStampUsec_ = 0;
     uint64_t                                       globalTimeStampUsec_ = 0;
-    uint32_t                                       metadataSize_        = 0;
+    size_t                                       metadataSize_        = 0;
     uint8_t                                        metadata_[256];
     std::shared_ptr<IFrameMetadataParserContainer> metadataPhasers_ = nullptr;
     std::shared_ptr<const StreamProfile>           streamProfile_   = nullptr;
@@ -87,13 +87,13 @@ protected:
 
 private:
     uint8_t const     *frameData_;
-    const uint32_t     dataBufSize_;
-    FrameBufferReclaim customBufferReclaim_;
+    const size_t     dataBufSize_;
+    FrameBufferReclaimFunc bufferReclaimFunc_;
 };
 
 class VideoFrame : public Frame {
 public:
-    VideoFrame(uint8_t *data, uint32_t dataBufSize, OBFrameType type, FrameBufferReclaim customBufferReclaim = nullptr);
+    VideoFrame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 
     uint32_t getWidth() const;
     uint32_t getHeight() const;
@@ -114,12 +114,12 @@ protected:
 
 class ColorFrame : public VideoFrame {
 public:
-    ColorFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
+    ColorFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 };
 
 class DepthFrame : public VideoFrame {
 public:
-    DepthFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
+    DepthFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 
     void  setValueScale(float valueScale);
     float getValueScale() const;
@@ -132,22 +132,22 @@ private:
 
 class IRFrame : public VideoFrame {
 public:
-    IRFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr, OBFrameType frameType = OB_FRAME_IR);
+    IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr, OBFrameType frameType = OB_FRAME_IR);
 };
 
 class IRLeftFrame : public IRFrame {
 public:
-    IRLeftFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
+    IRLeftFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 };
 
 class IRRightFrame : public IRFrame {
 public:
-    IRRightFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
+    IRRightFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 };
 
 class PointsFrame : public Frame {
 public:
-    PointsFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
+    PointsFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 
     void  setCoordinateValueScale(float valueScale);
     float getCoordinateValueScale() const;
@@ -164,7 +164,7 @@ public:
     } OBAccelFrameData;
 
 public:
-    AccelFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
+    AccelFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 
     OBAccelValue value();
     float        temperature();
@@ -178,7 +178,7 @@ public:
     } OBGyroFrameData;
 
 public:
-    GyroFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
+    GyroFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 
     OBGyroValue value();
     float       temperature();
@@ -188,7 +188,7 @@ class FrameSet : public Frame {
     typedef std::function<bool(void *)> ForeachBack;
 
 public:
-    FrameSet(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim = nullptr);
+    FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     ~FrameSet() noexcept;
 
     uint32_t getFrameCount();
@@ -240,5 +240,5 @@ template <typename T> bool Frame::is() {
     return false;
 }
 
-}  // namespace core
+
 }  // namespace ob

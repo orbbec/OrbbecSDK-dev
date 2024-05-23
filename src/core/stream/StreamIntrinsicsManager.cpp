@@ -2,7 +2,7 @@
 #include "logger/Logger.hpp"
 
 namespace libobsensor{
-namespace core {
+
 
 static std::mutex                               instanceMutex;
 static std::shared_ptr<StreamIntrinsicsManager> instance;
@@ -173,5 +173,5 @@ OBAccelIntrinsic StreamIntrinsicsManager::getAccelStreamIntrinsics(std::shared_p
     throw invalid_value_exception("Intrinsics for the input stream profile is not found.");
 }
 
-}  // namespace core
+
 }  // namespace ob

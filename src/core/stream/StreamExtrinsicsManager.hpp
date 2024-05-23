@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace libobsensor{
-namespace core {
+
 
 class StreamExtrinsicsManager {
 public:
@@ -41,5 +41,5 @@ private:
     std::recursive_mutex mutex_;
 };
 
-}  // namespace core
+
 }  // namespace ob

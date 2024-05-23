@@ -5,13 +5,12 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-#include "Frame.hpp"
+#include "frame/Frame.hpp"
 #include "logger/Logger.hpp"
 
 #define FRAME_DATA_ALIGN_IN_BYTE 16  // 16-byte alignment
 
-namespace libobsensor{
-namespace core {
+namespace libobsensor {
 
 class FrameMemoryAllocator {
 public:
@@ -36,7 +35,7 @@ public:
     virtual void                   reclaimBuffer(void *buffer) = 0;
     virtual std::shared_ptr<Frame> acquireFrame()              = 0;
     virtual void                   releaseIdleBuffer()         = 0;
-    virtual uint32_t               getFrameDataBufferSize()    = 0;
+    virtual size_t                 getFrameDataBufferSize()    = 0;
 };
 
 inline double byteToMB(uint64_t sizeInByte) {
@@ -45,12 +44,12 @@ inline double byteToMB(uint64_t sizeInByte) {
 
 class FrameBufferManagerBase : public IFrameBufferManager {
 public:
-    FrameBufferManagerBase(uint32_t frameDataBufferSize, uint32_t frameObjSize);
+    FrameBufferManagerBase(size_t frameDataBufferSize, size_t frameObjSize);
 
     virtual ~FrameBufferManagerBase() noexcept;
-    virtual void     reclaimBuffer(void *buffer) override;
-    virtual void     releaseIdleBuffer() override;
-    virtual uint32_t getFrameDataBufferSize() override {
+    void   reclaimBuffer(void *buffer) override;
+    void   releaseIdleBuffer() override;
+    size_t getFrameDataBufferSize() override {
         return frameDataBufferSize_;
     }
 
@@ -63,9 +62,9 @@ protected:
 
 protected:
     std::recursive_mutex mutex_;
-    uint32_t             frameDataBufferSize_;
-    uint32_t             frameObjSize_;
-    uint32_t             frameTotalSize_;
+    size_t               frameDataBufferSize_;
+    size_t               frameObjSize_;
+    size_t               frameTotalSize_;
 
 private:
     std::vector<uint8_t *> availableFrameBuffers_;
@@ -75,7 +74,7 @@ class FrameMemoryPool;
 template <typename T> class FrameBufferManager : public FrameBufferManagerBase, public std::enable_shared_from_this<FrameBufferManager<T>> {
 private:
     // Must be created through FrameMemoryPool to ensure that all FrameBufferManager objects are managed by FrameMemoryPool
-    FrameBufferManager(uint32_t frameDataBufferSize) : FrameBufferManagerBase(frameDataBufferSize, sizeof(T)) {
+    FrameBufferManager(size_t frameDataBufferSize) : FrameBufferManagerBase(frameDataBufferSize, sizeof(T)) {
         LOG_DEBUG("FrameBufferManager created! frame type:{0}, obj addr:0x{1:x}, frame obj total size:{2:.3f}MB", typeid(T).name(), uint64_t(this),
                   byteToMB(frameTotalSize_));
     }
@@ -115,5 +114,5 @@ public:
         return nullptr;
     }
 };
-}  // namespace core
-}  // namespace ob
+
+}  // namespace libobsensor

@@ -4,7 +4,7 @@
 #include "utils/StringUtils.hpp"
 
 namespace libobsensor{
-namespace core {
+
 
 const OBExtrinsic IdentityExtrinsic = { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
 
@@ -389,5 +389,5 @@ public:
 static unit_test_extrinsics_manager ut;
 #endif
 
-}  // namespace core
+
 }  // namespace ob

@@ -3,7 +3,7 @@
 #include <sstream>
 
 namespace libobsensor{
-namespace core {
+
 
 std::mutex                       static instanceMutex;
 std::shared_ptr<FrameMemoryPool> static instance;
@@ -38,7 +38,7 @@ FrameMemoryPool::~FrameMemoryPool() {
     bufMgrMap_.clear();
 }
 
-std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, uint32_t frameBufferSize) {
+std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, size_t frameBufferSize) {
     std::unique_lock<std::mutex> lock(bufMgrMapMutex_);
     FrameBufferManagerInfo       info = { type, frameBufferSize };
 
@@ -158,5 +158,5 @@ void FrameMemoryPool::freeIdleMemory() {
     }
 }
 
-}  // namespace core
+
 }  // namespace ob

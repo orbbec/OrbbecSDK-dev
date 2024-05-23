@@ -10,8 +10,8 @@ namespace libobsensor{
 class IFrameMetadataParser {
 public:
     virtual ~IFrameMetadataParser()                                   = default;
-    virtual int64_t getValue(const uint8_t *metadata, uint32_t dataSize)    = 0;
-    virtual bool    isSupported(const uint8_t *metadata, uint32_t dataSize) = 0;
+    virtual int64_t getValue(const uint8_t *metadata, size_t dataSize)    = 0;
+    virtual bool    isSupported(const uint8_t *metadata, size_t dataSize) = 0;
 };
 
 class IFrameMetadataParserContainer {

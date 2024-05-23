@@ -5,7 +5,7 @@
 #include <queue>
 
 namespace libobsensor{
-namespace core {
+
 
 class FrameQueue : public std::enable_shared_from_this<FrameQueue> {
 public:
@@ -38,5 +38,5 @@ private:
     std::atomic<bool>                           flushing_;
 };
 
-}  // namespace core
+
 }  // namespace ob

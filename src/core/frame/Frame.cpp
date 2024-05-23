@@ -2,15 +2,14 @@
 #include "logger/Logger.hpp"
 #include "utils/StringUtils.hpp"
 
-namespace libobsensor{
-namespace core {
+namespace libobsensor {
 
-Frame::Frame(uint8_t *data, uint32_t dataBufSize, OBFrameType type, FrameBufferReclaim customBufferReclaim)
-    : frameData_(data), dataBufSize_(dataBufSize), type_(type), customBufferReclaim_(customBufferReclaim) {}
+Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
+    : frameData_(data), dataBufSize_(dataBufSize), type_(type), bufferReclaimFunc_(bufferReclaimFunc) {}
 
 Frame::~Frame() noexcept {
-    if(customBufferReclaim_) {
-        customBufferReclaim_();
+    if(bufferReclaimFunc_) {
+        bufferReclaimFunc_();
     }
     else {
         delete[] frameData_;
@@ -28,15 +27,15 @@ OBFormat Frame::getFormat() const {
     return streamProfile_->getFormat();
 }
 
-uint32_t Frame::getNumber() const {
+uint64_t Frame::getNumber() const {
     return number_;
 }
 
-void Frame::setNumber(const uint32_t number) {
+void Frame::setNumber(const uint64_t number) {
     number_ = number;
 }
 
-uint32_t Frame::getDataSize() const {
+size_t Frame::getDataSize() const {
     return dataSize_;
 }
 
@@ -166,7 +165,7 @@ void VideoFrame::setStride(uint32_t stride) {
     stride_ = stride;
 }
 
-uint32_t Frame::getMetadataSize() const {
+size_t Frame::getMetadataSize() const {
     return metadataSize_;
 }
 
@@ -231,12 +230,12 @@ void Frame::copyInfo(const std::shared_ptr<Frame> sourceFrame) {
     metadataPhasers_ = sourceFrame->metadataPhasers_;
 }
 
-uint32_t Frame::getDataBufSize() const {
+size_t Frame::getDataBufSize() const {
     return dataBufSize_;
 }
 
-VideoFrame::VideoFrame(uint8_t *data, uint32_t dataBufSize, OBFrameType type, FrameBufferReclaim customBufferReclaim)
-    : Frame(data, dataBufSize, type, customBufferReclaim), availableBitSize_(0) {}
+VideoFrame::VideoFrame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
+    : Frame(data, dataBufSize, type, bufferReclaimFunc), availableBitSize_(0) {}
 
 uint8_t VideoFrame::getPixelAvailableBitSize() const {
     if(availableBitSize_ == 0) {
@@ -253,17 +252,17 @@ void VideoFrame::setPixelAvailableBitSize(uint8_t bitSize) {
 void VideoFrame::copyInfo(std::shared_ptr<Frame> sourceFrame) {
     Frame::copyInfo(sourceFrame);
     if(sourceFrame->is<VideoFrame>()) {
-        auto vf = sourceFrame->as<VideoFrame>();
+        auto vf           = sourceFrame->as<VideoFrame>();
         availableBitSize_ = vf->availableBitSize_;
-        stride_ = vf->stride_;
+        stride_           = vf->stride_;
     }
 }
 
-ColorFrame::ColorFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
-    : VideoFrame(data, dataBufSize, OB_FRAME_COLOR, customBufferReclaim) {}
+ColorFrame::ColorFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : VideoFrame(data, dataBufSize, OB_FRAME_COLOR, bufferReclaimFunc) {}
 
-DepthFrame::DepthFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
-    : VideoFrame(data, dataBufSize, OB_FRAME_DEPTH, customBufferReclaim), valueScale_(1.0f) {}
+DepthFrame::DepthFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : VideoFrame(data, dataBufSize, OB_FRAME_DEPTH, bufferReclaimFunc), valueScale_(1.0f) {}
 
 void DepthFrame::setValueScale(float valueScale) {
     valueScale_ = valueScale;
@@ -280,17 +279,17 @@ void DepthFrame::copyInfo(std::shared_ptr<Frame> sourceFrame) {
     }
 }
 
-IRFrame::IRFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim, OBFrameType frameType)
-    : VideoFrame(data, dataBufSize, frameType, customBufferReclaim) {}
+IRFrame::IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc, OBFrameType frameType)
+    : VideoFrame(data, dataBufSize, frameType, bufferReclaimFunc) {}
 
-IRLeftFrame::IRLeftFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
-    : IRFrame(data, dataBufSize, customBufferReclaim, OB_FRAME_IR_LEFT) {}
+IRLeftFrame::IRLeftFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : IRFrame(data, dataBufSize, bufferReclaimFunc, OB_FRAME_IR_LEFT) {}
 
-IRRightFrame::IRRightFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
-    : IRFrame(data, dataBufSize, customBufferReclaim, OB_FRAME_IR_RIGHT) {}
+IRRightFrame::IRRightFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : IRFrame(data, dataBufSize, bufferReclaimFunc, OB_FRAME_IR_RIGHT) {}
 
-PointsFrame::PointsFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
-    : Frame(data, dataBufSize, OB_FRAME_POINTS, customBufferReclaim) {}
+PointsFrame::PointsFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : Frame(data, dataBufSize, OB_FRAME_POINTS, bufferReclaimFunc) {}
 
 void PointsFrame::setCoordinateValueScale(float valueScale) {
     coordValueScale_ = valueScale;
@@ -300,8 +299,8 @@ float PointsFrame::getCoordinateValueScale() const {
     return coordValueScale_;
 }
 
-AccelFrame::AccelFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
-    : Frame(data, dataBufSize, OB_FRAME_ACCEL, customBufferReclaim) {}
+AccelFrame::AccelFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : Frame(data, dataBufSize, OB_FRAME_ACCEL, bufferReclaimFunc) {}
 
 OBAccelValue AccelFrame::value() {
     return *(OBAccelValue *)getData();
@@ -311,8 +310,8 @@ float AccelFrame::temperature() {
     return ((OBAccelFrameData *)getData())->temp;
 }
 
-GyroFrame::GyroFrame(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim)
-    : Frame(data, dataBufSize, OB_FRAME_GYRO, customBufferReclaim) {}
+GyroFrame::GyroFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : Frame(data, dataBufSize, OB_FRAME_GYRO, bufferReclaimFunc) {}
 
 OBGyroValue GyroFrame ::value() {
     return *(OBGyroValue *)getData();
@@ -322,8 +321,7 @@ float GyroFrame ::temperature() {
     return ((OBGyroFrameData *)getData())->temp;
 }
 
-
-FrameSet::FrameSet(uint8_t *data, uint32_t dataBufSize, FrameBufferReclaim customBufferReclaim) : Frame(data, dataBufSize, OB_FRAME_SET, customBufferReclaim) {}
+FrameSet::FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc) : Frame(data, dataBufSize, OB_FRAME_SET, bufferReclaimFunc) {}
 
 FrameSet::~FrameSet() {
     clearAllFrame();
@@ -491,5 +489,4 @@ void FrameSet::foreachFrame(ForeachBack foreachBack) {
     }
 }
 
-}  // namespace core
-}  // namespace ob
+}  // namespace libobsensor

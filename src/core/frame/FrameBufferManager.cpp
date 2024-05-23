@@ -5,7 +5,7 @@
 #include "logger/Logger.hpp"
 
 namespace libobsensor{
-namespace core {
+
 
 #define DEFAULT_MAX_FRAME_MEMORY_SIZE ((uint64_t)2 * 1024 * 1024 * 1024)  // 2GB
 
@@ -62,7 +62,7 @@ void FrameMemoryAllocator::deallocate(uint8_t *ptr, size_t size) {
               byteToMB(maxSize_));
 }
 
-FrameBufferManagerBase::FrameBufferManagerBase(uint32_t frameDataBufferSize, uint32_t frameObjSize)
+FrameBufferManagerBase::FrameBufferManagerBase(size_t frameDataBufferSize, size_t frameObjSize)
     : frameDataBufferSize_(frameDataBufferSize), frameObjSize_(frameObjSize) {
     frameTotalSize_ = frameDataBufferSize_ + frameObjSize_ + FRAME_DATA_ALIGN_IN_BYTE - 1;  // 多申请FRAME_DATA_ALIGN_IN_BYTE-1, 方便偏移数据部分地址，实现对齐
 }
@@ -126,5 +126,5 @@ void FrameBufferManagerBase::releaseIdleBuffer() {
     }
 }
 
-}  // namespace core
+
 }  // namespace ob

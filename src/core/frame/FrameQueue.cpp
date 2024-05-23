@@ -1,7 +1,7 @@
 #include "FrameQueue.hpp"
 
 namespace libobsensor{
-namespace core {
+
 FrameQueue::FrameQueue(size_t capacity) : capacity_(capacity), stoped_(false), flushing_(false), callback_(nullptr) {}
 
 FrameQueue::~FrameQueue() noexcept {
@@ -103,5 +103,5 @@ void FrameQueue::clear() {
     stoped_   = false;
 }
 
-}  // namespace core
+
 }  // namespace ob

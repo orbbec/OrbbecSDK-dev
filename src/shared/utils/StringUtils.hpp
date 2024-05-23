@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-namespace ob {
+namespace libobsensor{
 namespace utils {
 
 struct to_string {

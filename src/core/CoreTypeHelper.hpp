@@ -2,7 +2,7 @@
 
 #include "openobsdk/h/ObTypes.h"
 
-namespace ob {
+namespace libobsensor{
 namespace type_helper {
 
 uint32_t getBytesPerPixel(OBFormat format);

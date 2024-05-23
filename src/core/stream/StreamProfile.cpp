@@ -4,7 +4,7 @@
 
 #include "frame/Frame.hpp"
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 StreamProfile::StreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format) : owner_(owner), type_(type), format_(format){};

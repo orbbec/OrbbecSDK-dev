@@ -5,7 +5,7 @@
 #include <typeinfo>
 #include "logger/Logger.hpp"
 
-namespace ob {
+namespace libobsensor{
 class ob_exception : public std::exception {
 public:
     const char *get_message() const noexcept {

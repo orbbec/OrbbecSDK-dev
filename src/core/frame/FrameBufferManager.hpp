@@ -10,7 +10,7 @@
 
 #define FRAME_DATA_ALIGN_IN_BYTE 16  // 16-byte alignment
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 class FrameMemoryAllocator {

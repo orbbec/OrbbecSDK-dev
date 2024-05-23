@@ -2,7 +2,7 @@
 #include "CoreTypeHelper.hpp"
 #include <sstream>
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 std::mutex                       static instanceMutex;

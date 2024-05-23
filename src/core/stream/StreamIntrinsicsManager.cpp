@@ -1,7 +1,7 @@
 #include "StreamIntrinsicsManager.hpp"
 #include "logger/Logger.hpp"
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 static std::mutex                               instanceMutex;

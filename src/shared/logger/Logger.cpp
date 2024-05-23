@@ -21,7 +21,7 @@ std::map<std::string, std::shared_ptr<ObLogIntvlRecord>> logIntvlRecordMap;
 std::mutex                                               logIntvlRecordMapMtx;
 bool                                                     logIntvlRecordMapDestroyed(false);
 
-namespace ob {
+namespace libobsensor{
 
 const std::map<OBLogSeverity, spdlog::level::level_enum> OBLogSeverityToSpdlogLevel = {
 #ifdef _DEBUG

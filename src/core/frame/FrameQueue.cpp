@@ -1,6 +1,6 @@
 #include "FrameQueue.hpp"
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 FrameQueue::FrameQueue(size_t capacity) : capacity_(capacity), stoped_(false), flushing_(false), callback_(nullptr) {}
 

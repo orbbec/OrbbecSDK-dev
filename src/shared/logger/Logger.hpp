@@ -26,7 +26,7 @@
 #include <spdlog/fmt/ostr.h>
 #include <openobsdk/h/ObTypes.h>
 
-namespace ob {
+namespace libobsensor{
 typedef std::function<void(OBLogSeverity severity, const std::string &logMsg)> LogCallback;
 
 void setGlobalLogSeverity(OBLogSeverity severity);

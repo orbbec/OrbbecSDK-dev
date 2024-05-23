@@ -13,7 +13,7 @@
 #include <vector>
 #include <typeinfo>
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 class FrameSet;

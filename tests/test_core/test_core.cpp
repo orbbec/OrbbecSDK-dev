@@ -3,12 +3,13 @@
 #include "CoreTypeHelper.hpp"
 #include "logger/Logger.hpp"
 
-using namespace ob::core;
+using namespace libobsensor;
+using namespace libobsensor::core;
 int main(int argc, char **argv) {
-    ob::type_helper::unusedVar(argc);
-    ob::type_helper::unusedVar(argv);
+    type_helper::unusedVar(argc);
+    type_helper::unusedVar(argv);
 
-    auto logger                  = ob::Logger();
+    auto logger                  = Logger();
     logger.setLogSeverity(OB_LOG_SEVERITY_DEBUG);
     auto frameMemoryPool         = FrameMemoryPool::getInstance();
     auto depthFrameBufferManager = frameMemoryPool->createFrameBufferManager(OB_FRAME_DEPTH, 640 * 480 * 2);

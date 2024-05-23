@@ -4,7 +4,7 @@
 
 #include <queue>
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 class FrameQueue : public std::enable_shared_from_this<FrameQueue> {

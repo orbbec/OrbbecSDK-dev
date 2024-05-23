@@ -4,7 +4,7 @@
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 #define DEFAULT_MAX_FRAME_MEMORY_SIZE ((uint64_t)2 * 1024 * 1024 * 1024)  // 2GB

@@ -5,7 +5,7 @@
 
 #include <openobsdk/h/ObTypes.h>
 
-namespace ob {
+namespace libobsensor{
 
 class IFrameMetadataParser {
 public:

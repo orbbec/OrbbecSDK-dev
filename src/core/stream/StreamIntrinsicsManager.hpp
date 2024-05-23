@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 struct StreamProfileWeakPtrCompare {

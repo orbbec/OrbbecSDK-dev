@@ -3,7 +3,7 @@
 #include "exception/OBException.hpp"
 #include "utils/StringUtils.hpp"
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 const OBExtrinsic IdentityExtrinsic = { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };

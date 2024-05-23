@@ -2,7 +2,7 @@
 #include "logger/Logger.hpp"
 #include "utils/StringUtils.hpp"
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 Frame::Frame(uint8_t *data, uint32_t dataBufSize, OBFrameType type, FrameBufferReclaim customBufferReclaim)

@@ -5,7 +5,7 @@
 #include <string>
 #include "FrameBufferManager.hpp"
 
-namespace ob {
+namespace libobsensor{
 namespace core {
 
 struct FrameBufferManagerInfo {

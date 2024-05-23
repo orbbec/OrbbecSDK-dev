@@ -1,7 +1,7 @@
 #include "CoreTypeHelper.hpp"
 #include "exception/ObException.hpp"
 
-namespace ob {
+namespace libobsensor{
 namespace type_helper {
 
 uint32_t getBytesPerPixel(OBFormat format) {

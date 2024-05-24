@@ -3,8 +3,8 @@
 
 #include "frame/Frame.hpp"
 #include "stream/StreamProfile.hpp"
-#include "interface/ISensor.hpp"
-#include "interface/IDevice.hpp"
+#include "ISensor.hpp"
+#include "IDevice.hpp"
 
 #include "utils/StringUtils.hpp"
 

@@ -28,7 +28,7 @@ else(UNIX)
     include(cmake/linux_config.cmake)
 endif()
 
-# configure global settings: install rules, global variables, etc.
+# configure global settings: install rules, output directories, global variables, etc.
 include(cmake/global_config.cmake)
 
 # configure global directories variables

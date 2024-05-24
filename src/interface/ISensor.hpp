@@ -28,7 +28,7 @@ public:
     virtual StreamProfileList                    getStreamProfileList()    = 0;
     virtual std::shared_ptr<const StreamProfile> getCurrentStreamProfile() = 0;
 
-    // device切换相机深度模式时sensor也需要处理相关工作
+    // When the device switches the camera depth mode, the sensor also needs to handle related work.
     virtual void handleDepthAlgModeChanged() = 0;
     virtual void handleDeviceDetached()      = 0;
 

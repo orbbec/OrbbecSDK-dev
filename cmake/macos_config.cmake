@@ -19,9 +19,6 @@ message(STATUS "linux version ${LINUX_KERNEL_VERSION}")
 add_definitions(-DOS_MACOS)
 
 if(NOT IOS)
-  message(
-    "!!!!!!!!!!!!!!!!!!!!!!!!CMAKE_OSX_ARCHITECTURES:${CMAKE_OSX_ARCHITECTURES}"
-  )
   if(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15)
     add_definitions(-DOS_MACOS_X64)

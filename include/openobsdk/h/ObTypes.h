@@ -9,28 +9,12 @@
 #pragma once
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
 #ifdef OB_EXPORTS
-#define OB_EXTENSION_API __declspec(dllexport)
-#define OB_EXTENSION_INTERNAL_API __declspec(dllexport)
-#elif defined(OB2_EXPORTS)
-#define OB_EXTENSION_API __declspec(dllexport)
-#define OB_EXTENSION_INTERNAL_API
+#define OB_API __declspec(dllexport)
 #else
-#ifndef OB_STATIC
-#define OB_EXTENSION_API __declspec(dllimport)
-#define OB_EXTENSION_INTERNAL_API __declspec(dllimport)
-#else
-#define OB_EXTENSION_API
-#define OB_EXTENSION_INTERNAL_API
-#endif
+#define OB_API
 #endif
 #else
-#ifndef OB_STATIC
-#define OB_EXTENSION_API __attribute__((visibility("default")))
-#define OB_EXTENSION_INTERNAL_API __attribute__((visibility("default")))
-#else
-#define OB_EXTENSION_API
-#define OB_EXTENSION_INTERNAL_API
-#endif
+#define OB_API
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)

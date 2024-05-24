@@ -8,16 +8,16 @@ project(
     VERSION 0.0.1
     LANGUAGES CXX C)
 
-# install prefix
-set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
-
-# set project options
+# load project options
 include(cmake/options.cmake)
 
-# include macros
+# load macros
 include(cmake/macros.cmake)
 
-# configure platform-specific settings
+# set compiler flags
+include(cmake/compiler_flags.cmake)
+
+# configure platform-specific settings（contains platform-specific compiler flags）
 if(ANDROID_NDK_TOOLCHAIN_INCLUDED)
     include(cmake/android_config.cmake)
 elseif(WIN32)
@@ -28,51 +28,29 @@ else(UNIX)
     include(cmake/linux_config.cmake)
 endif()
 
-# set output directories
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release")
-endif()
+# configure global settings: install rules, global variables, etc.
+include(cmake/global_config.cmake)
 
-string(TOLOWER ${CMAKE_BUILD_TYPE} OB_BUILD_TYPE)
-set(OB_OUTPUT_DIRECTORY_ROOT ${CMAKE_BINARY_DIR}/${OB_CURRENT_OS}/${OB_BUILD_TYPE})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OB_OUTPUT_DIRECTORY_ROOT}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OB_OUTPUT_DIRECTORY_ROOT}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OB_OUTPUT_DIRECTORY_ROOT}/bin)
-if(MSVC)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-        "${OB_OUTPUT_DIRECTORY_ROOT}/lib"
-        CACHE PATH "Archive directory" FORCE)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/${OB_CURRENT_OS}/debug/bin")
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/${OB_CURRENT_OS}/release/bin")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/${OB_CURRENT_OS}/debug/lib")
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/${OB_CURRENT_OS}/release/lib")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/${OB_CURRENT_OS}/debug/lib")
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/${OB_CURRENT_OS}/release/lib")
-endif()
-
-include(cmake/compiler_flags.cmake)
-
-# set include directories
-set(OB_PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
-set(OB_UTILS_DIR ${CMAKE_CURRENT_LIST_DIR}/src/utils)
+# configure global directories variables
+set(OB_PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include/)
 set(OB_3RDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/3rdparty)
 
 add_subdirectory(src)
 
-if(BUILD_EXAMPLES)
+if(OB_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-if(BUILD_TESTS)
+if(OB_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-if(BUILD_DOCS)
+if(OB_BUILD_DOCS)
     add_subdirectory(docs)
 endif()
 
-if(BUILD_TOOLS)
+if(OB_BUILD_TOOLS)
     add_subdirectory(tools)
 endif()
 
-print_summary()
+ob_print_summary()

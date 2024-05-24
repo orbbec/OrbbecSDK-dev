@@ -5,7 +5,21 @@
 namespace libobsensor {
 
 Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
-    : frameData_(data), dataBufSize_(dataBufSize), type_(type), bufferReclaimFunc_(bufferReclaimFunc) {}
+    : frameData_(data),
+      dataBufSize_(dataBufSize),
+      dataSize_(dataBufSize),
+      type_(type),
+      bufferReclaimFunc_(bufferReclaimFunc),
+      number_(0),
+      timeStampUsec_(0),
+      systemTimeStampUsec_(0),
+      globalTimeStampUsec_(0),
+      metadataSize_(0),
+      metadataPhasers_(nullptr),
+      streamProfile_(nullptr)
+{
+
+}
 
 Frame::~Frame() noexcept {
     if(bufferReclaimFunc_) {

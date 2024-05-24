@@ -18,7 +18,7 @@ extern "C" {
  * @param[out] error Log wrong message
  * @return uint64_t return the frame index
  */
-uint64_t ob_frame_get_index(ob_frame *frame, ob_error **error);
+OB_API uint64_t ob_frame_get_index(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame format
@@ -27,7 +27,7 @@ uint64_t ob_frame_get_index(ob_frame *frame, ob_error **error);
  * @param[out] error  Log error messages
  * @return ob_format return the frame format
  */
-ob_format ob_frame_get_format(ob_frame *frame, ob_error **error);
+OB_API ob_format ob_frame_get_format(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame type
@@ -36,7 +36,7 @@ ob_format ob_frame_get_format(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return ob_frame_type return the frame type
  */
-ob_frame_type ob_frame_get_type(ob_frame *frame, ob_error **error);
+OB_API ob_frame_type ob_frame_get_type(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame timestamp (also known as device timestamp, hardware timestamp) of the frame in milliseconds.
@@ -47,7 +47,7 @@ ob_frame_type ob_frame_get_type(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint64_t return the frame hardware timestamp in milliseconds
  */
-uint64_t ob_frame_get_timestamp_ms(ob_frame *frame, ob_error **error);
+OB_API uint64_t ob_frame_get_timestamp_ms(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame timestamp (also known as device timestamp, hardware timestamp)  of the frame in microseconds.
@@ -58,7 +58,7 @@ uint64_t ob_frame_get_timestamp_ms(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint64_t return the frame hardware timestamp in microseconds
  */
-uint64_t ob_frame_get_timestamp_us(ob_frame *frame, ob_error **error);
+OB_API uint64_t ob_frame_get_timestamp_us(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Set the frame timestamp (also known as the device timestamp, hardware timestamp) of a frame object.
@@ -67,7 +67,7 @@ uint64_t ob_frame_get_timestamp_us(ob_frame *frame, ob_error **error);
  * @param[in] timestamp_us frame timestamp to set in microseconds.
  * @param[out] error Log error messages.
  */
-void ob_frame_set_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob_error **error);
+OB_API void ob_frame_set_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob_error **error);
 
 /**
  * @brief Get the system timestamp of the frame in milliseconds.
@@ -77,7 +77,7 @@ void ob_frame_set_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob_error 
  * @param[out] error Log error messages
  * @return uint64_t return the frame system timestamp in milliseconds
  */
-uint64_t ob_frame_get_system_timestamp_ms(ob_frame *frame, ob_error **error);
+OB_API uint64_t ob_frame_get_system_timestamp_ms(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the system timestamp of the frame in microseconds.
@@ -87,7 +87,7 @@ uint64_t ob_frame_get_system_timestamp_ms(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint64_t return the frame system timestamp in microseconds
  */
-uint64_t ob_frame_system_get_timestamp_us(ob_frame *frame, ob_error **error);
+OB_API uint64_t ob_frame_system_get_timestamp_us(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Set the system timestamp of a frame object.
@@ -96,7 +96,7 @@ uint64_t ob_frame_system_get_timestamp_us(ob_frame *frame, ob_error **error);
  * @param[in] timestamp_us System timestamp to set in microseconds.
  * @param[out] error Log error messages.
  */
-void ob_frame_set_system_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob_error **error);
+OB_API void ob_frame_set_system_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob_error **error);
 
 /**
  * @brief Get the global timestamp of the frame in microseconds.
@@ -110,7 +110,7 @@ void ob_frame_set_system_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob
  * @param[out] error Log error messages
  * @return uint64_t The global timestamp of the frame in microseconds.
  */
-uint64_t ob_frame_get_global_timestamp_us(ob_frame *frame, ob_error **error);
+OB_API uint64_t ob_frame_get_global_timestamp_us(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get frame data
@@ -119,7 +119,7 @@ uint64_t ob_frame_get_global_timestamp_us(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return void* * return frame data pointer
  */
-uint8_t *ob_frame_get_data(ob_frame *frame, ob_error **error);
+OB_API uint8_t *ob_frame_get_data(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame data size
@@ -130,7 +130,7 @@ uint8_t *ob_frame_get_data(ob_frame *frame, ob_error **error);
  * If it is point cloud data, it return the number of bytes occupied by all point sets. If you need to find the number of points, you need to divide dataSize
  * by the structure size of the corresponding point type.
  */
-uint32_t ob_frame_get_data_size(ob_frame *frame, ob_error **error);
+OB_API uint32_t ob_frame_get_data_size(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the metadata of the frame
@@ -139,7 +139,7 @@ uint32_t ob_frame_get_data_size(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return void* return the metadata pointer of the frame
  */
-uint8_t *ob_frame_get_metadata(ob_frame *frame, ob_error **error);
+OB_API uint8_t *ob_frame_get_metadata(ob_frame *frame, ob_error **error);
 #define ob_video_frame_metadata ob_frame_get_metadata  // for compatibility
 
 /**
@@ -149,7 +149,7 @@ uint8_t *ob_frame_get_metadata(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint32_t return the metadata size of the frame
  */
-uint32_t ob_frame_metadata_size(ob_frame *frame, ob_error **error);
+OB_API uint32_t ob_frame_metadata_size(ob_frame *frame, ob_error **error);
 #define ob_video_frame_metadata_size ob_frame_metadata_size  // for compatibility
 
 /**
@@ -159,7 +159,7 @@ uint32_t ob_frame_metadata_size(ob_frame *frame, ob_error **error);
  * @param[in] type metadata type, refer to @ref ob_frame_metadata_type
  * @param[out] error Log error messages
  */
-bool ob_frame_has_metadata(ob_frame *frame, ob_frame_metadata_type type, ob_error **error);
+OB_API bool ob_frame_has_metadata(ob_frame *frame, ob_frame_metadata_type type, ob_error **error);
 
 /**
  * @brief Get the metadata value of the frame
@@ -169,7 +169,7 @@ bool ob_frame_has_metadata(ob_frame *frame, ob_frame_metadata_type type, ob_erro
  * @param[out] error Log error messages
  * @return int64_t return the metadata value of the frame
  */
-int64_t ob_frame_get_metadata_value(ob_frame *frame, ob_frame_metadata_type type, ob_error **error);
+OB_API int64_t ob_frame_get_metadata_value(ob_frame *frame, ob_frame_metadata_type type, ob_error **error);
 
 /**
  * @brief Get the stream profile of the frame
@@ -180,7 +180,7 @@ int64_t ob_frame_get_metadata_value(ob_frame *frame, ob_frame_metadata_type type
  * @param error Log error messages
  * @return ob_stream_profile* Return the stream profile of the frame, if the frame is not captured by a sensor stream, it will return NULL
  */
-ob_stream_profile *ob_frame_get_stream_profile(ob_frame *frame, ob_error **error);
+OB_API ob_stream_profile *ob_frame_get_stream_profile(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Set (override) the stream profile of the frame
@@ -189,7 +189,7 @@ ob_stream_profile *ob_frame_get_stream_profile(ob_frame *frame, ob_error **error
  * @param stream_profile The stream profile to set for the frame.
  * @param error Log error messages.
  */
-void ob_frame_set_stream_profile(ob_frame *frame, ob_stream_profile *stream_profile, ob_error **error);
+OB_API void ob_frame_set_stream_profile(ob_frame *frame, ob_stream_profile *stream_profile, ob_error **error);
 
 /**
  * @brief Get the sensor of the frame
@@ -200,7 +200,7 @@ void ob_frame_set_stream_profile(ob_frame *frame, ob_stream_profile *stream_prof
  * @param[out] error Log error messages
  * @return ob_sensor* return the sensor of the frame, if the frame is not captured by a sensor or the sensor stream has been destroyed, it will return NULL
  */
-ob_sensor *ob_frame_get_sensor(ob_frame *frame, ob_error **error);
+OB_API ob_sensor *ob_frame_get_sensor(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the device of the frame
@@ -211,7 +211,7 @@ ob_sensor *ob_frame_get_sensor(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return ob_device* return the device of the frame, if the frame is not captured by a sensor stream or the device has been destroyed, it will return NULL
  */
-ob_device *ob_frame_get_device(ob_frame *frame, ob_error **error);
+OB_API ob_device *ob_frame_get_device(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get video frame width
@@ -220,7 +220,7 @@ ob_device *ob_frame_get_device(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint32_t return the frame width
  */
-uint32_t ob_video_frame_get_width(ob_frame *frame, ob_error **error);
+OB_API uint32_t ob_video_frame_get_width(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get video frame height
@@ -229,7 +229,7 @@ uint32_t ob_video_frame_get_width(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint32_t return the frame height
  */
-uint32_t ob_video_frame_get_height(ob_frame *frame, ob_error **error);
+OB_API uint32_t ob_video_frame_get_height(ob_frame *frame, ob_error **error);
 
 /**
  * @brief  Get the effective number of pixels (such as Y16 format frame, but only the lower 10 bits are effective bits, and the upper 6 bits are filled with 0)
@@ -239,7 +239,7 @@ uint32_t ob_video_frame_get_height(ob_frame *frame, ob_error **error);
  * @param[out] error log error messages
  * @return uint8_t return the effective number of pixels in the pixel, or 0 if it is an unsupported format
  */
-uint8_t ob_video_frame_pixel_available_bit_size(ob_frame *frame, ob_error **error);
+OB_API uint8_t ob_video_frame_pixel_available_bit_size(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the source sensor type of the ir frame (left or right for dual camera)
@@ -248,7 +248,7 @@ uint8_t ob_video_frame_pixel_available_bit_size(ob_frame *frame, ob_error **erro
  * @param ob_error Log error messages
  * @return ob_sensor_type return the source sensor type of the ir frame
  */
-ob_sensor_type ob_ir_frame_get_source_sensor_type(ob_frame *frame, ob_error **ob_error);
+OB_API ob_sensor_type ob_ir_frame_get_source_sensor_type(ob_frame *frame, ob_error **ob_error);
 
 /**
  * @brief Get the value scale of the depth frame. The pixel value of the depth frame is multiplied by the scale to give a depth value in millimeters.
@@ -258,7 +258,7 @@ ob_sensor_type ob_ir_frame_get_source_sensor_type(ob_frame *frame, ob_error **ob
  * @param[out] error Log error messages
  * @return float The value scale of the depth frame
  */
-float ob_depth_frame_get_value_scale(ob_frame *frame, ob_error **error);
+OB_API float ob_depth_frame_get_value_scale(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the point position value scale of the points frame. The point position value of the points frame is multiplied by the scale to give a position
@@ -269,7 +269,7 @@ float ob_depth_frame_get_value_scale(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return float The position value scale of the points frame
  */
-float ob_points_frame_get_coordinate_value_scale(ob_frame *frame, ob_error **error);
+OB_API float ob_points_frame_get_coordinate_value_scale(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Delete a frame object
@@ -277,7 +277,7 @@ float ob_points_frame_get_coordinate_value_scale(ob_frame *frame, ob_error **err
  * @param[in] frame The frame object to delete
  * @param[out] error Log error messages
  */
-void ob_delete_frame(ob_frame *frame, ob_error **error);
+OB_API void ob_delete_frame(ob_frame *frame, ob_error **error);
 /**
  * @brief Get the number of frames contained in the frameset
  *
@@ -285,7 +285,7 @@ void ob_delete_frame(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint32_t return the number of frames
  */
-uint32_t ob_frameset_get_frame_count(ob_frame *frameset, ob_error **error);
+OB_API uint32_t ob_frameset_get_frame_count(ob_frame *frameset, ob_error **error);
 /**
  * @brief Get the depth frame from the frameset.
  *
@@ -293,7 +293,7 @@ uint32_t ob_frameset_get_frame_count(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the depth frame.
  */
-ob_frame *ob_frameset_get_depth_frame(ob_frame *frameset, ob_error **error);
+OB_API ob_frame *ob_frameset_get_depth_frame(ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the color frame from the frameset.
@@ -302,7 +302,7 @@ ob_frame *ob_frameset_get_depth_frame(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the color frame.
  */
-ob_frame *ob_frameset_get_color_frame(ob_frame *frameset, ob_error **error);
+OB_API ob_frame *ob_frameset_get_color_frame(ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the infrared frame from the frameset.
@@ -311,7 +311,7 @@ ob_frame *ob_frameset_get_color_frame(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the infrared frame.
  */
-ob_frame *ob_frameset_get_ir_frame(ob_frame *frameset, ob_error **error);
+OB_API ob_frame *ob_frameset_get_ir_frame(ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get point cloud data from the frameset.
@@ -320,7 +320,7 @@ ob_frame *ob_frameset_get_ir_frame(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the point cloud frame.
  */
-ob_frame *ob_frameset_get_points_frame(ob_frame *frameset, ob_error **error);
+OB_API ob_frame *ob_frameset_get_points_frame(ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get a frame of a specific type from the frameset.
@@ -330,7 +330,7 @@ ob_frame *ob_frameset_get_points_frame(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the frame of the specified type, or nullptr if it does not exist.
  */
-ob_frame *ob_frameset_get_frame(ob_frame *frameset, ob_frame_type frame_type, ob_error **error);
+OB_API ob_frame *ob_frameset_get_frame(ob_frame *frameset, ob_frame_type frame_type, ob_error **error);
 
 /**
  * @brief Get a frame at a specific index from the FrameSet
@@ -340,7 +340,7 @@ ob_frame *ob_frameset_get_frame(ob_frame *frameset, ob_frame_type frame_type, ob
  * @param[out] error Log error messages.
  * @return ob_frame* Return the frame at the specified index, or nullptr if it does not exist.
  */
-ob_frame *ob_frameset_get_frame_by_index(ob_frame *frameset, int index, ob_error **error);
+OB_API ob_frame *ob_frameset_get_frame_by_index(ob_frame *frameset, int index, ob_error **error);
 
 /**
  * @brief Get accelerometer frame data.
@@ -349,7 +349,7 @@ ob_frame *ob_frameset_get_frame_by_index(ob_frame *frameset, int index, ob_error
  * @param[out] error Log error messages.
  * @return ob_accel_value Return the accelerometer data.
  */
-ob_accel_value ob_accel_frame_get_value(ob_frame *frame, ob_error **error);
+OB_API ob_accel_value ob_accel_frame_get_value(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the temperature when acquiring the accelerometer frame.
@@ -358,7 +358,7 @@ ob_accel_value ob_accel_frame_get_value(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages.
  * @return float Return the temperature value.
  */
-float ob_accel_frame_get_temperature(ob_frame *frame, ob_error **error);
+OB_API float ob_accel_frame_get_temperature(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get gyroscope frame data.
@@ -367,7 +367,7 @@ float ob_accel_frame_get_temperature(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_gyro_value Return the gyroscope data.
  */
-ob_gyro_value ob_gyro_frame_get_value(ob_frame *frame, ob_error **error);
+OB_API ob_gyro_value ob_gyro_frame_get_value(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the temperature when acquiring the gyroscope frame.
@@ -376,7 +376,7 @@ ob_gyro_value ob_gyro_frame_get_value(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages.
  * @return float Return the temperature value.
  */
-float ob_gyro_frame_get_temperature(ob_frame *frame, ob_error **error);
+OB_API float ob_gyro_frame_get_temperature(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Increase the reference count of a frame object.
@@ -384,7 +384,7 @@ float ob_gyro_frame_get_temperature(ob_frame *frame, ob_error **error);
  * @param[in] frame Frame object to increase the reference count.
  * @param[out] error Log error messages.
  */
-void ob_frame_add_ref(ob_frame *frame, ob_error **error);
+OB_API void ob_frame_add_ref(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Create an empty frame object based on the specified parameters.
@@ -397,7 +397,7 @@ void ob_frame_add_ref(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return an empty frame object.
  */
-ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, ob_error **error);
+OB_API ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, ob_error **error);
 
 /**
  * @brief Create a frame object based on an externally created buffer.
@@ -414,7 +414,7 @@ ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format format, uint
  * @param[out] error Log error messages.
  * @return ob_frame* Return the frame object.
  */
-ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, uint8_t *buffer,
+OB_API ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, uint8_t *buffer,
                                             uint32_t buffer_size, ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context, ob_error **error);
 
 /**
@@ -423,7 +423,7 @@ ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format 
  * @param[out] error Log error messages.
  * @return ob_frame* Return the frameset object.
  */
-ob_frame *ob_create_frameset(ob_error **error);
+OB_API ob_frame *ob_create_frameset(ob_error **error);
 
 /**
  * @brief Add a frame of the specified type to the frameset.
@@ -432,7 +432,7 @@ ob_frame *ob_create_frameset(ob_error **error);
  * @param[in] frame Frame object to add.
  * @param[out] error Log error messages.
  */
-void ob_frameset_push_frame(ob_frame *frameset, ob_frame *frame, ob_error **error);
+OB_API void ob_frameset_push_frame(ob_frame *frameset, ob_frame *frame, ob_error **error);
 
 #ifdef __cplusplus
 }

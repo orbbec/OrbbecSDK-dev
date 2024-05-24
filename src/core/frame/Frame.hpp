@@ -13,8 +13,7 @@
 #include <vector>
 #include <typeinfo>
 
-namespace libobsensor{
-
+namespace libobsensor {
 
 class FrameSet;
 class PointsFrame;
@@ -36,7 +35,7 @@ public:
 
     uint64_t       getNumber() const;
     void           setNumber(const uint64_t number);
-    size_t       getDataSize() const;
+    size_t         getDataSize() const;
     const uint8_t *getData() const;
     void           updateData(const uint8_t *data, uint32_t dataSize);
     uint64_t       getTimeStampUsec() const;
@@ -46,7 +45,7 @@ public:
     uint64_t       getGlobalTimeStampUsec() const;
     void           setGlobalTimeStampUsec(uint64_t ts);
 
-    size_t       getMetadataSize() const;
+    size_t         getMetadataSize() const;
     void           updateMetadata(const uint8_t *metadata, uint32_t metadataSize);
     const uint8_t *getMetadata() const;
 
@@ -73,21 +72,21 @@ protected:
     size_t getDataBufSize() const;
 
 protected:
-    size_t                                       dataSize_            = 0;
-    uint64_t                                       number_              = 0;
-    uint64_t                                       timeStampUsec_       = 0;
-    uint64_t                                       systemTimeStampUsec_ = 0;
-    uint64_t                                       globalTimeStampUsec_ = 0;
-    size_t                                       metadataSize_        = 0;
+    size_t                                         dataSize_;
+    uint64_t                                       number_;
+    uint64_t                                       timeStampUsec_;
+    uint64_t                                       systemTimeStampUsec_;
+    uint64_t                                       globalTimeStampUsec_;
+    size_t                                         metadataSize_;
     uint8_t                                        metadata_[256];
-    std::shared_ptr<IFrameMetadataParserContainer> metadataPhasers_ = nullptr;
-    std::shared_ptr<const StreamProfile>           streamProfile_   = nullptr;
+    std::shared_ptr<IFrameMetadataParserContainer> metadataPhasers_;
+    std::shared_ptr<const StreamProfile>           streamProfile_;
 
     const OBFrameType type_;  // Determined during construction, it is an inherent property of the object and cannot be changed.
 
 private:
-    uint8_t const     *frameData_;
-    const size_t     dataBufSize_;
+    uint8_t const         *frameData_;
+    const size_t           dataBufSize_;
     FrameBufferReclaimFunc bufferReclaimFunc_;
 };
 
@@ -240,5 +239,4 @@ template <typename T> bool Frame::is() {
     return false;
 }
 
-
-}  // namespace ob
+}  // namespace libobsensor

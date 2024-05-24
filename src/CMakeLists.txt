@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.1.15)
 
+set(OB_INTERFACE_DIR "${CMAKE_CURRENT_LIST_DIR}/interface")
+
 add_subdirectory(shared) # utils, logger, etc.
 add_subdirectory(core) # core library
 add_subdirectory(platform)

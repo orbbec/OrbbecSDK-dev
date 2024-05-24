@@ -6,7 +6,7 @@
 #include "logger/Logger.hpp"
 
 namespace libobsensor{
-class ob_exception : public std::exception {
+class libobsensor_exception : public std::exception {
 public:
     const char *get_message() const noexcept {
         return _msg.c_str();
@@ -21,21 +21,21 @@ public:
     }
 
 public:
-    ob_exception(const std::string &msg, ob_exception_type exception_type) noexcept : _msg(msg), _exception_type(exception_type) {}
+    libobsensor_exception(const std::string &msg, ob_exception_type exception_type) noexcept : _msg(msg), _exception_type(exception_type) {}
 
 private:
     std::string       _msg;
     ob_exception_type _exception_type;
 };
 
-class recoverable_exception : public ob_exception {
+class recoverable_exception : public libobsensor_exception {
 public:
     recoverable_exception(const std::string &msg, ob_exception_type exception_type) noexcept;
 };
 
-class unrecoverable_exception : public ob_exception {
+class unrecoverable_exception : public libobsensor_exception {
 public:
-    unrecoverable_exception(const std::string &msg, ob_exception_type exception_type) noexcept : ob_exception(msg, exception_type) {
+    unrecoverable_exception(const std::string &msg, ob_exception_type exception_type) noexcept : libobsensor_exception(msg, exception_type) {
         LOG_WARN(msg);
     }
 };
@@ -98,8 +98,8 @@ public:
     }
 
 #define CATCH_EXCEPTION                                                                                                                                \
-    catch(const ob::core::ob_exception &e) {                                                                                               \
-        LOG_WARN("Execute failure! A ob_exception has occurred!\n\t - where:{0}#{1}\n\t - msg:{2}\n\t - type:{3}", __LINE__, __FUNCTION__,    \
+    catch(const ob::core::libobsensor_exception &e) {                                                                                               \
+        LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n\t - where:{0}#{1}\n\t - msg:{2}\n\t - type:{3}", __LINE__, __FUNCTION__,    \
                  e.get_message(), typeid(e).name());                                                                                                   \
     }                                                                                                                                                  \
     catch(const std::exception &e) {                                                                                                                   \
@@ -111,8 +111,8 @@ public:
     }
 
 #define CATCH_EXCEPTION_AND_EXECUTE(statement)                                                                                                         \
-    catch(const  ob::core::ob_exception &e) {                                                                                               \
-        LOG_WARN("Execute failure! A ob_exception has occurred!\n\t - where:{0}#{1}\n\t - msg:{2}\n\t - type:{3}", __LINE__, __FUNCTION__,    \
+    catch(const  ob::core::libobsensor_exception &e) {                                                                                               \
+        LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n\t - where:{0}#{1}\n\t - msg:{2}\n\t - type:{3}", __LINE__, __FUNCTION__,    \
                  e.get_message(), typeid(e).name());                                                                                                   \
         statement;                                                                                                                                     \
     }                                                                                                                                                  \

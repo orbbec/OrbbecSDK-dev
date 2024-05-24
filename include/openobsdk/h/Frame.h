@@ -18,7 +18,7 @@ extern "C" {
  * @param[out] error Log wrong message
  * @return uint64_t return the frame index
  */
-uint64_t ob_frame_index(ob_frame *frame, ob_error **error);
+uint64_t ob_frame_get_index(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame format
@@ -27,7 +27,7 @@ uint64_t ob_frame_index(ob_frame *frame, ob_error **error);
  * @param[out] error  Log error messages
  * @return ob_format return the frame format
  */
-ob_format ob_frame_format(ob_frame *frame, ob_error **error);
+ob_format ob_frame_get_format(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame type
@@ -39,24 +39,35 @@ ob_format ob_frame_format(ob_frame *frame, ob_error **error);
 ob_frame_type ob_frame_get_type(ob_frame *frame, ob_error **error);
 
 /**
- * @brief Get the hardware timestamp of the frame in milliseconds.
- * @brief The hardware timestamp is the time point when the frame was captured by the device, on device clock domain.
+ * @brief Get the frame timestamp (also known as device timestamp, hardware timestamp) of the frame in milliseconds.
+ * @brief The hardware timestamp is the time point when the frame was captured by the device (Typically in the mid-exposure, unless otherwise stated), on
+ * device clock domain.
  *
  * @param[in] frame Frame object
  * @param[out] error Log error messages
  * @return uint64_t return the frame hardware timestamp in milliseconds
  */
-uint64_t ob_frame_time_stamp(ob_frame *frame, ob_error **error);
+uint64_t ob_frame_get_timestamp_ms(ob_frame *frame, ob_error **error);
 
 /**
- * @brief Get the hardware timestamp of the frame in microseconds.
- * @brief The hardware timestamp is the time point when the frame was captured by the device, on device clock domain.
+ * @brief Get the frame timestamp (also known as device timestamp, hardware timestamp)  of the frame in microseconds.
+ * @brief The hardware timestamp is the time point when the frame was captured by the device (Typically in the mid-exposure, unless otherwise stated), on device
+ * clock domain.
  *
  * @param[in] frame Frame object
  * @param[out] error Log error messages
  * @return uint64_t return the frame hardware timestamp in microseconds
  */
-uint64_t ob_frame_time_stamp_us(ob_frame *frame, ob_error **error);
+uint64_t ob_frame_get_timestamp_us(ob_frame *frame, ob_error **error);
+
+/**
+ * @brief Set the frame timestamp (also known as the device timestamp, hardware timestamp) of a frame object.
+ *
+ * @param[in] frame Frame object to set the timestamp.
+ * @param[in] timestamp_us frame timestamp to set in microseconds.
+ * @param[out] error Log error messages.
+ */
+void ob_frame_set_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob_error **error);
 
 /**
  * @brief Get the system timestamp of the frame in milliseconds.
@@ -66,7 +77,7 @@ uint64_t ob_frame_time_stamp_us(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint64_t return the frame system timestamp in milliseconds
  */
-uint64_t ob_frame_system_time_stamp(ob_frame *frame, ob_error **error);
+uint64_t ob_frame_get_system_timestamp_ms(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the system timestamp of the frame in microseconds.
@@ -76,21 +87,30 @@ uint64_t ob_frame_system_time_stamp(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint64_t return the frame system timestamp in microseconds
  */
-uint64_t ob_frame_system_time_stamp_us(ob_frame *frame, ob_error **error);
+uint64_t ob_frame_system_get_timestamp_us(ob_frame *frame, ob_error **error);
+
+/**
+ * @brief Set the system timestamp of a frame object.
+ *
+ * @param[in] frame Frame object to set the system timestamp for.
+ * @param[in] timestamp_us System timestamp to set in microseconds.
+ * @param[out] error Log error messages.
+ */
+void ob_frame_set_system_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob_error **error);
 
 /**
  * @brief Get the global timestamp of the frame in microseconds.
  * @brief The global timestamp is the time point when the frame was was captured by the device, and has been converted to the host clock domain. The
- * conversion process base on the device timestamp and can eliminate the timer drift of the device
+ * conversion process base on the frame timestamp and can eliminate the timer drift of the device
  *
- * @attention Only some devices support getting the global timestamp. If the device does not support it, this function will return 0. Check the device support
- * status by @ref ob_device_is_global_timestamp_supported() function.
+ * @attention Only some models of device support getting the global timestamp. If the device does not support it, this function will return 0. Check the device
+ * support status by @ref ob_device_is_global_timestamp_supported() function.
  *
  * @param[in] frame Frame object
  * @param[out] error Log error messages
  * @return uint64_t The global timestamp of the frame in microseconds.
  */
-uint64_t ob_frame_global_time_stamp_us(ob_frame *frame, ob_error **error);
+uint64_t ob_frame_get_global_timestamp_us(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get frame data
@@ -99,7 +119,7 @@ uint64_t ob_frame_global_time_stamp_us(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return void* * return frame data pointer
  */
-void *ob_frame_data(ob_frame *frame, ob_error **error);
+uint8_t *ob_frame_get_data(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame data size
@@ -110,7 +130,7 @@ void *ob_frame_data(ob_frame *frame, ob_error **error);
  * If it is point cloud data, it return the number of bytes occupied by all point sets. If you need to find the number of points, you need to divide dataSize
  * by the structure size of the corresponding point type.
  */
-uint32_t ob_frame_data_size(ob_frame *frame, ob_error **error);
+uint32_t ob_frame_get_data_size(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the metadata of the frame
@@ -119,8 +139,8 @@ uint32_t ob_frame_data_size(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return void* return the metadata pointer of the frame
  */
-void *ob_frame_metadata(ob_frame *frame, ob_error **error);
-#define ob_video_frame_metadata ob_frame_metadata  // for compatibility
+uint8_t *ob_frame_get_metadata(ob_frame *frame, ob_error **error);
+#define ob_video_frame_metadata ob_frame_get_metadata  // for compatibility
 
 /**
  * @brief Get the metadata size of the frame
@@ -160,7 +180,16 @@ int64_t ob_frame_get_metadata_value(ob_frame *frame, ob_frame_metadata_type type
  * @param error Log error messages
  * @return ob_stream_profile* Return the stream profile of the frame, if the frame is not captured by a sensor stream, it will return NULL
  */
-ob_stream_profile* ob_frame_get_stream_profile(ob_frame *frame, ob_error **error);
+ob_stream_profile *ob_frame_get_stream_profile(ob_frame *frame, ob_error **error);
+
+/**
+ * @brief Set (override) the stream profile of the frame
+ *
+ * @param frame frame object
+ * @param stream_profile The stream profile to set for the frame.
+ * @param error Log error messages.
+ */
+void ob_frame_set_stream_profile(ob_frame *frame, ob_stream_profile *stream_profile, ob_error **error);
 
 /**
  * @brief Get the sensor of the frame
@@ -171,7 +200,7 @@ ob_stream_profile* ob_frame_get_stream_profile(ob_frame *frame, ob_error **error
  * @param[out] error Log error messages
  * @return ob_sensor* return the sensor of the frame, if the frame is not captured by a sensor or the sensor stream has been destroyed, it will return NULL
  */
-ob_sensor* ob_frame_get_sensor(ob_frame *frame, ob_error **error);
+ob_sensor *ob_frame_get_sensor(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the device of the frame
@@ -182,7 +211,7 @@ ob_sensor* ob_frame_get_sensor(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return ob_device* return the device of the frame, if the frame is not captured by a sensor stream or the device has been destroyed, it will return NULL
  */
-ob_device* ob_frame_get_device(ob_frame *frame, ob_error **error);
+ob_device *ob_frame_get_device(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get video frame width
@@ -191,7 +220,7 @@ ob_device* ob_frame_get_device(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint32_t return the frame width
  */
-uint32_t ob_video_frame_width(ob_frame *frame, ob_error **error);
+uint32_t ob_video_frame_get_width(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get video frame height
@@ -200,7 +229,7 @@ uint32_t ob_video_frame_width(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint32_t return the frame height
  */
-uint32_t ob_video_frame_height(ob_frame *frame, ob_error **error);
+uint32_t ob_video_frame_get_height(ob_frame *frame, ob_error **error);
 
 /**
  * @brief  Get the effective number of pixels (such as Y16 format frame, but only the lower 10 bits are effective bits, and the upper 6 bits are filled with 0)
@@ -240,7 +269,7 @@ float ob_depth_frame_get_value_scale(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return float The position value scale of the points frame
  */
-float ob_points_frame_get_position_value_scale(ob_frame *frame, ob_error **error);
+float ob_points_frame_get_coordinate_value_scale(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Delete a frame object
@@ -256,7 +285,7 @@ void ob_delete_frame(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages
  * @return uint32_t return the number of frames
  */
-uint32_t ob_frameset_frame_count(ob_frame *frameset, ob_error **error);
+uint32_t ob_frameset_get_frame_count(ob_frame *frameset, ob_error **error);
 /**
  * @brief Get the depth frame from the frameset.
  *
@@ -264,7 +293,7 @@ uint32_t ob_frameset_frame_count(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the depth frame.
  */
-ob_frame *ob_frameset_depth_frame(ob_frame *frameset, ob_error **error);
+ob_frame *ob_frameset_get_depth_frame(ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the color frame from the frameset.
@@ -273,7 +302,7 @@ ob_frame *ob_frameset_depth_frame(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the color frame.
  */
-ob_frame *ob_frameset_color_frame(ob_frame *frameset, ob_error **error);
+ob_frame *ob_frameset_get_color_frame(ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the infrared frame from the frameset.
@@ -282,7 +311,7 @@ ob_frame *ob_frameset_color_frame(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the infrared frame.
  */
-ob_frame *ob_frameset_ir_frame(ob_frame *frameset, ob_error **error);
+ob_frame *ob_frameset_get_ir_frame(ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get point cloud data from the frameset.
@@ -291,7 +320,7 @@ ob_frame *ob_frameset_ir_frame(ob_frame *frameset, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_frame* Return the point cloud frame.
  */
-ob_frame *ob_frameset_points_frame(ob_frame *frameset, ob_error **error);
+ob_frame *ob_frameset_get_points_frame(ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get a frame of a specific type from the frameset.
@@ -320,7 +349,7 @@ ob_frame *ob_frameset_get_frame_by_index(ob_frame *frameset, int index, ob_error
  * @param[out] error Log error messages.
  * @return ob_accel_value Return the accelerometer data.
  */
-ob_accel_value ob_accel_frame_value(ob_frame *frame, ob_error **error);
+ob_accel_value ob_accel_frame_get_value(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the temperature when acquiring the accelerometer frame.
@@ -329,7 +358,7 @@ ob_accel_value ob_accel_frame_value(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages.
  * @return float Return the temperature value.
  */
-float ob_accel_frame_temperature(ob_frame *frame, ob_error **error);
+float ob_accel_frame_get_temperature(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get gyroscope frame data.
@@ -338,7 +367,7 @@ float ob_accel_frame_temperature(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages.
  * @return ob_gyro_value Return the gyroscope data.
  */
-ob_gyro_value ob_gyro_frame_value(ob_frame *frame, ob_error **error);
+ob_gyro_value ob_gyro_frame_get_value(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the temperature when acquiring the gyroscope frame.
@@ -347,7 +376,7 @@ ob_gyro_value ob_gyro_frame_value(ob_frame *frame, ob_error **error);
  * @param[out] error Log error messages.
  * @return float Return the temperature value.
  */
-float ob_gyro_frame_temperature(ob_frame *frame, ob_error **error);
+float ob_gyro_frame_get_temperature(ob_frame *frame, ob_error **error);
 
 /**
  * @brief Increase the reference count of a frame object.
@@ -360,22 +389,24 @@ void ob_frame_add_ref(ob_frame *frame, ob_error **error);
 /**
  * @brief Create an empty frame object based on the specified parameters.
  *
+ * @param[in] frame_type Frame object type.
  * @param[in] frame_format Frame object format.
  * @param[in] width Frame object width.
  * @param[in] height Frame object height.
- * @param[in] stride_bytes Buffer row span.
- * @param[in] frame_type Frame object type.
+ * @param[in] stride_bytes Row span in bytes. If 0, the stride is calculated based on the width and format.
  * @param[out] error Log error messages.
  * @return ob_frame* Return an empty frame object.
  */
-ob_frame *ob_create_frame(ob_format frame_format, int width, int height, int stride_bytes, ob_frame_type frame_type, ob_error **error);
+ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, ob_error **error);
 
 /**
  * @brief Create a frame object based on an externally created buffer.
  *
- * @param[in] frame_format Frame object format.
- * @param[in] frame_width Frame object width.
- * @param[in] frame_height Frame object height.
+ * @param[in] frame_type Frame object type.
+ * @param[in] format Frame object format.
+ * @param[in] width Frame object width.
+ * @param[in] height Frame object height.
+ * @param[in] stride_bytes Row span in bytes. If 0, the stride is calculated based on the width and format.
  * @param[in] buffer Frame object buffer.
  * @param[in] buffer_size Frame object buffer size.
  * @param[in] buffer_destroy_cb Destroy callback.
@@ -383,8 +414,8 @@ ob_frame *ob_create_frame(ob_format frame_format, int width, int height, int str
  * @param[out] error Log error messages.
  * @return ob_frame* Return the frame object.
  */
-ob_frame *ob_create_frame_from_buffer(ob_format frame_format, uint32_t frame_width, uint32_t frame_height, uint8_t *buffer, uint32_t buffer_size,
-                                      ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context, ob_error **error);
+ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, uint8_t *buffer,
+                                            uint32_t buffer_size, ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context, ob_error **error);
 
 /**
  * @brief Create an empty frameset object.
@@ -398,38 +429,10 @@ ob_frame *ob_create_frameset(ob_error **error);
  * @brief Add a frame of the specified type to the frameset.
  *
  * @param[in] frameset Frameset object.
- * @param[in] type Type of frame to add.
  * @param[in] frame Frame object to add.
  * @param[out] error Log error messages.
  */
-void ob_frameset_push_frame(ob_frame *frameset, ob_frame_type type, ob_frame *frame, ob_error **error);
-
-/**
- * @brief Set the system timestamp of a frame object.
- *
- * @param[in] frame Frame object to set the system timestamp for.
- * @param[in] system_timestamp System timestamp to set in milliseconds.
- * @param[out] error Log error messages.
- */
-void ob_frame_set_system_time_stamp(ob_frame *frame, uint64_t system_timestamp, ob_error **error);
-
-/**
- * @brief Set the device timestamp of a frame object.
- *
- * @param[in] frame Frame object to set the device timestamp.
- * @param[in] device_timestamp Device timestamp to set in milliseconds.
- * @param[out] error Log error messages.
- */
-void ob_frame_set_device_time_stamp(ob_frame *frame, uint64_t device_timestamp, ob_error **error);
-
-/**
- * @brief Set the device timestamp of a frame object.
- *
- * @param[in] frame Frame object to set the device timestamp for.
- * @param[in] device_timestamp_us Device timestamp to set in microseconds.
- * @param[out] error Log error messages.
- */
-void ob_frame_set_device_time_stamp_us(ob_frame *frame, uint64_t device_timestamp_us, ob_error **error);
+void ob_frameset_push_frame(ob_frame *frameset, ob_frame *frame, ob_error **error);
 
 #ifdef __cplusplus
 }

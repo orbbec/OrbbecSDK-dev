@@ -13,13 +13,6 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
 # set project options
 include(cmake/options.cmake)
-if(INSTALL_MODULE_FILTER)
-    set(INSTALL_MODULE_CORE ON)
-endif()
-
-if(INSTALL_MODULE_CORE)
-    set(INSTALL_MODULE_SHARED ON)
-endif()
 
 # include macros
 include(cmake/macros.cmake)

@@ -37,7 +37,7 @@ std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(std::weak_ptr<ISens
     return std::make_shared<VideoStreamProfile>(owner, type, format, width, height, fps);
 }
 
-std::shared_ptr<AccelStreamProfile> createAccelStreamProfile(OBFormat format, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate) {
+std::shared_ptr<AccelStreamProfile> createAccelStreamProfile(OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate) {
     return std::make_shared<AccelStreamProfile>(std::weak_ptr<ISensor>(), fullScaleRange, sampleRate);
 }
 

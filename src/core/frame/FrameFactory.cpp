@@ -24,21 +24,20 @@ std::shared_ptr<Frame> createFrame(OBFrameType frameType, OBFormat frameFormat, 
     return frame;
 }
 
-std::shared_ptr<Frame> createVideoFrame(OBFrameType frameType, OBFormat frameFormat, int width, int height, int strideBytes) {
+std::shared_ptr<Frame> createVideoFrame(OBFrameType frameType, OBFormat frameFormat, uint32_t width, uint32_t height, uint32_t strideBytes) {
     if(frameType == OB_FRAME_UNKNOWN || frameType == OB_FRAME_ACCEL || frameType == OB_FRAME_GYRO || frameType == OB_FRAME_SET) {
         throw libobsensor::invalid_value_exception("Invalid frame type for video frame.");
     }
 
     std::shared_ptr<IFrameBufferManager> bufferManager;
     auto                                 memoryPool = FrameMemoryPool::getInstance();
-    int                                  frameDataSize;
-    if(strideBytes > 0) {
-        frameDataSize = height * strideBytes;
-        bufferManager = memoryPool->createFrameBufferManager(frameType, frameDataSize);
+    size_t                               frameDataSize;
+    if(strideBytes == 0) {
+        strideBytes = type_helper::getBytesPerPixel(frameFormat) * width;
     }
-    else {
-        bufferManager = memoryPool->createFrameBufferManager(frameType, frameFormat, width, height);
-    }
+    frameDataSize = height * strideBytes;
+    bufferManager = memoryPool->createFrameBufferManager(frameType, frameDataSize);
+
     auto frame = bufferManager->acquireFrame();
     if(frame == nullptr) {
         LOG_WARN("The frame is dropped because there is no buffer to allocate");
@@ -48,10 +47,11 @@ std::shared_ptr<Frame> createVideoFrame(OBFrameType frameType, OBFormat frameFor
     auto streamType = type_helper::mapFrameTypeToStreamType(frameType);
     auto sp         = StreamProfileFactory::createVideoStreamProfile(streamType, frameFormat, width, height, 0);
     frame->setStreamProfile(sp);
+    frame->as<VideoFrame>()->setStride(strideBytes);
     return frame;
 }
 
-std::shared_ptr<Frame> createFrameFromUserBuffer(OBFrameType frameType, OBFormat format, uint8_t *buffer, uint32_t bufferSize,
+std::shared_ptr<Frame> createFrameFromUserBuffer(OBFrameType frameType, OBFormat format, uint8_t *buffer, size_t bufferSize,
                                                  FrameBufferReclaimFunc bufferReclaimFunc) {
     std::shared_ptr<Frame>         frame;
     std::shared_ptr<StreamProfile> sp;
@@ -62,7 +62,7 @@ std::shared_ptr<Frame> createFrameFromUserBuffer(OBFrameType frameType, OBFormat
     case OB_FRAME_IR_RIGHT:
     case OB_FRAME_IR:
     case OB_FRAME_COLOR:
-        return createVideoFrameFromUserBuffer(frameType, format, 0, 0, buffer, bufferSize, bufferReclaimFunc);
+        return createVideoFrameFromUserBuffer(frameType, format, 0, 0, 0, buffer, bufferSize, bufferReclaimFunc);
     case OB_FRAME_ACCEL:
         frame = std::make_shared<AccelFrame>(buffer, bufferSize, bufferReclaimFunc);
         sp    = StreamProfileFactory::createAccelStreamProfile(OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
@@ -80,8 +80,8 @@ std::shared_ptr<Frame> createFrameFromUserBuffer(OBFrameType frameType, OBFormat
     return frame;
 }
 
-std::shared_ptr<Frame> createVideoFrameFromUserBuffer(OBFrameType frameType, OBFormat format, uint32_t frameWidth, uint32_t frameHeight, uint8_t *buffer,
-                                                      uint32_t bufferSize, FrameBufferReclaimFunc bufferReclaimFunc) {
+std::shared_ptr<Frame> createVideoFrameFromUserBuffer(OBFrameType frameType, OBFormat format, uint32_t width, uint32_t height, uint32_t strideBytes,
+                                                      uint8_t *buffer, size_t bufferSize, FrameBufferReclaimFunc bufferReclaimFunc) {
     std::shared_ptr<Frame> frame;
     switch(frameType) {
     case OB_FRAME_VIDEO:
@@ -108,9 +108,17 @@ std::shared_ptr<Frame> createVideoFrameFromUserBuffer(OBFrameType frameType, OBF
     }
 
     auto streamType = type_helper::mapFrameTypeToStreamType(frameType);
-    auto sp         = StreamProfileFactory::createVideoStreamProfile(streamType, format, frameWidth, frameHeight, 0);
+    auto sp         = StreamProfileFactory::createVideoStreamProfile(streamType, format, width, height, 0);
 
     frame->setStreamProfile(sp);
+
+    if(strideBytes == 0){
+        strideBytes = type_helper::getBytesPerPixel(format) * width;
+    }
+    frame->as<VideoFrame>()->setStride(strideBytes);
+    if(strideBytes * height > bufferSize){
+        LOG_WARN("The strideBytes * height is greater than to the bufferSize, it is dangerous to access the buffer!");
+    }
     return frame;
 }
 

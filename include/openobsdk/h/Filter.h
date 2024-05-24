@@ -50,7 +50,7 @@ void ob_pointcloud_filter_set_frame_align_state(ob_filter *filter, bool state, o
  * @brief Set the point cloud data scaling factor.
  *
  * @attention Calling this function to set the scale will change the point coordinate scaling factor of the output point cloud frame: posScale = posScale /
- * scale. The point coordinate scaling factor for the output point cloud frame can be obtained via the @ref ob_points_frame_get_position_value_scale function.
+ * scale. The point coordinate scaling factor for the output point cloud frame can be obtained via the @ref ob_points_frame_get_coordinate_value_scale function.
  *
  * @param[in] filter A pointcloud_filter object.
  * @param[in] scale Set the point cloud coordinate data zoom factor.
@@ -485,7 +485,7 @@ ob_filter *ob_create_align(ob_error **error, ob_stream_type align_to_stream);
 
 /**
  * @brief Get the algin stream type.
- * 
+ *
  * @param[in] filter A align object.
  * @param[out] error Log error messages.
  * @return A ob_stream_type.

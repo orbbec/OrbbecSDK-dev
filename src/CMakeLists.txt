@@ -6,7 +6,6 @@ add_subdirectory(platform)
 add_subdirectory(device)
 add_subdirectory(pipeline)
 add_subdirectory(filter)
-add_subdirectory(impl)
 
 # config version info
 if(MSVC)
@@ -22,9 +21,12 @@ else()
     add_definitions(-DOB_STATIC)
 endif()
 
-target_sources(openobsdk PUBLIC ${CMAKE_CURRENT_LIST_DIR}/Context.hpp ${CMAKE_CURRENT_LIST_DIR}/Context.cpp)
+file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp ${CMAKE_CURRENT_LIST_DIR}/context/*.cpp)
+file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp)
+
+target_sources(openobsdk PUBLIC ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(openobsdk PUBLIC ob::shared ob::core)
+target_include_directories(openobsdk PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
 add_library(ob::openobsdk ALIAS openobsdk)
 ob_source_group(ob::openobsdk)
-

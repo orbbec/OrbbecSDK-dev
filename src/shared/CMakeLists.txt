@@ -19,7 +19,3 @@ target_include_directories(shared PUBLIC "$<BUILD_INTERFACE:${OB_PUBLIC_HEADERS_
 add_library(ob::shared ALIAS shared)
 ob_source_group(ob::shared)
 set_target_properties(shared PROPERTIES FOLDER "shared")
-
-if(INSTALL_MODULE_SHARED)
-    ob_install_module(shared ${CMAKE_CURRENT_SOURCE_DIR})
-endif()

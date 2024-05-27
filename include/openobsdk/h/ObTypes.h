@@ -60,6 +60,7 @@ struct ob_device_preset_list;
 #define OB_FPS_ANY 0
 #define OB_FORMAT_ANY OB_FORMAT_UNKNOWN
 #define OB_PROFILE_DEFAULT 0
+#define OB_DEFAULT_STRIDE_BYTES 0
 
 /**
  * @brief send data or receive data return status type

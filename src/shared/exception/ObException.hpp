@@ -98,7 +98,7 @@ public:
     }
 
 #define CATCH_EXCEPTION                                                                                                                                \
-    catch(const ob::core::libobsensor_exception &e) {                                                                                               \
+    catch(const libobsensor::libobsensor_exception &e) {                                                                                               \
         LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n\t - where:{0}#{1}\n\t - msg:{2}\n\t - type:{3}", __LINE__, __FUNCTION__,    \
                  e.get_message(), typeid(e).name());                                                                                                   \
     }                                                                                                                                                  \
@@ -111,7 +111,7 @@ public:
     }
 
 #define CATCH_EXCEPTION_AND_EXECUTE(statement)                                                                                                         \
-    catch(const  ob::core::libobsensor_exception &e) {                                                                                               \
+    catch(const  libobsensor::libobsensor_exception &e) {                                                                                               \
         LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n\t - where:{0}#{1}\n\t - msg:{2}\n\t - type:{3}", __LINE__, __FUNCTION__,    \
                  e.get_message(), typeid(e).name());                                                                                                   \
         statement;                                                                                                                                     \

@@ -1,9 +1,8 @@
 #include "FrameMemoryPool.hpp"
-#include "CoreTypeHelper.hpp"
+#include "utils/PublicTypeHelper.hpp"
 #include <sstream>
 
 namespace libobsensor{
-
 
 std::mutex                       static instanceMutex;
 std::shared_ptr<FrameMemoryPool> static instance;
@@ -128,7 +127,7 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
 }
 
 std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, OBFormat format, uint32_t width, uint32_t height) {
-    auto frameBufferSize = type_helper::calcVideoFrameMaxDataSize(format, width, height);
+    auto frameBufferSize = utils::calcVideoFrameMaxDataSize(format, width, height);
     return createFrameBufferManager(type, frameBufferSize);
 }
 

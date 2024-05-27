@@ -30,7 +30,7 @@ Frame::~Frame() noexcept {
     }
 }
 
-OBFrameType Frame::getType() {
+OBFrameType Frame::getType() const {
     return type_;
 }
 
@@ -57,7 +57,7 @@ const uint8_t *Frame::getData() const {
     return frameData_;
 }
 
-void Frame::updateData(const uint8_t *data, uint32_t dataSize) {
+void Frame::updateData(const uint8_t *data, size_t dataSize) {
     if(dataSize > dataBufSize_) {
         throw memory_exception(utils::to_string() << "Update data size(" << dataSize << ") > data buffer size! (" << dataBufSize_ << ")");
     }
@@ -183,7 +183,7 @@ size_t Frame::getMetadataSize() const {
     return metadataSize_;
 }
 
-void Frame::updateMetadata(const uint8_t *metadata, uint32_t metadataSize) {
+void Frame::updateMetadata(const uint8_t *metadata, size_t metadataSize) {
 
     if(metadataSize > 0 && metadata == nullptr) {
         // In the try_read_metadata() function, metadata may be empty.
@@ -228,7 +228,7 @@ void Frame::setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile)
     streamProfile_ = streamProfile;
 }
 
-void Frame::copyInfo(const std::shared_ptr<Frame> sourceFrame) {
+void Frame::copyInfo(const std::shared_ptr<const Frame> sourceFrame) {
     // type is determined during construction. It is an inherent property of the object and cannot be changed.
     // type_ = sourceFrame->type_;
 
@@ -263,10 +263,10 @@ void VideoFrame::setPixelAvailableBitSize(uint8_t bitSize) {
     availableBitSize_ = bitSize;
 }
 
-void VideoFrame::copyInfo(std::shared_ptr<Frame> sourceFrame) {
+void VideoFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
     Frame::copyInfo(sourceFrame);
     if(sourceFrame->is<VideoFrame>()) {
-        auto vf           = sourceFrame->as<VideoFrame>();
+        auto vf           = sourceFrame->as<const VideoFrame>();
         availableBitSize_ = vf->availableBitSize_;
         stride_           = vf->stride_;
     }
@@ -286,10 +286,10 @@ float DepthFrame::getValueScale() const {
     return valueScale_;
 }
 
-void DepthFrame::copyInfo(std::shared_ptr<Frame> sourceFrame) {
+void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
     VideoFrame::copyInfo(sourceFrame);
     if(sourceFrame->is<DepthFrame>()) {
-        valueScale_ = sourceFrame->as<DepthFrame>()->valueScale_;
+        valueScale_ = sourceFrame->as<const DepthFrame>()->valueScale_;
     }
 }
 

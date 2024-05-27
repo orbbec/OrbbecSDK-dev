@@ -10,7 +10,7 @@ template <typename T> void imagePixelValueScale(const T *src, T *dst, uint32_t w
     T       *dstPixel = dst;
     for(uint32_t h = 0; h < height; h++) {
         for(uint32_t w = 0; w < width; w++) {
-            *dstPixel =(T)(*srcPixel * scale_);
+            *dstPixel = (T)(*srcPixel * scale_);
             srcPixel++;
             dstPixel++;
         }
@@ -67,6 +67,23 @@ template <typename T> void imagePixelValueCutOff(T *src, T *dst, uint32_t width,
 
 PixelValueScaler::PixelValueScaler(const std::string &name) : FilterBase(name) {}
 PixelValueScaler::~PixelValueScaler() noexcept {}
+
+void PixelValueScaler::updateConfig(std::vector<std::string> &params) {
+    if(params.size() != 1) {
+        throw invalid_value_exception("PixelValueScaler config error: params size not match");
+    }
+    try {
+        scale_ = std::stof(params[0]);
+    }
+    catch(const std::exception &e) {
+        throw invalid_value_exception("PixelValueScaler config error: " + std::string(e.what()));
+    }
+}
+
+std::string PixelValueScaler::getConfigSchema() const {
+    // csv format: name type min max step default  description
+    return "scale, float, 0.01, 100.0, 0.01, 1.0, value scale factor";
+}
 
 std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame> frame) {
     if(frame->getType() != OB_FRAME_DEPTH) {

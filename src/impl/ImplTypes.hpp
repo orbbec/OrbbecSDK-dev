@@ -16,28 +16,6 @@ class Context;
 extern "C" {
 #endif
 
-struct ob_frame {
-    std::shared_ptr<libobsensor::Context> ctx;
-    std::shared_ptr<libobsensor::Frame>   frame;
-    std::atomic<int>                      refCnt = 1;
-};
-
-struct ob_stream_profile {
-    std::shared_ptr<libobsensor::Context>             ctx;
-    std::shared_ptr<const libobsensor::StreamProfile> profile;
-};
-
-struct ob_sensor {
-    std::shared_ptr<libobsensor::Context> ctx;
-    std::shared_ptr<libobsensor::IDevice> device;
-    OBSensorType                          type;  // 不直接创建sensor，而是使用用时才从device中获取（懒加载）
-};
-
-struct ob_device {
-    std::shared_ptr<libobsensor::Context> ctx;
-    std::shared_ptr<libobsensor::IDevice> device;
-};
-
 void translate_exception(const char *name, std::string args, ob_error **result);
 
 #ifdef __cplusplus

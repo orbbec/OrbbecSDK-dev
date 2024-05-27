@@ -12,15 +12,13 @@ class IFilter {
 public:
     virtual ~IFilter() noexcept = default;
 
-    virtual const std::string &getName() = 0;
+    virtual const std::string &getName() const= 0;
 
     // Config
     virtual void        updateConfig(std::vector<std::string> &params) = 0;
-    virtual std::string getConfigDescription() const                   = 0;
+    virtual std::string getConfigSchema() const                   = 0;
 
     virtual void reset()           = 0;  // Stop thread, clean memory, reset status
-    virtual void enable(bool en)   = 0;
-    virtual bool isEnabled() const = 0;
 
     // Synchronize
     virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) = 0;

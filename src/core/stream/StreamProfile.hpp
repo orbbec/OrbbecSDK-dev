@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-namespace libobsensor{
+namespace libobsensor {
 
 class ISensor;
 
@@ -13,16 +13,16 @@ class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
 public:
     StreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format);
 
-    std::shared_ptr<ISensor>          getOwner() const;
-    void                              bindOwner(std::shared_ptr<ISensor> owner);
-    void                              setType(OBStreamType type);
-    OBStreamType                      getType() const;
-    void                              setFormat(OBFormat format);
-    OBFormat                          getFormat() const;
+    std::shared_ptr<ISensor> getOwner() const;
+    void                     bindOwner(std::shared_ptr<ISensor> owner);
+    void                     setType(OBStreamType type);
+    OBStreamType             getType() const;
+    void                     setFormat(OBFormat format);
+    OBFormat                 getFormat() const;
 
-    OBExtrinsic                       getExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile) const;
-    void                              bindExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile, const OBExtrinsic &extrinsic);
-    void                              bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile);
+    OBExtrinsic getExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile) const;
+    void        bindExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile, const OBExtrinsic &extrinsic);
+    void        bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile);
 
     virtual std::shared_ptr<StreamProfile> clone() const = 0;
 
@@ -42,9 +42,9 @@ public:
     }
 
 protected:
-    std::weak_ptr<ISensor>            owner_;
-    OBStreamType                      type_;
-    OBFormat                          format_;
+    std::weak_ptr<ISensor> owner_;
+    OBStreamType           type_;
+    OBFormat               format_;
 };
 
 class VideoStreamProfile : public StreamProfile {
@@ -72,7 +72,7 @@ protected:
 
 class AccelStreamProfile : public StreamProfile {
 public:
-    AccelStreamProfile(std::weak_ptr<ISensor> owner,  OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
+    AccelStreamProfile(std::weak_ptr<ISensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
 
     OBAccelFullScaleRange          getFullScaleRange() const;
     OBAccelSampleRate              getSampleRate() const;
@@ -87,7 +87,7 @@ protected:
 
 class GyroStreamProfile : public StreamProfile {
 public:
-    GyroStreamProfile(std::weak_ptr<ISensor> owner,  OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
+    GyroStreamProfile(std::weak_ptr<ISensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
 
     OBGyroFullScaleRange           getFullScaleRange() const;
     OBGyroSampleRate               getSampleRate() const;
@@ -122,7 +122,6 @@ template <typename T> bool StreamProfile::is() const {
 
 typedef std::vector<std::shared_ptr<const StreamProfile>> StreamProfileList;
 
-
 std::vector<std::shared_ptr<const VideoStreamProfile>> matchVideoStreamProfile(const StreamProfileList &profileList, uint32_t width, uint32_t height,
                                                                                uint32_t fps, OBFormat format);
 
@@ -132,5 +131,14 @@ std::vector<std::shared_ptr<const AccelStreamProfile>> matchAccelStreamProfile(c
 std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(const StreamProfileList &profileList, OBGyroFullScaleRange fullScaleRange,
                                                                              OBGyroSampleRate sampleRate);
 
+}  // namespace libobsensor
 
-}//namespace ob
+#ifdef __cplusplus
+extern "C" {
+#endif
+struct ob_stream_profile {
+    std::shared_ptr<const libobsensor::StreamProfile> profile;
+};
+#ifdef __cplusplus
+}
+#endif

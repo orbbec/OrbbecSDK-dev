@@ -13,10 +13,7 @@ class FilterBase : public IFilter {
 public:
     FilterBase(const std::string &name);
     virtual ~FilterBase() noexcept;
-    const std::string &getName() override;
-
-    void enable(bool en) override;
-    bool isEnabled() const override;
+    const std::string &getName() const override;
 
     void reset() override;
 
@@ -30,9 +27,8 @@ public:
 protected:
     virtual std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) = 0;  // Filter function function, implemented on child class
 
-private:
+protected:
     const std::string name_;
-    std::atomic<bool> enable_;
 
     std::mutex mutex_;
 

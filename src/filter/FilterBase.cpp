@@ -2,7 +2,7 @@
 #include "exception/ObException.hpp"
 namespace libobsensor {
 
-FilterBase::FilterBase(const std::string &name) : name_(name), enable_(true) {
+FilterBase::FilterBase(const std::string &name) : name_(name){
     srcFrameQueue_ = std::make_shared<FrameQueue<const Frame>>(10);  // todo： read from config file to set the size of frame queue
     LOG_DEBUG("Filter {} created with frame queue capacity {}", name_, srcFrameQueue_->size());
 }
@@ -10,6 +10,10 @@ FilterBase::FilterBase(const std::string &name) : name_(name), enable_(true) {
 FilterBase::~FilterBase() noexcept {
     srcFrameQueue_->stop();
     LOG_DEBUG("Filter {} destroyed", name_);
+}
+
+const std::string &FilterBase::getName() const{
+    return name_;
 }
 
 std::shared_ptr<Frame> FilterBase::process(std::shared_ptr<const Frame> frame) {

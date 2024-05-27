@@ -1,8 +1,8 @@
-#include "CoreTypeHelper.hpp"
+#include "PublicTypeHelper.hpp"
 #include "exception/ObException.hpp"
 
 namespace libobsensor {
-namespace type_helper {
+namespace utils {
 
 uint32_t getBytesPerPixel(OBFormat format) {
     // bytes-per-pixel value
@@ -167,5 +167,5 @@ OBStreamType mapFrameTypeToStreamType(OBFrameType type) {
     return OB_STREAM_UNKNOWN;
 }
 
-}  // namespace type_helper
+}  // namespace utils
 }  // namespace libobsensor

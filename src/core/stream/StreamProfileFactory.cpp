@@ -1,7 +1,7 @@
 
 #include "StreamProfileFactory.hpp"
 #include "exception/ObException.hpp"
-#include "CoreTypeHelper.hpp"
+#include "utils/PublicTypeHelper.hpp"
 
 namespace libobsensor {
 namespace StreamProfileFactory {

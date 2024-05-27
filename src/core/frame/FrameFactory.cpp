@@ -2,26 +2,38 @@
 #include "stream/StreamProfileFactory.hpp"
 #include "FrameMemoryPool.hpp"
 #include "exception/ObException.hpp"
-#include "CoreTypeHelper.hpp"
+#include "utils/PublicTypeHelper.hpp"
 
 namespace libobsensor {
 namespace FrameFactory {
 
 std::shared_ptr<Frame> createFrame(OBFrameType frameType, OBFormat frameFormat, size_t datasize) {
-    std::shared_ptr<IFrameBufferManager> bufferManager;
 
     auto memoryPool = FrameMemoryPool::getInstance();
-
-    bufferManager = memoryPool->createFrameBufferManager(frameType, datasize);
-
+    std::shared_ptr<IFrameBufferManager> bufferManager = memoryPool->createFrameBufferManager(frameType, datasize);
     auto frame = bufferManager->acquireFrame();
+
     if(frame == nullptr) {
         throw libobsensor::memory_exception("Failed to create frame, out of memory or other memory allocation error.");
     }
-    auto streamType = type_helper::mapFrameTypeToStreamType(frameType);
+    auto streamType = utils::mapFrameTypeToStreamType(frameType);
     auto sp         = StreamProfileFactory::createStreamProfile(streamType, frameFormat);
     frame->setStreamProfile(sp);
     return frame;
+}
+
+std::shared_ptr<Frame> createFrame(std::shared_ptr<const Frame> frame, bool copyData) {
+    auto newFrame = createFrame(frame->getType(), frame->getFormat(), frame->getDataSize());
+    if(copyData) {
+        newFrame->updateData(frame->getData(), frame->getDataSize());
+        if(newFrame->is<VideoFrame>()){
+            auto vf = frame->as<const VideoFrame>();
+            auto newVf =  newFrame->as<VideoFrame>();
+            newVf->updateMetadata(vf->getMetadata(), vf->getMetadataSize());
+        }
+    }
+    newFrame->copyInfo(frame);
+    return newFrame;
 }
 
 std::shared_ptr<Frame> createVideoFrame(OBFrameType frameType, OBFormat frameFormat, uint32_t width, uint32_t height, uint32_t strideBytes) {
@@ -33,7 +45,7 @@ std::shared_ptr<Frame> createVideoFrame(OBFrameType frameType, OBFormat frameFor
     auto                                 memoryPool = FrameMemoryPool::getInstance();
     size_t                               frameDataSize;
     if(strideBytes == 0) {
-        strideBytes = type_helper::getBytesPerPixel(frameFormat) * width;
+        strideBytes = utils::getBytesPerPixel(frameFormat) * width;
     }
     frameDataSize = height * strideBytes;
     bufferManager = memoryPool->createFrameBufferManager(frameType, frameDataSize);
@@ -44,7 +56,7 @@ std::shared_ptr<Frame> createVideoFrame(OBFrameType frameType, OBFormat frameFor
         return nullptr;
     }
 
-    auto streamType = type_helper::mapFrameTypeToStreamType(frameType);
+    auto streamType = utils::mapFrameTypeToStreamType(frameType);
     auto sp         = StreamProfileFactory::createVideoStreamProfile(streamType, frameFormat, width, height, 0);
     frame->setStreamProfile(sp);
     frame->as<VideoFrame>()->setStride(strideBytes);
@@ -107,16 +119,16 @@ std::shared_ptr<Frame> createVideoFrameFromUserBuffer(OBFrameType frameType, OBF
         break;
     }
 
-    auto streamType = type_helper::mapFrameTypeToStreamType(frameType);
+    auto streamType = utils::mapFrameTypeToStreamType(frameType);
     auto sp         = StreamProfileFactory::createVideoStreamProfile(streamType, format, width, height, 0);
 
     frame->setStreamProfile(sp);
 
-    if(strideBytes == 0){
-        strideBytes = type_helper::getBytesPerPixel(format) * width;
+    if(strideBytes == 0) {
+        strideBytes = utils::getBytesPerPixel(format) * width;
     }
     frame->as<VideoFrame>()->setStride(strideBytes);
-    if(strideBytes * height > bufferSize){
+    if(strideBytes * height > bufferSize) {
         LOG_WARN("The strideBytes * height is greater than to the bufferSize, it is dangerous to access the buffer!");
     }
     return frame;

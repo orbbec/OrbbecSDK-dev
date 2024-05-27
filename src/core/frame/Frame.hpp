@@ -31,13 +31,13 @@ public:
     Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     virtual ~Frame() noexcept;
 
-    OBFrameType getType();
+    OBFrameType getType() const;
 
     uint64_t       getNumber() const;
     void           setNumber(const uint64_t number);
     size_t         getDataSize() const;
     const uint8_t *getData() const;
-    void           updateData(const uint8_t *data, uint32_t dataSize);
+    void           updateData(const uint8_t *data, size_t dataSize);
     uint64_t       getTimeStampUsec() const;
     void           setTimeStampUsec(uint64_t ts);
     uint64_t       getSystemTimeStampUsec() const;
@@ -46,7 +46,7 @@ public:
     void           setGlobalTimeStampUsec(uint64_t ts);
 
     size_t         getMetadataSize() const;
-    void           updateMetadata(const uint8_t *metadata, uint32_t metadataSize);
+    void           updateMetadata(const uint8_t *metadata, size_t metadataSize);
     const uint8_t *getMetadata() const;
 
     void    registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers);
@@ -57,15 +57,22 @@ public:
     void                                 setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile);
     OBFormat                             getFormat() const;  // get from stream profile
 
-    virtual void copyInfo(std::shared_ptr<Frame> sourceFrame);
+    virtual void copyInfo(std::shared_ptr<const Frame> sourceFrame);
 
-    template <typename T> bool               is();
+    template <typename T> bool               is() const;
     template <typename T> std::shared_ptr<T> as() {
         if(!is<T>()) {
             throw unsupported_operation_exception("unsupported operation, object's type is not require type");
         }
 
-        return std::static_pointer_cast<T>(std::const_pointer_cast<Frame>(shared_from_this()));
+        return std::dynamic_pointer_cast<T>(shared_from_this());
+    }
+
+    template <typename T> std::shared_ptr<const T> as() const {
+        if(!is<T>())
+            throw unsupported_operation_exception("unsupported operation, object's type is not require type");
+
+        return std::dynamic_pointer_cast<const T>(shared_from_this());
     }
 
 protected:
@@ -104,7 +111,7 @@ public:
     uint8_t getPixelAvailableBitSize() const;
     void    setPixelAvailableBitSize(uint8_t bitSize);
 
-    virtual void copyInfo(std::shared_ptr<Frame> sourceFrame) override;
+    virtual void copyInfo(std::shared_ptr<const Frame> sourceFrame) override;
 
 protected:
     uint8_t  availableBitSize_;  // available bit size of each pixel
@@ -123,7 +130,7 @@ public:
     void  setValueScale(float valueScale);
     float getValueScale() const;
 
-    virtual void copyInfo(std::shared_ptr<Frame> sourceFrame) override;
+    virtual void copyInfo(std::shared_ptr<const Frame> sourceFrame) override;
 
 private:
     float valueScale_;
@@ -210,7 +217,7 @@ public:
     void foreachFrame(ForeachBack foreachBack);
 };
 
-template <typename T> bool Frame::is() {
+template <typename T> bool Frame::is() const {
     switch(type_) {
 
     case OB_FRAME_VIDEO:

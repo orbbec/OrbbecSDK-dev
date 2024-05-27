@@ -247,3 +247,14 @@ template <typename T> bool Frame::is() const {
 }
 
 }  // namespace libobsensor
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+struct ob_frame {
+    std::shared_ptr<libobsensor::Frame> frame;
+    std::atomic<int>                    refCnt = 1;
+};
+#ifdef __cplusplus
+}
+#endif

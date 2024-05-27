@@ -39,3 +39,16 @@ private:
 };
 
 }  // namespace libobsensor
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+struct ob_sensor {
+    std::shared_ptr<libobsensor::IDevice> device; // sensor is lazy create base on device
+    OBSensorType                          type;
+};
+
+#ifdef __cplusplus
+}
+#endif

@@ -8,6 +8,9 @@ public:
     PixelValueScaler(const std::string &name);
     virtual ~PixelValueScaler() noexcept;
 
+    void        updateConfig(std::vector<std::string> &params) override;
+    std::string getConfigSchema() const override;
+
 public:
     void setScale(float scale) {
         scale_ = scale;
@@ -17,7 +20,7 @@ private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
 protected:
-    float                                scale_ = 1.0f;
+    float scale_ = 1.0f;
 };
 
 }  // namespace libobsensor

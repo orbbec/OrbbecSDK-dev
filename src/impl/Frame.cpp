@@ -145,7 +145,6 @@ ob_stream_profile *ob_frame_get_stream_profile(ob_frame *frame, ob_error **error
         return NULL;
     }
     auto impl     = new ob_stream_profile();
-    impl->ctx     = frame->ctx;
     impl->profile = innerProfile;
     return impl;
 }
@@ -178,7 +177,6 @@ ob_sensor *ob_frame_get_sensor(ob_frame *frame, ob_error **error) BEGIN_API_CALL
     }
 
     auto sensorImpl    = new ob_sensor();
-    sensorImpl->ctx    = frame->ctx;
     sensorImpl->device = innerDevice;
     sensorImpl->type   = innerSensor->getSensorType();
     return sensorImpl;
@@ -203,7 +201,6 @@ ob_device *ob_frame_get_device(ob_frame *frame, ob_error **error) BEGIN_API_CALL
     }
 
     auto deviceImpl    = new ob_device();
-    deviceImpl->ctx    = frame->ctx;
     deviceImpl->device = innerDevice;
     return deviceImpl;
 }
@@ -286,7 +283,6 @@ ob_frame *ob_frameset_get_depth_frame(ob_frame *frameset, ob_error **error) BEGI
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->ctx   = frameset->ctx;
     impl->frame = innerFrame;
     return impl;
 }
@@ -302,7 +298,6 @@ ob_frame *ob_frameset_get_color_frame(ob_frame *frameset, ob_error **error) BEGI
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->ctx   = frameset->ctx;
     impl->frame = innerFrame;
     return impl;
 }
@@ -318,7 +313,6 @@ ob_frame *ob_frameset_get_ir_frame(ob_frame *frameset, ob_error **error) BEGIN_A
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->ctx   = frameset->ctx;
     impl->frame = innerFrame;
     return impl;
 }
@@ -334,7 +328,6 @@ ob_frame *ob_frameset_get_points_frame(ob_frame *frameset, ob_error **error) BEG
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->ctx   = frameset->ctx;
     impl->frame = innerFrame;
     return impl;
 }
@@ -350,7 +343,6 @@ ob_frame *ob_frameset_get_frame(ob_frame *frameset, ob_frame_type frame_type, ob
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->ctx   = frameset->ctx;
     impl->frame = innerFrame;
     return impl;
 }
@@ -366,7 +358,6 @@ ob_frame *ob_frameset_get_frame_by_index(ob_frame *frameset, int index, ob_error
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->ctx   = frameset->ctx;
     impl->frame = innerFrame;
     return impl;
 }
@@ -408,7 +399,6 @@ ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format format, uint
     }
 
     auto frameImpl   = new ob_frame();
-    frameImpl->ctx   = libobsensor::Context::getInstance();
     frameImpl->frame = innerFrame;
 
     return frameImpl;
@@ -426,7 +416,6 @@ ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format 
     }
 
     auto frameImpl   = new ob_frame();
-    frameImpl->ctx   = libobsensor::Context::getInstance();
     frameImpl->frame = innerFrame;
 
     return frameImpl;
@@ -440,7 +429,6 @@ ob_frame *ob_create_frameset(ob_error **error) BEGIN_API_CALL {
     }
 
     auto frameImpl   = new ob_frame();
-    frameImpl->ctx   = libobsensor::Context::getInstance();
     frameImpl->frame = innerFrameSet;
 
     return frameImpl;

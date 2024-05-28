@@ -27,7 +27,7 @@ public:
 
 template <class T, bool S> struct ArgsStreamer {
     void streamArg(std::ostream &out, const T &val, bool last) {
-        // out << ':' << val << ( last ? " " : ", " );
+        out << ':' << val << ( last ? " " : ", " );
     }
 };
 

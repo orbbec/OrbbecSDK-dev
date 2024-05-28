@@ -14,6 +14,8 @@ std::shared_ptr<Frame> createFrameFromUserBuffer(OBFrameType frameType, OBFormat
 std::shared_ptr<Frame> createVideoFrameFromUserBuffer(OBFrameType frameType, OBFormat format, uint32_t width, uint32_t height, uint32_t strideBytes,
                                                       uint8_t *buffer, size_t bufferSize, FrameBufferReclaimFunc bufferReclaimFunc);
 
+std::shared_ptr<Frame> createFrameFromStreamProfile(std::shared_ptr<const StreamProfile> sp);
+
 std::shared_ptr<Frame> createFrameSet();
 
 }  // namespace FrameFactory

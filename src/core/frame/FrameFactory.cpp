@@ -134,6 +134,20 @@ std::shared_ptr<Frame> createVideoFrameFromUserBuffer(OBFrameType frameType, OBF
     return frame;
 }
 
+std::shared_ptr<Frame> createFrameFromStreamProfile(std::shared_ptr<const StreamProfile> sp) {
+    auto memoryPool = libobsensor::FrameMemoryPool::getInstance();
+    auto frameType = utils::mapStreamTypeToFrameType(sp->getType());
+    auto bufferManager = memoryPool->createFrameBufferManager(frameType, sp);
+    auto frame = bufferManager->acquireFrame();
+    if(frame == nullptr) {
+        LOG_WARN("The frame is dropped because there is no buffer to allocate");
+        return nullptr;
+    }
+    frame->setStreamProfile(sp);
+    return frame;
+}
+
+
 std::shared_ptr<Frame> createFrameSet() {
     auto memoryPool            = libobsensor::FrameMemoryPool::getInstance();
     auto frameSetBufferManager = memoryPool->createFrameBufferManager(OB_FRAME_SET, 7 * sizeof(std::shared_ptr<Frame>));

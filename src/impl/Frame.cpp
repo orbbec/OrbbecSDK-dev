@@ -422,6 +422,20 @@ ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format 
 }
 NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
 
+ob_frame *ob_create_frame_from_stream_profile(ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL{
+    VALIDATE_NOT_NULL(profile);
+    auto innerFrame = libobsensor::FrameFactory::createFrameFromStreamProfile(profile->profile);
+    if(innerFrame == nullptr) {
+        return nullptr;
+    }
+
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = innerFrame;
+
+    return frameImpl;
+}
+NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
+
 ob_frame *ob_create_frameset(ob_error **error) BEGIN_API_CALL {
     auto innerFrameSet = libobsensor::FrameFactory::createFrameSet();
     if(innerFrameSet == nullptr) {

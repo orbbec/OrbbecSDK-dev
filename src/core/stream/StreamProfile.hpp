@@ -139,6 +139,10 @@ extern "C" {
 struct ob_stream_profile {
     std::shared_ptr<const libobsensor::StreamProfile> profile;
 };
+
+struct ob_stream_profile_list {
+    std::vector<std::shared_ptr<const libobsensor::StreamProfile>> profileList;
+};
 #ifdef __cplusplus
 }
 #endif

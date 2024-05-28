@@ -418,6 +418,15 @@ OB_API ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_
                                             uint32_t buffer_size, ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context, ob_error **error);
 
 /**
+ * @brief Create a frame object based on stream profile
+ * 
+ * @param[in] profile Stream profile object
+ * @param[out] error Log error messages.
+ * @return ob_frame* Return the frame object.
+ */
+OB_API ob_frame *ob_create_frame_from_stream_profile(ob_stream_profile *profile, ob_error **error);
+
+/**
  * @brief Create an empty frameset object.
  *
  * @param[out] error Log error messages.

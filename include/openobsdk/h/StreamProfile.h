@@ -59,7 +59,7 @@ OB_API ob_stream_profile* ob_create_gyro_stream_profile(ob_gyro_full_scale_range
  * @param[out] error  Log error messages
  * @return ob_format return the format of the stream
  */
-OB_API ob_format ob_stream_profile_get_format(ob_stream_profile *profile, ob_error **error);
+OB_API ob_format ob_stream_profile_get_format(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get stream profile type
@@ -68,7 +68,7 @@ OB_API ob_format ob_stream_profile_get_format(ob_stream_profile *profile, ob_err
  * @param[out] error Log error messages
  * @return ob_stream_type stream type
  */
-OB_API ob_stream_type ob_stream_profile_get_type(ob_stream_profile *profile, ob_error **error);
+OB_API ob_stream_type ob_stream_profile_get_type(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get the extrinsic for source stream to target stream
@@ -78,7 +78,7 @@ OB_API ob_stream_type ob_stream_profile_get_type(ob_stream_profile *profile, ob_
  * @param[out] error Log error messages
  * @return ob_extrinsic The extrinsic
  */
-OB_API ob_extrinsic ob_stream_profile_get_extrinsic_to(ob_stream_profile *source, ob_stream_profile *target, ob_error **error);
+OB_API ob_extrinsic ob_stream_profile_get_extrinsic_to(const ob_stream_profile *source, ob_stream_profile *target, ob_error **error);
 
 /**
  * @brief Set the extrinsic for source stream to target stream
@@ -88,7 +88,7 @@ OB_API ob_extrinsic ob_stream_profile_get_extrinsic_to(ob_stream_profile *source
  * @param[in] extrinsic The extrinsic
  * @param[out] error   Log error messages
  */
-OB_API void ob_stream_profile_set_extrinsic_to(ob_stream_profile *source, ob_stream_profile *target, ob_extrinsic extrinsic, ob_error **error);
+OB_API void ob_stream_profile_set_extrinsic_to(ob_stream_profile *source, const ob_stream_profile *target, ob_extrinsic extrinsic, ob_error **error);
 
 /**
  * @brief Get the frame rate of the video stream
@@ -97,7 +97,7 @@ OB_API void ob_stream_profile_set_extrinsic_to(ob_stream_profile *source, ob_str
  * @param[out] error Log error messages
  * @return uint32_t return the frame rate of the stream
  */
-OB_API uint32_t ob_video_stream_profile_get_fps(ob_stream_profile *profile, ob_error **error);
+OB_API uint32_t ob_video_stream_profile_get_fps(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get the width of the video stream
@@ -106,7 +106,7 @@ OB_API uint32_t ob_video_stream_profile_get_fps(ob_stream_profile *profile, ob_e
  * @param[out] error Log error messages
  * @return uint32_t return the width of the stream
  */
-OB_API uint32_t ob_video_stream_profile_get_width(ob_stream_profile *profile, ob_error **error);
+OB_API uint32_t ob_video_stream_profile_get_width(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get the height of the video stream
@@ -115,7 +115,7 @@ OB_API uint32_t ob_video_stream_profile_get_width(ob_stream_profile *profile, ob
  * @param[out] error  Log error messages
  * @return uint32_t return the height of the stream
  */
-OB_API uint32_t ob_video_stream_profile_get_height(ob_stream_profile *profile, ob_error **error);
+OB_API uint32_t ob_video_stream_profile_get_height(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get the intrinsic of the video stream
@@ -124,7 +124,7 @@ OB_API uint32_t ob_video_stream_profile_get_height(ob_stream_profile *profile, o
  * @param[out] error   Log error messages
  * @return ob_camera_intrinsic Return the intrinsic of the stream
  */
-OB_API ob_camera_intrinsic ob_video_stream_get_intrinsic(ob_stream_profile *profile, ob_error **error);
+OB_API ob_camera_intrinsic ob_video_stream_get_intrinsic(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Set the intrinsic of the video stream
@@ -142,7 +142,7 @@ OB_API void ob_video_stream_set_intrinsic(ob_stream_profile *profile, ob_camera_
  * @param[out] error   Log error messages
  * @return ob_camera_distortion Return the distortion of the stream
  */
-OB_API ob_camera_distortion ob_video_stream_get_distortion(ob_stream_profile *profile, ob_error **error);
+OB_API ob_camera_distortion ob_video_stream_get_distortion(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Set the distortion of the video stream
@@ -160,7 +160,7 @@ OB_API void ob_video_stream_set_distortion(ob_stream_profile *profile, ob_camera
  * @param[out] error Log error messages.
  * @return The full-scale range of the accelerometer stream.
  */
-OB_API ob_accel_full_scale_range ob_accel_stream_profile_get_full_scale_range(ob_stream_profile *profile, ob_error **error);
+OB_API ob_accel_full_scale_range ob_accel_stream_profile_get_full_scale_range(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get the sampling frequency of the accelerometer frame.
@@ -169,7 +169,7 @@ OB_API ob_accel_full_scale_range ob_accel_stream_profile_get_full_scale_range(ob
  * @param[out] error Log error messages.
  * @return The sampling frequency of the accelerometer frame.
  */
-OB_API ob_accel_sample_rate ob_accel_stream_profile_get_sample_rate(ob_stream_profile *profile, ob_error **error);
+OB_API ob_accel_sample_rate ob_accel_stream_profile_get_sample_rate(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get the intrinsic of the accelerometer stream.
@@ -178,7 +178,7 @@ OB_API ob_accel_sample_rate ob_accel_stream_profile_get_sample_rate(ob_stream_pr
  * @param[out] error Log error messages.
  * @return ob_accel_intrinsic Return the intrinsic of the accelerometer stream.
  */
-OB_API ob_accel_intrinsic ob_accel_stream_profile_get_intrinsic(ob_stream_profile *profile, ob_error **error);
+OB_API ob_accel_intrinsic ob_accel_stream_profile_get_intrinsic(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Set the intrinsic of the accelerometer stream.
@@ -196,7 +196,7 @@ OB_API void ob_accel_stream_profile_set_intrinsic(ob_stream_profile *profile, ob
  * @param[out] error Log error messages.
  * @return The full-scale range of the gyroscope stream.
  */
-OB_API ob_gyro_full_scale_range ob_gyro_stream_profile_get_full_scale_range(ob_stream_profile *profile, ob_error **error);
+OB_API ob_gyro_full_scale_range ob_gyro_stream_profile_get_full_scale_range(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get the sampling frequency of the gyroscope stream.
@@ -205,7 +205,7 @@ OB_API ob_gyro_full_scale_range ob_gyro_stream_profile_get_full_scale_range(ob_s
  * @param[out] error Log error messages.
  * @return The sampling frequency of the gyroscope stream.
  */
-OB_API ob_gyro_sample_rate ob_gyro_stream_profile_get_sample_rate(ob_stream_profile *profile, ob_error **error);
+OB_API ob_gyro_sample_rate ob_gyro_stream_profile_get_sample_rate(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Get the intrinsic of the gyroscope stream.
@@ -214,7 +214,7 @@ OB_API ob_gyro_sample_rate ob_gyro_stream_profile_get_sample_rate(ob_stream_prof
  * @param[out] error Log error messages.
  * @return ob_gyro_intrinsic Return the intrinsic of the gyroscope stream.
  */
-OB_API ob_gyro_intrinsic ob_gyro_stream_get_intrinsic(ob_stream_profile *profile, ob_error **error);
+OB_API ob_gyro_intrinsic ob_gyro_stream_get_intrinsic(const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Set the intrinsic of the gyroscope stream.
@@ -237,7 +237,7 @@ OB_API void ob_gyro_stream_set_intrinsic(ob_stream_profile *profile, ob_gyro_int
  * @param[out] error Log error messages.
  * @return The matching profile.
  */
-OB_API ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(ob_stream_profile_list *profile_list, int width, int height, ob_format format, int fps,
+OB_API const ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(const ob_stream_profile_list *profile_list, int width, int height, ob_format format, int fps,
                                                                    ob_error **error);
 
 /**
@@ -250,7 +250,7 @@ OB_API ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(ob_str
  * @param[out] error Log error messages.
  * @return The matching profile.
  */
-OB_API ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(ob_stream_profile_list *profile_list, ob_accel_full_scale_range full_scale_range,
+OB_API const ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(const ob_stream_profile_list *profile_list, ob_accel_full_scale_range full_scale_range,
                                                                    ob_accel_sample_rate sample_rate, ob_error **error);
 
 /**
@@ -263,7 +263,7 @@ OB_API ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(ob_str
  * @param[out] error Log error messages.
  * @return The matching profile.
  */
-OB_API ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(ob_stream_profile_list *profile_list, ob_gyro_full_scale_range full_scale_range,
+OB_API const ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(const ob_stream_profile_list *profile_list, ob_gyro_full_scale_range full_scale_range,
                                                                   ob_gyro_sample_rate sample_rate, ob_error **error);
 
 /**
@@ -274,7 +274,7 @@ OB_API ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(ob_stre
  * @param[out] error Log error messages.
  * @return The matching profile.
  */
-OB_API ob_stream_profile *ob_stream_profile_list_get_profile(ob_stream_profile_list *profile_list, int index, ob_error **error);
+OB_API const ob_stream_profile *ob_stream_profile_list_get_profile(const ob_stream_profile_list *profile_list, int index, ob_error **error);
 
 /**
  * @brief Get the number of StreamProfile lists.
@@ -283,7 +283,7 @@ OB_API ob_stream_profile *ob_stream_profile_list_get_profile(ob_stream_profile_l
  * @param[out] error Log error messages.
  * @return The number of StreamProfile lists.
  */
-OB_API uint32_t ob_stream_profile_list_count(ob_stream_profile_list *profile_list, ob_error **error);
+OB_API uint32_t ob_stream_profile_list_count(const ob_stream_profile_list *profile_list, ob_error **error);
 
 /**
  * @brief Delete the stream profile list.
@@ -291,7 +291,7 @@ OB_API uint32_t ob_stream_profile_list_count(ob_stream_profile_list *profile_lis
  * @param[in] profile_list Stream configuration list.
  * @param[out] error Log error messages.
  */
-OB_API void ob_delete_stream_profile_list(ob_stream_profile_list *profile_list, ob_error **error);
+OB_API void ob_delete_stream_profile_list(const ob_stream_profile_list *profile_list, ob_error **error);
 
 /**
  * @brief Delete the stream configuration.
@@ -299,7 +299,7 @@ OB_API void ob_delete_stream_profile_list(ob_stream_profile_list *profile_list, 
  * @param[in] profile Stream profile object .
  * @param[out] error Log error messages.
  */
-OB_API void ob_delete_stream_profile(ob_stream_profile *profile, ob_error **error);
+OB_API void ob_delete_stream_profile(const ob_stream_profile *profile, ob_error **error);
 
 #ifdef __cplusplus
 }

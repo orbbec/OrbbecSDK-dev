@@ -27,7 +27,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, ref_frame, copy_data)
 
 ob_frame *ob_create_frame_from_stream_profile(const ob_stream_profile *stream_profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(stream_profile);
-    auto innerFrame = libobsensor::FrameFactory::createFrame( stream_profile->profile);
+    auto innerFrame = libobsensor::FrameFactory::createFrameFromStreamProfile( stream_profile->profile);
     auto frameImpl   = new ob_frame();
     frameImpl->frame = innerFrame;
     return frameImpl;

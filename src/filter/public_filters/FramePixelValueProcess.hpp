@@ -11,11 +11,6 @@ public:
     void        updateConfig(std::vector<std::string> &params) override;
     std::string getConfigSchema() const override;
 
-public:
-    void setScale(float scale) {
-        scale_ = scale;
-    }
-
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 

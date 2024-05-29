@@ -81,19 +81,19 @@ void PixelValueScaler::updateConfig(std::vector<std::string> &params) {
 }
 
 std::string PixelValueScaler::getConfigSchema() const {
-    // csv format: name type min max step default  description
+    // csv format: name，type， min，max，step，default，description
     return "scale, float, 0.01, 100.0, 0.01, 1.0, value scale factor";
 }
 
 std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame> frame) {
     if(frame->getType() != OB_FRAME_DEPTH) {
         LOG_WARN_INTVL("PixelValueScaler unsupported to process this frame type: {}", frame->getType());
-        return FrameFactory::createFrame(frame);
+        return FrameFactory::cloneFrame(frame);
     }
 
     auto depthFrame = frame->as<DepthFrame>();
 
-    auto outFrame = FrameFactory::createFrame(frame);
+    auto outFrame = FrameFactory::cloneFrame(frame);
 
     switch(frame->getFormat()) {
     case OB_FORMAT_Y16:
@@ -102,7 +102,6 @@ std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame
     default:
         break;
     }
-    outFrame->copyInfo(frame);
 
     auto outDepthFrame = outFrame->as<DepthFrame>();
     auto valueScale    = outDepthFrame->getValueScale();

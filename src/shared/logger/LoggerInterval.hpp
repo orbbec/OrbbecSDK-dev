@@ -5,6 +5,7 @@
 #include <spdlog/fmt/fmt.h>
 #include <spdlog/fmt/chrono.h>
 #include <map>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <mutex>

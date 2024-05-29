@@ -1,4 +1,5 @@
 #include "FrameFactory.hpp"
+#include "stream/StreamProfile.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "FrameMemoryPool.hpp"
 #include "exception/ObException.hpp"
@@ -9,9 +10,9 @@ namespace FrameFactory {
 
 std::shared_ptr<Frame> createFrame(OBFrameType frameType, OBFormat frameFormat, size_t datasize) {
 
-    auto memoryPool = FrameMemoryPool::getInstance();
+    auto                                 memoryPool    = FrameMemoryPool::getInstance();
     std::shared_ptr<IFrameBufferManager> bufferManager = memoryPool->createFrameBufferManager(frameType, datasize);
-    auto frame = bufferManager->acquireFrame();
+    auto                                 frame         = bufferManager->acquireFrame();
 
     if(frame == nullptr) {
         throw libobsensor::memory_exception("Failed to create frame, out of memory or other memory allocation error.");
@@ -22,13 +23,20 @@ std::shared_ptr<Frame> createFrame(OBFrameType frameType, OBFormat frameFormat, 
     return frame;
 }
 
-std::shared_ptr<Frame> createFrame(std::shared_ptr<const Frame> frame, bool copyData) {
+std::shared_ptr<Frame> createFrame(std::shared_ptr<const StreamProfile> profile){
+    // TODO: implement this function
+    utils::unusedVar(profile);
+    return nullptr;
+}
+
+
+std::shared_ptr<Frame> cloneFrame(std::shared_ptr<const Frame> frame, bool copyData) {
     auto newFrame = createFrame(frame->getType(), frame->getFormat(), frame->getDataSize());
     if(copyData) {
         newFrame->updateData(frame->getData(), frame->getDataSize());
-        if(newFrame->is<VideoFrame>()){
-            auto vf = frame->as<const VideoFrame>();
-            auto newVf =  newFrame->as<VideoFrame>();
+        if(newFrame->is<VideoFrame>()) {
+            auto vf    = frame->as<const VideoFrame>();
+            auto newVf = newFrame->as<VideoFrame>();
             newVf->updateMetadata(vf->getMetadata(), vf->getMetadataSize());
         }
     }

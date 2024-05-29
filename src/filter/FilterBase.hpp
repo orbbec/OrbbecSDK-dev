@@ -16,6 +16,8 @@ public:
     const std::string &getName() const override;
 
     void reset() override;
+    void enable(bool en) override;
+    bool isEnabled() const override;
 
     // Synchronize
     std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) override;
@@ -29,6 +31,7 @@ protected:
 
 protected:
     const std::string name_;
+    std::atomic<bool> enabled_;
 
     std::mutex mutex_;
 

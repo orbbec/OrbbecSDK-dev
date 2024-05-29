@@ -93,10 +93,10 @@ uint32_t VideoFrame::getFps() const {
     if(!streamProfile_) {
         throw invalid_value_exception("Error: This frame dose not have a stream profile!");
     }
-    if(!streamProfile_->is<const VideoStreamProfile>()) {
+    if(!streamProfile_->is<VideoStreamProfile>()) {
         throw invalid_value_exception("Error! A VideoFrame contain a non-video stream profile!");
     }
-    return streamProfile_->as<const VideoStreamProfile>()->getFps();
+    return streamProfile_->as<VideoStreamProfile>()->getFps();
 }
 
 uint32_t VideoFrame::getWidth() const {
@@ -106,17 +106,17 @@ uint32_t VideoFrame::getWidth() const {
     if(!streamProfile_->is<const VideoStreamProfile>()) {
         throw invalid_value_exception("Error! A VideoFrame contain a non-video stream profile!");
     }
-    return streamProfile_->as<const VideoStreamProfile>()->getWidth();
+    return streamProfile_->as<VideoStreamProfile>()->getWidth();
 }
 
 uint32_t VideoFrame::getHeight() const {
     if(!streamProfile_) {
         throw invalid_value_exception("Error: This frame dose not have a stream profile!");
     }
-    if(!streamProfile_->is<const VideoStreamProfile>()) {
+    if(!streamProfile_->is<VideoStreamProfile>()) {
         throw invalid_value_exception("Error! A VideoFrame contain a non-video stream profile!");
     }
-    return streamProfile_->as<const VideoStreamProfile>()->getHeight();
+    return streamProfile_->as<VideoStreamProfile>()->getHeight();
 }
 
 uint32_t calculateStrideBytes(uint32_t width, OBFormat format) {
@@ -268,7 +268,7 @@ void VideoFrame::setPixelAvailableBitSize(uint8_t bitSize) {
 void VideoFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
     Frame::copyInfo(sourceFrame);
     if(sourceFrame->is<VideoFrame>()) {
-        auto vf           = sourceFrame->as<const VideoFrame>();
+        auto vf           = sourceFrame->as<VideoFrame>();
         availableBitSize_ = vf->availableBitSize_;
         stride_           = vf->stride_;
     }
@@ -291,7 +291,8 @@ float DepthFrame::getValueScale() const {
 void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
     VideoFrame::copyInfo(sourceFrame);
     if(sourceFrame->is<DepthFrame>()) {
-        valueScale_ = sourceFrame->as<const DepthFrame>()->valueScale_;
+        auto df = sourceFrame->as<DepthFrame>();
+        valueScale_ = df->valueScale_;
     }
 }
 

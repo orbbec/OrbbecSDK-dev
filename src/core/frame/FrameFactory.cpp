@@ -23,19 +23,12 @@ std::shared_ptr<Frame> createFrame(OBFrameType frameType, OBFormat frameFormat, 
     return frame;
 }
 
-std::shared_ptr<Frame> createFrame(std::shared_ptr<const StreamProfile> profile){
-    // TODO: implement this function
-    utils::unusedVar(profile);
-    return nullptr;
-}
-
-
 std::shared_ptr<Frame> cloneFrame(std::shared_ptr<const Frame> frame, bool copyData) {
     auto newFrame = createFrame(frame->getType(), frame->getFormat(), frame->getDataSize());
     if(copyData) {
         newFrame->updateData(frame->getData(), frame->getDataSize());
         if(newFrame->is<VideoFrame>()) {
-            auto vf    = frame->as<const VideoFrame>();
+            auto vf    = frame->as<VideoFrame>();
             auto newVf = newFrame->as<VideoFrame>();
             newVf->updateMetadata(vf->getMetadata(), vf->getMetadataSize());
         }

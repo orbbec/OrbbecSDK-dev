@@ -10,6 +10,8 @@ extern "C" {
 
 #include "ObTypes.h"
 
+OB_API ob_filter *ob_create_filter(const char *name, ob_error **error);
+
 /**
  * @brief Create a PointCloud Filter.
  *
@@ -322,7 +324,6 @@ void ob_edge_noise_removal_filter_set_filter_params(ob_filter *filter, ob_edge_n
  */
 ob_edge_noise_removal_filter_params ob_edge_noise_removal_filter_get_filter_params(ob_filter *filter, ob_error **error);
 
-
 /**
  * @brief Get the noise removal filter margin left th range.
  *
@@ -358,7 +359,6 @@ ob_uint16_property_range ob_edge_noise_removal_filter_get_margin_top_th_range(ob
  * @return ob_uint16_property_range the margin_bottom_th value of property range.
  */
 ob_uint16_property_range ob_edge_noise_removal_filter_get_margin_bottom_th_range(ob_filter *filter, ob_error **error);
-
 
 /**
  * @brief Create a decimation filter.
@@ -450,7 +450,6 @@ void ob_sequence_id_filter_select_sequence_id(ob_filter *filter, int sequence_id
  * @return sequence id to pass the filter.
  */
 int ob_sequence_id_filter_get_sequence_id(ob_filter *filter, ob_error **error);
-
 
 /**
  * @brief Get the current sequence id list.
@@ -564,7 +563,7 @@ void ob_filter_push_frame(ob_filter *filter, ob_frame *frame, ob_error **error);
  * @param[in] filter A filter object.
  * @param[out] error Log error messages.
  */
-void ob_delete_filter(ob_filter *filter, ob_error **error);
+OB_API void ob_delete_filter(ob_filter *filter, ob_error **error);
 
 #ifdef __cplusplus
 }

@@ -8,13 +8,112 @@
 extern "C" {
 #endif
 
-uint64_t ob_frame_get_index(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_create_frame(ob_frame_type frame_type, ob_format format, uint32_t data_size, ob_error **error) BEGIN_API_CALL {
+    auto innerFrame = libobsensor::FrameFactory::createFrame(frame_type, format, data_size);
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = innerFrame;
+    return frameImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame_type, format, data_size)
+
+ob_frame *ob_clone_frame(const ob_frame *ref_frame, bool copy_data, ob_error **error)BEGIN_API_CALL{
+    VALIDATE_NOT_NULL(ref_frame);
+    auto innerFrame = libobsensor::FrameFactory::cloneFrame(ref_frame->frame, copy_data);
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = innerFrame;
+    return frameImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, ref_frame, copy_data)
+
+ob_frame *ob_create_frame_from_stream_profile(const ob_stream_profile *stream_profile, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(stream_profile);
+    auto innerFrame = libobsensor::FrameFactory::createFrame( stream_profile->profile);
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = innerFrame;
+    return frameImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, stream_profile)
+
+ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes,
+                                ob_error **error) BEGIN_API_CALL {
+
+    auto innerFrame = libobsensor::FrameFactory::createVideoFrame(frame_type, format, width, height, stride_bytes);
+    if(innerFrame == nullptr) {
+        LOG_ERROR("User custom frame create failed!");
+        return nullptr;
+    }
+
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = innerFrame;
+
+    return frameImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame_type, format, width, height, stride_bytes)
+
+ob_frame *ob_create_frame_from_buffer(ob_frame_type frame_type, ob_format format, uint8_t *buffer, uint32_t buffer_size,
+                                      ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context, ob_error **error) BEGIN_API_CALL {
+    auto innerFrame = libobsensor::FrameFactory::createFrameFromUserBuffer(
+        frame_type, format, buffer, buffer_size,
+        [buffer_destroy_cb, buffer, buffer_destroy_context]() { buffer_destroy_cb(buffer, buffer_destroy_context); });
+
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = innerFrame;
+
+    return frameImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame_type, format, buffer, buffer_size, buffer_destroy_cb, buffer_destroy_context)
+
+ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, uint8_t *buffer,
+                                            uint32_t buffer_size, ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context,
+                                            ob_error **error) BEGIN_API_CALL {
+    auto innerFrame = libobsensor::FrameFactory::createVideoFrameFromUserBuffer(
+        frame_type, format, width, height, stride_bytes, buffer, buffer_size,
+        [buffer_destroy_cb, buffer, buffer_destroy_context]() { buffer_destroy_cb(buffer, buffer_destroy_context); });
+
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = innerFrame;
+
+    return frameImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame_type, format, width, height, stride_bytes, buffer, buffer_size, buffer_destroy_cb, buffer_destroy_context)
+
+ob_frame *ob_create_frameset(ob_error **error) BEGIN_API_CALL {
+    auto innerFrameSet = libobsensor::FrameFactory::createFrameSet();
+    if(innerFrameSet == nullptr) {
+        return nullptr;
+    }
+
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = innerFrameSet;
+
+    return frameImpl;
+}
+NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
+
+void ob_frame_add_ref(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    frame->refCnt += 1;
+}
+HANDLE_EXCEPTIONS_NO_RETURN(frame)
+
+void ob_delete_frame(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    auto innerFrame = frame->frame;
+    if(frame->refCnt > 1) {
+        frame->refCnt -= 1;
+        return;
+    }
+    delete frame;
+}
+HANDLE_EXCEPTIONS_NO_RETURN(frame)
+
+uint64_t ob_frame_get_index(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->getNumber();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint64_t(0), frame)
 
-uint32_t ob_video_frame_get_width(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_video_frame_get_width(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     if(!frame->frame->is<libobsensor::VideoFrame>()) {
         throw libobsensor::unsupported_operation_exception("It's not a video frame!");
@@ -23,7 +122,7 @@ uint32_t ob_video_frame_get_width(ob_frame *frame, ob_error **error) BEGIN_API_C
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frame)
 
-uint32_t ob_video_frame_get_height(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_video_frame_get_height(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     if(!frame->frame->is<libobsensor::VideoFrame>()) {
         throw libobsensor::unsupported_operation_exception("It's not a video frame!");
@@ -32,43 +131,31 @@ uint32_t ob_video_frame_get_height(ob_frame *frame, ob_error **error) BEGIN_API_
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frame)
 
-ob_format ob_frame_get_format(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_format ob_frame_get_format(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->getFormat();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_FORMAT_UNKNOWN, frame)
 
-ob_frame_type ob_frame_get_type(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_frame_type ob_frame_get_type(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->getType();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_FRAME_VIDEO, frame)
 
-uint64_t ob_frame_get_timestamp_ms(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(frame);
-    return frame->frame->getTimeStampUsec() / 1000;
-}
-HANDLE_EXCEPTIONS_AND_RETURN(uint64_t(0), frame)
-
-uint64_t ob_frame_get_timestamp_us(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint64_t ob_frame_get_timestamp_us(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->getTimeStampUsec();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint64_t(0), frame)
 
-uint64_t ob_frame_get_system_timestamp_ms(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(frame);
-    return frame->frame->getSystemTimeStampUsec() / 1000;
-}
-HANDLE_EXCEPTIONS_AND_RETURN(uint64_t(0), frame)
-
-uint64_t ob_frame_get_system_timestamp_us(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint64_t ob_frame_get_system_timestamp_us(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->getSystemTimeStampUsec();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint64_t(0), frame)
 
-uint64_t ob_frame_get_global_timestamp_us(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint64_t ob_frame_get_global_timestamp_us(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->getGlobalTimeStampUsec();
 }
@@ -88,57 +175,73 @@ void ob_frame_set_timestamp_us(ob_frame *frame, uint64_t timestamp_us, ob_error 
 }
 HANDLE_EXCEPTIONS_NO_RETURN(frame)
 
-float ob_depth_frame_get_value_scale(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+float ob_depth_frame_get_value_scale(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     auto depthFrame = frame->frame->as<libobsensor::DepthFrame>();
     return depthFrame->getValueScale();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(-1.0f, frame)
 
-float ob_points_frame_get_coordinate_value_scale(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+float ob_points_frame_get_coordinate_value_scale(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     auto pointsFrame = frame->frame->as<libobsensor::PointsFrame>();
     return pointsFrame->getCoordinateValueScale();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(-1.0f, frame)
 
-uint8_t *ob_frame_get_data(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+const uint8_t *ob_frame_get_data(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return const_cast<uint8_t *>(frame->frame->getData());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
-uint32_t ob_frame_get_data_size(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+void ob_frame_update_data(ob_frame *frame, const uint8_t *data, uint32_t data_size, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    VALIDATE_NOT_NULL(data);
+    auto innerFrame = frame->frame;
+    innerFrame->updateData(data, data_size);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(frame, data, data_size)
+
+uint32_t ob_frame_get_data_size(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return (uint32_t)frame->frame->getDataSize();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frame)
 
-uint8_t *ob_frame_get_metadata(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+const uint8_t *ob_frame_get_metadata(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return const_cast<uint8_t *>(frame->frame->getMetadata());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
-uint32_t ob_frame_get_metadata_size(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_frame_get_metadata_size(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return (uint32_t)frame->frame->getMetadataSize();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frame)
 
-bool ob_frame_has_metadata(ob_frame *frame, ob_frame_metadata_type type, ob_error **error) BEGIN_API_CALL {
+void ob_frame_update_metadata(ob_frame *frame, const uint8_t *metadata, size_t metadata_size, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    VALIDATE_NOT_NULL(metadata);
+    auto innerFrame = frame->frame;
+    innerFrame->updateMetadata(metadata, metadata_size);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(frame, metadata_size)
+
+bool ob_frame_has_metadata(const ob_frame *frame, ob_frame_metadata_type type, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->hasMetadata(type);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, frame)
 
-int64_t ob_frame_get_metadata_value(ob_frame *frame, ob_frame_metadata_type type, ob_error **error) BEGIN_API_CALL {
+int64_t ob_frame_get_metadata_value(const ob_frame *frame, ob_frame_metadata_type type, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->as<libobsensor::VideoFrame>()->getMetadataValue(type);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(-1, frame)
 
-ob_stream_profile *ob_frame_get_stream_profile(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile *ob_frame_get_stream_profile(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
@@ -150,7 +253,7 @@ ob_stream_profile *ob_frame_get_stream_profile(ob_frame *frame, ob_error **error
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
-void ob_frame_set_stream_profile(ob_frame *frame, ob_stream_profile *stream_profile, ob_error **error) BEGIN_API_CALL {
+void ob_frame_set_stream_profile(ob_frame *frame, const ob_stream_profile *stream_profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     VALIDATE_NOT_NULL(stream_profile);
     auto innerFrame   = frame->frame;
@@ -159,7 +262,7 @@ void ob_frame_set_stream_profile(ob_frame *frame, ob_stream_profile *stream_prof
 }
 HANDLE_EXCEPTIONS_NO_RETURN(frame, stream_profile)
 
-ob_sensor *ob_frame_get_sensor(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_sensor *ob_frame_get_sensor(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
@@ -183,7 +286,7 @@ ob_sensor *ob_frame_get_sensor(ob_frame *frame, ob_error **error) BEGIN_API_CALL
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
-ob_device *ob_frame_get_device(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_device *ob_frame_get_device(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
@@ -206,13 +309,13 @@ ob_device *ob_frame_get_device(ob_frame *frame, ob_error **error) BEGIN_API_CALL
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
-uint8_t ob_video_frame_get_pixel_available_bit_size(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint8_t ob_video_frame_get_pixel_available_bit_size(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->as<libobsensor::VideoFrame>()->getPixelAvailableBitSize();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint8_t(0), frame)
 
-ob_sensor_type ob_ir_frame_get_data_source(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_sensor_type ob_ir_frame_get_data_source(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     auto type = frame->frame->as<libobsensor::VideoFrame>()->getType();
     if(type == OB_FRAME_IR) {
@@ -228,7 +331,7 @@ ob_sensor_type ob_ir_frame_get_data_source(ob_frame *frame, ob_error **error) BE
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_SENSOR_UNKNOWN, frame)
 
-ob_accel_value ob_accel_frame_get_value(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_accel_value ob_accel_frame_get_value(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     if(!frame->frame->is<libobsensor::AccelFrame>()) {
         throw libobsensor::unsupported_operation_exception("It's not a accel frame!");
@@ -237,7 +340,7 @@ ob_accel_value ob_accel_frame_get_value(ob_frame *frame, ob_error **error) BEGIN
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_accel_value(), frame)
 
-float ob_accel_frame_get_temperature(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+float ob_accel_frame_get_temperature(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     if(!frame->frame->is<libobsensor::AccelFrame>()) {
         throw libobsensor::unsupported_operation_exception("It's not a accel frame!");
@@ -246,7 +349,7 @@ float ob_accel_frame_get_temperature(ob_frame *frame, ob_error **error) BEGIN_AP
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0.0f, frame)
 
-ob_gyro_value ob_gyro_frame_get_value(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_gyro_value ob_gyro_frame_get_value(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     if(!frame->frame->is<libobsensor::GyroFrame>()) {
         throw libobsensor::unsupported_operation_exception("It's not a gyro frame!");
@@ -255,7 +358,7 @@ ob_gyro_value ob_gyro_frame_get_value(ob_frame *frame, ob_error **error) BEGIN_A
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_gyro_value(), frame)
 
-float ob_gyro_frame_get_temperature(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+float ob_gyro_frame_get_temperature(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     if(!frame->frame->is<libobsensor::GyroFrame>()) {
         throw libobsensor::unsupported_operation_exception("It's not a gyro frame!");
@@ -264,7 +367,7 @@ float ob_gyro_frame_get_temperature(ob_frame *frame, ob_error **error) BEGIN_API
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0.0f, frame)
 
-uint32_t ob_frameset_get_frame_count(ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -273,7 +376,7 @@ uint32_t ob_frameset_get_frame_count(ob_frame *frameset, ob_error **error) BEGIN
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frameset)
 
-ob_frame *ob_frameset_get_depth_frame(ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -288,7 +391,7 @@ ob_frame *ob_frameset_get_depth_frame(ob_frame *frameset, ob_error **error) BEGI
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-ob_frame *ob_frameset_get_color_frame(ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -303,7 +406,7 @@ ob_frame *ob_frameset_get_color_frame(ob_frame *frameset, ob_error **error) BEGI
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-ob_frame *ob_frameset_get_ir_frame(ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -318,7 +421,7 @@ ob_frame *ob_frameset_get_ir_frame(ob_frame *frameset, ob_error **error) BEGIN_A
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-ob_frame *ob_frameset_get_points_frame(ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -333,7 +436,7 @@ ob_frame *ob_frameset_get_points_frame(ob_frame *frameset, ob_error **error) BEG
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-ob_frame *ob_frameset_get_frame(ob_frame *frameset, ob_frame_type frame_type, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type frame_type, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -348,7 +451,7 @@ ob_frame *ob_frameset_get_frame(ob_frame *frameset, ob_frame_type frame_type, ob
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-ob_frame *ob_frameset_get_frame_by_index(ob_frame *frameset, int index, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, int index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -368,86 +471,9 @@ void ob_frameset_push_frame(ob_frame *frameset, ob_frame *frame, ob_error **erro
     VALIDATE_NOT_NULL(frame);
     auto innerFrameSet = frameset->frame->as<libobsensor::FrameSet>();
     auto innerFrame    = frame->frame;
-    innerFrameSet->pushFrame(std::move(innerFrame));  // TODO: check frame type
+    innerFrameSet->pushFrame(std::move(innerFrame));
 }
 HANDLE_EXCEPTIONS_NO_RETURN(frameset, frame)
-
-void ob_delete_frame(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(frame);
-    auto innerFrame = frame->frame;
-    if(frame->refCnt > 1) {
-        frame->refCnt -= 1;
-        return;
-    }
-    delete frame;
-}
-HANDLE_EXCEPTIONS_NO_RETURN(frame)
-
-void ob_frame_add_ref(ob_frame *frame, ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(frame);
-    frame->refCnt += 1;
-}
-HANDLE_EXCEPTIONS_NO_RETURN(frame)
-
-ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes,
-                                ob_error **error) BEGIN_API_CALL {
-
-    auto innerFrame = libobsensor::FrameFactory::createVideoFrame(frame_type, format, width, height, stride_bytes);
-    if(innerFrame == nullptr) {
-        LOG_ERROR("User custom frame create failed!");
-        return nullptr;
-    }
-
-    auto frameImpl   = new ob_frame();
-    frameImpl->frame = innerFrame;
-
-    return frameImpl;
-}
-NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
-
-ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, uint8_t *buffer,
-                                            uint32_t buffer_size, ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context,
-                                            ob_error **error) BEGIN_API_CALL {
-    auto innerFrame = libobsensor::FrameFactory::createVideoFrameFromUserBuffer(
-        frame_type, format, width, height, stride_bytes, buffer, buffer_size,
-        [buffer_destroy_cb, buffer, buffer_destroy_context]() { buffer_destroy_cb(buffer, buffer_destroy_context); });
-    if(innerFrame == nullptr) {
-        return nullptr;
-    }
-
-    auto frameImpl   = new ob_frame();
-    frameImpl->frame = innerFrame;
-
-    return frameImpl;
-}
-NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
-
-ob_frame *ob_create_frame_from_stream_profile(ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL{
-    VALIDATE_NOT_NULL(profile);
-    auto innerFrame = libobsensor::FrameFactory::createFrameFromStreamProfile(profile->profile);
-    if(innerFrame == nullptr) {
-        return nullptr;
-    }
-
-    auto frameImpl   = new ob_frame();
-    frameImpl->frame = innerFrame;
-
-    return frameImpl;
-}
-NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
-
-ob_frame *ob_create_frameset(ob_error **error) BEGIN_API_CALL {
-    auto innerFrameSet = libobsensor::FrameFactory::createFrameSet();
-    if(innerFrameSet == nullptr) {
-        return nullptr;
-    }
-
-    auto frameImpl   = new ob_frame();
-    frameImpl->frame = innerFrameSet;
-
-    return frameImpl;
-}
-NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
 
 #ifdef __cplusplus
 }

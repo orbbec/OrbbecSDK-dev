@@ -23,7 +23,7 @@ file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp ${CMAKE_CURR
 file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp)
 
 target_sources(openobsdk PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
-target_link_libraries(openobsdk PRIVATE ob::shared ob::core)
+target_link_libraries(openobsdk PRIVATE ob::shared ob::core ob::filter)
 target_include_directories(openobsdk PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_include_directories(openobsdk PUBLIC "$<BUILD_INTERFACE:${OB_PUBLIC_HEADERS_DIR}>" "$<INSTALL_INTERFACE:include>")
 

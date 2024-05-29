@@ -12,7 +12,14 @@ target_sources(filter PRIVATE ${SOURCE_FILES} ${HEADERS_FILES})
 target_link_libraries(filter PUBLIC ob::shared ob::core)
 target_include_directories(filter PUBLIC ${OB_PUBLIC_HEADERS_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
+add_subdirectory(${OB_3RDPARTY_DIR}/dylib dylib)
+target_link_libraries(filter PUBLIC dylib::dylib)
+
 add_library(ob::filter ALIAS filter)
 ob_source_group(ob::filter)
 
 set_target_properties(filter PROPERTIES FOLDER "modules")
+
+if(OB_INSTALL_FILTER_DEV_HEADERS)
+    install(FILES ${CMAKE_CURRENT_LIST_DIR}/private_filters/PrivFilterTypes.h DESTINATION include/openobsdk/h/)
+endif()

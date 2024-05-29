@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 
-namespace libobsensor{
+namespace libobsensor {
 namespace utils {
 
 struct to_string {
@@ -27,7 +27,7 @@ public:
 
 template <class T, bool S> struct ArgsStreamer {
     void streamArg(std::ostream &out, const T &val, bool last) {
-        out << ':' << val << ( last ? " " : ", " );
+        out << ':' << val << (last ? " " : ", ");
     }
 };
 
@@ -69,6 +69,5 @@ template <class T, class... U> void ArgsToStream(std::ostream &out, const char *
     ArgsToStream(out, names, rest...);
 }
 
-
 }  // namespace utils
-}  // namespace ob
+}  // namespace libobsensor

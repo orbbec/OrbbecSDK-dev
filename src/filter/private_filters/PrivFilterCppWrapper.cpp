@@ -2,17 +2,17 @@
 #include "logger/Logger.hpp"
 
 namespace libobsensor {
-PrivFilterCppWrapper::PrivFilterCppWrapper(const char *filterName, ob_private_filter *privFilter) : FilterBase(filterName), privFilter_(privFilter) {}
+PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, ob_priv_filter_context *filterCtx) : FilterBase(filterName), privFilterCtx_(filterCtx) {}
 
 PrivFilterCppWrapper::~PrivFilterCppWrapper() noexcept {
-    if(privFilter_) {
+    if(privFilterCtx_) {
         ob_error *error = nullptr;
-        privFilter_->destroy(privFilter_, &error);
+        privFilterCtx_->destroy(privFilterCtx_, &error);
         if(error) {
             LOG_WARN("Private filter {} destroyed failed: {}", name_, error->message);
             delete error;
         }
-        privFilter_ = nullptr;
+        privFilterCtx_ = nullptr;
     }
     LOG_DEBUG("Private filter {} destroyed", name_);
 }
@@ -23,7 +23,7 @@ void PrivFilterCppWrapper::updateConfig(std::vector<std::string> &params) {
     for(auto &p: params) {
         c_params.push_back(p.c_str());
     }
-    privFilter_->update_config(privFilter_->filter, params.size(), c_params.data(), &error);
+    privFilterCtx_->update_config(privFilterCtx_->filter, params.size(), c_params.data(), &error);
     if(error) {
         LOG_WARN("Private filter {} update config failed: {}", name_, error->message);
         delete error;
@@ -32,7 +32,7 @@ void PrivFilterCppWrapper::updateConfig(std::vector<std::string> &params) {
 
 std::string PrivFilterCppWrapper::getConfigSchema() const {
     ob_error   *error = nullptr;
-    const char *desc  = privFilter_->get_config_schema(privFilter_->filter, &error);
+    const char *desc  = privFilterCtx_->get_config_schema(privFilterCtx_->filter, &error);
     if(error) {
         LOG_WARN("Private filter {} get config schema failed: {}", name_, error->message);
         delete error;
@@ -43,7 +43,7 @@ std::string PrivFilterCppWrapper::getConfigSchema() const {
 
 void PrivFilterCppWrapper::reset() {
     ob_error *error = nullptr;
-    privFilter_->reset(privFilter_->filter, &error);
+    privFilterCtx_->reset(privFilterCtx_->filter, &error);
     if(error) {
         LOG_WARN("Private filter {} reset failed: {}", name_, error->message);
         delete error;
@@ -55,7 +55,7 @@ std::shared_ptr<Frame> PrivFilterCppWrapper::processFunc(std::shared_ptr<const F
     ob_frame *c_frame = new ob_frame();
     c_frame->frame    = std::const_pointer_cast<Frame>(frame);
 
-    auto rst_frame = privFilter_->process(privFilter_->filter, c_frame, &error);
+    auto rst_frame = privFilterCtx_->process(privFilterCtx_->filter, c_frame, &error);
     if(error) {
         LOG_WARN("Private filter {} process failed: {}", name_, error->message);
         delete error;

@@ -37,7 +37,7 @@ std::shared_ptr<IFilter> PrivFilterCreator::create() {
         throw unsupported_operation_exception(errorMsg);
     }
 
-    auto pkgCtx              = pkgCtx_;
+    auto pkgCtx              = pkgCtx_;  // Pass the pkgCtx to the deleter of shared_ptr to control the lifetime
     auto privFilterCtxShared = std::shared_ptr<ob_priv_filter_context>(privFilterCtx, [filterName, pkgCtx](ob_priv_filter_context *ctx) {
         if(ctx) {
             ob_error *error = nullptr;
@@ -85,7 +85,7 @@ std::shared_ptr<IFilter> PrivFilterCreator::create(const std::string &activation
         throw unsupported_operation_exception(errorMsg);
     }
 
-    auto pkgCtx              = pkgCtx_;
+    auto pkgCtx              = pkgCtx_;  // Pass the pkgCtx to the deleter of shared_ptr to control the lifetime
     auto privFilterCtxShared = std::shared_ptr<ob_priv_filter_context>(privFilterCtx, [filterName, pkgCtx](ob_priv_filter_context *ctx) {
         if(ctx) {
             ob_error *error = nullptr;

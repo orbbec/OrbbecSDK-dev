@@ -4,21 +4,27 @@
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
 
-namespace libobsensor{
-
+namespace libobsensor {
 
 #define DEFAULT_MAX_FRAME_MEMORY_SIZE ((uint64_t)2 * 1024 * 1024 * 1024)  // 2GB
 
-FrameMemoryAllocator::FrameMemoryAllocator() : maxSize_(DEFAULT_MAX_FRAME_MEMORY_SIZE), usedSize_(0) {}
+FrameMemoryAllocator::FrameMemoryAllocator() : maxSize_(DEFAULT_MAX_FRAME_MEMORY_SIZE), usedSize_(0), logger_(Logger::getInstance()) {}
 FrameMemoryAllocator::~FrameMemoryAllocator() noexcept {
     if(usedSize_ > 0) {
         LOG_WARN("FrameMemoryAllocator destroyed while still has memory used! usedSize={0:.3f}MB", byteToMB(usedSize_));
     }
 }
 
+std::mutex FrameMemoryAllocator::instanceMutex_;
+std::weak_ptr<FrameMemoryAllocator> FrameMemoryAllocator::instanceWeakPtr_;
 std::shared_ptr<FrameMemoryAllocator> FrameMemoryAllocator::getInstance() {
-    static std::shared_ptr<FrameMemoryAllocator> frameMemoryAllocator = std::shared_ptr<FrameMemoryAllocator>(new FrameMemoryAllocator());
-    return frameMemoryAllocator;
+    std::lock_guard<std::mutex> lock(instanceMutex_);
+    auto                        instance = instanceWeakPtr_.lock();
+    if(!instance) {
+        instance                      = std::shared_ptr<FrameMemoryAllocator>(new FrameMemoryAllocator());
+        instanceWeakPtr_ = instance;
+    }
+    return instance;
 }
 
 void FrameMemoryAllocator::setMaxFrameMemorySize(uint64_t sizeInMb) {
@@ -63,14 +69,15 @@ void FrameMemoryAllocator::deallocate(uint8_t *ptr, size_t size) {
 }
 
 FrameBufferManagerBase::FrameBufferManagerBase(size_t frameDataBufferSize, size_t frameObjSize)
-    : frameDataBufferSize_(frameDataBufferSize), frameObjSize_(frameObjSize) {
-    frameTotalSize_ = frameDataBufferSize_ + frameObjSize_ + FRAME_DATA_ALIGN_IN_BYTE - 1;  // 多申请FRAME_DATA_ALIGN_IN_BYTE-1, 方便偏移数据部分地址，实现对齐
+    : frameDataBufferSize_(frameDataBufferSize), frameObjSize_(frameObjSize), frameMemoryAllocator_(FrameMemoryAllocator::getInstance()) {
+    frameTotalSize_ = frameDataBufferSize_ + frameObjSize_ + FRAME_DATA_ALIGN_IN_BYTE
+                      - 1;  // Apply for more FRAME_DATA_ALIGN_IN_BYTE-1 to facilitate offset part of the data address and achieve alignment
 }
 
 FrameBufferManagerBase::~FrameBufferManagerBase() noexcept {
     std::unique_lock<std::recursive_mutex> lock_(mutex_);
     while(!availableFrameBuffers_.empty()) {
-        FrameMemoryAllocator::getInstance()->deallocate(availableFrameBuffers_.front(), frameTotalSize_);
+        frameMemoryAllocator_->deallocate(availableFrameBuffers_.front(), frameTotalSize_);
         availableFrameBuffers_.erase(availableFrameBuffers_.begin());
     }
     LOG_DEBUG("FrameBufferManagerBase destroyed! manager type:{0},  obj addr:0x{1:x}", typeid(*this).name(), uint64_t(this));
@@ -84,12 +91,12 @@ uint8_t *FrameBufferManagerBase::acquireBuffer() {
         availableFrameBuffers_.erase(availableFrameBuffers_.begin());
     }
     else {
-        bufferPtr = FrameMemoryAllocator::getInstance()->allocate(frameTotalSize_);
+        bufferPtr = frameMemoryAllocator_->allocate(frameTotalSize_);
         if(bufferPtr == nullptr) {
             LOG_WARN("allocBuffer failed! Will retry after release idle memory on FrameMemoryPool");
             auto memoryPool = FrameMemoryPool::getInstance();
             memoryPool->freeIdleMemory();
-            bufferPtr = FrameMemoryAllocator::getInstance()->allocate(frameTotalSize_);
+            bufferPtr = frameMemoryAllocator_->allocate(frameTotalSize_);
             if(bufferPtr == nullptr) {
                 auto msg = std::string("Alloc frame buffer failed! size=") + std::to_string(frameTotalSize_);
                 LOG_FATAL(msg);
@@ -110,21 +117,21 @@ void FrameBufferManagerBase::reclaimBuffer(void *buffer) {
     availableFrameBuffers_.push_back((uint8_t *)buffer);
 
     if(availableFrameBuffers_.size() > 100) {
-        // 当availableFrameBuffers_ 足够多时及时及时释放内存
-        // 不能直接删除当前buffer，会导致frame析构崩溃
-        FrameMemoryAllocator::getInstance()->deallocate(availableFrameBuffers_.front(), frameTotalSize_);
+        // Release the memory in time when there are enough availableFrameBuffers_
+        // The current buffer cannot be deleted directly, which will cause frame destruction and crash.
+        frameMemoryAllocator_->deallocate(availableFrameBuffers_.front(), frameTotalSize_);
         availableFrameBuffers_.erase(availableFrameBuffers_.begin());
     }
 }
+
 void FrameBufferManagerBase::releaseIdleBuffer() {
     std::unique_lock<std::recursive_mutex> lock_(mutex_);
     while(!availableFrameBuffers_.empty()) {
-        // 当availableFrameBuffers_ 足够多时及时及时释放内存
-        // 不能直接删除当前buffer，会导致frame析构崩溃
-        FrameMemoryAllocator::getInstance()->deallocate(availableFrameBuffers_.front(), frameTotalSize_);
+        // Release the memory in time when there are enough availableFrameBuffers_
+        // The current buffer cannot be deleted directly, which will cause frame destruction and crash.
+        frameMemoryAllocator_->deallocate(availableFrameBuffers_.front(), frameTotalSize_);
         availableFrameBuffers_.erase(availableFrameBuffers_.begin());
     }
 }
 
-
-}  // namespace ob
+}  // namespace libobsensor

@@ -19,9 +19,9 @@
 
 std::map<std::string, std::shared_ptr<ObLogIntvlRecord>> logIntvlRecordMap;
 std::mutex                                               logIntvlRecordMapMtx;
-bool                                                     logIntvlRecordMapDestroyed(false);
+std::atomic<bool>                                        logIntvlRecordMapDestroyed(false);
 
-namespace libobsensor{
+namespace libobsensor {
 
 const std::map<OBLogSeverity, spdlog::level::level_enum> OBLogSeverityToSpdlogLevel = {
 #ifdef _DEBUG
@@ -191,23 +191,36 @@ void Logger::updateDefaultSpdLogger() {
 
     std::shared_ptr<spdlog::logger> spdLogger;
     if(GlobalLoggerConfig.async) {
-        spdlog::init_thread_pool(1024, 1);  // queue with 1k items and 1 threads, 多个线程会导致日志输出顺序错乱
+        spdlog::init_thread_pool(1024, 1);  // queue with 1k items and 1 threads, multiple threads will cause the log output order to be disordered
 
-        // 异步logger
+        // Asynchronous logger
         spdLogger = std::make_shared<spdlog::async_logger>("OrbbecSDK", sinks.begin(), sinks.end(),  //
                                                            spdlog::thread_pool(), spdlog::async_overflow_policy::block);
 
-        spdlog::flush_every(std::chrono::seconds(1));  // 设置每隔1秒flush一次日志
+        spdlog::flush_every(std::chrono::seconds(1));  // Set to flush the log every 1 second
     }
     else {
-        // 同步 logger
+        // Synchronize logger
         spdLogger = std::make_shared<spdlog::logger>("OrbbecSDK", sinks.begin(), sinks.end());
     }
 
     spdlog::set_default_logger(spdLogger);
-    spdlog::set_level(spdlog::level::trace);  // 设置logger日志级别(这里设置为trace, 实际输出时会根据sink的日志级别输出)
-    spdlog::flush_on(spdlog::level::trace);   // 设置flush日志的级别（接收到大于等于这个级别日志时立即输出日志）
+    spdlog::set_level(spdlog::level::trace);  // Set the logger log level (here set to trace, the actual output will be output according to the sink's log
+                                              // level)
+    spdlog::flush_on(spdlog::level::trace);   // Set the flush log level (immediately output logs when receiving logs greater than or equal to this level)
     spdlog::set_pattern(OB_DEFAULT_LOG_FMT);
+}
+
+std::mutex              Logger::instanceMutex_;
+std::weak_ptr<Logger>   Logger::instanceWeakPtr_;
+std::shared_ptr<Logger> Logger::getInstance() {
+    std::lock_guard<std::mutex> lock(instanceMutex_);
+    auto                        instance = instanceWeakPtr_.lock();
+    if(!instance) {
+        instance         = std::shared_ptr<Logger>(new Logger());
+        instanceWeakPtr_ = instance;
+    }
+    return instance;
 }
 
 Logger::Logger() : spdlogRegistry_(spdlog::details::registry::instance_ptr()) {
@@ -246,8 +259,6 @@ Logger::~Logger() noexcept {
         callbackSink_.reset();
     }
 
-    // LOG_INFO("Logger destroyed!");
-    // spdlog::shutdown();  // 在此之后尝试输出log将会导致程序崩溃(同一个进程重新创建context也会因为这个问题导致崩溃)
     spdlogRegistry_.reset();
 }
 
@@ -359,16 +370,4 @@ void Logger::setLogCallback(OBLogSeverity severity, LogCallback callback) {
     updateDefaultSpdLogger();
 }
 
-// void Logger::flush() {
-//     if(consoleSink_) {
-//         consoleSink_->flush();
-//     }
-//     if(fileSink_) {
-//         fileSink_->flush();
-//     }
-//     if(callbackSink_) {
-//         callbackSink_->flush();
-//     }
-// }
-
-}  // namespace ob
+}  // namespace libobsensor

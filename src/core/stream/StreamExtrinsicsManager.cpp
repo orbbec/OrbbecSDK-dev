@@ -3,8 +3,7 @@
 #include "exception/OBException.hpp"
 #include "utils/StringUtils.hpp"
 
-namespace libobsensor{
-
+namespace libobsensor {
 
 const OBExtrinsic IdentityExtrinsic = { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
 
@@ -58,22 +57,19 @@ OBExtrinsic inverseExtrinsics(const OBExtrinsic &extrinsics) {
     return invExtrinsic;
 }
 
-static std::mutex instanceMutex;
-static std::shared_ptr<StreamExtrinsicsManager> instance;
+std::mutex                               StreamExtrinsicsManager::instanceMutex_;
+std::weak_ptr<StreamExtrinsicsManager>   StreamExtrinsicsManager::instanceWeakPtr_;
 std::shared_ptr<StreamExtrinsicsManager> StreamExtrinsicsManager::getInstance() {
-    std::unique_lock<std::mutex> lock(instanceMutex);
+    std::unique_lock<std::mutex> lock(instanceMutex_);
+    auto                         instance = instanceWeakPtr_.lock();
     if(!instance) {
-        instance = std::shared_ptr<StreamExtrinsicsManager>(new StreamExtrinsicsManager());
+        instance         = std::shared_ptr<StreamExtrinsicsManager>(new StreamExtrinsicsManager());
+        instanceWeakPtr_ = instance;
     }
     return instance;
 }
 
-void StreamExtrinsicsManager::destroyInstance() {
-    std::unique_lock<std::mutex> lock(instanceMutex);
-    getInstance().reset();
-}
-
-StreamExtrinsicsManager::StreamExtrinsicsManager() : nextId_(0) {}
+StreamExtrinsicsManager::StreamExtrinsicsManager() : nextId_(0), logger_(Logger::getInstance())  {}
 
 StreamExtrinsicsManager::~StreamExtrinsicsManager() noexcept {}
 
@@ -83,7 +79,7 @@ void StreamExtrinsicsManager::registerExtrinsics(std::shared_ptr<const StreamPro
         throw invalid_value_exception("Invalid stream profile, from or to is null");
     }
 
-    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     cleanExpiredStreamProfiles();
 
     if(!from || !to) {
@@ -128,7 +124,7 @@ void StreamExtrinsicsManager::registerExtrinsics(std::shared_ptr<const StreamPro
 }
 
 void StreamExtrinsicsManager::registerSameExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) {
-    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     cleanExpiredStreamProfiles();
 
     if(!from || !to) {
@@ -163,7 +159,7 @@ void StreamExtrinsicsManager::registerSameExtrinsics(std::shared_ptr<const Strea
 }
 
 OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) {
-    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     if(!from || !to) {
         throw invalid_value_exception("Invalid stream profile");
     }
@@ -389,5 +385,4 @@ public:
 static unit_test_extrinsics_manager ut;
 #endif
 
-
-}  // namespace ob
+}  // namespace libobsensor

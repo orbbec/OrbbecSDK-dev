@@ -12,7 +12,7 @@ public:
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct ob_device {
+struct ob_device_t {
     std::shared_ptr<libobsensor::IDevice> device;
 };
 #ifdef __cplusplus

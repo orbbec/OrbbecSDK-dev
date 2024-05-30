@@ -4,6 +4,7 @@
 #include <functional>
 #include <string>
 #include "FrameBufferManager.hpp"
+#include "logger/Logger.hpp"
 
 namespace libobsensor {
 
@@ -21,11 +22,17 @@ struct FrameBufferManagerInfoCompare {
     }
 };
 
-class FrameMemoryPool {
+class FrameMemoryPool : public std::enable_shared_from_this<FrameMemoryPool> {
+private:
+    FrameMemoryPool();
+
+    static std::mutex                     instanceMutex_;
+    static std::weak_ptr<FrameMemoryPool> instanceWeakPtr_;
+    static bool                           reuseFrameBufferManager_;
+
 public:
     ~FrameMemoryPool();
     static std::shared_ptr<FrameMemoryPool> getInstance();
-    static void                             destroyInstance();
     static void                             setMaxFrameMemorySize(uint64_t sizeInMB);
     static void                             activateFrameBufferManagerReuse(bool enable);
 
@@ -36,12 +43,11 @@ public:
     void freeIdleMemory();
 
 private:
-    FrameMemoryPool();
-
-private:
     std::map<FrameBufferManagerInfo, std::shared_ptr<IFrameBufferManager>, FrameBufferManagerInfoCompare> bufMgrMap_;
     std::mutex                                                                                            bufMgrMapMutex_;
     std::vector<std::weak_ptr<IFrameBufferManager>>                                                       bufMgrWeakList_;
+
+    std::shared_ptr<Logger> logger_;  // Manages the lifecycle of the logger object.
 };
 
 }  // namespace libobsensor

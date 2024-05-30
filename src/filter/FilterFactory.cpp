@@ -8,23 +8,19 @@
 
 namespace libobsensor {
 
-static std::mutex                     instanceMutex;
-static std::shared_ptr<FilterFactory> instance;
-
+std::mutex                     FilterFactory::instanceMutex_;
+std::weak_ptr<FilterFactory>   FilterFactory::instanceWeakPtr_;
 std::shared_ptr<FilterFactory> FilterFactory::getInstance() {
-    std::unique_lock<std::mutex> lk(instanceMutex);
+    std::unique_lock<std::mutex> lk(instanceMutex_);
+    auto                         instance = instanceWeakPtr_.lock();
     if(!instance) {
-        instance = std::shared_ptr<FilterFactory>(new FilterFactory());
+        instance         = std::shared_ptr<FilterFactory>(new FilterFactory());
+        instanceWeakPtr_ = instance;
     }
     return instance;
 }
 
-void FilterFactory::destroyInstance() {
-    std::unique_lock<std::mutex> lk(instanceMutex);
-    instance.reset();
-}
-
-FilterFactory::FilterFactory() {
+FilterFactory::FilterFactory() : logger_(Logger::getInstance()) {
     auto publicFilterCreators  = PublicFilterCreatorLoader::getCreators();
     auto privateFilterCreators = PrivFilterCreatorLoader::getCreators();
     filterCreators_.insert(publicFilterCreators.begin(), publicFilterCreators.end());

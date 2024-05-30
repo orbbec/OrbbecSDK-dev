@@ -5,9 +5,9 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <mutex>
 
-namespace libobsensor{
-
+namespace libobsensor {
 
 struct StreamProfileWeakPtrCompare {
     bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
@@ -23,9 +23,14 @@ struct StreamProfileWeakPtrCompare {
 };
 
 class StreamIntrinsicsManager {
+private:
+    StreamIntrinsicsManager();
+
+    static std::mutex                             instanceMutex_;
+    static std::weak_ptr<StreamIntrinsicsManager> instanceWeakPtr_;
+
 public:
     static std::shared_ptr<StreamIntrinsicsManager> getInstance();
-    static void destroyInstance();
 
     ~StreamIntrinsicsManager() noexcept;
 
@@ -39,16 +44,14 @@ public:
     OBAccelIntrinsic   getAccelStreamIntrinsics(std::shared_ptr<const StreamProfile> profile);
 
 private:
-    StreamIntrinsicsManager();
+    std::mutex mutex_;
 
-private:
     std::map<std::weak_ptr<const StreamProfile>, OBCameraIntrinsic, StreamProfileWeakPtrCompare>  videoStreamIntrinsics_;
     std::map<std::weak_ptr<const StreamProfile>, OBCameraDistortion, StreamProfileWeakPtrCompare> videoStreamDistortion_;
     std::map<std::weak_ptr<const StreamProfile>, OBGyroIntrinsic, StreamProfileWeakPtrCompare>    gyroStreamIntrinsics_;
     std::map<std::weak_ptr<const StreamProfile>, OBAccelIntrinsic, StreamProfileWeakPtrCompare>   accelStreamIntrinsics_;
 
-    std::mutex mutex_;
+    std::shared_ptr<Logger> logger_;  // Manages the lifecycle of the logger object.
 };
 
-
-}  // namespace ob
+}  // namespace libobsensor

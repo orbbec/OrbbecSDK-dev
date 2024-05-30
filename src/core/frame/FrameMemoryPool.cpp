@@ -2,23 +2,20 @@
 #include "utils/PublicTypeHelper.hpp"
 #include <sstream>
 
-namespace libobsensor{
+namespace libobsensor {
 
-std::mutex                       static instanceMutex;
-std::shared_ptr<FrameMemoryPool> static instance;
-bool                             reuseFrameBufferManager = true;
+std::mutex                     FrameMemoryPool::instanceMutex_;
+std::weak_ptr<FrameMemoryPool> FrameMemoryPool::instanceWeakPtr_;
+bool                           FrameMemoryPool::reuseFrameBufferManager_;
 
 std::shared_ptr<FrameMemoryPool> FrameMemoryPool::getInstance() {
-    std::unique_lock<std::mutex> lk(instanceMutex);
+    std::unique_lock<std::mutex> lk(instanceMutex_);
+    auto                         instance = instanceWeakPtr_.lock();
     if(!instance) {
-        instance = std::shared_ptr<FrameMemoryPool>(new FrameMemoryPool());
+        instance         = std::shared_ptr<FrameMemoryPool>(new FrameMemoryPool());
+        instanceWeakPtr_ = instance;
     }
     return instance;
-}
-
-void FrameMemoryPool::destroyInstance() {
-    std::unique_lock<std::mutex> lk(instanceMutex);
-    instance.reset();
 }
 
 void FrameMemoryPool::setMaxFrameMemorySize(uint64_t sizeInMB) {
@@ -26,10 +23,10 @@ void FrameMemoryPool::setMaxFrameMemorySize(uint64_t sizeInMB) {
 }
 
 void FrameMemoryPool::activateFrameBufferManagerReuse(bool enable) {
-    reuseFrameBufferManager = enable;
+    reuseFrameBufferManager_ = enable;
 }
 
-FrameMemoryPool::FrameMemoryPool() {
+FrameMemoryPool::FrameMemoryPool():logger_(Logger::getInstance()) {
     LOG_DEBUG("FrameMemoryPool created!");
 }
 
@@ -41,7 +38,7 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
     std::unique_lock<std::mutex> lock(bufMgrMapMutex_);
     FrameBufferManagerInfo       info = { type, frameBufferSize };
 
-    if(reuseFrameBufferManager) {
+    if(reuseFrameBufferManager_) {
         auto iter = bufMgrMap_.find(info);
         if(iter != bufMgrMap_.end()) {
             return iter->second;
@@ -93,7 +90,7 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
         break;
     }
 
-    if(reuseFrameBufferManager) {
+    if(reuseFrameBufferManager_) {
         bufMgrMap_.insert({ info, frameBufMgr });
     }
     else {
@@ -157,5 +154,4 @@ void FrameMemoryPool::freeIdleMemory() {
     }
 }
 
-
-}  // namespace ob
+}  // namespace libobsensor

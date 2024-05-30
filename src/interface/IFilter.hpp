@@ -50,7 +50,7 @@ public:
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct ob_filter {
+struct ob_filter_t {
     std::shared_ptr<libobsensor::IFilter> filter;
 };
 #ifdef __cplusplus

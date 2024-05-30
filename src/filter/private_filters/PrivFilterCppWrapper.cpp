@@ -2,18 +2,9 @@
 #include "logger/Logger.hpp"
 
 namespace libobsensor {
-PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, ob_priv_filter_context *filterCtx) : FilterBase(filterName), privFilterCtx_(filterCtx) {}
+PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, std::shared_ptr<ob_priv_filter_context> filterCtx) : FilterBase(filterName), privFilterCtx_(filterCtx) {}
 
 PrivFilterCppWrapper::~PrivFilterCppWrapper() noexcept {
-    if(privFilterCtx_) {
-        ob_error *error = nullptr;
-        privFilterCtx_->destroy(privFilterCtx_, &error);
-        if(error) {
-            LOG_WARN("Private filter {} destroyed failed: {}", name_, error->message);
-            delete error;
-        }
-        privFilterCtx_ = nullptr;
-    }
     LOG_DEBUG("Private filter {} destroyed", name_);
 }
 

@@ -247,5 +247,14 @@ void forEachSubDirInDirectory(const std::string &directory, const std::function<
     }
 #endif
 }
+
+std::string removeExtensionOfFileName(const std::string &fileName){
+    size_t pos = fileName.find_last_of(".");
+    if(pos == std::string::npos) {
+        return fileName;
+    }
+    return fileName.substr(0, pos);
+}
+
 }  // namespace utils
 }  // namespace libobsensor

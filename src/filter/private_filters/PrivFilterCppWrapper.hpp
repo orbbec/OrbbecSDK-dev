@@ -9,7 +9,7 @@ extern "C" {
 namespace libobsensor {
 class PrivFilterCppWrapper : public FilterBase {
 public:
-    PrivFilterCppWrapper(const std::string &filterName, ob_priv_filter_context *filterCtx);
+    PrivFilterCppWrapper(const std::string &filterName, std::shared_ptr<ob_priv_filter_context> filterCtx);
     virtual ~PrivFilterCppWrapper() noexcept;
 
     // Config
@@ -22,6 +22,6 @@ private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;  // Filter function function, implemented on child class
 
 private:
-    ob_priv_filter_context_t *privFilterCtx_;
+    std::shared_ptr<ob_priv_filter_context_t> privFilterCtx_;
 };
 }  // namespace libobsensor

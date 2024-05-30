@@ -6,12 +6,12 @@
 #include "utils/FileUtils.hpp"
 namespace libobsensor {
 
-PrivFilterCreator::PrivFilterCreator(std::shared_ptr<PrivFilterLibHandle> libHandle, size_t index) : libHandle_(libHandle), index_(index) {}
+PrivFilterCreator::PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index) : pkgCtx_(pkgCtx), index_(index) {}
 
 std::shared_ptr<IFilter> PrivFilterCreator::create() {
     ob_error *error = nullptr;
 
-    bool activated = libHandle_->is_activated(&error);
+    bool activated = pkgCtx_->is_activated(&error);
     if(error) {
         std::string errorMsg = "Check if private filter library is activated: " + std::string(error->message);
         delete error;
@@ -22,27 +22,40 @@ std::shared_ptr<IFilter> PrivFilterCreator::create() {
         throw unsupported_operation_exception("Private filter library not activated");
     }
 
-    auto privFilter = libHandle_->create_filter(index_, &error);
+    auto privFilterCtx = pkgCtx_->create_filter(index_, &error);
+
     if(error) {
         std::string errorMsg = "Failed to create private filter: " + std::string(error->message);
         delete error;
         throw unsupported_operation_exception(errorMsg);
     }
 
-    auto filterName = libHandle_->get_filter_name(index_, &error);
+    auto filterName = pkgCtx_->get_filter_name(index_, &error);
     if(error) {
         std::string errorMsg = "Failed to get filter name: " + std::string(error->message);
         delete error;
         throw unsupported_operation_exception(errorMsg);
     }
 
-    return std::make_shared<PrivFilterCppWrapper>(filterName, privFilter);
+    auto pkgCtx              = pkgCtx_;
+    auto privFilterCtxShared = std::shared_ptr<ob_priv_filter_context>(privFilterCtx, [filterName, pkgCtx](ob_priv_filter_context *ctx) {
+        if(ctx) {
+            ob_error *error = nullptr;
+            ctx->destroy(ctx, &error);
+            if(error) {
+                LOG_WARN("Private filter {} destroyed failed: {}", filterName, error->message);
+                delete error;
+            }
+            ctx = nullptr;
+        }
+    });
+    return std::make_shared<PrivFilterCppWrapper>(filterName, privFilterCtxShared);
 }
 
 std::shared_ptr<IFilter> PrivFilterCreator::create(const std::string &activationKey) {
     ob_error *error = nullptr;
 
-    bool activated = libHandle_->is_activated(&error);
+    bool activated = pkgCtx_->is_activated(&error);
     if(error) {
         std::string errorMsg = "Check if private filter library is activated: " + std::string(error->message);
         delete error;
@@ -50,7 +63,7 @@ std::shared_ptr<IFilter> PrivFilterCreator::create(const std::string &activation
     }
 
     if(!activated) {
-        libHandle_->activate(activationKey.c_str(), &error);
+        pkgCtx_->activate(activationKey.c_str(), &error);
         if(error) {
             std::string errorMsg = "Failed to activate private filter library: " + std::string(error->message);
             delete error;
@@ -58,26 +71,38 @@ std::shared_ptr<IFilter> PrivFilterCreator::create(const std::string &activation
         }
     }
 
-    auto filterName = libHandle_->get_filter_name(index_, &error);
+    auto filterName = pkgCtx_->get_filter_name(index_, &error);
     if(error) {
         std::string errorMsg = "Failed to get filter name: " + std::string(error->message);
         delete error;
         throw unsupported_operation_exception(errorMsg);
     }
 
-    auto privFilter = libHandle_->create_filter(index_, &error);
+    auto privFilterCtx = pkgCtx_->create_filter(index_, &error);
     if(error) {
         std::string errorMsg = "Failed to create private filter: " + std::string(error->message);
         delete error;
         throw unsupported_operation_exception(errorMsg);
     }
 
-    return std::make_shared<PrivFilterCppWrapper>(filterName, privFilter);
+    auto pkgCtx              = pkgCtx_;
+    auto privFilterCtxShared = std::shared_ptr<ob_priv_filter_context>(privFilterCtx, [filterName, pkgCtx](ob_priv_filter_context *ctx) {
+        if(ctx) {
+            ob_error *error = nullptr;
+            ctx->destroy(ctx, &error);
+            if(error) {
+                LOG_WARN("Private filter {} destroyed failed: {}", filterName, error->message);
+                delete error;
+            }
+            ctx = nullptr;
+        }
+    });
+    return std::make_shared<PrivFilterCppWrapper>(filterName, privFilterCtxShared);
 }
 
 std::string PrivFilterCreator::getVendorSpecificCode() const {
     ob_error *error = nullptr;
-    auto      code   = libHandle_->get_vendor_specific_code(&error);
+    auto      code  = pkgCtx_->get_vendor_specific_code(&error);
     if(error) {
         std::string errorMsg = "Failed to get filter UID: " + std::string(error->message);
         delete error;
@@ -88,27 +113,28 @@ std::string PrivFilterCreator::getVendorSpecificCode() const {
 
 namespace PrivFilterCreatorLoader {
 
-#define DEFAULT_PRIVATE_FILTERS_ROOT_DIR "./extention/filters/"
+#define DEFAULT_PRIVATE_FILTERS_ROOT_DIR "./extension/filters/"
 std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
     // todo: get filters root dir from config file
     std::string filtersRootDir = DEFAULT_PRIVATE_FILTERS_ROOT_DIR;
 
     std::map<std::string, std::shared_ptr<IFilterCreator>> filterCreators;
 
-    auto load = [&filterCreators](const std::string &dir, const std::string &libName) {
-        auto libHandle                      = std::make_shared<PrivFilterLibHandle>();
-        libHandle->dir                      = dir;
-        libHandle->libName                  = libName;
-        libHandle->dylib                    = std::make_shared<dylib>(dir, libName);
-        libHandle->get_filter_count         = libHandle->dylib->get_function<size_t(ob_error **)>("ob_get_filter_count");
-        libHandle->get_filter_name          = libHandle->dylib->get_function<const char *(size_t, ob_error **)>("ob_get_filter_name");
-        libHandle->create_filter            = libHandle->dylib->get_function<ob_priv_filter_context *(size_t, ob_error **)>("ob_create_filter");
-        libHandle->get_vendor_specific_code = libHandle->dylib->get_function<const char *(ob_error **)>("ob_priv_filter_get_vendor_specific_code");
-        libHandle->is_activated             = libHandle->dylib->get_function<bool(ob_error **)>("ob_priv_filter_is_activated");
-        libHandle->activate                 = libHandle->dylib->get_function<bool(const char *, ob_error **)>("ob_priv_filter_activate");
+    auto load = [&filterCreators](const std::string &dir, const std::string &packageName) {
+        auto pkgCtx_                      = std::make_shared<PrivFilterPackageContext>();
+        pkgCtx_->dir                      = dir;
+        pkgCtx_->packageName              = packageName;
+        auto fileName                     = utils::removeExtensionOfFileName(packageName);
+        pkgCtx_->dylib                    = std::make_shared<dylib>(dir, fileName);
+        pkgCtx_->get_filter_count         = pkgCtx_->dylib->get_function<size_t(ob_error **)>("ob_get_filter_count");
+        pkgCtx_->get_filter_name          = pkgCtx_->dylib->get_function<const char *(size_t, ob_error **)>("ob_get_filter_name");
+        pkgCtx_->create_filter            = pkgCtx_->dylib->get_function<ob_priv_filter_context *(size_t, ob_error **)>("ob_create_filter");
+        pkgCtx_->get_vendor_specific_code = pkgCtx_->dylib->get_function<const char *(ob_error **)>("ob_priv_filter_get_vendor_specific_code");
+        pkgCtx_->is_activated             = pkgCtx_->dylib->get_function<bool(ob_error **)>("ob_priv_filter_is_activated");
+        pkgCtx_->activate                 = pkgCtx_->dylib->get_function<bool(const char *, ob_error **)>("ob_priv_filter_activate");
 
         ob_error *error       = nullptr;
-        auto      filterCount = libHandle->get_filter_count(&error);
+        auto      filterCount = pkgCtx_->get_filter_count(&error);
         if(error) {
             std::string errorMsg = "Failed to get filter count: " + std::string(error->message);
             delete error;
@@ -116,16 +142,16 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         }
 
         for(size_t i = 0; i < filterCount; i++) {
-            auto filterName = libHandle->get_filter_name(i, &error);
+            auto filterName = pkgCtx_->get_filter_name(i, &error);
             if(error) {
                 std::string errorMsg = "Failed to get filter name: " + std::string(error->message);
                 delete error;
                 throw unsupported_operation_exception(errorMsg);
             }
 
-            auto creator               = std::make_shared<PrivFilterCreator>(libHandle, i);
+            auto creator               = std::make_shared<PrivFilterCreator>(pkgCtx_, i);
             filterCreators[filterName] = creator;
-            LOG_INFO("Private filter creator created: {}", filterName);
+            LOG_DEBUG("Private filter creator created: {}", filterName);
         }
     };
 
@@ -134,9 +160,9 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
 
     // filter library with dependencies files (multiple files), should be placed in a sub directory
     utils::forEachSubDirInDirectory(filtersRootDir, [&](const std::string &folderName) {
-        auto dir     = filtersRootDir + folderName + "/";
-        auto libName = folderName;  // the filter lib file name should be the same as the folder name
-        TRY_EXECUTE({ load(dir, libName); });
+        auto dir         = filtersRootDir + folderName + "/";
+        auto packageName = folderName;  // the filter lib file name should be the same as the folder name
+        TRY_EXECUTE({ load(dir, packageName); });
     });
 
     return filterCreators;

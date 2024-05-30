@@ -132,16 +132,16 @@ OB_API ob_frame *ob_create_frameset(ob_error **error);
  * @param[in] frame Frame object to increase the reference count.
  * @param[out] error Log error messages.
  */
-OB_API void ob_frame_add_ref(ob_frame *frame, ob_error **error);
+OB_API void ob_frame_add_ref(const ob_frame *frame, ob_error **error);
 
 /**
  * @brief Delete a frame object
  * @brief This function will decrease the reference count of the frame object and release the memory if the reference count becomes 0.
  *
- * @param[in] frame The frame object to delete
+ * @param[in] frame The frame object to delete.
  * @param[out] error Log error messages
  */
-OB_API void ob_delete_frame(ob_frame *frame, ob_error **error);
+OB_API void ob_delete_frame(const ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the frame index
@@ -453,7 +453,7 @@ OB_API uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error *
  * @param[out] error Log error messages.
  * @return ob_frame* Return the depth frame.
  */
-OB_API ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error);
+OB_API const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the color frame from the frameset.
@@ -464,7 +464,7 @@ OB_API ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error 
  * @param[out] error Log error messages.
  * @return ob_frame* Return the color frame.
  */
-OB_API ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error **error);
+OB_API const ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the infrared frame from the frameset.
@@ -475,7 +475,7 @@ OB_API ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error 
  * @param[out] error Log error messages.
  * @return ob_frame* Return the infrared frame.
  */
-OB_API ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **error);
+OB_API const ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get point cloud frame from the frameset.
@@ -486,7 +486,7 @@ OB_API ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **e
  * @param[out] error Log error messages.
  * @return ob_frame* Return the point cloud frame.
  */
-OB_API ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error **error);
+OB_API const ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get a frame of a specific type from the frameset.
@@ -498,7 +498,7 @@ OB_API ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error
  * @param[out] error Log error messages.
  * @return ob_frame* Return the frame of the specified type, or nullptr if it does not exist.
  */
-OB_API ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type frame_type, ob_error **error);
+OB_API const ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type frame_type, ob_error **error);
 
 /**
  * @brief Get a frame at a specific index from the FrameSet
@@ -508,7 +508,7 @@ OB_API ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type f
  * @param[out] error Log error messages.
  * @return ob_frame* Return the frame at the specified index, or nullptr if it does not exist.
  */
-OB_API ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, int index, ob_error **error);
+OB_API const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, int index, ob_error **error);
 
 /**
  * @brief Add a frame of the specified type to the frameset.
@@ -517,7 +517,7 @@ OB_API ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, int in
  * @param[in] frame Frame object to add.
  * @param[out] error Log error messages.
  */
-OB_API void ob_frameset_push_frame(ob_frame *frameset, ob_frame *frame, ob_error **error);
+OB_API void ob_frameset_push_frame(ob_frame *frameset, const ob_frame *frame, ob_error **error);
 
 #ifdef __cplusplus
 }

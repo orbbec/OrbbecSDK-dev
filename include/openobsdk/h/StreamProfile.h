@@ -53,6 +53,14 @@ OB_API ob_stream_profile* ob_create_accel_stream_profile(ob_accel_full_scale_ran
 OB_API ob_stream_profile* ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,ob_error **error);
 
 /**
+ * @brief Delete the stream configuration.
+ *
+ * @param[in] profile Stream profile object .
+ * @param[out] error Log error messages.
+ */
+OB_API void ob_delete_stream_profile(const ob_stream_profile *profile, ob_error **error);
+
+/**
  * @brief Get stream profile format
  *
  * @param[in] profile  Stream profile object
@@ -229,6 +237,8 @@ OB_API void ob_gyro_stream_set_intrinsic(ob_stream_profile *profile, ob_gyro_int
  * @brief Match the corresponding ob_stream_profile through the passed parameters. If there are multiple matches,
  * the first one in the list will be returned by default. If no matched profile is found, an error will be returned.
  *
+ * @attention The stream profile returned by this function should be deleted by calling @ref ob_delete_stream_profile() when it is no longer needed.
+ *
  * @param[in] profile_list Resolution list.
  * @param[in] width Width. If you don't need to add matching conditions, you can pass OB_WIDTH_ANY.
  * @param[in] height Height. If you don't need to add matching conditions, you can pass OB_HEIGHT_ANY.
@@ -244,6 +254,8 @@ OB_API const ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(
  * @brief Match the corresponding ob_stream_profile through the passed parameters. If there are multiple matches,
  * the first one in the list will be returned by default. If no matched profile is found, an error will be returned.
  *
+ * @attention The stream profile returned by this function should be deleted by calling @ref ob_delete_stream_profile() when it is no longer needed.
+ *
  * @param[in] profile_list Resolution list.
  * @param[in] full_scale_range Full-scale range. If you don't need to add matching conditions, you can pass 0.
  * @param[in] sample_rate Sample rate. If you don't need to add matching conditions, you can pass 0.
@@ -257,6 +269,8 @@ OB_API const ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(
  * @brief Match the corresponding ob_stream_profile through the passed parameters. If there are multiple matches,
  * the first one in the list will be returned by default. If no matched profile is found, an error will be returned.
  *
+ * @attention The stream profile returned by this function should be deleted by calling @ref ob_delete_stream_profile() when it is no longer needed.
+ *
  * @param[in] profile_list Resolution list.
  * @param[in] full_scale_range Full-scale range. If you don't need to add matching conditions, you can pass 0.
  * @param[in] sample_rate Sample rate. If you don't need to add matching conditions, you can pass 0.
@@ -268,6 +282,8 @@ OB_API const ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(c
 
 /**
  * @brief Get the corresponding StreamProfile by subscripting.
+ *
+ * @attention The stream profile returned by this function should be deleted by calling @ref ob_delete_stream_profile() when it is no longer needed.
  *
  * @param[in] profile_list StreamProfile lists.
  * @param[in] index Index.
@@ -293,13 +309,6 @@ OB_API uint32_t ob_stream_profile_list_count(const ob_stream_profile_list *profi
  */
 OB_API void ob_delete_stream_profile_list(const ob_stream_profile_list *profile_list, ob_error **error);
 
-/**
- * @brief Delete the stream configuration.
- *
- * @param[in] profile Stream profile object .
- * @param[out] error Log error messages.
- */
-OB_API void ob_delete_stream_profile(const ob_stream_profile *profile, ob_error **error);
 
 #ifdef __cplusplus
 }

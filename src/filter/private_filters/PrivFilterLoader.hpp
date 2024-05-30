@@ -15,9 +15,9 @@ extern "C" {
 
 namespace libobsensor {
 
-struct PrivFilterLibHandle {
+struct PrivFilterPackageContext {
     std::string                                   dir;
-    std::string                                   libName;
+    std::string                                   packageName;
     std::shared_ptr<dylib>                        dylib;
     pfunc_ob_get_filter_count                     get_filter_count;
     pfunc_ob_get_filter_name                      get_filter_name;
@@ -29,7 +29,7 @@ struct PrivFilterLibHandle {
 
 class PrivFilterCreator : public IPrivFilterCreator {
 public:
-    PrivFilterCreator(std::shared_ptr<PrivFilterLibHandle> libHandle, size_t index);
+    PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index);
     virtual ~PrivFilterCreator() = default;
 
     std::shared_ptr<IFilter> create() override;
@@ -37,7 +37,7 @@ public:
     std::string              getVendorSpecificCode() const override;
 
 private:
-    std::shared_ptr<PrivFilterLibHandle> libHandle_;
+    std::shared_ptr<PrivFilterPackageContext> pkgCtx_;
     size_t                               index_;
 };
 

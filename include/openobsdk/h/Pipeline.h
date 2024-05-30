@@ -15,7 +15,7 @@ extern "C" {
 /**
  * @brief Create a pipeline object
  *
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_pipeline* return the pipeline object
  */
 ob_pipeline *ob_create_pipeline(ob_error **error);
@@ -24,7 +24,7 @@ ob_pipeline *ob_create_pipeline(ob_error **error);
  * @brief Using device objects to create pipeline objects
  *
  * @param[in] dev Device object used to create pipeline
- * @param[out] error  Log error messages
+ * @param[out] error  Pointer to an error object that will be set if an error occurs.
  * @return ob_pipeline* return the pipeline object
  */
 ob_pipeline *ob_create_pipeline_with_device(ob_device *dev, ob_error **error);
@@ -33,7 +33,7 @@ ob_pipeline *ob_create_pipeline_with_device(ob_device *dev, ob_error **error);
  * @brief Use the playback file to create a pipeline object
  *
  * @param[in] file_name The playback file path used to create the pipeline
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_pipeline* return the pipeline object
  */
 ob_pipeline *ob_create_pipeline_with_playback_file(const char *file_name, ob_error **error);
@@ -42,7 +42,7 @@ ob_pipeline *ob_create_pipeline_with_playback_file(const char *file_name, ob_err
  * @brief Delete pipeline objects
  *
  * @param[in] pipeline  The pipeline object to be deleted
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_delete_pipeline(ob_pipeline *pipeline, ob_error **error);
 
@@ -50,7 +50,7 @@ void ob_delete_pipeline(ob_pipeline *pipeline, ob_error **error);
  * @brief Start the pipeline with default parameters
  *
  * @param[in] pipeline  pipeline object
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_start(ob_pipeline *pipeline, ob_error **error);
 
@@ -59,7 +59,7 @@ void ob_pipeline_start(ob_pipeline *pipeline, ob_error **error);
  *
  * @param[in] pipeline  pipeline object
  * @param[in] config Parameters to be configured
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_start_with_config(ob_pipeline *pipeline, ob_config *config, ob_error **error);
 
@@ -70,7 +70,7 @@ void ob_pipeline_start_with_config(ob_pipeline *pipeline, ob_config *config, ob_
  * @param[in] config  Parameters to be configured
  * @param[in] callback Trigger a callback when all frame data in the frameset arrives
  * @param[in] user_data  Pass in any user data and get it from the callback
- * @param[out] error  Log error messages
+ * @param[out] error  Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_start_with_callback(ob_pipeline *pipeline, ob_config *config, ob_frameset_callback callback, void *user_data, ob_error **error);
 
@@ -78,7 +78,7 @@ void ob_pipeline_start_with_callback(ob_pipeline *pipeline, ob_config *config, o
  * @brief Stop pipeline
  *
  * @param[in] pipeline pipeline object
- * @param[out] error  Log error messages
+ * @param[out] error  Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_stop(ob_pipeline *pipeline, ob_error **error);
 
@@ -87,7 +87,7 @@ void ob_pipeline_stop(ob_pipeline *pipeline, ob_error **error);
  * @brief Returns default configuration if the user has not configured
  *
  * @param[in] pipeline The pipeline object
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_config* The configuration object
  */
 ob_config *ob_pipeline_get_config(ob_pipeline *pipeline, ob_error **error);
@@ -97,7 +97,7 @@ ob_config *ob_pipeline_get_config(ob_pipeline *pipeline, ob_error **error);
  *
  * @param[in] pipeline The pipeline object
  * @param[in] timeout_ms The timeout for waiting (in milliseconds)
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* The frameset that was waited for. A frameset is a special frame that can be used to obtain independent frames from the set.
  */
 ob_frame *ob_pipeline_wait_for_frameset(ob_pipeline *pipeline, uint32_t timeout_ms, ob_error **error);
@@ -106,7 +106,7 @@ ob_frame *ob_pipeline_wait_for_frameset(ob_pipeline *pipeline, uint32_t timeout_
  * @brief Get the device object associated with the pipeline
  *
  * @param[in] pipeline The pipeline object
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_device* The device object
  */
 ob_device *ob_pipeline_get_device(ob_pipeline *pipeline, ob_error **error);
@@ -115,7 +115,7 @@ ob_device *ob_pipeline_get_device(ob_pipeline *pipeline, ob_error **error);
  * @brief Get the playback object associated with the pipeline
  *
  * @param[in] pipeline The pipeline object
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_playback* The playback object
  */
 ob_playback *ob_pipeline_get_playback(ob_pipeline *pipeline, ob_error **error);
@@ -125,7 +125,7 @@ ob_playback *ob_pipeline_get_playback(ob_pipeline *pipeline, ob_error **error);
  *
  * @param[in] pipeline The pipeline object
  * @param[in] sensorType The sensor type. The supported sensor types can be obtained through the ob_device_get_sensor_list() interface.
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile_list* The stream profile list
  */
 ob_stream_profile_list *ob_pipeline_get_stream_profile_list(ob_pipeline *pipeline, ob_sensor_type sensorType, ob_error **error);
@@ -134,7 +134,7 @@ ob_stream_profile_list *ob_pipeline_get_stream_profile_list(ob_pipeline *pipelin
  * @brief Enable frame synchronization
  *
  * @param[in] pipeline The pipeline object
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_enable_frame_sync(ob_pipeline *pipeline, ob_error **error);
 
@@ -142,7 +142,7 @@ void ob_pipeline_enable_frame_sync(ob_pipeline *pipeline, ob_error **error);
  * @brief Disable frame synchronization
  *
  * @param[in] pipeline The pipeline object
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_disable_frame_sync(ob_pipeline *pipeline, ob_error **error);
 
@@ -151,7 +151,7 @@ void ob_pipeline_disable_frame_sync(ob_pipeline *pipeline, ob_error **error);
  *
  * @param[in] pipeline The pipeline object
  * @param[in] config The pipeline configuration
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_switch_config(ob_pipeline *pipeline, ob_config *config, ob_error **error);
 
@@ -163,7 +163,7 @@ void ob_pipeline_switch_config(ob_pipeline *pipeline, ob_config *config, ob_erro
  * @param[in] colorHeight color height
  * @param[in] depthWidth depth width
  * @param[in] depthHeight depth height
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_camera_param returns camera internal parameters
  */
 ob_camera_param ob_pipeline_get_camera_param_with_profile(ob_pipeline *pipeline, uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth,
@@ -174,7 +174,7 @@ ob_camera_param ob_pipeline_get_camera_param_with_profile(ob_pipeline *pipeline,
  * @attention If D2C is enabled, it will return the camera parameters after D2C, if not, it will return to the default parameters
  *
  * @param[in] pipeline pipeline object
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_camera_param The camera internal parameters
  */
 ob_camera_param ob_pipeline_get_camera_param(ob_pipeline *pipeline, ob_error **error);
@@ -184,7 +184,7 @@ ob_camera_param ob_pipeline_get_camera_param(ob_pipeline *pipeline, ob_error **e
  *
  * @param[in] pipeline pipeline object
  * @param[in] config The pipeline configuration
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_calibration_param The calibration parameters
  */
 ob_calibration_param ob_pipeline_get_calibration_param(ob_pipeline *pipeline, ob_config *config, ob_error **error);
@@ -195,7 +195,7 @@ ob_calibration_param ob_pipeline_get_calibration_param(ob_pipeline *pipeline, ob
  * @param[in] pipeline The pipeline object
  * @param[in] color_profile The input profile of the color sensor
  * @param[in] align_mode The input align mode
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile_list* The list of D2C-enabled depth sensor resolutions
  */
 ob_stream_profile_list *ob_get_d2c_depth_profile_list(ob_pipeline *pipeline, ob_stream_profile *color_profile, ob_align_mode align_mode, ob_error **error);
@@ -205,7 +205,7 @@ ob_stream_profile_list *ob_get_d2c_depth_profile_list(ob_pipeline *pipeline, ob_
  *
  * @param[in] pipeline The pipeline object
  * @param[in] distance The working distance
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_rect The area information that is valid after D2C at the working distance
  */
 ob_rect ob_get_d2c_valid_area(ob_pipeline *pipeline, uint32_t distance, ob_error **error);
@@ -216,7 +216,7 @@ ob_rect ob_get_d2c_valid_area(ob_pipeline *pipeline, uint32_t distance, ob_error
  * @param[in] pipeline The pipeline object
  * @param[in] minimum_distance The minimum working distance
  * @param[in] maximum_distance The maximum working distance
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_rect The area information that is valid after D2C at the working distance
  */
 ob_rect ob_get_d2c_range_valid_area(ob_pipeline *pipeline, uint32_t minimum_distance, uint32_t maximum_distance, ob_error **error);
@@ -226,7 +226,7 @@ ob_rect ob_get_d2c_range_valid_area(ob_pipeline *pipeline, uint32_t minimum_dist
  *
  * @param[in] pipeline The pipeline object
  * @param[in] file_name The recorded file path
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_start_record(ob_pipeline *pipeline, const char *file_name, ob_error **error);
 
@@ -234,14 +234,14 @@ void ob_pipeline_start_record(ob_pipeline *pipeline, const char *file_name, ob_e
  * @brief Stop recording
  *
  * @param[in] pipeline The pipeline object
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_pipeline_stop_record(ob_pipeline *pipeline, ob_error **error);
 
 /**
  * @brief Create the pipeline configuration
  *
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_config* The configuration object
  */
 ob_config *ob_create_config(ob_error **error);
@@ -250,7 +250,7 @@ ob_config *ob_create_config(ob_error **error);
  * @brief Delete the pipeline configuration
  *
  * @param[in] config The configuration to be deleted
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_delete_config(ob_config *config, ob_error **error);
 
@@ -259,7 +259,7 @@ void ob_delete_config(ob_config *config, ob_error **error);
  *
  * @param[in] config The pipeline configuration
  * @param[in] profile The stream configuration to be enabled
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_enable_stream(ob_config *config, ob_stream_profile *profile, ob_error **error);
 
@@ -268,7 +268,7 @@ void ob_config_enable_stream(ob_config *config, ob_stream_profile *profile, ob_e
  * @brief Enable all streams in the pipeline configuration
  *
  * @param[in] config The pipeline configuration
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_enable_all_stream(ob_config *config, ob_error **error);
 
@@ -276,7 +276,7 @@ void ob_config_enable_all_stream(ob_config *config, ob_error **error);
  * @brief  Get the enabled stream profile list in the pipeline configuration
  *
  * @param config The pipeline configuration
- * @param error Log error messages
+ * @param error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile_list* The enabled stream profile list, should be released by @ref ob_delete_stream_profile_list after use
  */
 ob_stream_profile_list *ob_config_get_enabled_stream_profile_list(ob_config *config, ob_error **error);
@@ -286,7 +286,7 @@ ob_stream_profile_list *ob_config_get_enabled_stream_profile_list(ob_config *con
  *
  * @param[in] config The pipeline configuration
  * @param[in] type The type of stream to be disabled
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_disable_stream(ob_config *config, ob_stream_type type, ob_error **error);
 
@@ -294,7 +294,7 @@ void ob_config_disable_stream(ob_config *config, ob_stream_type type, ob_error *
  * @brief Disable all streams in the pipeline configuration
  *
  * @param[in] config The pipeline configuration
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_disable_all_stream(ob_config *config, ob_error **error);
 
@@ -303,7 +303,7 @@ void ob_config_disable_all_stream(ob_config *config, ob_error **error);
  *
  * @param[in] config The pipeline configuration
  * @param[in] mode The alignment mode to be set
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_set_align_mode(ob_config *config, ob_align_mode mode, ob_error **error);
 
@@ -312,7 +312,7 @@ void ob_config_set_align_mode(ob_config *config, ob_align_mode mode, ob_error **
  *
  * @param[in] config The pipeline configuration
  * @param[in] enable Whether scaling is required
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_set_depth_scale_require(ob_config *config, bool enable, ob_error **error);
 
@@ -324,7 +324,7 @@ void ob_config_set_depth_scale_require(ob_config *config, bool enable, ob_error 
  * @param[in] config The pipeline configuration
  * @param[in] d2c_target_width The target width for D2C
  * @param[in] d2c_target_height The target height for D2C
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_set_d2c_target_resolution(ob_config *config, uint32_t d2c_target_width, uint32_t d2c_target_height, ob_error **error);
 
@@ -335,7 +335,7 @@ void ob_config_set_d2c_target_resolution(ob_config *config, uint32_t d2c_target_
  *
  * @param[in] config The pipeline configuration
  * @param[in] mode The frame aggregation output mode to be set (default mode is @ref OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE)
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_set_frame_aggregate_output_mode(ob_config *config, ob_frame_aggregate_output_mode mode, ob_error **error);
 

@@ -116,4 +116,4 @@ aarch64_custom_toolchain.cmake
 .aderc
 package_name.txt
 
-openobsdk/src/impl/Version.hpp
+include/openobsdk/h/Export.h

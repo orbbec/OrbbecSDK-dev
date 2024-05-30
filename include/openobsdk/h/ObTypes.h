@@ -7,24 +7,8 @@
  */
 
 #pragma once
-#if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
-#ifdef OB_EXPORTS
-#define OB_API __declspec(dllexport)
-#else
-#define OB_API
-#endif
-#else
-#define OB_API
-#endif
 
-#if defined(__GNUC__) || defined(__clang__)
-#define DEPRECATED __attribute__((deprecated))
-#elif defined(_MSC_VER)
-#define DEPRECATED __declspec(deprecated)
-#else
-#pragma message("WARNING: You need to implement DEPRECATED for this compiler")
-#define DEPRECATED
-#endif
+#include "Export.h"
 
 #pragma pack(push, 1)  // struct 1-byte align
 

@@ -14,7 +14,7 @@ public:
 
     // Config
     void        updateConfig(std::vector<std::string> &params) override;
-    std::string getConfigSchema() const override;
+    const std::string& getConfigSchema() const override;
 
     void reset() override;  // Stop thread, clean memory, reset status
 
@@ -23,5 +23,6 @@ private:
 
 private:
     std::shared_ptr<ob_priv_filter_context_t> privFilterCtx_;
+    std::string configSchema_;
 };
 }  // namespace libobsensor

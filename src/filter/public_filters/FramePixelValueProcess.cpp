@@ -80,9 +80,10 @@ void PixelValueScaler::updateConfig(std::vector<std::string> &params) {
     }
 }
 
-std::string PixelValueScaler::getConfigSchema() const {
+const std::string &PixelValueScaler::getConfigSchema() const {
     // csv format: name，type， min，max，step，default，description
-    return "scale, float, 0.01, 100.0, 0.01, 1.0, value scale factor";
+    static const std::string schema = "scale, float, 0.01, 100.0, 0.01, 1.0, value scale factor";
+    return schema;
 }
 
 std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame> frame) {

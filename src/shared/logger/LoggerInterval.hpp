@@ -35,7 +35,7 @@ struct ObLogIntvlRecord {
     }
 };
 
-extern bool                                                     logIntvlRecordMapDestroyed;
+extern std::atomic<bool>                                        logIntvlRecordMapDestroyed;
 extern std::map<std::string, std::shared_ptr<ObLogIntvlRecord>> logIntvlRecordMap;
 extern std::mutex                                               logIntvlRecordMapMtx;
 

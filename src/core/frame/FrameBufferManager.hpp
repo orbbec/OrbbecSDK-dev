@@ -13,29 +13,38 @@
 namespace libobsensor {
 
 class FrameMemoryAllocator {
+private:
+    FrameMemoryAllocator();
+    static std::mutex                          instanceMutex_;
+    static std::weak_ptr<FrameMemoryAllocator> instanceWeakPtr_;
+
 public:
     static std::shared_ptr<FrameMemoryAllocator> getInstance();
+
     ~FrameMemoryAllocator() noexcept;
+
     void     setMaxFrameMemorySize(uint64_t sizeInMb);
     uint8_t *allocate(size_t size);
     void     deallocate(uint8_t *ptr, size_t size);
 
 private:
-    FrameMemoryAllocator();
-
-private:
     uint64_t   maxSize_;
     uint64_t   usedSize_;
     std::mutex mutex_;
+
+    std::shared_ptr<Logger> logger_;  // Manages the lifecycle of the logger object.
 };
 
 class IFrameBufferManager {
 public:
     virtual ~IFrameBufferManager() noexcept {};
-    virtual void                   reclaimBuffer(void *buffer) = 0;
-    virtual std::shared_ptr<Frame> acquireFrame()              = 0;
-    virtual void                   releaseIdleBuffer()         = 0;
-    virtual size_t                 getFrameDataBufferSize()    = 0;
+    virtual void   reclaimBuffer(void *buffer) = 0;
+    virtual void   releaseIdleBuffer()         = 0;
+    virtual size_t getFrameDataBufferSize()    = 0;
+
+private:
+    virtual std::shared_ptr<Frame> acquireFrame() = 0;
+    friend class FrameFactory;
 };
 
 inline double byteToMB(uint64_t sizeInByte) {
@@ -55,8 +64,6 @@ public:
 
     std::unique_lock<std::recursive_mutex> lockBuffers();
 
-    virtual std::shared_ptr<Frame> acquireFrame() override = 0;
-
 protected:
     uint8_t *acquireBuffer();
 
@@ -67,7 +74,8 @@ protected:
     size_t               frameTotalSize_;
 
 private:
-    std::vector<uint8_t *> availableFrameBuffers_;
+    std::vector<uint8_t *>                availableFrameBuffers_;
+    std::shared_ptr<FrameMemoryAllocator> frameMemoryAllocator_;
 };
 
 class FrameMemoryPool;
@@ -86,6 +94,7 @@ public:
         LOG_DEBUG("FrameBufferManager destroying...! frame type: {0},  obj addr:0x{1:x}", typeid(T).name(), uint64_t(this));
     }
 
+private:
     virtual std::shared_ptr<Frame> acquireFrame() override {
         uint8_t *bufferPtr = acquireBuffer();
         if(bufferPtr != nullptr) {
@@ -113,6 +122,8 @@ public:
         }
         return nullptr;
     }
+
+    friend class FrameFactory;
 };
 
 }  // namespace libobsensor

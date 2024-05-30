@@ -1,24 +1,22 @@
 #include "StreamIntrinsicsManager.hpp"
 #include "logger/Logger.hpp"
 
-namespace libobsensor{
+namespace libobsensor {
 
+std::mutex                               StreamIntrinsicsManager::instanceMutex_;
+std::weak_ptr<StreamIntrinsicsManager>   StreamIntrinsicsManager::instanceWeakPtr_;
 
-static std::mutex                               instanceMutex;
-static std::shared_ptr<StreamIntrinsicsManager> instance;
 std::shared_ptr<StreamIntrinsicsManager> StreamIntrinsicsManager::getInstance() {
-    std::unique_lock<std::mutex> lock(instanceMutex);
+    std::unique_lock<std::mutex> lock(instanceMutex_);
+    auto                         instance = instanceWeakPtr_.lock();
     if(!instance) {
-        instance = std::shared_ptr<StreamIntrinsicsManager>(new StreamIntrinsicsManager());
+        instance         = std::shared_ptr<StreamIntrinsicsManager>(new StreamIntrinsicsManager());
+        instanceWeakPtr_ = instance;
     }
     return instance;
 }
 
-void StreamIntrinsicsManager::destroyInstance() {
-    getInstance().reset();
-}
-
-StreamIntrinsicsManager::StreamIntrinsicsManager() {}
+StreamIntrinsicsManager::StreamIntrinsicsManager():logger_(Logger::getInstance())  {}
 
 StreamIntrinsicsManager::~StreamIntrinsicsManager() noexcept {}
 
@@ -173,5 +171,4 @@ OBAccelIntrinsic StreamIntrinsicsManager::getAccelStreamIntrinsics(std::shared_p
     throw invalid_value_exception("Intrinsics for the input stream profile is not found.");
 }
 
-
-}  // namespace ob
+}  // namespace libobsensor

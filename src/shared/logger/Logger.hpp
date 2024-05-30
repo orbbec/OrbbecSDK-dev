@@ -12,12 +12,23 @@
 #endif
 #endif
 
-#define LOG_TRACE(...) SPDLOG_LOGGER_TRACE(spdlog::default_logger(), __VA_ARGS__)  // 调试跟踪信息, 仅编译成debug版本时有效
-#define LOG_DEBUG(...) SPDLOG_LOGGER_DEBUG(spdlog::default_logger(), __VA_ARGS__)  // 调试信息, 面向SDK开发人员，提供SDK内部运行过程及状态信息
-#define LOG_INFO(...) SPDLOG_LOGGER_INFO(spdlog::default_logger(), __VA_ARGS__)  // 一般信息，面相用户，提供SDK的运行状态及调用结果信息
-#define LOG_WARN(...) SPDLOG_LOGGER_WARN(spdlog::default_logger(), __VA_ARGS__)  // 警告信息（如：内存占用到达最大限定值，缓存队列占满，系统内存即将耗尽等）
-#define LOG_ERROR(...) SPDLOG_LOGGER_ERROR(spdlog::default_logger(), __VA_ARGS__)  // 错误信息（如：用户参数错误，设备错误调用循序，设备掉线无响应等）
-#define LOG_FATAL(...) SPDLOG_LOGGER_CRITICAL(spdlog::default_logger(), __VA_ARGS__)  // 致命错误信息（如：系统内存不足导致无法正常运行）
+// Debug trace information, only valid when compiled into debug version
+#define LOG_TRACE(...) SPDLOG_LOGGER_TRACE(spdlog::default_logger(), __VA_ARGS__)
+
+// Debugging information, for SDK developers, provides SDK internal running process and status information
+#define LOG_DEBUG(...) SPDLOG_LOGGER_DEBUG(spdlog::default_logger(), __VA_ARGS__)
+
+// General information, facing users, providing SDK running status and call result information
+#define LOG_INFO(...) SPDLOG_LOGGER_INFO(spdlog::default_logger(), __VA_ARGS__)
+
+// Warning information (such as: memory usage reaches the maximum limit, cache queue is full, system memory is about to be exhausted, etc.)
+#define LOG_WARN(...) SPDLOG_LOGGER_WARN(spdlog::default_logger(), __VA_ARGS__)
+
+// Error information (such as: user parameter error, device error calling sequence, device offline and unresponsive, etc.)
+#define LOG_ERROR(...) SPDLOG_LOGGER_ERROR(spdlog::default_logger(), __VA_ARGS__)
+
+// Fatal error message (for example: insufficient system memory prevents normal operation)
+#define LOG_FATAL(...) SPDLOG_LOGGER_CRITICAL(spdlog::default_logger(), __VA_ARGS__)
 
 #include <atomic>
 #include <string>
@@ -26,7 +37,7 @@
 #include <spdlog/fmt/ostr.h>
 #include <openobsdk/h/ObTypes.h>
 
-namespace libobsensor{
+namespace libobsensor {
 typedef std::function<void(OBLogSeverity severity, const std::string &logMsg)> LogCallback;
 
 void setGlobalLogSeverity(OBLogSeverity severity);
@@ -36,8 +47,15 @@ void setGlobalFileLogDir(const std::string &directory);  // for api2
 void setGlobalLogCallback(OBLogSeverity severity, LogCallback callback);
 
 class Logger {
-public:
+private:
     Logger();
+
+    static std::mutex            instanceMutex_;
+    static std::weak_ptr<Logger> instanceWeakPtr_;
+
+public:
+    static std::shared_ptr<Logger> getInstance();
+
     ~Logger() noexcept;
 
     // both console and file and callback log
@@ -48,11 +66,8 @@ public:
     void setLogToFileDir(const std::string &directory);
     void setLogCallback(OBLogSeverity severity, LogCallback callback);
 
-    // void flush();
-
-private:
-    inline void createSinkFromGlobalConfig();
-    inline void updateDefaultSpdLogger();
+    void createSinkFromGlobalConfig();
+    void updateDefaultSpdLogger();
 
 private:
     spdlog::sink_ptr consoleSink_;
@@ -61,4 +76,4 @@ private:
 
     std::shared_ptr<spdlog::details::registry> spdlogRegistry_;  // handle spdlog registry instance to control it's life cycle
 };
-}  // namespace ob
+}  // namespace libobsensor

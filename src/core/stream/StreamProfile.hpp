@@ -136,11 +136,11 @@ std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(con
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct ob_stream_profile {
+struct ob_stream_profile_t {
     std::shared_ptr<const libobsensor::StreamProfile> profile;
 };
 
-struct ob_stream_profile_list {
+struct ob_stream_profile_list_t {
     std::vector<std::shared_ptr<const libobsensor::StreamProfile>> profileList;
 };
 #ifdef __cplusplus

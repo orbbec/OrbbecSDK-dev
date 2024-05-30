@@ -251,7 +251,7 @@ template <typename T> bool Frame::is() const {
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct ob_frame {
+struct ob_frame_t {
     std::shared_ptr<libobsensor::Frame> frame;
     std::atomic<int>                    refCnt = 1;
 };

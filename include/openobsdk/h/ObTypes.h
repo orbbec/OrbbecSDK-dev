@@ -35,25 +35,25 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-struct ob_context;
-struct ob_device;
-struct ob_device_info;
-struct ob_device_list;
-struct ob_camera_param_list;
-struct ob_sensor;
-struct ob_sensor_list;
-struct ob_stream_profile;
-struct ob_stream_profile_list;
-struct ob_frame;
-struct ob_filter;
-struct ob_pipeline;
-struct ob_config;
-struct ob_recorder;
-struct ob_playback;
-struct ob_depth_work_mode_list;
-struct ob_filter_list;
-struct ob_filters;
-struct ob_device_preset_list;
+typedef struct ob_context_t              ob_context;
+typedef struct ob_device_t               ob_device;
+typedef struct ob_device_info_t          ob_device_info;
+typedef struct ob_device_list_t          ob_device_list;
+typedef struct ob_camera_param_list_t    ob_camera_param_list;
+typedef struct ob_sensor_t               ob_sensor;
+typedef struct ob_sensor_list_t          ob_sensor_list;
+typedef struct ob_stream_profile_t       ob_stream_profile;
+typedef struct ob_stream_profile_list_t  ob_stream_profile_list;
+typedef struct ob_frame_t                ob_frame;
+typedef struct ob_filter_t               ob_filter;
+typedef struct ob_pipeline_t             ob_pipeline;
+typedef struct ob_config_t               ob_config;
+typedef struct ob_recorder_t             ob_recorder;
+typedef struct ob_playback_t             ob_playback;
+typedef struct ob_depth_work_mode_list_t ob_depth_work_mode_list;
+typedef struct ob_filter_list_t          ob_filter_list;
+typedef struct ob_filters_t              ob_filters;
+typedef struct ob_device_preset_list_t   ob_device_preset_list;
 
 #define OB_WIDTH_ANY 0
 #define OB_HEIGHT_ANY 0
@@ -187,6 +187,7 @@ typedef enum {
     OB_FRAME_IR_LEFT   = 8,  /**< Left IR frame for stereo camera */
     OB_FRAME_IR_RIGHT  = 9,  /**< Right IR frame for stereo camera */
     OB_FRAME_RAW_PHASE = 10, /**< Raw Phase frame*/
+    OB_FRAME_COUNT,          /**< The total number of frame types, is not a valid frame type */
 } OBFrameType,
     ob_frame_type;
 

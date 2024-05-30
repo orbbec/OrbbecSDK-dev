@@ -44,7 +44,7 @@ private:
 extern "C" {
 #endif
 
-struct ob_sensor {
+struct ob_sensor_t {
     std::shared_ptr<libobsensor::IDevice> device; // sensor is lazy create base on device
     OBSensorType                          type;
 };

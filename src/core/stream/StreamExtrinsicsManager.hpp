@@ -6,13 +6,17 @@
 #include <memory>
 #include <vector>
 
-namespace libobsensor{
-
+namespace libobsensor {
 
 class StreamExtrinsicsManager {
+private:
+    StreamExtrinsicsManager();
+
+    static std::mutex                             instanceMutex_;
+    static std::weak_ptr<StreamExtrinsicsManager> instanceWeakPtr_;
+
 public:
     static std::shared_ptr<StreamExtrinsicsManager> getInstance();
-    static void destroyInstance();
 
     ~StreamExtrinsicsManager() noexcept;
 
@@ -23,7 +27,6 @@ public:
     OBExtrinsic getExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to);
 
 private:
-    StreamExtrinsicsManager();
     void cleanExpiredStreamProfiles();
     void eraseStreamProfile(std::shared_ptr<const StreamProfile> sp);
     void eraseNodeFromExtrinsicsGraph(uint64_t id);
@@ -34,12 +37,13 @@ private:
     uint64_t getStreamProfileId(std::shared_ptr<const StreamProfile> profile) const;
 
 private:
+    uint64_t nextId_;
+
+    std::mutex                                                mutex_;
     std::map<uint64_t, std::vector<std::weak_ptr<const StreamProfile>>> streamProfileMap_;  // vertices
     std::map<uint64_t, std::vector<std::pair<uint64_t, OBExtrinsic>>>   extrinsicsGraph_;   // graph adjacency list
-    uint64_t                                                            nextId_;
 
-    std::recursive_mutex mutex_;
+    std::shared_ptr<Logger> logger_;  // Manages the lifecycle of the logger object.
 };
 
-
-}  // namespace ob
+}  // namespace libobsensor

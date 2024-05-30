@@ -32,7 +32,7 @@ ob_stream_profile_list *ob_sensor_get_stream_profile_list(ob_sensor *sensor, ob_
  * @brief Request the list of recommended filter list
  *
  * @param[in] sensor The ob_sensor object.
- * @param[out] error Log error messages.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  * @return ob_filter_list
  */
@@ -42,7 +42,7 @@ ob_filter_list *ob_sensor_get_recommended_filter_list(ob_sensor *sensor, ob_erro
  * @brief Get the number of recommended filter list
  *
  * @param filter_list Recommended filter list
- * @param error Log error messages
+ * @param error Pointer to an error object that will be set if an error occurs.
  * @return uint32_t The number of list
  */
 uint32_t ob_filter_list_get_count(ob_filter_list *filter_list, ob_error **error);
@@ -52,7 +52,7 @@ uint32_t ob_filter_list_get_count(ob_filter_list *filter_list, ob_error **error)
  *
  * @param filter_list Recommended filter list
  * @param index Recommended filter index
- * @param error Log error messages
+ * @param error Pointer to an error object that will be set if an error occurs.
  * @return ob_filter The index of ob_filter
  */
 ob_filter *ob_get_filter(ob_filter_list *filter_list, uint32_t index, ob_error **error);
@@ -61,7 +61,7 @@ ob_filter *ob_get_filter(ob_filter_list *filter_list, uint32_t index, ob_error *
  * @brief Get the name of ob_filter
  *
  * @param filter ob_filter object
- * @param error Log error messages
+ * @param error Pointer to an error object that will be set if an error occurs.
  * @return char The filter of name
  */
 const char *ob_get_filter_name(ob_filter *filter, ob_error **error);

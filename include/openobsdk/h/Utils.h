@@ -14,7 +14,7 @@ extern "C" {
  * @param[in] source_sensor_type Source sensor type
  * @param[in] target_sensor_type Target sensor type
  * @param[out] target_point3f Target 3d point value
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  * @return bool Transform result
  */
@@ -30,7 +30,7 @@ bool ob_calibration_3d_to_3d(const ob_calibration_param calibration_param, const
  * @param[in] source_sensor_type Source sensor type
  * @param[in] target_sensor_type Target sensor type
  * @param[out] target_point3f Target 3d point value
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  * @return bool Transform result
  */
@@ -46,7 +46,7 @@ bool ob_calibration_2d_to_3d(const ob_calibration_param calibration_param, const
  * @param[in] source_sensor_type Source sensor type
  * @param[in] target_sensor_type Target sensor type
  * @param[out] target_point3f Target 3d point value
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  * @return bool Transform result
  */
@@ -62,7 +62,7 @@ bool ob_calibration_2d_to_3d_undistortion(const ob_calibration_param calibration
  * @param[in] source_sensor_type Source sensor type
  * @param[in] target_sensor_type Target sensor type
  * @param[out] target_point2f Target 2d point value
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  * @return bool Transform result
  */
@@ -78,7 +78,7 @@ bool ob_calibration_3d_to_2d(const ob_calibration_param calibration_param, const
  * @param[in] source_sensor_type Source sensor type
  * @param[in] target_sensor_type Target sensor type
  * @param[out] target_point2f Target 2d point value
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  * @return bool Transform result
  */
@@ -92,7 +92,7 @@ bool ob_calibration_2d_to_2d(const ob_calibration_param calibration_param, const
  * @param[in] depth_frame Input depth frame
  * @param[in] target_color_camera_width Target color camera width
  * @param[in] target_color_camera_height Target color camera height
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  * @return ob_frame* Transformed depth frame
  */
@@ -108,7 +108,7 @@ ob_frame *transformation_depth_frame_to_color_camera(ob_device *device, ob_frame
  * * 1080 * 2*sizeof(float) (1920 * 1080 represents the image resolution, and 2 represents two LUTs, one for x-coordinate and one for y-coordinate).
  * @param[in] data_size input data size
  * @param[out] xy_tables output xy tables
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  * @return bool Transform result
  */
@@ -121,7 +121,7 @@ bool transformation_init_xy_tables(const ob_calibration_param calibration_param,
  * @param[in] xy_tables input xy tables,see transformation_init_xy_tables
  * @param[in] depth_image_data input depth image data
  * @param[out] pointcloud_data output point cloud data
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void transformation_depth_to_pointcloud(ob_xy_tables *xy_tables, const void *depth_image_data, void *pointcloud_data, ob_error **error);
 
@@ -132,7 +132,7 @@ void transformation_depth_to_pointcloud(ob_xy_tables *xy_tables, const void *dep
  * @param[in] depth_image_data input depth image data
  * @param[in] color_image_data input color image data (only RGB888 support)
  * @param[out] pointcloud_data output point cloud data
- * @param[out] error Log error messages
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void transformation_depth_to_rgbd_pointcloud(ob_xy_tables *xy_tables, const void *depth_image_data, const void *color_image_data, void *pointcloud_data,
                                              ob_error **error);

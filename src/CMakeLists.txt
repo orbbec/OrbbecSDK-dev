@@ -17,7 +17,8 @@ endif()
 
 # only support shared library for now
 add_library(openobsdk SHARED "" ${ORBBEC_VERSIONINFO_RC})
-add_definitions(-DOB_EXPORTS)
+include(GenerateExportHeader)
+generate_export_header(openobsdk BASE_NAME OB EXPORT_FILE_NAME ${OB_PUBLIC_HEADERS_DIR}/openobsdk/h/Export.h)
 
 file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp ${CMAKE_CURRENT_LIST_DIR}/context/*.cpp)
 file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp)

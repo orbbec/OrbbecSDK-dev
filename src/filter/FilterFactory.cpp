@@ -25,6 +25,11 @@ FilterFactory::FilterFactory() : logger_(Logger::getInstance()) {
     auto privateFilterCreators = PrivFilterCreatorLoader::getCreators();
     filterCreators_.insert(publicFilterCreators.begin(), publicFilterCreators.end());
     filterCreators_.insert(privateFilterCreators.begin(), privateFilterCreators.end());
+
+    LOG_DEBUG("Registered {} filter creators", filterCreators_.size());
+    for(auto &creator : filterCreators_) {
+        LOG_DEBUG(" - {}", creator.first);
+    }
 }
 
 FilterFactory::~FilterFactory() noexcept {}

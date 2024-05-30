@@ -8,8 +8,8 @@ public:
     PixelValueScaler(const std::string &name);
     virtual ~PixelValueScaler() noexcept;
 
-    void        updateConfig(std::vector<std::string> &params) override;
-    std::string getConfigSchema() const override;
+    void               updateConfig(std::vector<std::string> &params) override;
+    const std::string &getConfigSchema() const override;
 
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;

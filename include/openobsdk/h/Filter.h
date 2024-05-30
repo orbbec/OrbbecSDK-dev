@@ -13,10 +13,67 @@ extern "C" {
 /**
  * @brief Create a Filter object.
  *
+ * @attention If the filter of the specified name is a private filter, and the creator of the filter have not been activated, the function will return NULL.
+ *
  * @param name The name of the filter.
  * @param error Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT ob_filter *ob_create_filter(const char *name, ob_error **error);
+
+/**
+ * @brief Get the vendor specific code of a filter by filter name.
+ * @brief A private filter can define its own vendor specific code for specific purposes.
+ *
+ * @param name The name of the filter.
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return const char* Return the vendor specific code of the filter.
+ */
+OB_EXPORT const char *ob_filter_get_vendor_specific_code(const char *name, ob_error **error);
+
+/**
+ * @brief Create a private Filter object with activation key.
+ * @brief Some private filters require an activation key to be activated, its depends on the vendor of the filter.
+ *
+ * @param name The name of the filter.
+ * @param activation_key The activation key of the filter.
+ * @param error Pointer to an error object that will be set if an error occurs.
+ *
+ * @return ob_filter* Return the private filter object.
+ */
+OB_EXPORT ob_filter *ob_create_private_filter(const char *name, const char *activation_key, ob_error **error);
+
+/**
+ * @brief Delete the filter.
+ *
+ * @param[in] filter The filter object to be deleted.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_delete_filter(ob_filter *filter, ob_error **error);
+
+/**
+ * @brief Get config schema of the filter
+ *
+ * @brief The returned string is a csv format string representing the configuration schema of the filter. The format of the string is:
+ *  <parameter_name>, <parameter_type: int, float, bool, string>, <minimum_value>, <maximum_value>, <value_step>, <default_value>, <parameter_description>
+ *
+ * @param[in] filter The filter object to get the configuration schema for
+ * @param[out] error Pointer to an error object that will be set if an error occurs
+ *
+ * @return A csv format string representing the configuration schema of the filter
+ */
+OB_EXPORT const char* ob_filter_get_config_schema(const ob_filter *filter, ob_error **error);
+
+/**
+ * @brief Update config of the filter
+ *
+ * @attention The passed in argc and argv must match the configuration schema returned by the @ref ob_filter_get_config_schema function.
+ *
+ * @param[in] filter The filter object to update the configuration for
+ * @param[in] argc The number of arguments in the argv array
+ * @param[in] argv An array of strings representing the configuration values
+ * @param[out] error Pointer to an error object that will be set if an error occurs
+ */
+OB_EXPORT void ob_filter_update_config(ob_filter *filter, size_t argc, const char **argv, ob_error **error);
 
 /**
  * @brief Create a PointCloud Filter.

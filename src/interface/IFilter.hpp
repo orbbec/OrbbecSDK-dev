@@ -15,8 +15,8 @@ public:
     virtual const std::string &getName() const = 0;
 
     // Config
-    virtual void        updateConfig(std::vector<std::string> &params) = 0;
-    virtual std::string getConfigSchema() const                        = 0;
+    virtual void               updateConfig(std::vector<std::string> &params) = 0;
+    virtual const std::string &getConfigSchema() const                        = 0;
 
     virtual void reset()           = 0;  // Stop thread, clean memory, reset status
     virtual void enable(bool en)   = 0;
@@ -42,7 +42,7 @@ public:
     virtual ~IPrivFilterCreator() noexcept = default;
 
     virtual std::shared_ptr<IFilter> create(const std::string &activationKey) = 0;
-    virtual std::string              getVendorSpecificCode() const = 0;
+    virtual std::string              getVendorSpecificCode() const            = 0;
 };
 
 }  // namespace libobsensor

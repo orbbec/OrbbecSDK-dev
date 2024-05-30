@@ -5,9 +5,7 @@ extern "C" {
 #endif
 #include "openobsdk/h/Frame.h"
 
-typedef uint64_t *ob_priv_filter;
-
-struct ob_priv_filter_context_t;  // Forward declaration
+typedef struct ob_priv_filter_t ob_priv_filter;
 typedef struct ob_priv_filter_context_t ob_priv_filter_context;
 
 /**

@@ -2,7 +2,16 @@
 #include "logger/Logger.hpp"
 
 namespace libobsensor {
-PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, std::shared_ptr<ob_priv_filter_context> filterCtx) : FilterBase(filterName), privFilterCtx_(filterCtx) {}
+PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, std::shared_ptr<ob_priv_filter_context> filterCtx)
+    : FilterBase(filterName), privFilterCtx_(filterCtx) {
+    ob_error   *error = nullptr;
+    const char *desc  = privFilterCtx_->get_config_schema(privFilterCtx_->filter, &error);
+    if(error) {
+        LOG_WARN("Private filter {} get config schema failed: {}", name_, error->message);
+        delete error;
+    }
+    configSchema_ = desc;
+}
 
 PrivFilterCppWrapper::~PrivFilterCppWrapper() noexcept {
     LOG_DEBUG("Private filter {} destroyed", name_);
@@ -21,15 +30,8 @@ void PrivFilterCppWrapper::updateConfig(std::vector<std::string> &params) {
     }
 };
 
-std::string PrivFilterCppWrapper::getConfigSchema() const {
-    ob_error   *error = nullptr;
-    const char *desc  = privFilterCtx_->get_config_schema(privFilterCtx_->filter, &error);
-    if(error) {
-        LOG_WARN("Private filter {} get config schema failed: {}", name_, error->message);
-        delete error;
-        return "";
-    }
-    return desc;
+const std::string &PrivFilterCppWrapper::getConfigSchema() const {
+   return configSchema_;
 };
 
 void PrivFilterCppWrapper::reset() {
@@ -42,7 +44,7 @@ void PrivFilterCppWrapper::reset() {
 };
 
 std::shared_ptr<Frame> PrivFilterCppWrapper::processFunc(std::shared_ptr<const Frame> frame) {
-    ob_error *error = nullptr;
+    ob_error *error   = nullptr;
     ob_frame *c_frame = new ob_frame();
     c_frame->frame    = std::const_pointer_cast<Frame>(frame);
 

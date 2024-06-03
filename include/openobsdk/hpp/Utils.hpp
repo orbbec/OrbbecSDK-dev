@@ -10,7 +10,7 @@
 namespace ob {
 class Device;
 
-class OB_EXTENSION_API CoordinateTransformHelper {
+class  CoordinateTransformHelper {
 public:
     /**
      * @brief Transform a 3d point of a source coordinate system into a 3d point of the target coordinate system.

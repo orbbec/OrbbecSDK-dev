@@ -5,7 +5,7 @@
 #pragma once
 
 namespace ob {
-class OB_EXTENSION_API Version {
+class  Version {
 public:
     /**
      * @brief Get the major version number of the SDK.

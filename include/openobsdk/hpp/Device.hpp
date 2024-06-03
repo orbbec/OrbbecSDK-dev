@@ -26,7 +26,7 @@ class CameraParamList;
 class OBDepthWorkModeList;
 class DevicePresetList;
 
-class OB_EXTENSION_API Device {
+class  Device {
 protected:
     std::unique_ptr<DeviceImpl> impl_;
 
@@ -630,7 +630,7 @@ public:
 /**
  * @brief A class describing device information, representing the name, id, serial number and other basic information of an RGBD camera.
  */
-class OB_EXTENSION_API DeviceInfo {
+class  DeviceInfo {
 private:
     std::unique_ptr<DeviceInfoImpl> impl_;
 
@@ -747,7 +747,7 @@ public:
 /**
  * @brief Class representing a list of devices
  */
-class OB_EXTENSION_API DeviceList {
+class  DeviceList {
 private:
     std::unique_ptr<DeviceListImpl> impl_;
 
@@ -857,7 +857,7 @@ public:
 /**
  * @brief Class representing a list of camera parameters
  */
-class OB_EXTENSION_API CameraParamList {
+class  CameraParamList {
 private:
     std::unique_ptr<CameraParamListImpl> impl_;
 
@@ -884,7 +884,7 @@ public:
 /**
  * @brief Class representing a list of OBDepthWorkMode
  */
-class OB_EXTENSION_API OBDepthWorkModeList {
+class  OBDepthWorkModeList {
 private:
     std::unique_ptr<OBDepthWorkModeListImpl> impl_;
 
@@ -928,7 +928,7 @@ public:
  * @brief Class representing a list of device presets
  * @breif A device preset is a set of parameters or configurations that can be applied to the device to achieve a specific effect or function.
  */
-class OB_EXTENSION_API DevicePresetList {
+class  DevicePresetList {
 private:
     std::unique_ptr<DevicePresetListImpl> impl_;
 

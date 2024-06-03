@@ -24,7 +24,7 @@ typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
 /**
  * @brief The Filter class is the base class for all filters in the SDK.
  */
-class OB_EXTENSION_API Filter : public std::enable_shared_from_this<Filter> {
+class  Filter : public std::enable_shared_from_this<Filter> {
 public:
     Filter();
 
@@ -109,7 +109,7 @@ protected:
 /**
  * @brief The PointCloudFilter class is a subclass of Filter that generates point clouds.
  */
-class OB_EXTENSION_API PointCloudFilter : public Filter {
+class  PointCloudFilter : public Filter {
 public:
     PointCloudFilter();
 
@@ -162,7 +162,7 @@ public:
 /**
  * @brief The FormatConvertFilter class is a subclass of Filter that performs format conversion.
  */
-class OB_EXTENSION_API FormatConvertFilter : public Filter {
+class  FormatConvertFilter : public Filter {
 public:
     FormatConvertFilter();
 
@@ -177,7 +177,7 @@ public:
 /**
  * @brief The CompressionFilter class is a subclass of Filter that performs compression.
  */
-class OB_EXTENSION_API CompressionFilter : public Filter {
+class  CompressionFilter : public Filter {
 public:
     CompressionFilter();
 
@@ -193,7 +193,7 @@ public:
 /**
  * @brief The DecompressionFilter class is a subclass of Filter that performs decompression.
  */
-class OB_EXTENSION_API DecompressionFilter : public Filter {
+class  DecompressionFilter : public Filter {
 public:
     DecompressionFilter();
 };
@@ -201,7 +201,7 @@ public:
 /**
  * @brief Hole filling filter,the processing performed depends on the selected hole filling mode.
  */
-class OB_EXTENSION_API HoleFillingFilter : public Filter {
+class  HoleFillingFilter : public Filter {
 public:
     HoleFillingFilter();
 
@@ -224,7 +224,7 @@ public:
 /**
  * @brief Temporal filter
  */
-class OB_EXTENSION_API TemporalFilter : public Filter {
+class  TemporalFilter : public Filter {
 public:
     TemporalFilter();
 
@@ -262,7 +262,7 @@ public:
  * alpha defines the weight of the current pixel for smoothing,
  * delta defines the depth gradient below which the smoothing will occur as number of depth levels.
  */
-class OB_EXTENSION_API SpatialAdvancedFilter : public Filter {
+class  SpatialAdvancedFilter : public Filter {
 public:
     SpatialAdvancedFilter();
 
@@ -312,7 +312,7 @@ public:
 /**
  * @brief Depth to disparity or disparity to depth
  */
-class OB_EXTENSION_API DisparityTransform : public Filter {
+class  DisparityTransform : public Filter {
 public:
 
     /**
@@ -327,7 +327,7 @@ public:
  * the processing merges between depth frames with
  * different sub-preset sequence ids.
  */
-class OB_EXTENSION_API HdrMerge : public Filter {
+class  HdrMerge : public Filter {
 public:
     HdrMerge();
 };
@@ -335,7 +335,7 @@ public:
 /**
  * @brief Align for depth to other or other to depth.
  */
-class OB_EXTENSION_API Align : public Filter {
+class  Align : public Filter {
 public:
     /**
      * @brief Creaet Align filter.
@@ -355,7 +355,7 @@ public:
  * @brief Creates depth Thresholding filter
  * By controlling min and max options on the block
  */
-class OB_EXTENSION_API ThresholdFilter : public Filter {
+class  ThresholdFilter : public Filter {
 public:
     ThresholdFilter();
 
@@ -382,7 +382,7 @@ public:
 /**
  * @brief Create SequenceIdFilter processing block.
  */
-class OB_EXTENSION_API SequenceIdFilter : public Filter {
+class  SequenceIdFilter : public Filter {
 public:
     SequenceIdFilter();
 
@@ -418,7 +418,7 @@ public:
 /**
  * @brief The noise removal filter,removing scattering depth pixels.
  */
-class OB_EXTENSION_API NoiseRemovalFilter : public Filter {
+class  NoiseRemovalFilter : public Filter {
 public:
     NoiseRemovalFilter();
 
@@ -452,7 +452,7 @@ public:
 /**
  * @brief Decimation filter,reducing complexity by subsampling depth maps and losing depth details.
  */
-class OB_EXTENSION_API DecimationFilter : public Filter {
+class  DecimationFilter : public Filter {
 public:
     DecimationFilter();
 
@@ -477,7 +477,7 @@ public:
 /**
  * @brief The edge noise removal filter,removing scattering depth pixels.
  */
-class OB_EXTENSION_API EdgeNoiseRemovalFilter : public Filter {
+class  EdgeNoiseRemovalFilter : public Filter {
 public:
     EdgeNoiseRemovalFilter();
 

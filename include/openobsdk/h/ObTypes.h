@@ -91,6 +91,7 @@ typedef enum {
 } OBLogSeverity,
     ob_log_severity, DEVICE_LOG_SEVERITY_LEVEL, OBDeviceLogSeverityLevel, ob_device_log_severity_level;
 #define OB_LOG_SEVERITY_NONE OB_LOG_SEVERITY_OFF
+
 /**
  * @brief The exception types in the SDK, through the exception type, you can easily determine the specific type of error.
  * For detailed error API interface functions and error logs, please refer to the information of ob_error
@@ -99,14 +100,14 @@ typedef enum {
     OB_EXCEPTION_TYPE_UNKNOWN,                 /**< Unknown error, an error not clearly defined by the SDK */
     OB_EXCEPTION_STD_EXCEPTION,                /** < Standard exception, an error caused by the standard library */
     OB_EXCEPTION_TYPE_CAMERA_DISCONNECTED,     /**< Camera/Device has been disconnected, the camera/device is not available */
-    OB_EXCEPTION_TYPE_PLATFORM,                /**< An error in the SDK adaptation platform layer means an error in the implementation of a specific system
+    OB_EXCEPTION_TYPE_PLATFORM,                /**< An error in the SDK adaptation platform layer, which means an error in the implementation of a specific system
                                                   platform */
     OB_EXCEPTION_TYPE_INVALID_VALUE,           /**< Invalid parameter type exception, need to check input parameter */
-    OB_EXCEPTION_TYPE_WRONG_API_CALL_SEQUENCE, /**< Exception caused by API version mismatch */
-    OB_EXCEPTION_TYPE_NOT_IMPLEMENTED,         /**< SDK and firmware have not yet implemented functions */
+    OB_EXCEPTION_TYPE_WRONG_API_CALL_SEQUENCE, /**< Wrong API call sequence, the API is called in the wrong order or the wrong parameter is passed */
+    OB_EXCEPTION_TYPE_NOT_IMPLEMENTED,         /**< SDK and firmware have not yet implemented this function or feature */
     OB_EXCEPTION_TYPE_IO,                      /**< SDK access IO exception error */
-    OB_EXCEPTION_TYPE_MEMORY,                  /**< SDK access and use memory errors, which means that the frame fails to allocate memory */
-    OB_EXCEPTION_TYPE_UNSUPPORTED_OPERATION,   /**< Unsupported operation type error by SDK or RGBD device */
+    OB_EXCEPTION_TYPE_MEMORY,                  /**< SDK access and use memory errors. For example, the frame fails to allocate memory */
+    OB_EXCEPTION_TYPE_UNSUPPORTED_OPERATION,   /**< Unsupported operation type error by SDK or device */
 } OBExceptionType,
     ob_exception_type;
 
@@ -197,8 +198,8 @@ typedef enum {
     OB_FORMAT_I420       = 15,   /**< I420 format */
     OB_FORMAT_ACCEL      = 16,   /**< Acceleration data format */
     OB_FORMAT_GYRO       = 17,   /**< Gyroscope data format */
-    OB_FORMAT_POINT      = 19,   /**< XYZ 3D coordinate point format */
-    OB_FORMAT_RGB_POINT  = 20,   /**< XYZ 3D coordinate point format with RGB information */
+    OB_FORMAT_POINT      = 19,   /**< XYZ 3D coordinate point format, @ref OBPoint */
+    OB_FORMAT_RGB_POINT  = 20,   /**< XYZ 3D coordinate point format with RGB information, @ref OBColorPoint */
     OB_FORMAT_RLE        = 21,   /**< RLE pressure test format (SDK will be unpacked into Y16 by default) */
     OB_FORMAT_RGB        = 22,   /**< RGB format (actual RGB888)  */
     OB_FORMAT_BGR        = 23,   /**< BGR format (actual BGR888) */
@@ -1690,7 +1691,7 @@ typedef void (*ob_frameset_callback)(ob_frame *frameset, void *user_data);
  * @param buffer Data that needs to be deleted
  * @param user_data User-defined data
  */
-typedef void(ob_frame_destroy_callback)(void *buffer, void *user_data);
+typedef void(ob_frame_destroy_callback)(uint8_t *buffer, void *user_data);
 
 /**
  * @brief Callback for receiving log

@@ -18,7 +18,7 @@ extern "C" {
  * no longer needed.
  *
  * @param frame_type The frame object type.
- * @param format      The frame object format.
+ * @param format The frame object format.
  * @param data_size The size of the frame object data.
  * @param error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the frame object.
@@ -47,10 +47,10 @@ OB_EXPORT ob_frame *ob_clone_frame(const ob_frame *ref_frame, bool copy_data, ob
  * no logger needed.
  *
  * @param stream_profile The stream profile to create the new frame object according to.
- * @param error  Pointer to an error object that will be set if an error occurs.
+ * @param error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the new frame object.
  */
-OB_EXPORT ob_frame *ob_create_frame_from_stream_profile( const ob_stream_profile *stream_profile, ob_error **error);
+OB_EXPORT ob_frame *ob_create_frame_from_stream_profile(const ob_stream_profile *stream_profile, ob_error **error);
 
 /**
  * @brief Create an video frame object based on the specified parameters.
@@ -69,7 +69,7 @@ OB_EXPORT ob_frame *ob_create_frame_from_stream_profile( const ob_stream_profile
 OB_EXPORT ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes, ob_error **error);
 
 /**
- * @brief  Create a frame object based on an externally created buffer.
+ * @brief Create a frame object based on an externally created buffer.
  *
  * @attention The buffer is owned by the user and will not be destroyed by the frame object. The user should ensure that the buffer is valid and not modified.
  * @attention The frame object is created with a reference count of 1, and the reference count should be decreased by calling @ref ob_delete_frame() when it is
@@ -79,13 +79,13 @@ OB_EXPORT ob_frame *ob_create_video_frame(ob_frame_type frame_type, ob_format fo
  * @param[in] format Frame object format.
  * @param[in] buffer Frame object buffer.
  * @param[in] buffer_size Frame object buffer size.
- * @param[in] buffer_destroy_cb Destroy callback, user-defined function to destroy the buffer.
+ * @param[in] buffer_destroy_cb Destroy callback, will be called when the frame object is destroyed.
  * @param[in] buffer_destroy_context Destroy context, user-defined context to be passed to the destroy callback.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the frame object.
  */
 OB_EXPORT ob_frame *ob_create_frame_from_buffer(ob_frame_type frame_type, ob_format format, uint8_t *buffer, uint32_t buffer_size,
-                                             ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context, ob_error **error);
+                                                ob_frame_destroy_callback *buffer_destroy_cb, void *buffer_destroy_context, ob_error **error);
 
 /**
  * @brief Create a video frame object based on an externally created buffer.
@@ -107,8 +107,8 @@ OB_EXPORT ob_frame *ob_create_frame_from_buffer(ob_frame_type frame_type, ob_for
  * @return ob_frame* Return the frame object.
  */
 OB_EXPORT ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, ob_format format, uint32_t width, uint32_t height, uint32_t stride_bytes,
-                                                   uint8_t *buffer, uint32_t buffer_size, ob_frame_destroy_callback *buffer_destroy_cb,
-                                                   void *buffer_destroy_context, ob_error **error);
+                                                      uint8_t *buffer, uint32_t buffer_size, ob_frame_destroy_callback *buffer_destroy_cb,
+                                                      void *buffer_destroy_context, ob_error **error);
 
 /**
  * @brief Create an empty frameset object.
@@ -156,7 +156,7 @@ OB_EXPORT uint64_t ob_frame_get_index(const ob_frame *frame, ob_error **error);
  * @brief Get the frame format
  *
  * @param[in] frame Frame object
- * @param[out] error  Pointer to an error object that will be set if an error occurs.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_format return the frame format
  */
 OB_EXPORT ob_format ob_frame_get_format(const ob_frame *frame, ob_error **error);
@@ -171,7 +171,7 @@ OB_EXPORT ob_format ob_frame_get_format(const ob_frame *frame, ob_error **error)
 OB_EXPORT ob_frame_type ob_frame_get_type(const ob_frame *frame, ob_error **error);
 
 /**
- * @brief Get the frame timestamp (also known as device timestamp, hardware timestamp)  of the frame in microseconds.
+ * @brief Get the frame timestamp (also known as device timestamp, hardware timestamp) of the frame in microseconds.
  * @brief The hardware timestamp is the time point when the frame was captured by the device (Typically in the mid-exposure, unless otherwise stated), on device
  * clock domain.
  *
@@ -263,8 +263,8 @@ OB_EXPORT const uint8_t *ob_frame_get_metadata(const ob_frame *frame, ob_error *
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return uint32_t return the metadata size of the frame
  */
-OB_EXPORT uint32_t ob_frame_metadata_size(const ob_frame *frame, ob_error **error);
-#define ob_video_frame_metadata_size ob_frame_metadata_size  // for compatibility
+OB_EXPORT uint32_t ob_frame_get_metadata_size(const ob_frame *frame, ob_error **error);
+#define ob_video_frame_metadata_size ob_frame_get_metadata_size  // for compatibility
 
 /**
  * @brief Update the metadata of the frame
@@ -291,7 +291,7 @@ OB_EXPORT bool ob_frame_has_metadata(const ob_frame *frame, ob_frame_metadata_ty
  * @brief Get the metadata value of the frame
  *
  * @param[in] frame frame object
- * @param[in] type  metadata type, refer to @ref ob_frame_metadata_type
+ * @param[in] type metadata type, refer to @ref ob_frame_metadata_type
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return int64_t return the metadata value of the frame
  */
@@ -351,21 +351,21 @@ OB_EXPORT uint32_t ob_video_frame_get_width(const ob_frame *frame, ob_error **er
 /**
  * @brief Get video frame height
  *
- * @param[in] frame  Frame object
+ * @param[in] frame Frame object
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return uint32_t return the frame height
  */
 OB_EXPORT uint32_t ob_video_frame_get_height(const ob_frame *frame, ob_error **error);
 
 /**
- * @brief  Get the effective number of pixels (such as Y16 format frame, but only the lower 10 bits are effective bits, and the upper 6 bits are filled with 0)
+ * @brief Get the effective number of pixels (such as Y16 format frame, but only the lower 10 bits are effective bits, and the upper 6 bits are filled with 0)
  * @attention Only valid for Y8/Y10/Y11/Y12/Y14/Y16 format
  *
  * @param[in] frame video frame object
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return uint8_t return the effective number of pixels in the pixel, or 0 if it is an unsupported format
  */
-OB_EXPORT uint8_t ob_video_frame_pixel_available_bit_size(const ob_frame *frame, ob_error **error);
+OB_EXPORT uint8_t ob_video_frame_get_pixel_available_bit_size(const ob_frame *frame, ob_error **error);
 
 /**
  * @brief Get the source sensor type of the ir frame (left or right for dual camera)
@@ -387,13 +387,13 @@ OB_EXPORT ob_sensor_type ob_ir_frame_get_source_sensor_type(const ob_frame *fram
 OB_EXPORT float ob_depth_frame_get_value_scale(const ob_frame *frame, ob_error **error);
 
 /**
- * @brief Get the point position value scale of the points frame. The point position value of the points frame is multiplied by the scale to give a position
+ * @brief Get the point coordinate value scale of the points frame. The point position value of the points frame is multiplied by the scale to give a position
  * value in millimeters. For example, if scale=0.1, the x-coordinate value of a point is x = 10000, which means that the actual x-coordinate value = x*scale =
  * 10000*0.1 = 1000mm.
  *
  * @param[in] frame Frame object
  * @param[out] error Pointer to an error object that will be set if an error occurs.
- * @return float The position value scale of the points frame
+ * @return float The coordinate value scale of the points frame
  */
 OB_EXPORT float ob_points_frame_get_coordinate_value_scale(const ob_frame *frame, ob_error **error);
 

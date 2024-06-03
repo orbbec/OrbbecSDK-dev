@@ -61,7 +61,7 @@ OB_EXPORT void ob_delete_filter(ob_filter *filter, ob_error **error);
  *
  * @return A csv format string representing the configuration schema of the filter
  */
-OB_EXPORT const char* ob_filter_get_config_schema(const ob_filter *filter, ob_error **error);
+OB_EXPORT const char *ob_filter_get_config_schema(const ob_filter *filter, ob_error **error);
 
 /**
  * @brief Update config of the filter
@@ -74,6 +74,71 @@ OB_EXPORT const char* ob_filter_get_config_schema(const ob_filter *filter, ob_er
  * @param[out] error Pointer to an error object that will be set if an error occurs
  */
 OB_EXPORT void ob_filter_update_config(ob_filter *filter, size_t argc, const char **argv, ob_error **error);
+
+/**
+ * @brief Reset the filter, clears the cache, and resets the state. If the asynchronous interface is used, the processing thread will also be stopped and the
+ * pending cache frames will be cleared.
+ *
+ * @param[in] filter A filter object.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_filter_reset(ob_filter *filter, ob_error **error);
+
+/**
+ * @brief Enable the frame post processing
+ * @brief The filter default is enable.
+ *
+ * @attention If the filter has been disabled by calling this function, processing will directly output a clone of the input frame.
+ *
+ * @param[in] filter A filter object.
+ * @param[in] enable enable status, true: enable; false: disable.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_filter_enable(ob_filter *filter, bool enable, ob_error **error);
+
+/**
+ * @brief Get the enable status of the frame post processing
+ *
+ * @attention If the filter is disabled, the processing will directly output a clone of the input frame.
+ *
+ * @param[in] filter A filter object.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ *
+ * @return The post processing filter status. True: enable; False: disable.
+ */
+OB_EXPORT bool ob_filter_is_enable(ob_filter *filter, ob_error **error);
+
+/**
+ * @brief Process the frame (synchronous interface).
+ *
+ * @param[in] filter A filter object.
+ * @param[in] frame Pointer to the frame object to be processed.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ *
+ * @return The frame object processed by the filter.
+ */
+OB_EXPORT ob_frame *ob_filter_process(ob_filter *filter, const ob_frame *frame, ob_error **error);
+
+/**
+ * @brief Set the processing result callback function for the filter (asynchronous callback interface).
+ *
+ * @param[in] filter A filter object.
+ * @param[in] callback Callback function.
+ * @param[in] user_data Arbitrary user data pointer can be passed in and returned from the callback.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_filter_set_callback(ob_filter *filter, ob_filter_callback callback, void *user_data, ob_error **error);
+
+/**
+ * @brief Push the frame into the pending cache for the filter (asynchronous callback interface).
+ *
+ * @attention The frame object will be add reference count, so the user still need call @ref ob_delete_frame to release the frame after calling this function.
+ *
+ * @param[in] filter A filter object.
+ * @param[in] frame Pointer to the frame object to be processed.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_filter_push_frame(ob_filter *filter, const ob_frame *frame, ob_error **error);
 
 /**
  * @brief Create a PointCloud Filter.
@@ -561,64 +626,6 @@ ob_stream_type ob_align_get_to_stream_type(ob_filter *filter, ob_error **error);
  * @return A depth_filter object.
  */
 ob_filter *ob_create_disparity_transform(ob_error **error, bool depth_to_disparity);
-
-/**
- * @brief Reset the filter, clears the cache, and resets the state. If the asynchronous interface is used, the processing thread will also be stopped and the
- * pending cache frames will be cleared.
- *
- * @param[in] filter A filter object.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- */
-void ob_filter_reset(ob_filter *filter, ob_error **error);
-
-/**
- * @brief Process the frame (synchronous interface).
- *
- * @param[in] filter A filter object.
- * @param[in] frame Pointer to the frame object to be processed.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- *
- * @return The frame object processed by the filter.
- */
-ob_frame *ob_filter_process(ob_filter *filter, ob_frame *frame, ob_error **error);
-
-/**
- * @brief Enable the frame post processing
- *
- * @param[in] filter A filter object.
- * @param[in] enable enable status
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- */
-void ob_filter_enable(ob_filter *filter, bool enable, ob_error **error);
-
-/**
- * @brief Get the enable status of the frame post processing
- *
- * @param[in] filter A filter object.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- *
- * @return The post processing filter status.
- */
-bool ob_filter_is_enable(ob_filter *filter, ob_error **error);
-
-/**
- * @brief Set the processing result callback function for the filter (asynchronous callback interface).
- *
- * @param[in] filter A filter object.
- * @param[in] callback Callback function.
- * @param[in] user_data Arbitrary user data pointer can be passed in and returned from the callback.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- */
-void ob_filter_set_callback(ob_filter *filter, ob_filter_callback callback, void *user_data, ob_error **error);
-
-/**
- * @brief Push the frame into the pending cache for the filter (asynchronous callback interface).
- *
- * @param[in] filter A filter object.
- * @param[in] frame Pointer to the frame object to be processed.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- */
-void ob_filter_push_frame(ob_filter *filter, ob_frame *frame, ob_error **error);
 
 #ifdef __cplusplus
 }

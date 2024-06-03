@@ -48,7 +48,7 @@ HANDLE_EXCEPTIONS_NO_RETURN(filter)
 
 const char *ob_filter_get_config_schema(const ob_filter *filter, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
-    auto& configSchema = filter->filter->getConfigSchema();
+    auto &configSchema = filter->filter->getConfigSchema();
     return configSchema.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, filter)
@@ -59,6 +59,51 @@ void ob_filter_update_config(ob_filter *filter, size_t argc, const char **argv, 
     filter->filter->updateConfig(args);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(filter, argc, argv)
+
+void ob_filter_reset(ob_filter *filter, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    filter->filter->reset();
+}
+HANDLE_EXCEPTIONS_NO_RETURN(filter)
+
+void ob_filter_enable(ob_filter *filter, bool enable, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    filter->filter->enable(enable);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(filter, enable)
+
+bool ob_filter_is_enabled(ob_filter *filter, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    return filter->filter->isEnabled();
+}
+HANDLE_EXCEPTIONS_AND_RETURN(false, filter)
+
+OB_EXPORT ob_frame *ob_filter_process(ob_filter *filter, const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    VALIDATE_NOT_NULL(frame);
+    auto result      = filter->filter->process(frame->frame);
+    auto frameImpl   = new ob_frame();
+    frameImpl->frame = result;
+    return frameImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, filter, frame)
+
+void ob_filter_set_callback(ob_filter *filter, ob_filter_callback callback, void *user_data, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    filter->filter->setCallback([callback, user_data](std::shared_ptr<libobsensor::Frame> frame) {
+        auto frameImpl   = new ob_frame();
+        frameImpl->frame = std::move(frame);
+        callback(frameImpl, user_data);
+    });
+}
+HANDLE_EXCEPTIONS_NO_RETURN(filter, callback, user_data)
+
+void ob_filter_push_frame(ob_filter *filter, const ob_frame *frame, ob_error **error) BEGIN_API_CALL{
+    VALIDATE_NOT_NULL(filter);
+    VALIDATE_NOT_NULL(frame);
+    filter->filter->pushFrame(frame->frame);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(filter, frame)
 
 #ifdef __cplusplus
 }

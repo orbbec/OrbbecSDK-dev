@@ -28,7 +28,7 @@ class OBFilterList;
  */
 using FrameCallback = std::function<void(std::shared_ptr<Frame> frame)>;
 
-class OB_EXTENSION_API Sensor {
+class  Sensor {
 protected:
     std::unique_ptr<SensorImpl> impl_;
 
@@ -77,7 +77,7 @@ public:
     void switchProfile(std::shared_ptr<StreamProfile> streamProfile);
 };
 
-class OB_EXTENSION_API SensorList {
+class  SensorList {
 private:
     std::unique_ptr<SensorListImpl> impl_;
 
@@ -122,7 +122,7 @@ public:
 /**
  * @brief Class representing a list of FrameProcessingBlock
  */
-class OB_EXTENSION_API OBFilterList {
+class  OBFilterList {
 private:
     std::unique_ptr<OBFilterListImpl> impl_;
 

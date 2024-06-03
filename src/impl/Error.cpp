@@ -24,7 +24,7 @@ ob_exception_type ob_error_get_exception_type(const ob_error *error) {
     return error ? error->exception_type : OB_EXCEPTION_TYPE_UNKNOWN;
 }
 
-void ob_delete_error(ob_error *error) {
+void ob_delete_error(const ob_error *error) {
     if(error) {
         delete error;
         error = NULL;

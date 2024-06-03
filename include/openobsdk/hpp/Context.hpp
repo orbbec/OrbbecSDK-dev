@@ -18,7 +18,7 @@ class Device;
 class DeviceInfo;
 class DeviceList;
 
-class OB_EXTENSION_API Context {
+class  Context {
 private:
     std::unique_ptr<ContextImpl> impl_;
 

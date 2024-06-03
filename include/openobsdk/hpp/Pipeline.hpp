@@ -25,7 +25,7 @@ class StreamProfileList;
 
 typedef std::function<void(std::shared_ptr<FrameSet> frame)> FrameSetCallback;
 
-class OB_EXTENSION_API Pipeline {
+class  Pipeline {
 private:
     std::unique_ptr<PipelineImpl> impl_;
 
@@ -198,7 +198,7 @@ public:
  *
  * The Config class provides an interface for configuring pipeline parameters.
  */
-class OB_EXTENSION_API Config {
+class  Config {
 private:
     std::unique_ptr<ConfigImpl> impl_;
 

@@ -20,7 +20,7 @@ class DeviceInfo;
 using PlaybackCallback   = std::function<void(std::shared_ptr<Frame> frame)>;
 using MediaStateCallback = std::function<void(OBMediaState state)>;
 
-class OB_EXTENSION_API Recorder {
+class  Recorder {
 private:
     std::unique_ptr<RecorderImpl> impl_;
 
@@ -60,7 +60,7 @@ public:
     void write(std::shared_ptr<Frame> frame);
 };
 
-class OB_EXTENSION_API Playback {
+class  Playback {
 private:
     std::unique_ptr<PlaybackImpl> impl_;
 

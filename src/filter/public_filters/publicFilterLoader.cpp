@@ -31,6 +31,7 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         ADD_FILTER_CREATOR(DisparityTransform),
         ADD_FILTER_CREATOR(IMUFrameReversion),
 
+
     };
 
     return filterCreators;

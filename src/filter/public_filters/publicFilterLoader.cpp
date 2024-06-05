@@ -10,10 +10,19 @@ std::shared_ptr<IFilter> publicFilterCreator::create() {
 
 
 namespace PublicFilterCreatorLoader {
+
+#define ADD_FILTER_CREATOR(name)                                                                     \
+    {                                                                                                \
+        #name, std::make_shared<publicFilterCreator>([]() { return std::make_shared<name>(#name); }) \
+    }
+
 std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
     static std::map<std::string, std::shared_ptr<IFilterCreator>> filterCreators = {
-        { "PixelValueScaler", std::make_shared<publicFilterCreator>([]() { return std::make_shared<PixelValueScaler>("PixelValueScaler"); }) },
+        ADD_FILTER_CREATOR(PixelValueScaler),
+        ADD_FILTER_CREATOR(PixelValueCutOff),
+
     };
+
     return filterCreators;
 }
 

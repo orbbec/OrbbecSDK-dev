@@ -110,4 +110,67 @@ std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame
 
     return outFrame;
 }
+
+
+PixelValueCutOff::PixelValueCutOff(const std::string &name) : FilterBase(name) {}
+PixelValueCutOff::~PixelValueCutOff() noexcept {}
+
+void PixelValueCutOff::updateConfig(std::vector<std::string> &params) {
+    if(params.size() != 2) {
+        throw invalid_value_exception("PixelValueCutOff config error: params size not match");
+    }
+    try {
+        int min = std::stoi(params[0]);
+        if(min >= 0 && min <= 16000) {
+            min_ = min;
+        }
+
+        int max = std::stoi(params[1]);
+        if(max >= 0 && max <= 16000) {
+            max_ = max;
+        }
+    }
+    catch(const std::exception &e) {
+        throw invalid_value_exception("PixelValueCutOff config error: " + std::string(e.what()));
+    }
+}
+
+const std::string &PixelValueCutOff::getConfigSchema() const {
+    // csv format: name，type， min，max，step，default，description
+    static const std::string schema = "min, int, 0, 16000, 1, 0, min depth range\n"
+           "max, int, 0, 16000, 1, 16000, max depth range";
+    return schema;
+}
+
+std::shared_ptr<Frame> PixelValueCutOff::processFunc(std::shared_ptr<const Frame> frame) {
+    if(!frame) {
+        return nullptr;
+    }
+
+    auto  videoFrame = frame->as<VideoFrame>();
+    auto  outFrame   = FrameFactory::cloneFrame(frame);
+    float scale      = 1.0f;
+    if(frame->is<DepthFrame>()) {
+        scale = frame->as<DepthFrame>()->getValueScale();
+    }
+
+    if(max_ != 65535) {
+        switch(frame->getFormat()) {
+        case OB_FORMAT_Y16:
+            imagePixelValueCutOff((uint16_t *)frame->getData(), (uint16_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(),
+                                  (uint32_t)(min_ / scale), (uint32_t)(max_ / scale));
+            break;
+        case OB_FORMAT_Y8:
+            imagePixelValueCutOff((uint8_t *)frame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(),
+                                  (uint32_t)(min_ / scale), (uint32_t)(max_ / scale));
+            break;
+        default:
+            LOG_ERROR_INTVL("PixelValueCutOff: unsupported format: {}", frame->getFormat());
+            break;
+        }
+    }
+
+    return outFrame;
+}
+
 }  // namespace libobsensor

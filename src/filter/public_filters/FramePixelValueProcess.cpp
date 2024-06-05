@@ -173,4 +173,52 @@ std::shared_ptr<Frame> PixelValueCutOff::processFunc(std::shared_ptr<const Frame
     return outFrame;
 }
 
+
+PixelValueOffset::PixelValueOffset(const std::string &name) : FilterBase(name) {}
+PixelValueOffset::~PixelValueOffset() noexcept {}
+
+void PixelValueOffset::updateConfig(std::vector<std::string> &params) {
+    if(params.size() != 1) {
+        throw invalid_value_exception("PixelValueOffset config error: params size not match");
+    }
+    try {
+        offset_ = static_cast<int8_t>(std::stoi(params[0]));
+    }
+    catch(const std::exception &e) {
+        throw invalid_value_exception("PixelValueOffset config error: " + std::string(e.what()));
+    }
+}
+
+const std::string &PixelValueOffset::getConfigSchema() const {
+    // csv format: name，type， min，max，step，default，description
+    static const std::string schema = "offset, int, -16, 16, 1, 0, value offset factor";
+    return schema;
+}
+
+std::shared_ptr<Frame> PixelValueOffset::processFunc(std::shared_ptr<const Frame> frame) {
+    if(!frame) {
+        return nullptr;
+    }
+
+    auto videoFrame = frame->as<VideoFrame>();
+    auto outFrame = FrameFactory::cloneFrame(frame);
+    if(offset_ != 0) {
+        switch(frame->getFormat()) {
+        case OB_FORMAT_Y16:
+            imagePixelValueOffset((uint16_t *)frame->getData(), (uint16_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), offset_);
+            break;
+        case OB_FORMAT_Y8:
+            imagePixelValueOffset((uint8_t *)frame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), offset_);
+            break;
+        default:
+            LOG_ERROR_INTVL("PixelValueOffset: unsupported format: {}", frame->getFormat());
+            break;
+        }
+
+        uint8_t bitSize = frame->as<VideoFrame>()->getPixelAvailableBitSize();
+        outFrame->as<VideoFrame>()->setPixelAvailableBitSize(bitSize - offset_);
+    }
+    return outFrame;
+}
+
 }  // namespace libobsensor

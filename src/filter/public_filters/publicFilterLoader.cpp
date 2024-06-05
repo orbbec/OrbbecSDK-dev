@@ -1,6 +1,7 @@
 #include "publicFilterLoader.hpp"
 #include "FramePixelValueProcess.hpp"
 #include "HdrMergeProcess.hpp"
+#include "SequenceIdProcess.hpp"
 
 namespace libobsensor {
 publicFilterCreator::publicFilterCreator(std::function<std::shared_ptr<IFilter>()> creatorFunc) : creatorFunc_(creatorFunc) {}
@@ -22,6 +23,7 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         ADD_FILTER_CREATOR(PixelValueScaler),
         ADD_FILTER_CREATOR(PixelValueCutOff),
         ADD_FILTER_CREATOR(HdrMerge),
+        ADD_FILTER_CREATOR(SequenceIdFilter),
 
     };
 

@@ -3,7 +3,7 @@
 
 namespace libobsensor {
 
-class IDeviceEnumerator; // forward declaration
+class IDeviceEnumerator;  // forward declaration
 
 struct DeviceEnumInfo {
     std::string connectionType_;  // "Ethernet", "USB2.0", "USB3.0", etc.
@@ -34,15 +34,24 @@ struct DeviceEnumInfo {
     }
 };
 
-typedef std::function<void(std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added)> DeviceChangedCallback;
-typedef std::function<void(std::vector<std::shared_ptr<DeviceEnumInfo>> added)>                                                   DeviceInstalledCallback;
-typedef std::function<void(std::vector<std::shared_ptr<DeviceEnumInfo>> removed)>                                                 DeviceRemovedCallback;
+typedef std::vector<std::shared_ptr<const DeviceEnumInfo>>                                      DeviceEnumInfoList;
+typedef std::function<void(const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added)> DeviceChangedCallback;
 
 class IDeviceEnumerator {
 public:
-    virtual ~IDeviceEnumerator()                                                                              = default;
-    virtual std::vector<std::shared_ptr<DeviceEnumInfo>> getDeviceInfoList()                                  = 0;
-    virtual std::shared_ptr<IDevice>                 createDevice(std::shared_ptr<DeviceEnumInfo> info)       = 0;
-    virtual void                                     setDeviceChangedCallback(DeviceChangedCallback callback) = 0;
+    virtual ~                        IDeviceEnumerator()                                      = default;
+    virtual DeviceEnumInfoList       getDeviceInfoList()                                      = 0;
+    virtual std::shared_ptr<IDevice> createDevice(const std::shared_ptr<const DeviceEnumInfo>& info)       = 0;
+    virtual void                     setDeviceChangedCallback(DeviceChangedCallback callback) = 0;
 };
 }  // namespace libobsensor
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+struct ob_device_list_t {
+    libobsensor::DeviceEnumInfoList list;
+};
+#ifdef __cplusplus
+}
+#endif

@@ -11,7 +11,7 @@
 
 namespace libobsensor {
 
-void printDeviceList(std::string title, std::vector<std::shared_ptr<DeviceEnumInfo>> deviceList) {
+void printDeviceList(std::string title, const DeviceEnumInfoList& deviceList) {
     LOG_INFO(title + ": ({})", deviceList.size());
     for(auto &deviceInfo: deviceList) {
         if(deviceInfo->connectionType_ == "Ethernet") {
@@ -43,8 +43,7 @@ DeviceManager::DeviceManager() : destroy_(false), multiDeviceSyncIntervalMs_(0) 
 
 #if defined(BUILD_USB_PORT)
     LOG_DEBUG("Enable USB Device Enumerator ...");
-    auto usbDeviceEnumerator = std::make_shared<UsbDeviceEnumerator>(
-        [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+    auto usbDeviceEnumerator = std::make_shared<UsbDeviceEnumerator>([&](const DeviceEnumInfoList&  removed, const DeviceEnumInfoList&  added) { onDeviceChanged(removed, added); });
 
     deviceEnumerators_.emplace_back(usbDeviceEnumerator);
 #endif
@@ -99,7 +98,7 @@ std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uin
 
     auto device = NetDeviceEnumerator::createDevice(address, port);
     if(device == nullptr) {
-        LOG_ERROR("create Net Device failed! address={0}, port={1}", address, port);
+        throw libobsensor::invalid_value_exception("Failed to create Net Device, address=" + address + ", port=" + std::to_string(port));
         return nullptr;
     }
 
@@ -163,8 +162,8 @@ std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<Devic
     return device;
 }
 
-std::vector<std::shared_ptr<DeviceEnumInfo>> DeviceManager::getDeviceInfoList() {
-    std::vector<std::shared_ptr<DeviceEnumInfo>> deviceInfoList;
+DeviceEnumInfoList DeviceManager::getDeviceInfoList() const{
+    DeviceEnumInfoList deviceInfoList;
     for(auto &enumerator_: deviceEnumerators_) {
         auto infos = enumerator_->getDeviceInfoList();
         deviceInfoList.insert(deviceInfoList.end(), infos.begin(), infos.end());
@@ -177,7 +176,7 @@ void DeviceManager::setDeviceChangedCallback(DeviceChangedCallback callback) {
     devChangedCallback_ = callback;
 }
 
-void DeviceManager::onDeviceChanged(std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) {
+void DeviceManager::onDeviceChanged(const DeviceEnumInfoList& removed, const DeviceEnumInfoList&  added) {
     std::unique_lock<std::mutex> lock(callbackMutex_);
 
     LOG_INFO("Device changed! removed: {0}, added: {1}", removed.size(), added.size());
@@ -306,9 +305,13 @@ void DeviceManager::enableNetDeviceEnumeration(bool enable) {
         return typeid(*enumerator) == typeid(NetDeviceEnumerator);
     });
     if(enable && iter == deviceEnumerators_.end()) {
+<<<<<<< HEAD
         auto netDeviceEnumerator =
             std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed,
                                                               std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+=======
+        auto netDeviceEnumerator = std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+>>>>>>> 2b5680b (Implementing Context and Device Manager.)
         deviceEnumerators_.emplace_back(netDeviceEnumerator);
         auto deviceInfoList = getDeviceInfoList();
         printDeviceList("Current device(s) list", deviceInfoList);

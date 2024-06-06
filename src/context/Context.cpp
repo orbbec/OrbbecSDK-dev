@@ -8,7 +8,7 @@ namespace libobsensor {
 std::mutex             Context::instanceMutex_;
 std::weak_ptr<Context> Context::instanceWeakPtr_;
 
-std::shared_ptr<Context> Context::getInstance(const std::string& configPath) {
+std::shared_ptr<Context> Context::getInstance(const std::string &configPath) {
     std::unique_lock<std::mutex> lock(instanceMutex_);
     auto                         ctxInstance = instanceWeakPtr_.lock();
     if(!ctxInstance) {
@@ -20,8 +20,30 @@ std::shared_ptr<Context> Context::getInstance(const std::string& configPath) {
 
 Context::Context(const std::string& configFilePath):  deviceManager_(DeviceManager::getInstance()),logger_(Logger::getInstance()), frameMemoryPool_(FrameMemoryPool::getInstance()  ) {
     utils::unusedVar(configFilePath); // todo: use to load config file
+    std::unique_lock<std::mutex> lock(instanceMutex_);
+    return !instanceWeakPtr_.expired();
 }
 
-Context::~Context() {}
+Context::Context(const std::string &configFilePath) {
+    // Perform initialization here for sequential order.
+    logger_          = Logger::getInstance();
+    deviceManager_   = DeviceManager::getInstance();
+    frameMemoryPool_ = FrameMemoryPool::getInstance();
+    utils::unusedVar(configFilePath);  // todo: use to load config file
+}
+
+Context::~Context() noexcept {}
+
+std::shared_ptr<DeviceManager> Context::getDeviceManager() const {
+    return deviceManager_;
+}
+
+std::shared_ptr<Logger> Context::getLogger() const {
+    return logger_;
+}
+
+std::shared_ptr<FrameMemoryPool> Context::getFrameMemoryPool() const {
+    return frameMemoryPool_;
+}
 
 }  // namespace libobsensor

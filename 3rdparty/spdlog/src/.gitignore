@@ -19,7 +19,7 @@ build/*
 
 # Compiled Dynamic libraries
 *.so
-*.dylib
+*.Dylib
 *.dll
 
 # Compiled Static libraries

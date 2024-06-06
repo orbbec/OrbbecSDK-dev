@@ -51,10 +51,11 @@ std::string getDevicePath(libusb_device *usbDevice) {
     std::stringstream        port_path;
     auto                     port_count = libusb_get_port_numbers(usbDevice, usb_ports, max_usb_depth);
     auto                     usb_dev    = std::to_string(libusb_get_device_address(usbDevice));
-    libusb_device_descriptor dev_desc;
+    libusb_device_descriptor dev_desc{};
     auto                     r = libusb_get_device_descriptor(usbDevice, &dev_desc);
+    (void)r;
 
-    for(size_t i = 0; i < port_count; ++i) {
+    for(int i = 0; i < port_count; ++i) {
         port_path << std::to_string(usb_ports[i]) << (((i + 1) < port_count) ? "." : "");
     }
 
@@ -107,8 +108,7 @@ UsbDeviceLibusb::UsbDeviceLibusb(libusb_device *device, const libusb_device_desc
     if(sts != LIBUSB_SUCCESS) {
         auto              rs_sts = libusbStatusToOb(sts);
         std::stringstream msg;
-        msg << "failed to open usb device! "
-            << " error: " << usbStatusToString.at(rs_sts);
+        msg << "failed to open usb device! " << " error: " << usbStatusToString.at(rs_sts);
         LOG_ERROR(msg.str());
         throw std::runtime_error(msg.str());
     }
@@ -150,13 +150,13 @@ void UsbDeviceLibusb::init() {
                 break;
             }
             for(int j = 0; j < inf.num_altsetting; j++) {
-                auto          d  = inf.altsetting[j];
+                auto          d     = inf.altsetting[j];
                 UsbDescriptor altUd = { d.bLength, d.bDescriptorType, std::vector<uint8_t>(d.bLength) };
                 memcpy(altUd.data.data(), &d, d.bLength);
                 descriptors_.push_back(altUd);
                 for(int k = 0; k < d.extra_length;) {
-                    auto          l  = d.extra[k];
-                    auto          dt = d.extra[k + 1];
+                    auto          l       = d.extra[k];
+                    auto          dt      = d.extra[k + 1];
                     UsbDescriptor extraUd = { l, dt, std::vector<uint8_t>(l) };
                     memcpy(extraUd.data.data(), &d.extra[k], l);
                     descriptors_.push_back(extraUd);

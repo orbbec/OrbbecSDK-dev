@@ -20,22 +20,18 @@ namespace pal {
 class LinuxPal : public ObPal {
 public:
     LinuxPal();
-    ~LinuxPal() noexcept;
+    ~LinuxPal() noexcept override;
 
-    virtual std::shared_ptr<ISourcePort> createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
+    std::shared_ptr<ISourcePort> createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
 #if defined(BUILD_USB_PORT)
 public:
-    virtual std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
-    virtual SourcePortInfoList             queryUsbSourcePort() override;
-    virtual std::shared_ptr<ISourcePort>    createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo>) override;
-    virtual std::shared_ptr<ISourcePort>    createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
-    virtual std::shared_ptr<ISourcePort>    createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo>) override;
+    std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
+    SourcePortInfoList             queryUsbSourcePort() override;
 
 private:
     void loadXmlConfig();
 
-private:
     std::shared_ptr<UsbEnumerator> usbEnumerator_;
 
     typedef enum {
@@ -48,7 +44,7 @@ private:
 #endif
 
 private:
-    std::mutex                                                                 sourcePortMapMutex_;
+    std::mutex                                                                  sourcePortMapMutex_;
     std::map<std::shared_ptr<const SourcePortInfo>, std::weak_ptr<ISourcePort>> sourcePortMap_;
 };
 
@@ -57,14 +53,12 @@ int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hot
 int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 class LibusbDeviceWatcher : public DeviceWatcher {
 public:
-    LibusbDeviceWatcher() {
-        // libusb_init(); // 创建linuxPal会初始化
-    }
-    ~LibusbDeviceWatcher() noexcept {
+    LibusbDeviceWatcher() =default;
+    ~LibusbDeviceWatcher() noexcept override {
         TRY_EXECUTE(stop());
         // libusb_exit();
     }
-    virtual void start(deviceChangedCallback callback) override {
+    void start(deviceChangedCallback callback) override {
         callback_ = callback;
         auto rc   = libusb_hotplug_register_callback(NULL, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, 0, 0x2BC5, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY,
                                                      deviceArrivalCallback, this, &hp[0]);
@@ -77,7 +71,7 @@ public:
             LOG_WARN("register libusb hotplug failed!");
         }
     }
-    virtual void stop() override {
+    void stop() override {
         libusb_hotplug_deregister_callback(NULL, hp[0]);
         libusb_hotplug_deregister_callback(NULL, hp[1]);
     }

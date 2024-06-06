@@ -6,11 +6,11 @@
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 
-
 #include "usb/backend/DeviceLibusb.hpp"
 #include <utlist.h>
-
+#include <libuvc/libuvc_internal.h>
 #include <algorithm>
+#include <utils/Utils.hpp>
 
 #define UVC_AE_MODE_D0_MANUAL (1 << 0)
 #define UVC_AE_MODE_D1_AUTO (1 << 1)
@@ -23,7 +23,7 @@
 
 namespace libobsensor {
 namespace pal {
-uvc_frame_format fourCC2UvcFormat(int32_t fourccCode) {
+uvc_frame_format fourCC2UvcFormat(uint32_t fourccCode) {
     uvc_frame_format uvcFormat = UVC_FRAME_FORMAT_UNKNOWN;
     std::find_if(fourccToUvcFormatMap.begin(), fourccToUvcFormatMap.end(), [&](const std::pair<uint32_t, uvc_frame_format> sf) {
         if(fourccCode == sf.first) {
@@ -79,24 +79,26 @@ void ObLibuvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
     for(auto &&pf: uvcProfiles) {
         auto formatIter = fourccToOBFormat.find(pf.fourcc);
         if(formatIter != fourccToOBFormat.end()) {
-            if((profile->format == formatIter->second) && (profile->fps == pf.fps) && (profile->height == pf.height) && (profile->width == pf.width)) {
+            if((profile->getFormat() == formatIter->second) && (profile->getFps() == pf.fps) && (profile->getHeight() == pf.height)
+               && (profile->getWidth() == pf.width)) {
                 foundProfile       = true;
                 selectedUvcProfile = pf;
                 break;
             }
         }
     }
-    LOG_DEBUG("playProfile: infIndex={0}, selected_format.width={1}, height={2}, format={3}", (uint32_t)portInfo_->infIndex, profile->width, profile->height,
-              profile->format);
+    LOG_DEBUG("playProfile: infIndex={0}, selected_format.width={1}, height={2}, format={3}", (uint32_t)portInfo_->infIndex, profile->getWidth(),
+              profile->getHeight(), profile->getFormat());
 
-    if(foundProfile == false) {
+    if(!foundProfile) {
         throw std::runtime_error("Failed to find supported format!");
     }
 
     // libusb_clear_halt(devHandle_->usb_devh, selectedUvcProfile.endpointAddress);
 
     uvc_stream_ctrl_t ctrl;
-    auto res = uvc_get_stream_ctrl_format_size(devHandle_, &ctrl, fourCC2UvcFormat(selectedUvcProfile.fourcc), profile->width, profile->height, profile->fps);
+    auto res = uvc_get_stream_ctrl_format_size(devHandle_, &ctrl, fourCC2UvcFormat(selectedUvcProfile.fourcc), profile->getWidth(), profile->getHeight(),
+                                               profile->getFps());
     if(res < 0) {
         LOG_ERROR("uvc_get_stream_ctrl_format_size failed!");
         throw std::runtime_error("uvc_get_stream_ctrl_format_size failed!");
@@ -111,10 +113,11 @@ void ObLibuvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
     {
         std::unique_lock<std::mutex> lock(streamMutex_);
         int32_t                      bufNum = LIBUVC_NUM_TRANSFER_BUFS;
-        if((profile->format == OB_FORMAT_MJPG || profile->format == OB_FORMAT_Y8) && profile->fps <= LIBUVC_TRANSFER_LOW_FRAME_SIZE) {
+        if((profile->getFormat() == OB_FORMAT_MJPG || profile->getFormat() == OB_FORMAT_Y8) && profile->getFps() <= LIBUVC_TRANSFER_LOW_FRAME_SIZE) {
             bufNum = LIBUVC_NUM_TRANSFER_LOW_FRAME_BUFS;
         }
-        auto obStreamHandle = std::shared_ptr<OBUvcStreamHandle>(new OBUvcStreamHandle({ profile, callback, uvcStreamHandle }));
+        auto obStreamHandle = std::make_shared<OBUvcStreamHandle>(profile, callback, uvcStreamHandle);
+        // std::shared_ptr<OBUvcStreamHandle>(new OBUvcStreamHandle(profile, callback, uvcStreamHandle));
         streamHandles_.push_back(obStreamHandle);
         uvcStreamHandle->actual_transfer_buff_num = bufNum;
         ret                                       = uvc_stream_start(uvcStreamHandle, ObLibuvcDevicePort::onFrameCallback, obStreamHandle.get(), 0);
@@ -122,10 +125,10 @@ void ObLibuvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
 
     if(ret == UVC_ERROR_NO_MEM) {
         for(uint32_t i = 0; i < uvcStreamHandle->actual_transfer_buff_num; i++) {
-            if(uvcStreamHandle->transfers[i] != NULL) {
+            if(uvcStreamHandle->transfers[i] != nullptr) {
                 free(uvcStreamHandle->transfers[i]->buffer);
                 libusb_free_transfer(uvcStreamHandle->transfers[i]);
-                uvcStreamHandle->transfers[i] = NULL;
+                uvcStreamHandle->transfers[i] = nullptr;
             }
         }
         std::unique_lock<std::mutex> lock(streamMutex_);
@@ -148,8 +151,8 @@ void ObLibuvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> pr
     LOG_DEBUG("ObLibuvcDevicePort::stopStream()...");
     std::unique_lock<std::mutex> lock(streamMutex_);
     auto                         it = std::find_if(streamHandles_.begin(), streamHandles_.end(), [&](const std::shared_ptr<OBUvcStreamHandle> sh) {
-        return (profile->format == sh->profile->format) && (profile->fps == sh->profile->fps) && (profile->height == sh->profile->height)
-               && (profile->width == sh->profile->width);
+        return (profile->getFormat() == sh->profile->getFormat()) && (profile->getFps() == sh->profile->getFps())
+               && (profile->getHeight() == sh->profile->getHeight()) && (profile->getWidth() == sh->profile->getWidth());
     });
     if(it == streamHandles_.end()) {
         LOG_DEBUG("can not find match stream handle.");
@@ -183,6 +186,9 @@ void ObLibuvcDevicePort::stopAllStream() {
         uvc_stream_stop(uvcStreamHandle);
         uvc_stream_close(uvcStreamHandle);
         auto ret = libusb_clear_halt(devHandle_->usb_devh, endpointAddr);
+        if(ret != LIBUSB_SUCCESS) {
+            LOG_ERROR("libusb_clear_halt failed, error code={}", ret);
+        }
     }
     streamHandles_.clear();
     LOG_DEBUG("ObLibuvcDevicePort::stopAllStream() done");
@@ -323,7 +329,7 @@ std::vector<std::shared_ptr<const VideoStreamProfile>> ObLibuvcDevicePort::getSt
     for(auto &&pf: uvcProfiles) {
         auto formatIter = fourccToOBFormat.find(pf.fourcc);
         if(formatIter != fourccToOBFormat.end()) {
-            auto sp = std::make_shared<VideoStreamProfile>(OB_STREAM_VIDEO, formatIter->second, pf.width, pf.height, pf.fps);
+            auto sp = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, formatIter->second, pf.width, pf.height, pf.fps);
             results.push_back(sp);
         }
     }
@@ -351,12 +357,6 @@ int32_t ObLibuvcDevicePort::uvcCtrlValueTranslate(uvc_req_code action, OBPropert
             else {
                 LOG_DEBUG("UVC_GET_CUR:ae res mode is invalid.");
             }
-            // if(res == (UVC_AE_MODE_D3_AP | UVC_AE_MODE_D0_MANUAL)) {
-            //     translated_value = (value == UVC_AE_MODE_D0_MANUAL) ? 0 : 1;
-            // }
-            // else if(res == (UVC_AE_MODE_D1_AUTO | UVC_AE_MODE_D2_SP)) {
-            //     translated_value = (value == UVC_AE_MODE_D2_SP) ? 0 : 1;
-            // }
         }
         break;
 
@@ -377,13 +377,6 @@ int32_t ObLibuvcDevicePort::uvcCtrlValueTranslate(uvc_req_code action, OBPropert
             else {
                 LOG_DEBUG("UVC_SET_CUR:ae res mode is invalid.");
             }
-
-            // if(res == (UVC_AE_MODE_D3_AP | UVC_AE_MODE_D0_MANUAL)) {
-            //     translated_value = value ? UVC_AE_MODE_D3_AP : UVC_AE_MODE_D0_MANUAL;
-            // }
-            // else if(res == (UVC_AE_MODE_D1_AUTO | UVC_AE_MODE_D2_SP)) {
-            //     translated_value = value ? UVC_AE_MODE_D1_AUTO : UVC_AE_MODE_D2_SP;
-            // }
         }
         break;
 
@@ -418,8 +411,8 @@ int32_t ObLibuvcDevicePort::uvcCtrlValueTranslate(uvc_req_code action, OBPropert
 }
 
 void ObLibuvcDevicePort::onFrameCallback(uvc_frame *frame, void *userPtr) {
-    OBUvcStreamHandle *handle = (OBUvcStreamHandle *)userPtr;
-    VideoFrameObject   fo;
+    (void)userPtr;
+    VideoFrameObject fo;
     fo.frameSize = frame->data_bytes;
     fo.frameData = frame->data;
 
@@ -436,15 +429,15 @@ void ObLibuvcDevicePort::onFrameCallback(uvc_frame *frame, void *userPtr) {
         fo.scrDataBuf  = (char *)frame->payload_header + UVC_PAYLOAD_HEADER_SRC_OFFSET;
         fo.scrDataSize = UVC_PAYLOAD_HEADER_SRC_LENGTH;
     }
-    handle->callback(fo);
+    // FIXME:
+    // handle->callback(fo);
 }
 
 int32_t ObLibuvcDevicePort::getCtrl(uvc_req_code action, uint8_t control, uint8_t unit) const {
     unsigned char buffer[4] = { 0 };
     int32_t       ret       = 0;
 
-    UsbStatus sts;
-    uint32_t  transferred;
+    uint32_t transferred;
 
     transferred = uvc_get_ctrl(devHandle_, unit, control, buffer, sizeof(buffer), action);
 
@@ -518,11 +511,13 @@ int ObLibuvcDevicePort::obPropToUvcCS(OBPropertyID propertyId, int &unit) const 
 }
 
 void ObLibuvcDevicePort::setCtrl(uvc_req_code action, uint8_t control, uint8_t unit, int32_t value) const {
+    (void)action;
     unsigned char buffer[4];
     INT_TO_DW(value, buffer);
 
     uint32_t transferred;
     transferred = uvc_set_ctrl(devHandle_, unit, control, buffer, sizeof(int32_t));
+    (void)transferred;
 }
 
 std::vector<ObLibuvcDevicePort::uvcProfile> ObLibuvcDevicePort::queryAvailableUvcProfile() const {
@@ -557,6 +552,8 @@ std::vector<ObLibuvcDevicePort::uvcProfile> ObLibuvcDevicePort::queryAvailableUv
                         }
                     }
                 }
+            default:
+                break;
             }
         }
     }
@@ -567,20 +564,6 @@ std::vector<ObLibuvcDevicePort::uvcProfile> ObLibuvcDevicePort::queryAvailableUv
 std::shared_ptr<const SourcePortInfo> ObLibuvcDevicePort::getSourcePortInfo() const {
     return portInfo_;
 }
-
-// void ObLibuvcDevicePort::checkConnection() const {
-// #ifdef __ANDROID__
-//     auto deviceInfoList = AndroidUsbDeviceManager::getInstance()->getDeviceInfoList();
-// #else
-//     auto deviceInfoList = UsbEnumerator::queryDevicesInfo();
-// #endif
-
-//     for(auto &&usb_info: deviceInfoList) {
-//         if(usb_info.uid == portInfo->uid)
-//             return;
-//     }
-//     throw std::runtime_error("Camera is no longer connected!");
-// }
 
 #ifdef __ANDROID__
 std::string ObLibuvcDevicePort::getUsbConnectType() {

@@ -1,13 +1,13 @@
-# dylib
+# Dylib
 
-[![version](https://img.shields.io/badge/Version-2.2.1-blue.svg)](https://github.com/martin-olivier/dylib/releases/tag/v2.2.1)
-[![license](https://img.shields.io/badge/License-MIT-orange.svg)](https://github.com/martin-olivier/dylib/blob/main/LICENSE)
+[![version](https://img.shields.io/badge/Version-2.2.1-blue.svg)](https://github.com/martin-olivier/Dylib/releases/tag/v2.2.1)
+[![license](https://img.shields.io/badge/License-MIT-orange.svg)](https://github.com/martin-olivier/Dylib/blob/main/LICENSE)
 [![cpp](https://img.shields.io/badge/Compatibility-C++11-darkgreen.svg)](https://isocpp.org)
 
-[![ci](https://github.com/martin-olivier/dylib/actions/workflows/CI.yml/badge.svg)](https://github.com/martin-olivier/dylib/actions/workflows/CI.yml)
-[![coverage](https://codecov.io/gh/martin-olivier/dylib/branch/main/graph/badge.svg)](https://codecov.io/gh/martin-olivier/dylib)
+[![ci](https://github.com/martin-olivier/Dylib/actions/workflows/CI.yml/badge.svg)](https://github.com/martin-olivier/Dylib/actions/workflows/CI.yml)
+[![coverage](https://codecov.io/gh/martin-olivier/Dylib/branch/main/graph/badge.svg)](https://codecov.io/gh/martin-olivier/Dylib)
 
-The goal of this C++ library is to load dynamic libraries (.so, .dll, .dylib) and access its functions and global variables at runtime.  
+The goal of this C++ library is to load dynamic libraries (.so, .dll, .Dylib) and access its functions and global variables at runtime.  
 
 `⭐ Don't forget to put a star if you like the project!`
 
@@ -17,60 +17,60 @@ Works on `Linux`, `Windows`, `MacOS`
 
 ## Installation
 
-You can fetch `dylib` to your project using `CMake`:
+You can fetch `Dylib` to your project using `CMake`:
 
 ```cmake
 include(FetchContent)
 
 FetchContent_Declare(
-    dylib
-    GIT_REPOSITORY "https://github.com/martin-olivier/dylib"
+    Dylib
+    GIT_REPOSITORY "https://github.com/martin-olivier/Dylib"
     GIT_TAG        "v2.2.1"
 )
 
-FetchContent_MakeAvailable(dylib)
+FetchContent_MakeAvailable(Dylib)
 ```
 
-You can also click [HERE](https://github.com/martin-olivier/dylib/releases/download/v2.2.1/dylib.hpp) to download the `dylib` header file.
+You can also click [HERE](https://github.com/martin-olivier/Dylib/releases/download/v2.2.1/Dylib.hpp) to download the `Dylib` header file.
 
 ## Documentation
 
 ### Constructor
 
-The `dylib` class can load a dynamic library from the system library path
+The `Dylib` class can load a dynamic library from the system library path
 
 ```c++
 // Load "foo" library from the system library path
 
-dylib lib("foo");
+Dylib lib("foo");
 ```
 
-The `dylib` class can also load a dynamic library from a specific path
+The `Dylib` class can also load a dynamic library from a specific path
 
 ```c++
 // Load "foo" library from relative path "./libs"
 
-dylib lib("./libs", "foo");
+Dylib lib("./libs", "foo");
 
 // Load "foo" library from full path "/usr/lib"
 
-dylib lib("/usr/lib", "foo");
+Dylib lib("/usr/lib", "foo");
 ```
 
-The `dylib` class will automatically add the filename decorations of the current os to the library name, but you can disable that by setting `decorations` parameter to `dylib::no_filename_decorations`
+The `Dylib` class will automatically add the filename decorations of the current os to the library name, but you can disable that by setting `decorations` parameter to `Dylib::no_filename_decorations`
 
 ```c++
 // Windows -> "foo.dll"
-// MacOS   -> "libfoo.dylib"
+// MacOS   -> "libfoo.Dylib"
 // Linux   -> "libfoo.so"
 
-dylib lib("foo");
+Dylib lib("foo");
 
 // Windows -> "foo.lib"
 // MacOS   -> "foo.lib"
 // Linux   -> "foo.lib"
 
-dylib lib("foo.lib", dylib::no_filename_decorations);
+Dylib lib("foo.lib", Dylib::no_filename_decorations);
 ```
 
 ### Get a function or a variable
@@ -84,7 +84,7 @@ Get a global variable from the dynamic library currently loaded in the object
 ```c++
 // Load "foo" dynamic library
 
-dylib lib("foo");
+Dylib lib("foo");
 
 // Get the function "adder" (get_function<T> will return T*)
 
@@ -111,13 +111,13 @@ Get a symbol from the dynamic library currently loaded in the object
 Returns the dynamic library handle
 
 ```c++
-dylib lib("foo");
+Dylib lib("foo");
 
 if (lib.has_symbol("GetModule") == false)
     std::cerr << "symbol 'GetModule' not found in 'foo' lib" << std::endl;
 
-dylib::native_handle_type handle = lib.native_handle();
-dylib::native_symbol_type symbol = lib.get_symbol("GetModule");
+Dylib::native_handle_type handle = lib.native_handle();
+Dylib::native_symbol_type symbol = lib.get_symbol("GetModule");
 
 assert(handle != nullptr && symbol != nullptr);
 assert(symbol == dlsym(handle, "GetModule"));
@@ -131,23 +131,23 @@ This exception is raised when the library failed to load or the library encounte
 `symbol_error`  
 This exception is raised when the library failed to load a symbol  
 
-Those exceptions inherit from `dylib::exception`
+Those exceptions inherit from `Dylib::exception`
 
 ```c++
 try {
-    dylib lib("foo");
+    Dylib lib("foo");
     double pi_value = lib.get_variable<double>("pi_value");
     std::cout << pi_value << std::endl;
-} catch (const dylib::load_error &) {
+} catch (const Dylib::load_error &) {
     std::cerr << "failed to load 'foo' library" << std::endl;
-} catch (const dylib::symbol_error &) {
+} catch (const Dylib::symbol_error &) {
     std::cerr << "failed to get 'pi_value' symbol" << std::endl;
 }
 ```
 
 ## Example
 
-A full example about the usage of the `dylib` library is available [HERE](example)
+A full example about the usage of the `Dylib` library is available [HERE](example)
 
 ## Tests
 
@@ -166,9 +166,9 @@ ctest
 
 ## Community
 
-If you have any question about the usage of the library, do not hesitate to open a [discussion](https://github.com/martin-olivier/dylib/discussions)
+If you have any question about the usage of the library, do not hesitate to open a [discussion](https://github.com/martin-olivier/Dylib/discussions)
 
-If you want to report a bug or provide a feature, do not hesitate to open an [issue](https://github.com/martin-olivier/dylib/issues) or submit a [pull request](https://github.com/martin-olivier/dylib/pulls)
+If you want to report a bug or provide a feature, do not hesitate to open an [issue](https://github.com/martin-olivier/Dylib/issues) or submit a [pull request](https://github.com/martin-olivier/Dylib/pulls)
 
 ## Contributing
 

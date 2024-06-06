@@ -1,5 +1,5 @@
 #include "Context.hpp"
-#include "utils/utils.hpp"
+#include "utils/Utils.hpp"
 
 #include <mutex>
 
@@ -18,7 +18,7 @@ std::shared_ptr<Context> Context::getInstance(const std::string& configPath) {
     return ctxInstance;
 }
 
-Context::Context(const std::string& configFilePath): logger_(Logger::getInstance()), deviceManager_(DeviceManager::getInstance()), frameMemoryPool_(FrameMemoryPool::getInstance()  ) {
+Context::Context(const std::string& configFilePath):  deviceManager_(DeviceManager::getInstance()),logger_(Logger::getInstance()), frameMemoryPool_(FrameMemoryPool::getInstance()  ) {
     utils::unusedVar(configFilePath); // todo: use to load config file
 }
 

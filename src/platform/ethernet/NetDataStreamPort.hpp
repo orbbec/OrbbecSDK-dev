@@ -8,12 +8,26 @@
 namespace libobsensor {
 namespace pal {
 
+struct dataStreamWatcherWeakPtrCompare {
+    bool operator()(const std::weak_ptr<DataStreamWatcher> &a, const std::weak_ptr<DataStreamWatcher> &b) const {
+        auto aItem = a.lock();
+        auto bItem = b.lock();
+        if(!aItem) {
+            return true;
+        }
+        if(!bItem) {
+            return false;
+        }
+        return aItem.get() < bItem.get();
+    }
+};
+
 struct NetDataStreamPortInfo : public NetSourcePortInfo {
     NetDataStreamPortInfo(std::string address, uint16_t port, uint16_t vendorPort, std::string mac = "unknown", std::string serialNumber = "unknown",
                           uint32_t pid = 0)
         : NetSourcePortInfo(SOURCE_PORT_NET_VENDOR_STREAM, address, port, mac, serialNumber, pid), vendorPort(vendorPort) {}
 
-    virtual bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
+    virtual bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const {
         if(cmpInfo->portType != portType) {
             return false;
         }
@@ -28,8 +42,6 @@ class NetDataStreamPort : public IDataStreamPort {
 public:
     NetDataStreamPort(std::shared_ptr<const NetDataStreamPortInfo> portInfo);
     virtual ~NetDataStreamPort() noexcept;
-    virtual void                                  addWatcher(std::weak_ptr<DataStreamWatcher> watcher) override;
-    virtual void                                  removeWatcher(std::weak_ptr<DataStreamWatcher> watcher) override;
     virtual std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override {
         return portInfo_;
     }

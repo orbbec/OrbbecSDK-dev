@@ -18,7 +18,7 @@ CPLUSPLUS_COMPILER =    /usr/bin/xcrun clang
 CPLUSPLUS_FLAGS =       $(COMPILE_OPTS) -Wall
 OBJ =                   o
 LINK =                  /usr/bin/xcrun clang -o
-LINK_OPTS =             -L. -arch i386 -miphoneos-version-min=$(MIN_IOS_VERSION) --sysroot=$(SDK) -isysroot -L$(SDK)/usr/lib/system -I$(SDK)/usr/lib /usr/lib/libc++.dylib
+LINK_OPTS =             -L. -arch i386 -miphoneos-version-min=$(MIN_IOS_VERSION) --sysroot=$(SDK) -isysroot -L$(SDK)/usr/lib/system -I$(SDK)/usr/lib /usr/lib/libc++.Dylib
 CONSOLE_LINK_OPTS =     $(LINK_OPTS)
 LIBRARY_LINK =          /usr/bin/xcrun libtool -static -o 
 LIBRARY_LINK_OPTS =

@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <unistd.h>
-#include <limits.h>
+#include <limits>
+#include <algorithm>
 #include <dirent.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -11,6 +12,7 @@
 
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 namespace pal {
@@ -30,27 +32,6 @@ int xioctl(int fh, unsigned long request, void *arg) {
     } while(ret < 0 && (errno == EINTR || errno == EAGAIN) && retry--);
     return ret;
 }
-
-// UsbSpec getUSBConnectionType(std::string path) {
-//     UsbSpec res{ usb_undefined };
-
-//     char usb_actual_path[PATH_MAX] = { 0 };
-//     if(realpath(path.c_str(), usb_actual_path) != nullptr) {
-//         path = std::string(usb_actual_path);
-//         std::string val;
-//         if(!(std::ifstream(path + "/version") >> val)) {
-//             LOG_ERROR("Failed to read usb version specification");
-//             return res;
-//         }
-
-//         auto kvp = std::find_if(usb_spec_names.begin(), usb_spec_names.end(),
-//                                 [&val](const std::pair<UsbSpec, std::string> &kpv) { return (std::string::npos != val.find(kpv.second)); });
-//         if(kvp != std::end(usb_spec_names)) {
-//             res = kvp->first;
-//         }
-//     }
-//     return res;
-// }
 
 v4l2_capability getV4l2DeviceCapabilities(const std::string &dev_name) {
     // RAII to handle exceptions
@@ -211,7 +192,7 @@ bool ObV4lUvcDevicePort::isContainedMetadataDevice(std::shared_ptr<const USBSour
     return false;
 }
 
-void foreachProfile(std::vector<std::shared_ptr<V4lDeviceHandle>>                                                 deviceHandles,
+void foreachProfile(std::vector<std::shared_ptr<V4lDeviceHandle>>                                              deviceHandles,
                     std::function<bool(std::shared_ptr<V4lDeviceHandle>, std::shared_ptr<VideoStreamProfile>)> func) {
     bool quit = false;
     for(auto &devHandle: deviceHandles) {
@@ -252,13 +233,13 @@ void foreachProfile(std::vector<std::shared_ptr<V4lDeviceHandle>>               
                 while(!quit && xioctl(devHandle->fd, VIDIOC_ENUM_FRAMEINTERVALS, &frame_interval) == 0) {
                     if(frame_interval.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
                         if(frame_interval.discrete.numerator != 0) {
-                            auto formatIter = fourccToOBFormat.find(fourcc);
-                            if(formatIter != fourccToOBFormat.end()) {
+                            auto formatIter = FOURCC_FORMAT_MAP.find(fourcc);
+                            if(formatIter != FOURCC_FORMAT_MAP.end()) {
                                 auto width   = frame_size.discrete.width;
                                 auto height  = frame_size.discrete.height;
                                 auto fps     = static_cast<float>(frame_interval.discrete.denominator) / static_cast<float>(frame_interval.discrete.numerator);
                                 auto format  = formatIter->second;
-                                auto profile = std::make_shared<VideoStreamProfile>(OB_STREAM_VIDEO, format, width, height, fps);
+                                auto profile = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, format, width, height, fps);
                                 if(fourcc != 0) {
                                     quit = func(devHandle, profile);
                                 }
@@ -344,10 +325,10 @@ ObV4lUvcDevicePort::ObV4lUvcDevicePort(std::shared_ptr<const USBSourcePortInfo> 
             devHandle->metadataFd = fd;
         }
         else {
-            devHandle       = std::make_shared<V4lDeviceHandle>();
+            devHandle             = std::make_shared<V4lDeviceHandle>();
             devHandle->metadataFd = -1;
-            devHandle->info = *iter;
-            auto fd         = open(devHandle->info->name.c_str(), O_RDWR | O_NONBLOCK, 0);
+            devHandle->info       = *iter;
+            auto fd               = open(devHandle->info->name.c_str(), O_RDWR | O_NONBLOCK, 0);
             if(fd < 0) {
                 throw libobsensor::io_exception("Failed to open: " + devHandle->info->name);
             }
@@ -395,20 +376,19 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
         int            max_fd    = std::max({ devHandle->fd, devHandle->metadataFd, devHandle->stopPipeFd[0], devHandle->stopPipeFd[1] });
         struct timeval remaining = { 0, 500000 };  // 500ms
 
-        if(devHandle->metadataFd >= 0){
+        if(devHandle->metadataFd >= 0) {
             v4l2_buffer buf = {};
             buf.type        = LOCAL_V4L2_BUF_TYPE_META_CAPTURE;
             buf.memory      = V4L2_MEMORY_MMAP;
             xioctl(devHandle->metadataFd, VIDIOC_QBUF, &buf);
         }
 
-        if(devHandle->fd >= 0){
+        if(devHandle->fd >= 0) {
             v4l2_buffer buf = {};
             buf.type        = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             buf.memory      = V4L2_MEMORY_MMAP;
             xioctl(devHandle->fd, VIDIOC_QBUF, &buf);
         }
-
 
         while(devHandle->isCapturing) {
             fd_set fds{};
@@ -477,6 +457,7 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
 
                 if(buf.bytesused) {
                     auto timestamp = (double)buf.timestamp.tv_sec * 1000.f + (double)buf.timestamp.tv_usec / 1000.f;
+                    (void)timestamp;
 
                     VideoFrameObject videoFrame;
                     videoFrame.frameSize = buf.bytesused;
@@ -485,17 +466,18 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
                         auto uvc_payload_header     = devHandle->metadataBuffers[metadataBufferIndex].ptr + sizeof(V4L2UvcMetaHeader);
                         auto uvc_payload_header_len = devHandle->metadataBuffers[metadataBufferIndex].actual_length - sizeof(V4L2UvcMetaHeader);
                         if(uvc_payload_header_len >= sizeof(StandardUvcFramePayloadHeader)) {
-                            videoFrame.metadataSize                      = uvc_payload_header_len - sizeof(StandardUvcFramePayloadHeader);
-                            videoFrame.metadata                          = (void *)(uvc_payload_header + sizeof(StandardUvcFramePayloadHeader));
-                            StandardUvcFramePayloadHeader *payloadHeader = (StandardUvcFramePayloadHeader *)uvc_payload_header;
-                            videoFrame.deviceTime                        = payloadHeader->dwPresentationTime;
-                            videoFrame.scrDataSize                       = sizeof(StandardUvcFramePayloadHeader::scrSourceClock);
-                            videoFrame.scrDataBuf                        = (void *)payloadHeader->scrSourceClock;
+                            videoFrame.metadataSize = uvc_payload_header_len - sizeof(StandardUvcFramePayloadHeader);
+                            videoFrame.metadata     = (void *)(uvc_payload_header + sizeof(StandardUvcFramePayloadHeader));
+                            auto payloadHeader      = (StandardUvcFramePayloadHeader *)uvc_payload_header;
+                            videoFrame.deviceTime   = payloadHeader->dwPresentationTime;
+                            videoFrame.scrDataSize  = sizeof(StandardUvcFramePayloadHeader::scrSourceClock);
+                            videoFrame.scrDataBuf   = (void *)payloadHeader->scrSourceClock;
                         }
                     }
 
                     videoFrame.systemTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                    devHandle->frameCallback(videoFrame);
+                    // FIXME:
+                    // devHandle->frameCallback(videoFrame);
                 }
 
                 if(devHandle->isCapturing) {
@@ -512,6 +494,7 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
 std::vector<std::shared_ptr<const VideoStreamProfile>> ObV4lUvcDevicePort::getStreamProfileList() {
     std::vector<std::shared_ptr<const VideoStreamProfile>> profileList;
     foreachProfile(deviceHandles_, [&profileList](std::shared_ptr<V4lDeviceHandle> devHandle, std::shared_ptr<VideoStreamProfile> profile) {
+        (void)devHandle;
         profileList.push_back(profile);
         return false;  // false means continue
     });
@@ -520,17 +503,17 @@ std::vector<std::shared_ptr<const VideoStreamProfile>> ObV4lUvcDevicePort::getSt
 
 uint32_t phaseProfileFormatToFourcc(std::shared_ptr<const VideoStreamProfile> profile) {
     int      formatFourcc    = 0;
-    OBFormat format          = profile->format;
+    OBFormat format          = profile->getFormat();
     auto     foundFormatIter = std::find_if(v4lFourccMap.begin(), v4lFourccMap.end(),
                                             [&](const std::pair<uint32_t, uint32_t> &item) { return item.second == mapFormatToFourcc(format); });
     if(foundFormatIter != v4lFourccMap.end()) {
         formatFourcc = foundFormatIter->first;
     }
     else {
-        auto it = std::find_if(fourccToOBFormat.begin(), fourccToOBFormat.end(),
+        auto it = std::find_if(FOURCC_FORMAT_MAP.begin(), FOURCC_FORMAT_MAP.end(),
                                [format](const std::pair<uint32_t, OBFormat> &pair) { return format == pair.second; });
-        if(it == fourccToOBFormat.end()) {
-            LOG_ERROR("unsupported format {}", profile->format);
+        if(it == FOURCC_FORMAT_MAP.end()) {
+            LOG_ERROR("unsupported format {}", profile->getFormat());
             return 0;
         }
         formatFourcc = it->first;
@@ -542,19 +525,20 @@ uint32_t phaseProfileFormatToFourcc(std::shared_ptr<const VideoStreamProfile> pr
 void ObV4lUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) {
     std::shared_ptr<V4lDeviceHandle> devHandle = nullptr;
     foreachProfile(deviceHandles_, [&](std::shared_ptr<V4lDeviceHandle> handle, std::shared_ptr<VideoStreamProfile> prof) {
-        if(prof->width == profile->width && prof->height == profile->height && prof->fps == profile->fps && prof->format == profile->format) {
+        if(prof->getWidth() == profile->getWidth() && prof->getHeight() == profile->getHeight() && prof->getFps() == profile->getFps()
+           && prof->getFormat() == profile->getFormat()) {
             devHandle = handle;
             return true;
         }
         return false;
     });
     if(!devHandle) {
-        throw libobsensor::linux_pal_exception("No v4l device found for profile: width=" + std::to_string(profile->width)
-                                               + ", height=" + std::to_string(profile->height) + ", fps=" + std::to_string(profile->fps)
-                                               + ", format=" + std::to_string(profile->format));
+        throw libobsensor::linux_pal_exception("No v4l device found for profile: width=" + std::to_string(profile->getWidth())
+                                               + ", height=" + std::to_string(profile->getHeight()) + ", fps=" + std::to_string(profile->getFps())
+                                               + ", format=" + std::to_string(profile->getFormat()));
     }
     if(devHandle->isCapturing) {
-        libobsensor::linux_pal_exception("V4l device is already capturing");
+        throw libobsensor::linux_pal_exception("V4l device is already capturing");
     }
 
     if(devHandle->metadataFd >= 0) {
@@ -608,8 +592,8 @@ void ObV4lUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
 
     v4l2_format fmt         = {};
     fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    fmt.fmt.pix.width       = profile->width;
-    fmt.fmt.pix.height      = profile->height;
+    fmt.fmt.pix.width       = profile->getWidth();
+    fmt.fmt.pix.height      = profile->getHeight();
     fmt.fmt.pix.field       = V4L2_FIELD_NONE;
     fmt.fmt.pix.pixelformat = phaseProfileFormatToFourcc(profile);
     if(xioctl(devHandle->fd, VIDIOC_S_FMT, &fmt) < 0) {
@@ -623,7 +607,7 @@ void ObV4lUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
     v4l2_streamparm streamparm                       = {};
     streamparm.type                                  = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     streamparm.parm.capture.timeperframe.numerator   = 1;
-    streamparm.parm.capture.timeperframe.denominator = profile->fps;
+    streamparm.parm.capture.timeperframe.denominator = profile->getFps();
     if(xioctl(devHandle->fd, VIDIOC_S_PARM, &streamparm) < 0) {
         throw libobsensor::io_exception("Failed to set streamparm!" + devHandle->info->name + ", " + strerror(errno));
     }
@@ -662,7 +646,7 @@ void ObV4lUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
     devHandle->isCapturing   = true;
     devHandle->profile       = profile;
     devHandle->frameCallback = callback;
-    devHandle->captureThread = std::make_shared<std::thread>([this, devHandle]() { captureLoop(devHandle); });
+    devHandle->captureThread = std::make_shared<std::thread>([devHandle]() { captureLoop(devHandle); });
 }
 
 void ObV4lUvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> profile) {
@@ -670,7 +654,7 @@ void ObV4lUvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> pr
         return;
     }
 
-    auto clearUp = [](std::shared_ptr<V4lDeviceHandle> devHandle){
+    auto clearUp = [](std::shared_ptr<V4lDeviceHandle> devHandle) {
         // cleanup
         for(uint32_t i = 0; i < MAX_BUFFER_COUNT; i++) {
             if(devHandle->buffers[i].ptr) {

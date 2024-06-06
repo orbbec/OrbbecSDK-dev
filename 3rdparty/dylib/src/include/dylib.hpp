@@ -1,8 +1,8 @@
 /**
- * @file dylib.hpp
+ * @file Dylib.hpp
  * @version 2.2.1
  * @brief C++ cross-platform wrapper around dynamic loading of shared libraries
- * @link https://github.com/martin-olivier/dylib
+ * @link https://github.com/martin-olivier/Dylib
  *
  * @author Martin Olivier <martin.olivier@live.fr>
  * @copyright (c) 2023 Martin Olivier
@@ -45,14 +45,14 @@
 #endif
 
 /**
- *  The dylib class can hold a dynamic library instance and interact with it
+ *  The Dylib class can hold a dynamic library instance and interact with it
  *  by getting its symbols like functions or global variables
  */
-class dylib {
+class Dylib {
 public:
     struct filename_components {
         static constexpr const char *prefix = DYLIB_WIN_OTHER("", "lib");
-        static constexpr const char *suffix = DYLIB_WIN_MAC_OTHER(".dll", ".dylib", ".so");
+        static constexpr const char *suffix = DYLIB_WIN_MAC_OTHER(".dll", ".Dylib", ".so");
     };
     using native_handle_type = DYLIB_WIN_OTHER(HINSTANCE, void *);
     using native_symbol_type = DYLIB_WIN_OTHER(FARPROC, void *);
@@ -93,14 +93,14 @@ public:
         explicit symbol_error(const std::string &message) : exception(message) {}
     };
 
-    dylib(const dylib&) = delete;
-    dylib& operator=(const dylib&) = delete;
+    Dylib(const Dylib &) = delete;
+    Dylib & operator=(const Dylib &) = delete;
 
-    dylib(dylib &&other) noexcept : m_handle(other.m_handle) {
+    Dylib(Dylib &&other) noexcept : m_handle(other.m_handle) {
         other.m_handle = nullptr;
     }
 
-    dylib& operator=(dylib &&other) noexcept {
+    Dylib & operator=(Dylib &&other) noexcept {
         if (this != &other)
             std::swap(m_handle, other.m_handle);
         return *this;
@@ -117,7 +117,7 @@ public:
      *  @param decorations add os decorations to the library name
      */
     ///@{
-    dylib(const char *dir_path, const char *lib_name, bool decorations = add_filename_decorations) {
+    Dylib(const char *dir_path, const char *lib_name, bool decorations = add_filename_decorations) {
         if (!dir_path || !lib_name)
             throw std::invalid_argument("Null parameter");
 
@@ -136,34 +136,34 @@ public:
             throw load_error("Could not load library \"" + final_path + final_name + "\"\n" + get_error_description());
     }
 
-    dylib(const std::string &dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)
-        : dylib(dir_path.c_str(), lib_name.c_str(), decorations) {}
+    Dylib(const std::string &dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)
+        : Dylib(dir_path.c_str(), lib_name.c_str(), decorations) {}
 
-    dylib(const std::string &dir_path, const char *lib_name, bool decorations = add_filename_decorations)
-        : dylib(dir_path.c_str(), lib_name, decorations) {}
+    Dylib(const std::string &dir_path, const char *lib_name, bool decorations = add_filename_decorations)
+        : Dylib(dir_path.c_str(), lib_name, decorations) {}
 
-    dylib(const char *dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)
-        : dylib(dir_path, lib_name.c_str(), decorations) {}
+    Dylib(const char *dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)
+        : Dylib(dir_path, lib_name.c_str(), decorations) {}
 
-    explicit dylib(const std::string &lib_name, bool decorations = add_filename_decorations)
-        : dylib("", lib_name.c_str(), decorations) {}
+    explicit Dylib(const std::string &lib_name, bool decorations = add_filename_decorations)
+        : Dylib("", lib_name.c_str(), decorations) {}
 
-    explicit dylib(const char *lib_name, bool decorations = add_filename_decorations)
-        : dylib("", lib_name, decorations) {}
+    explicit Dylib(const char *lib_name, bool decorations = add_filename_decorations)
+        : Dylib("", lib_name, decorations) {}
 
 #ifdef DYLIB_CPP17
-    explicit dylib(const std::filesystem::path &lib_path)
-        : dylib("", lib_path.string().c_str(), no_filename_decorations) {}
+    explicit Dylib(const std::filesystem::path &lib_path)
+        : Dylib("", lib_path.string().c_str(), no_filename_decorations) {}
 
-    dylib(const std::filesystem::path &dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)
-        : dylib(dir_path.string().c_str(), lib_name.c_str(), decorations) {}
+    Dylib(const std::filesystem::path &dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)
+        : Dylib(dir_path.string().c_str(), lib_name.c_str(), decorations) {}
 
-    dylib(const std::filesystem::path &dir_path, const char *lib_name, bool decorations = add_filename_decorations)
-        : dylib(dir_path.string().c_str(), lib_name, decorations) {}
+    Dylib(const std::filesystem::path &dir_path, const char *lib_name, bool decorations = add_filename_decorations)
+        : Dylib(dir_path.string().c_str(), lib_name, decorations) {}
 #endif
     ///@}
 
-    ~dylib() {
+    ~Dylib() {
         if (m_handle)
             close(m_handle);
     }

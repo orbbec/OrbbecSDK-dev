@@ -15,20 +15,22 @@ class UsbEndpointLibusb : public UsbEndpoint {
 public:
     UsbEndpointLibusb(libusb_endpoint_descriptor desc, uint8_t interfaceNumber) : desc_(desc), interfaceNumber_(interfaceNumber) {}
 
-    virtual uint8_t getAddress() const override {
+    ~UsbEndpointLibusb() noexcept = default;
+
+    uint8_t getAddress() const override {
         return desc_.bEndpointAddress;
     }
-    virtual EndpointType getType() const override {
+    EndpointType getType() const override {
         return (EndpointType)desc_.bmAttributes;
     }
-    virtual uint8_t getInterfaceNumber() const override {
+    uint8_t getInterfaceNumber() const override {
         return interfaceNumber_;
     }
 
-    virtual EndpointDirection getDirection() const override {
+    EndpointDirection getDirection() const override {
         return desc_.bEndpointAddress >= OB_USB_ENDPOINT_DIRECTION_READ ? OB_USB_ENDPOINT_DIRECTION_READ : OB_USB_ENDPOINT_DIRECTION_WRITE;
     }
-    virtual uint32_t getMaxPacketSize() const override {
+    uint32_t getMaxPacketSize() const override {
         return desc_.wMaxPacketSize;
     }
     libusb_endpoint_descriptor getDescriptor() {

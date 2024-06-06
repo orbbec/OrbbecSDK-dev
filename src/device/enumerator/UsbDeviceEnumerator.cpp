@@ -1,8 +1,8 @@
 #include "UsbDeviceEnumerator.hpp"
-#include "utils/utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
-UsbDeviceEnumerator::UsbDeviceEnumerator( DeviceChangedCallback callback) : obPal_(pal::ObPal::getInstance()) {
+UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(pal::ObPal::getInstance()) {
     devChangedCallback_ = [callback, this](const std::vector<std::shared_ptr<DeviceEnumInfo>> &removedList,
                                            const std::vector<std::shared_ptr<DeviceEnumInfo>> &addedList) {
 #ifdef __ANDROID__
@@ -115,7 +115,7 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::queryRemovedDe
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
     if(portInfoList != currentUsbPortInfoList_) {
-        currentUsbPortInfoList_                          = portInfoList;
+        currentUsbPortInfoList_                              = portInfoList;
         std::vector<std::shared_ptr<DeviceEnumInfo>> curList = usbDeviceInfoMatch(portInfoList);
         return utils::subtract_sets(deviceInfoList_, curList);
     }
@@ -143,6 +143,7 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::queryArrivalDe
 std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
     std::vector<std::shared_ptr<DeviceEnumInfo>> deviceInfoList;
     // todo: match device by pid
+    (void)portInfoList;
     return deviceInfoList;
 }
 
@@ -230,7 +231,8 @@ std::shared_ptr<IDevice> UsbDeviceEnumerator::createDevice(const std::shared_ptr
     std::shared_ptr<IDevice> device;
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    auto info_found = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [&](std::shared_ptr<DeviceEnumInfo> item) { return item->uid_ == info->uid_; });
+    auto                                   info_found =
+        std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [&](std::shared_ptr<DeviceEnumInfo> item) { return item->uid_ == info->uid_; });
     if(info_found == deviceInfoList_.end()) {
         return nullptr;
     }

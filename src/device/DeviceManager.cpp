@@ -26,32 +26,34 @@ void printDeviceList(std::string title, std::vector<std::shared_ptr<DeviceEnumIn
     }
 }
 
-std::weak_ptr<DeviceManager> DeviceManager::instanceWeakPtr_;
-std::mutex DeviceManager::instanceMutex_;
-std::shared_ptr<DeviceManager> DeviceManager::getInstance(){
+std::weak_ptr<DeviceManager>   DeviceManager::instanceWeakPtr_;
+std::mutex                     DeviceManager::instanceMutex_;
+std::shared_ptr<DeviceManager> DeviceManager::getInstance() {
     std::unique_lock<std::mutex> lock(instanceMutex_);
     auto                         instance = instanceWeakPtr_.lock();
     if(!instance) {
-        instance = std::shared_ptr<DeviceManager>(new DeviceManager());
+        instance         = std::shared_ptr<DeviceManager>(new DeviceManager());
         instanceWeakPtr_ = instance;
     }
     return instance;
 }
 
-DeviceManager::DeviceManager() : multiDeviceSyncIntervalMs_(0), destroy_(false) {
+DeviceManager::DeviceManager() : destroy_(false), multiDeviceSyncIntervalMs_(0) {
     LOG_DEBUG("DeviceManager init ...");
 
 #if defined(BUILD_USB_PORT)
     LOG_DEBUG("Enable USB Device Enumerator ...");
-    auto usbDeviceEnumerator = std::make_shared<UsbDeviceEnumerator>([&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+    auto usbDeviceEnumerator = std::make_shared<UsbDeviceEnumerator>(
+        [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
 
     deviceEnumerators_.emplace_back(usbDeviceEnumerator);
 #endif
 
 #if defined(BUILD_NET_PORT)
-    if(false) { // todo: qurey if net enum is enabled form global config
+    if(false) {  // todo: qurey if net enum is enabled form global config
         LOG_DEBUG("Enable Net Device Enumerator ...");
-        auto netDeviceEnumerator = std::make_shared<NetDeviceEnumerator>( [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+        auto netDeviceEnumerator = std::make_shared<NetDeviceEnumerator>(
+            [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
         deviceEnumerators_.emplace_back(netDeviceEnumerator);
     }
 #endif
@@ -95,7 +97,7 @@ std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uin
         }
     }
 
-    auto device = NetDeviceEnumerator::createDevice( address, port);
+    auto device = NetDeviceEnumerator::createDevice(address, port);
     if(device == nullptr) {
         LOG_ERROR("create Net Device failed! address={0}, port={1}", address, port);
         return nullptr;
@@ -148,7 +150,7 @@ std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<Devic
 
     if(!device) {
         throw invalid_value_exception(utils::to_string() << "Trying to create a device that doesn't exist or removed!, name=" << info->name_
-                                                           << ", pid=" << info->pid_ << ", SN/ID=" << info->deviceSn_);
+                                                         << ", pid=" << info->pid_ << ", SN/ID=" << info->deviceSn_);
     }
 
     // add to createdDevices_
@@ -220,26 +222,26 @@ void DeviceManager::multiDeviceSyncFunc(uint8_t retry, std::vector<std::string> 
     //     if(!dev) {
     //         continue;
     //     }
-        // auto resLock         = dev->tryLockResource();
-        // auto propertyManager = dev->getPropertyManager(resLock);
-        // if(!propertyManager->isPropertySupported(OB_STRUCT_DEVICE_TIME, OB_PERMISSION_WRITE)) {
-        //     continue;
-        // }
-        //
-        // BEGIN_TRY_EXECUTE({ rtt = dev->syncDeviceTime(); })
-        // CATCH_EXCEPTION_AND_EXECUTE(rtt = 0)
+    // auto resLock         = dev->tryLockResource();
+    // auto propertyManager = dev->getPropertyManager(resLock);
+    // if(!propertyManager->isPropertySupported(OB_STRUCT_DEVICE_TIME, OB_PERMISSION_WRITE)) {
+    //     continue;
+    // }
+    //
+    // BEGIN_TRY_EXECUTE({ rtt = dev->syncDeviceTime(); })
+    // CATCH_EXCEPTION_AND_EXECUTE(rtt = 0)
 
-        // std::stringstream ss;
-        // if(rtt > MAX_RTT) {  // rtt
-        //     ss << "dev-uid@0x" << std::hex << item.first << ", update device time succeeded, but rtt is too large! round-trip-time=" << rtt << "ms\n";
-        //     LOG_ERROR(ss.str());
-        //     abnormalDevices.push_back(item.first);
-        // }
-        // else {
-        //     ss << "dev-uid@0x" << std::hex << item.first << ", update device time succeeded! round-trip-time=" << std::dec << rtt << "ms\n";
-        //     LOG_INFO(ss.str());
-        //     devicesMap.insert({ item.first, rtt });
-        // }
+    // std::stringstream ss;
+    // if(rtt > MAX_RTT) {  // rtt
+    //     ss << "dev-uid@0x" << std::hex << item.first << ", update device time succeeded, but rtt is too large! round-trip-time=" << rtt << "ms\n";
+    //     LOG_ERROR(ss.str());
+    //     abnormalDevices.push_back(item.first);
+    // }
+    // else {
+    //     ss << "dev-uid@0x" << std::hex << item.first << ", update device time succeeded! round-trip-time=" << std::dec << rtt << "ms\n";
+    //     LOG_INFO(ss.str());
+    //     devicesMap.insert({ item.first, rtt });
+    // }
     // }
     //
     // // 找出rtt异常设备
@@ -304,8 +306,9 @@ void DeviceManager::enableNetDeviceEnumeration(bool enable) {
         return typeid(*enumerator) == typeid(NetDeviceEnumerator);
     });
     if(enable && iter == deviceEnumerators_.end()) {
-        auto netDeviceEnumerator = std::make_shared<NetDeviceEnumerator>(
-            obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+        auto netDeviceEnumerator =
+            std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed,
+                                                              std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
         deviceEnumerators_.emplace_back(netDeviceEnumerator);
         auto deviceInfoList = getDeviceInfoList();
         printDeviceList("Current device(s) list", deviceInfoList);

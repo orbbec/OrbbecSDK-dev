@@ -5,12 +5,53 @@
 
 #include <map>
 #include <vector>
+#include <functional>
 
 #if !defined(WIN32) && defined(BUILD_USB_PORT)
 #include <libuvc/libuvc.h>
 #endif
 namespace libobsensor {
 namespace pal {
+
+struct VideoFrameObject {
+    VideoFrameObject()
+        : index(0),
+          systemTime(0),
+          deviceTime(0),
+          format(OB_FORMAT_UNKNOWN),
+          frameSize(0),
+          frameData(nullptr),
+          metadataSize(0),
+          metadata(nullptr),
+          scrDataBuf(nullptr),
+          scrDataSize(0) {}
+
+    void copyInfo(const VideoFrameObject source) {
+        index        = source.index;
+        systemTime   = source.systemTime;
+        deviceTime   = source.deviceTime;
+        format       = source.format;
+        frameSize    = source.frameSize;
+        frameData    = source.frameData;
+        metadataSize = source.metadataSize;
+        metadata     = source.metadata;
+        scrDataBuf   = source.scrDataBuf;
+        scrDataSize  = source.scrDataSize;
+    }
+
+    uint64_t index;
+    uint64_t systemTime;
+    uint64_t deviceTime;
+    OBFormat format;
+    uint32_t frameSize;
+    void    *frameData;
+    uint8_t  metadataSize;
+    void    *metadata;
+    void    *scrDataBuf;  // source clock reference, 通常是6个字节
+    uint8_t  scrDataSize;
+};
+
+using VideoFrameCallback = std::function<void(const VideoFrameObject &)>;
 
 #define LIBUVC_NUM_TRANSFER_LOW_FRAME_BUFS 20
 #define LIBUVC_TRANSFER_LOW_FRAME_SIZE 10
@@ -20,51 +61,16 @@ namespace pal {
 
 #pragma pack(push, 1)
 struct StandardUvcFramePayloadHeader {
-  uint8_t  bHeaderLength;
-  uint8_t  bmHeaderInfo;
-  uint32_t dwPresentationTime;
-  uint8_t  scrSourceClock[6];
+    uint8_t  bHeaderLength;
+    uint8_t  bmHeaderInfo;
+    uint32_t dwPresentationTime;
+    uint8_t  scrSourceClock[6];
 };
 #pragma pack(pop)
 #define UVC_PAYLOAD_HEADER_SRC_LENGTH (6)
 #define UVC_PAYLOAD_HEADER_SRC_OFFSET (6)
 
-/** Converts an unaligned one-byte integer into an int8 */
-#define B_TO_BYTE(p) ((int8_t)(p)[0])
 
-/** Converts an unaligned two-byte little-endian integer into an int16 */
-#define SW_TO_SHORT(p) ((uint8_t)(p)[0] | ((int8_t)(p)[1] << 8))
-
-/** Converts an unaligned four-byte little-endian integer into an int32 */
-#define DW_TO_INT(p) ((uint8_t)(p)[0] | ((uint8_t)(p)[1] << 8) | ((uint8_t)(p)[2] << 16) | ((int8_t)(p)[3] << 24))
-
-/** Converts an unaligned eight-byte little-endian integer into an int64 */
-#define QW_TO_QUAD(p)                                                                                                                      \
-    (((uint64_t)(p)[0]) | (((uint64_t)(p)[1]) << 8) | (((uint64_t)(p)[2]) << 16) | (((uint64_t)(p)[3]) << 24) | (((uint64_t)(p)[4]) << 32) \
-     | (((uint64_t)(p)[5]) << 40) | (((uint64_t)(p)[6]) << 48) | (((int64_t)(p)[7]) << 56))
-
-/** Converts an int16 into an unaligned two-byte little-endian integer */
-#define SHORT_TO_SW(s, p)  \
-    (p)[0] = (uint8_t)(s); \
-    (p)[1] = (uint8_t)((s) >> 8);
-
-/** Converts an int32 into an unaligned four-byte little-endian integer */
-#define INT_TO_DW(i, p)            \
-    (p)[0] = (uint8_t)(i);         \
-    (p)[1] = (uint8_t)((i) >> 8);  \
-    (p)[2] = (uint8_t)((i) >> 16); \
-    (p)[3] = (uint8_t)((i) >> 24);
-
-/** Converts an int64 into an unaligned eight-byte little-endian integer */
-#define QUAD_TO_QW(i, p)           \
-    (p)[0] = (uint8_t)(i);         \
-    (p)[1] = (uint8_t)((i) >> 8);  \
-    (p)[2] = (uint8_t)((i) >> 16); \
-    (p)[3] = (uint8_t)((i) >> 24); \
-    (p)[4] = (uint8_t)((i) >> 32); \
-    (p)[5] = (uint8_t)((i) >> 40); \
-    (p)[6] = (uint8_t)((i) >> 48); \
-    (p)[7] = (uint8_t)((i) >> 56);
 
 template <typename T> uint32_t fourCc2Int(const T a, const T b, const T c, const T d) {
     static_assert((std::is_integral<T>::value), "fourcc supports integral built-in types only");
@@ -81,7 +87,7 @@ const std::map<uint32_t, uvc_frame_format> fourccToUvcFormatMap = {
     { fourCc2Int('Y', '1', '1', ' '), UVC_FRAME_FORMAT_Y11 },  { fourCc2Int('Y', '1', '2', ' '), UVC_FRAME_FORMAT_Y12 },
     { fourCc2Int('Y', '1', '4', ' '), UVC_FRAME_FORMAT_Y14 },  { fourCc2Int('Y', '1', '6', ' '), UVC_FRAME_FORMAT_Y16 },
     { fourCc2Int('R', 'V', 'L', ' '), UVC_FRAME_FORMAT_RVL },  { fourCc2Int('Z', '1', '6', ' '), UVC_FRAME_FORMAT_Z16 },
-    { fourCc2Int('Y', 'V', '1', '2'), UVC_FRAME_FORMAT_YV12 },  { fourCc2Int('B', 'A', '8', '1'), UVC_FRAME_FORMAT_BA81 },
+    { fourCc2Int('Y', 'V', '1', '2'), UVC_FRAME_FORMAT_YV12 }, { fourCc2Int('B', 'A', '8', '1'), UVC_FRAME_FORMAT_BA81 },
 };
 #endif
 

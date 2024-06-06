@@ -10,12 +10,8 @@
 #include "usb/hid/HidDevicePort.hpp"
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
-#include "usb/uvc/rawPhaseConverter/MSDEConverterDevice.hpp"
 #include "usb/uvc/ObV4lUvcDevicePort.hpp"
-#include "core/Context.hpp"
-#include "core/device/DeviceInfoConfig.hpp"
-#include <usb/openni/linux/OpenNIUSBLinux.hpp>
-#include "usb/uvc/ObMultiUvcDevice.hpp"
+#include "context/Context.hpp"
 #endif
 
 #if defined(BUILD_NET_PORT)
@@ -24,9 +20,19 @@
 
 #include <cctype>  // std::tolower
 #include <chrono>
+#include <algorithm>
 
 namespace libobsensor {
 namespace pal {
+
+const std::vector<uint16_t> gFemtoMegaPids = {
+    0x0669,  // Femto Mega
+    0x06c0,  // Femto Mega i
+};
+
+template <class T> static bool isMatchDeviceByPid(uint16_t pid, T &pids) {
+    return std::any_of(pids.begin(), pids.end(), [pid](uint16_t pid_) { return pid_ == pid; });
+}
 LinuxPal::LinuxPal() {
 #if defined(BUILD_USB_PORT)
     usbEnumerator_ = std::make_shared<UsbEnumerator>();
@@ -37,7 +43,7 @@ LinuxPal::~LinuxPal() noexcept {}
 
 std::shared_ptr<ISourcePort> LinuxPal::createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
-    std::shared_ptr<ISourcePort>  port;
+    std::shared_ptr<ISourcePort> port;
 
     // clear expired weak_ptr
     for(auto it = sourcePortMap_.begin(); it != sourcePortMap_.end();) {
@@ -139,6 +145,8 @@ std::shared_ptr<DeviceWatcher> LinuxPal::createUsbDeviceWatcher() const {
     if(LibusbDeviceWatcher::hasCapability()) {
         return std::make_shared<LibusbDeviceWatcher>();
     }
+    LOG_WARN("Libusb is not available, return nullptr!");
+    return nullptr;
 }
 
 SourcePortInfoList LinuxPal::queryUsbSourcePort() {
@@ -163,52 +171,6 @@ SourcePortInfoList LinuxPal::queryUsbSourcePort() {
     return portInfoList;
 }
 
-std::shared_ptr<ISourcePort> LinuxPal::createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
-    if(portInfo->portType == SOURCE_PORT_USB_VENDOR) {
-        auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
-        if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
-        }
-        return std::make_shared<OpenNIDevicePortLinux>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
-    }
-
-    return nullptr;
-}
-
-std::shared_ptr<ISourcePort> LinuxPal::createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo> portInfo) {
-    switch(type) {
-    case RAW_PHASE_CONVERTER_MSDE: {
-        std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
-        std::shared_ptr<ISourcePort>  port;
-        auto                         it = sourcePortMap_.find(portInfo);
-        if(it != sourcePortMap_.end()) {
-            port = it->second.lock();
-            if(port != nullptr) {
-                return port;
-            }
-        }
-        auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
-        if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator create UnpackDevicePort failed!");
-        }
-        port = std::make_shared<MSDEConverterDevice>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
-        if(port != nullptr) {
-            sourcePortMap_.insert(std::make_pair(portInfo, port));
-        }
-        return port;
-    }
-    }
-    return nullptr;
-}
-
-std::shared_ptr<ISourcePort> LinuxPal::createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
-    auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
-    if(usbDev == nullptr) {
-        throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
-    }
-    return std::make_shared<ObMultiUvcDevice>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
-}
-
 std::string parseDevicePath(libusb_device *usbDevice) {
     auto usb_bus = std::to_string(libusb_get_bus_number(usbDevice));
     // As per the USB 3.0 specs, the current maximum limit for the depth is 7.
@@ -217,15 +179,18 @@ std::string parseDevicePath(libusb_device *usbDevice) {
     std::stringstream        port_path;
     auto                     port_count = libusb_get_port_numbers(usbDevice, usb_ports, max_usb_depth);
     auto                     usb_dev    = std::to_string(libusb_get_device_address(usbDevice));
-    libusb_device_descriptor dev_desc;
+    libusb_device_descriptor dev_desc{};
     auto                     r = libusb_get_device_descriptor(usbDevice, &dev_desc);
-    for(size_t i = 0; i < port_count; ++i) {
+    (void)r;
+    for(int i = 0; i < port_count; ++i) {
         port_path << std::to_string(usb_ports[i]) << (((i + 1) < port_count) ? "." : "");
     }
     return usb_bus + "-" + port_path.str() + "-" + usb_dev;
 }
 
 int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+    (void)ctx;
+    (void)event;
     auto watcher = (LibusbDeviceWatcher *)user_data;
     LOG_DEBUG("Device arrival event occurred");
     watcher->callback_(OB_DEVICE_ARRIVAL, parseDevicePath(device));
@@ -233,6 +198,8 @@ int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hot
 }
 
 int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+    (void)ctx;
+    (void)event;
     auto watcher = (LibusbDeviceWatcher *)user_data;
     LOG_DEBUG("Device removed event occurred");
     watcher->callback_(OB_DEVICE_REMOVED, parseDevicePath(device));
@@ -241,39 +208,40 @@ int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hot
 
 #if defined(BUILD_USB_PORT)
 void LinuxPal::loadXmlConfig() {
-    auto ctx       = Context::getInstance();
-    auto xmlConfig = ctx->getXmlConfig();
-    if(!xmlConfig->isLoadConfigFileSuccessful()) {
-        return;
-    }
-
-    if(xmlConfig->isNodeContained("Device.LinuxUVCBackend")) {
-        std::string backend = "";
-        if(xmlConfig->getStringValue("Device.LinuxUVCBackend", backend)) {
-            if(backend == "V4L2") {
-                uvcBackendType_ = UVC_BACKEND_TYPE_V4L2;
-            }
-            else if(backend == "LibUVC") {
-                uvcBackendType_ = UVC_BACKEND_TYPE_LIBUVC;
-            }
-            else {
-                uvcBackendType_ = UVC_BACKEND_TYPE_AUTO;
-            }
-        }
-        LOG_DEBUG("Uvc backend have been set to {}({})", backend, uvcBackendType_);
-    }
-    else if(xmlConfig->isNodeContained("Enumeration.Mode")) {  // deprecated, for compatibility
-        std::string mode = "";
-        if(xmlConfig->getStringValue("Enumeration.Mode", mode)) {
-            if(mode == "V4L2") {
-                uvcBackendType_ = UVC_BACKEND_TYPE_V4L2;
-            }
-            else {
-                uvcBackendType_ = UVC_BACKEND_TYPE_LIBUVC;
-            }
-        }
-        LOG_DEBUG("Uvc backend have been set to {}({})", mode, uvcBackendType_);
-    }
+    // FIXME
+    // auto ctx       = Context::getInstance();
+    //    auto xmlConfig = ctx->getXmlConfig();
+    //    if(!xmlConfig->isLoadConfigFileSuccessful()) {
+    //        return;
+    //    }
+    //
+    //    if(xmlConfig->isNodeContained("Device.LinuxUVCBackend")) {
+    //        std::string backend = "";
+    //        if(xmlConfig->getStringValue("Device.LinuxUVCBackend", backend)) {
+    //            if(backend == "V4L2") {
+    //                uvcBackendType_ = UVC_BACKEND_TYPE_V4L2;
+    //            }
+    //            else if(backend == "LibUVC") {
+    //                uvcBackendType_ = UVC_BACKEND_TYPE_LIBUVC;
+    //            }
+    //            else {
+    //                uvcBackendType_ = UVC_BACKEND_TYPE_AUTO;
+    //            }
+    //        }
+    //        LOG_DEBUG("Uvc backend have been set to {}({})", backend, uvcBackendType_);
+    //    }
+    //    else if(xmlConfig->isNodeContained("Enumeration.Mode")) {  // deprecated, for compatibility
+    //        std::string mode = "";
+    //        if(xmlConfig->getStringValue("Enumeration.Mode", mode)) {
+    //            if(mode == "V4L2") {
+    //                uvcBackendType_ = UVC_BACKEND_TYPE_V4L2;
+    //            }
+    //            else {
+    //                uvcBackendType_ = UVC_BACKEND_TYPE_LIBUVC;
+    //            }
+    //        }
+    //        LOG_DEBUG("Uvc backend have been set to {}({})", mode, uvcBackendType_);
+    //    }
 }
 #endif
 

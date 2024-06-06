@@ -13,8 +13,6 @@
 #include "usb/uvc/rawPhaseConverter/MSDEConverterDevice.hpp"
 #include "core/Context.hpp"
 #include "core/device/DeviceInfoConfig.hpp"
-#include <usb/openni/linux/OpenNIUSBLinux.hpp>
-#include "usb/uvc/ObMultiUvcDevice.hpp"
 #endif
 
 #if defined(BUILD_NET_PORT)

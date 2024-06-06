@@ -18,7 +18,7 @@ namespace libobsensor {
 struct PrivFilterPackageContext {
     std::string                                   dir;
     std::string                                   packageName;
-    std::shared_ptr<dylib>                        dylib;
+    std::shared_ptr<Dylib>                        dylib;
     pfunc_ob_get_filter_count                     get_filter_count;
     pfunc_ob_get_filter_name                      get_filter_name;
     pfunc_ob_create_filter                        create_filter;

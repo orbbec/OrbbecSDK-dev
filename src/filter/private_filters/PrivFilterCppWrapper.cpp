@@ -28,11 +28,11 @@ void PrivFilterCppWrapper::updateConfig(std::vector<std::string> &params) {
         LOG_WARN("Private filter {} update config failed: {}", name_, error->message);
         delete error;
     }
-};
+}
 
 const std::string &PrivFilterCppWrapper::getConfigSchema() const {
    return configSchema_;
-};
+}
 
 void PrivFilterCppWrapper::reset() {
     ob_error *error = nullptr;
@@ -41,7 +41,7 @@ void PrivFilterCppWrapper::reset() {
         LOG_WARN("Private filter {} reset failed: {}", name_, error->message);
         delete error;
     }
-};
+}
 
 std::shared_ptr<Frame> PrivFilterCppWrapper::processFunc(std::shared_ptr<const Frame> frame) {
     ob_error *error   = nullptr;

@@ -23,6 +23,7 @@ enum SourcePortType {
 struct SourcePortInfo {
     virtual ~SourcePortInfo() noexcept = default;
     SourcePortType portType;
+    virtual bool   equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const = 0;
 };
 
 struct NetSourcePortInfo : public SourcePortInfo {
@@ -32,17 +33,35 @@ struct NetSourcePortInfo : public SourcePortInfo {
     std::string mac;
     std::string serialNumber;
     uint32_t    pid;
+    bool        equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
+        if(cmpInfo->portType != portType) {
+            return false;
+        }
+        auto netCmpInfo = std::dynamic_pointer_cast<const NetSourcePortInfo>(cmpInfo);
+        return (address == netCmpInfo->address) && (port == netCmpInfo->port) && (mac == netCmpInfo->mac) && (serialNumber == netCmpInfo->serialNumber)
+               && (pid == netCmpInfo->pid);
+    }
 };
 
 struct ShmStreamPortInfo : public SourcePortInfo {
     ~ShmStreamPortInfo() noexcept override = default;
-    std::string shmName;
-    int32_t     blockSize;
-    int32_t     blockCount;
+    std::string  shmName;
+    int32_t      blockSize;
+    int32_t      blockCount;
+    virtual bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
+        if(cmpInfo->portType != portType) {
+            return false;
+        }
+        auto netCmpInfo = std::dynamic_pointer_cast<const ShmStreamPortInfo>(cmpInfo);
+        return (shmName == netCmpInfo->shmName) && (blockSize == netCmpInfo->blockSize) && (blockCount == netCmpInfo->blockCount);
+    };
 };
 
 struct USBSourcePortInfo : public SourcePortInfo {
     ~USBSourcePortInfo() noexcept override = default;
+    explicit USBSourcePortInfo(SourcePortType type) {
+        portType = type;
+    }
     std::string url;  // usb device url
     std::string uid;
     uint16_t    vid = 0;  // usb device vid
@@ -54,6 +73,14 @@ struct USBSourcePortInfo : public SourcePortInfo {
     uint8_t     infIndex = 0;  // interface index
     std::string infName;       // interface name
     std::string hubId;         // hub id
+    bool        equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
+        if(cmpInfo->portType != portType) {
+            return false;
+        }
+        auto netCmpInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(cmpInfo);
+        return (url == netCmpInfo->url) && (vid == netCmpInfo->vid) && (pid == netCmpInfo->pid) && (infUrl == netCmpInfo->infUrl)
+               && (infIndex == netCmpInfo->infIndex) && (infName == netCmpInfo->infName) && (hubId == netCmpInfo->hubId);
+    };
 };
 
 typedef std::vector<std::shared_ptr<const SourcePortInfo>> SourcePortInfoList;
@@ -70,7 +97,6 @@ class IVendorDataPort : virtual public ISourcePort {  // Virtual inheritance sol
 public:
     ~IVendorDataPort() noexcept override = default;
 
-    virtual std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) = 0;
 };
 
 // for imu data stream
@@ -96,7 +122,7 @@ public:
 
     virtual std::vector<std::shared_ptr<const VideoStreamProfile>> getStreamProfileList()                     = 0;
     virtual void startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) = 0;
-    virtual void stopStream(std::shared_ptr<const VideoStreamProfile> profile)                               = 0;
-    virtual void stopAllStream()                                                                             = 0;
+    virtual void stopStream(std::shared_ptr<const VideoStreamProfile> profile)                                = 0;
+    virtual void stopAllStream()                                                                              = 0;
 };
 }  // namespace libobsensor

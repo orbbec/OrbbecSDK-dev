@@ -363,7 +363,7 @@ bool findSN2Toupper(const std::string &src, std::string &dst) {
     std::transform(tokens[2].begin(), tokens[2].end(), std::back_inserter(dst),
                    [](const char &ch) { return static_cast<char>(std::toupper(static_cast<unsigned char>(ch))); });
     return true;
-};
+}
 
 bool UsbEnumerator::getStringDesc(UsbDeviceInfo &info) {
     std::unique_lock<std::recursive_mutex> lock(usbCtxMutex_);

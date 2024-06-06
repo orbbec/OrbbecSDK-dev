@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <utility>
-#include "dylib.hpp"
+#include "Dylib.hpp"
 
 TEST(example, example_test) {
     testing::internal::CaptureStdout();

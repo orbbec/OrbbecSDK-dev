@@ -11,37 +11,34 @@ UsbInterfaceLibusb::UsbInterfaceLibusb(libusb_interface intf) : _desc(*intf.alts
     inf_ = intf;
     for(int e = 0; e < _desc.bNumEndpoints; ++e) {
         auto ep = _desc.endpoint[e];
-        _endpoints.push_back(std::make_shared<UsbEndpointLibusb>(ep, _desc.bInterfaceNumber));
+        auto endpoint = std::make_shared<UsbEndpointLibusb>(ep, _desc.bInterfaceNumber);
+        _endpoints.push_back(endpoint);
     }
 }
 
-UsbInterfaceLibusb::~UsbInterfaceLibusb() noexcept {}
+UsbInterfaceLibusb::~UsbInterfaceLibusb() noexcept = default;
 
 const std::shared_ptr<UsbEndpoint> UsbInterfaceLibusb::firstEndpoint(EndpointDirection direction, EndpointType type) const {
 
     if(type == OB_USB_ENDPOINT_ISOCHRONOUS) {
-        for(int alt_idx = 0; alt_idx < _associatedInterfaces.size(); alt_idx++) {
-            auto altsetting = _associatedInterfaces[alt_idx];
-
+        for(const auto &altsetting: _associatedInterfaces) {
             /* Find the endpoint with the number specified in the VS header */
-            for(int ep_idx = 0; ep_idx < altsetting->getEndpoints().size(); ep_idx++) {
+            for(size_t ep_idx = 0; ep_idx < altsetting->getEndpoints().size(); ep_idx++) {
                 auto endpoint = getEndpoints()[ep_idx];
-
                 if(endpoint->getAddress() == 0x81) {
-
-                    // int ret = libusb_set_interface_alt_setting( context.usb_device, altsetting->getNumber(), alt_idx );
-
                     return endpoint;
                 }
             }
         }
     }
     else {
-        for(auto &&ep: _endpoints) {
-            if(ep->getType() != type)
+        for(const auto &ep: _endpoints) {
+            if(ep->getType() != type) {
                 continue;
-            if(ep->getDirection() != direction)
+            }
+            if(ep->getDirection() != direction) {
                 continue;
+            }
             return ep;
         }
     }
@@ -50,11 +47,9 @@ const std::shared_ptr<UsbEndpoint> UsbInterfaceLibusb::firstEndpoint(EndpointDir
 
 const std::shared_ptr<UsbEndpoint> UsbInterfaceLibusb::getEndpoint(const uint8_t endPointAddress, EndpointDirection direction, EndpointType type) const {
     if(type == OB_USB_ENDPOINT_ISOCHRONOUS) {
-        for(int alt_idx = 0; alt_idx < _associatedInterfaces.size(); alt_idx++) {
-            auto altsetting = _associatedInterfaces[alt_idx];
-
+        for(const auto &altsetting: _associatedInterfaces) {
             /* Find the endpoint with the number specified in the VS header */
-            for(int ep_idx = 0; ep_idx < altsetting->getEndpoints().size(); ep_idx++) {
+            for(size_t ep_idx = 0; ep_idx < altsetting->getEndpoints().size(); ep_idx++) {
                 auto endpoint = getEndpoints()[ep_idx];
 
                 if(endpoint->getAddress() == endPointAddress) {

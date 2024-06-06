@@ -3,7 +3,7 @@
 #include "PrivFilterCppWrapper.hpp"
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
-#include "utils/FileUtils.hpp"
+#include "utils/Utils.hpp"
 namespace libobsensor {
 
 PrivFilterCreator::PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index) : pkgCtx_(pkgCtx), index_(index) {}

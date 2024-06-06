@@ -137,26 +137,6 @@ void ob_set_logger_callback(ob_log_severity severity, ob_log_callback callback, 
  * @param[out] error Pointer to an error object that will be populated if an error occurs during log output setting
  */
 void ob_set_logger_to_console(ob_log_severity severity, ob_error **error);
-
-/**
- * @brief Load a license file
- *
- * @param[in] filePath Path to the license file
- * @param[in] key Decryption key. "OB_DEFAULT_DECRYPT_KEY" can be used to represent the default key.
- * @param[out] error Pointer to an error object that will be populated if an error occurs during license loading
- */
-void ob_load_license(const char *filePath, const char *key, ob_error **error);
-
-/**
- * @brief Load a license from data
- *
- * @param[in] data Pointer to the license data
- * @param[in] dataLen Length of the license data
- * @param[in] key Decryption key. "OB_DEFAULT_DECRYPT_KEY" can be used to represent the default key.
- * @param[out] error Pointer to an error object that will be populated if an error occurs during license loading
- */
-void ob_load_license_from_data(const char *data, uint32_t dataLen, const char *key, ob_error **error);
-
 #ifdef __cplusplus
 }
 #endif

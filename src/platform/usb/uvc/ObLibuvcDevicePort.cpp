@@ -1,0 +1,594 @@
+// License: Apache 2.0. See LICENSE file in root directory.
+// Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
+
+#include "ObLibuvcDevicePort.hpp"
+#include "UvcTypes.hpp"
+#include "logger/Logger.hpp"
+#include "exception/ObException.hpp"
+
+
+#include "usb/backend/DeviceLibusb.hpp"
+#include <utlist.h>
+
+#include <algorithm>
+
+#define UVC_AE_MODE_D0_MANUAL (1 << 0)
+#define UVC_AE_MODE_D1_AUTO (1 << 1)
+#define UVC_AE_MODE_D2_SP (1 << 2)
+#define UVC_AE_MODE_D3_AP (1 << 3)
+
+#ifdef __ANDROID__
+#include "pal/android/AndroidUsbDeviceManager.hpp"
+#endif
+
+namespace libobsensor {
+namespace pal {
+uvc_frame_format fourCC2UvcFormat(int32_t fourccCode) {
+    uvc_frame_format uvcFormat = UVC_FRAME_FORMAT_UNKNOWN;
+    std::find_if(fourccToUvcFormatMap.begin(), fourccToUvcFormatMap.end(), [&](const std::pair<uint32_t, uvc_frame_format> sf) {
+        if(fourccCode == sf.first) {
+            uvcFormat = sf.second;
+            return true;
+        }
+        return false;
+    });
+    return uvcFormat;
+}
+
+ObLibuvcDevicePort::ObLibuvcDevicePort(std::shared_ptr<UsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo)
+    : usbDev_(usbDev), portInfo_(portInfo) {
+    auto libusbDev = std::static_pointer_cast<UsbDeviceLibusb>(usbDev_);
+
+    uvc_init(&uvcCtx_, libusbDev->getContext());
+    uvcDev_          = (uvc_device_t *)malloc(sizeof(*uvcDev_));
+    uvcDev_->ctx     = uvcCtx_;
+    uvcDev_->ref     = 0;
+    uvcDev_->usb_dev = libusbDev->getDevice();
+    usbDevH_         = libusbDev->getDeviceHandle();
+
+    auto res = uvc_open(uvcDev_, portInfo->infIndex, &devHandle_, usbDevH_);
+    if(res < 0) {
+        LOG_WARN("uvc_open  path={} already opened", portInfo->infUrl);
+        std::stringstream ss;
+        ss << "uvc_open  path=" << portInfo->infUrl << " failed,return res" << res;
+        LOG_WARN("uvc_open  path={0} failed,return res:${1}", portInfo->infUrl, res);
+        throw std::runtime_error(ss.str());
+    }
+    else {
+        LOG_DEBUG("uvc_open success");
+    }
+}
+
+ObLibuvcDevicePort::~ObLibuvcDevicePort() noexcept {
+    LOG_DEBUG("~ObLibuvcDevicePort");
+    stopAllStream();
+
+    // free(uvcDev_); // free in uvc_exit()
+    uvc_close(devHandle_);
+    uvc_exit(uvcCtx_);
+
+    LOG_INFO("uvc_close done.");
+    LOG_INFO("~ObLibuvcDevicePort done");
+}
+
+void ObLibuvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) {
+    LOG_DEBUG("ObLibuvcDevicePort::startStream()...");
+    bool       foundProfile       = false;
+    uvcProfile selectedUvcProfile = { 0 };
+    auto       uvcProfiles        = queryAvailableUvcProfile();
+    for(auto &&pf: uvcProfiles) {
+        auto formatIter = fourccToOBFormat.find(pf.fourcc);
+        if(formatIter != fourccToOBFormat.end()) {
+            if((profile->format == formatIter->second) && (profile->fps == pf.fps) && (profile->height == pf.height) && (profile->width == pf.width)) {
+                foundProfile       = true;
+                selectedUvcProfile = pf;
+                break;
+            }
+        }
+    }
+    LOG_DEBUG("playProfile: infIndex={0}, selected_format.width={1}, height={2}, format={3}", (uint32_t)portInfo_->infIndex, profile->width, profile->height,
+              profile->format);
+
+    if(foundProfile == false) {
+        throw std::runtime_error("Failed to find supported format!");
+    }
+
+    // libusb_clear_halt(devHandle_->usb_devh, selectedUvcProfile.endpointAddress);
+
+    uvc_stream_ctrl_t ctrl;
+    auto res = uvc_get_stream_ctrl_format_size(devHandle_, &ctrl, fourCC2UvcFormat(selectedUvcProfile.fourcc), profile->width, profile->height, profile->fps);
+    if(res < 0) {
+        LOG_ERROR("uvc_get_stream_ctrl_format_size failed!");
+        throw std::runtime_error("uvc_get_stream_ctrl_format_size failed!");
+    }
+
+    uvc_stream_handle_t *uvcStreamHandle;
+    uvc_error_t          ret = uvc_stream_open_ctrl(devHandle_, &uvcStreamHandle, &ctrl);
+    if(ret != UVC_SUCCESS) {
+        throw std::runtime_error("uvc_stream_open_ctrl failed!");
+    }
+
+    {
+        std::unique_lock<std::mutex> lock(streamMutex_);
+        int32_t                      bufNum = LIBUVC_NUM_TRANSFER_BUFS;
+        if((profile->format == OB_FORMAT_MJPG || profile->format == OB_FORMAT_Y8) && profile->fps <= LIBUVC_TRANSFER_LOW_FRAME_SIZE) {
+            bufNum = LIBUVC_NUM_TRANSFER_LOW_FRAME_BUFS;
+        }
+        auto obStreamHandle = std::shared_ptr<OBUvcStreamHandle>(new OBUvcStreamHandle({ profile, callback, uvcStreamHandle }));
+        streamHandles_.push_back(obStreamHandle);
+        uvcStreamHandle->actual_transfer_buff_num = bufNum;
+        ret                                       = uvc_stream_start(uvcStreamHandle, ObLibuvcDevicePort::onFrameCallback, obStreamHandle.get(), 0);
+    }
+
+    if(ret == UVC_ERROR_NO_MEM) {
+        for(uint32_t i = 0; i < uvcStreamHandle->actual_transfer_buff_num; i++) {
+            if(uvcStreamHandle->transfers[i] != NULL) {
+                free(uvcStreamHandle->transfers[i]->buffer);
+                libusb_free_transfer(uvcStreamHandle->transfers[i]);
+                uvcStreamHandle->transfers[i] = NULL;
+            }
+        }
+        std::unique_lock<std::mutex> lock(streamMutex_);
+        streamHandles_.erase(streamHandles_.end() - 1);
+        throw std::runtime_error("uvc_stream_start failed with err_code=UVC_ERROR_NO_MEM, try to increase the usbfs buffer size!");
+    }
+
+    if(ret != UVC_SUCCESS) {
+        std::unique_lock<std::mutex> lock(streamMutex_);
+        streamHandles_.erase(streamHandles_.end() - 1);
+        uvc_stream_close(uvcStreamHandle);
+        throw std::runtime_error("uvc_stream_start failed!");
+    }
+
+    LOG_DEBUG("ObLibuvcDevicePort::startStream() done");
+}
+
+void ObLibuvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> profile) {
+
+    LOG_DEBUG("ObLibuvcDevicePort::stopStream()...");
+    std::unique_lock<std::mutex> lock(streamMutex_);
+    auto                         it = std::find_if(streamHandles_.begin(), streamHandles_.end(), [&](const std::shared_ptr<OBUvcStreamHandle> sh) {
+        return (profile->format == sh->profile->format) && (profile->fps == sh->profile->fps) && (profile->height == sh->profile->height)
+               && (profile->width == sh->profile->width);
+    });
+    if(it == streamHandles_.end()) {
+        LOG_DEBUG("can not find match stream handle.");
+        return;
+    }
+
+    uvc_stream_handle_t *uvcStreamHandle = (*it)->streamHandle;
+    auto                 endpointAddr    = uvcStreamHandle->stream_if->bEndpointAddress;
+#ifdef OS_MACOS
+    libusb_clear_halt(devHandle_->usb_devh, endpointAddr);
+#endif
+    uvc_stream_stop(uvcStreamHandle);
+    uvc_stream_close(uvcStreamHandle);
+
+#ifndef OS_MACOS
+    libusb_clear_halt(devHandle_->usb_devh, endpointAddr);
+#endif
+
+    streamHandles_.erase(it);
+    LOG_DEBUG("ObLibuvcDevicePort::stopStream() done");
+}
+
+void ObLibuvcDevicePort::stopAllStream() {
+    std::unique_lock<std::mutex> lock(streamMutex_);
+    if(streamHandles_.empty()) {
+        return;
+    }
+    for(auto &&sh: streamHandles_) {
+        uvc_stream_handle_t *uvcStreamHandle = sh->streamHandle;
+        auto                 endpointAddr    = uvcStreamHandle->stream_if->bEndpointAddress;
+        uvc_stream_stop(uvcStreamHandle);
+        uvc_stream_close(uvcStreamHandle);
+        auto ret = libusb_clear_halt(devHandle_->usb_devh, endpointAddr);
+    }
+    streamHandles_.clear();
+    LOG_DEBUG("ObLibuvcDevicePort::stopAllStream() done");
+}
+
+bool ObLibuvcDevicePort::getPu(OBPropertyID propertyId, int32_t &value) {
+    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    int                                   unit;
+    int                                   control = obPropToUvcCS(propertyId, unit);
+    value                                         = getCtrl(UVC_GET_CUR, control, unit);
+    value                                         = uvcCtrlValueTranslate(UVC_GET_CUR, propertyId, value);
+
+    return true;
+}
+
+bool ObLibuvcDevicePort::setPu(OBPropertyID propertyId, int32_t value) {
+    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    int                                   unit;
+    int                                   control = obPropToUvcCS(propertyId, unit);
+    value                                         = uvcCtrlValueTranslate(UVC_SET_CUR, propertyId, value);
+    setCtrl(UVC_SET_CUR, control, unit, value);
+    LOG_DEBUG("ObLibuvcDevicePort::setPu() propertyId = {} value = ", propertyId, value);
+    return true;
+}
+
+ControlRange ObLibuvcDevicePort::getPuRange(OBPropertyID propertyId) {
+    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    int                                   unit = 0;
+    int                                   min, max, step, def;
+
+    int control = obPropToUvcCS(propertyId, unit);
+    if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT || propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL
+       || propertyId == OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL) {
+        min  = 0;
+        max  = 1;
+        step = 1;
+    }
+    else {
+        min = getCtrl(UVC_GET_MIN, control, unit);
+        min = uvcCtrlValueTranslate(UVC_GET_MIN, propertyId, min);
+
+        max = getCtrl(UVC_GET_MAX, control, unit);
+        max = uvcCtrlValueTranslate(UVC_GET_MAX, propertyId, max);
+
+        step = getCtrl(UVC_GET_RES, control, unit);
+        step = uvcCtrlValueTranslate(UVC_GET_RES, propertyId, step);
+    }
+
+    if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT) {
+        def = 0;
+    }
+    else {
+        def = getCtrl(UVC_GET_DEF, control, unit);
+        def = uvcCtrlValueTranslate(UVC_GET_DEF, propertyId, def);
+    }
+
+    LOG_DEBUG("getPuRange unit={0}, propertyId={1}, min={2}, max={3}, step={4}, def={5}", unit, propertyId, min, max, step, def);
+    if(step == min) {
+        step = 1;
+    }
+    ControlRange result(min, max, step, def);
+
+    return result;
+}
+
+bool ObLibuvcDevicePort::setXu(uint8_t ctrl, const uint8_t *data, uint32_t len) {
+    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    auto                                  recv = uvc_set_ctrl(devHandle_, xuUnit_.unit, ctrl, const_cast<uint8_t *>(data), len);
+    if(recv <= 0) {
+        LOG_ERROR("setXu failed, error code={}", recv);
+        return false;
+    }
+    return true;
+}
+
+bool ObLibuvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {
+    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    switch((ObVendorXuCtrlId)ctrl) {
+    case OB_VENDOR_XU_CTRL_ID_512:
+        *len = 512;
+        break;
+    case OB_VENDOR_XU_CTRL_ID_64:
+        *len = 64;
+        break;
+
+    case OB_VENDOR_XU_CTRL_ID_1024:
+        *len = 1024;
+        break;
+    default:
+        return false;
+    }
+    int recv = uvc_get_ctrl(devHandle_, xuUnit_.unit, ctrl, data, *len, UVC_GET_CUR);
+    *len     = recv;
+    if(recv <= 0) {
+        LOG_ERROR("getXu failed, error code={}", recv);
+        return false;
+    }
+    return true;
+}
+
+bool ObLibuvcDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
+    uint8_t ctrl         = pal::OB_VENDOR_XU_CTRL_ID_64;
+    auto    alignDataLen = dataLen;
+    if(alignDataLen <= 64) {
+        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_64;
+        alignDataLen = 64;
+    }
+    else if(alignDataLen > 512) {
+        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_1024;
+        alignDataLen = 1024;
+    }
+    else {
+        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_512;
+        alignDataLen = 512;
+    }
+
+    return setXu(ctrl, data, alignDataLen);
+}
+
+bool ObLibuvcDevicePort::recvData(uint8_t *data, uint32_t *dataLen) {
+    uint8_t ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
+    if(*dataLen <= 64) {
+        ctrl = pal::OB_VENDOR_XU_CTRL_ID_64;
+    }
+    else if(*dataLen > 512) {
+        ctrl = pal::OB_VENDOR_XU_CTRL_ID_1024;
+    }
+    else {
+        ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
+    }
+    return getXu(ctrl, data, dataLen);
+}
+
+std::vector<std::shared_ptr<const VideoStreamProfile>> ObLibuvcDevicePort::getStreamProfileList() {
+    std::vector<std::shared_ptr<const VideoStreamProfile>> results;
+
+    auto uvcProfiles = queryAvailableUvcProfile();
+    for(auto &&pf: uvcProfiles) {
+        auto formatIter = fourccToOBFormat.find(pf.fourcc);
+        if(formatIter != fourccToOBFormat.end()) {
+            auto sp = std::make_shared<VideoStreamProfile>(OB_STREAM_VIDEO, formatIter->second, pf.width, pf.height, pf.fps);
+            results.push_back(sp);
+        }
+    }
+    return results;
+}
+
+int32_t ObLibuvcDevicePort::uvcCtrlValueTranslate(uvc_req_code action, OBPropertyID propertyId, int32_t value) const {
+    LOG_DEBUG("ObLibuvcDevicePort::uvcCtrlValueTranslate propertyId={0}, action={1}, value={2}", action, propertyId, value);
+    // Value may be translated according to action/propertyId value
+    int32_t translated_value = value;
+
+    switch(action) {
+    case UVC_GET_CUR:  // Translating from UVC 1.5 Spec up to RS
+        if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL) {
+            auto res = getCtrl(UVC_GET_RES, UVC_CT_AE_MODE_CONTROL, uvc_get_input_terminals(devHandle_)->bTerminalID);
+            LOG_DEBUG("UVC_GET_CUR:getAERes:{}.", res);
+            if(res & UVC_AE_MODE_D0_MANUAL) {
+                translated_value = (value == UVC_AE_MODE_D0_MANUAL) ? 0 : 1;
+                LOG_DEBUG("UVC_AE_MODE_D0_MANUAL:translated_value:{},value:{}.", translated_value, value);
+            }
+            else if(res & UVC_AE_MODE_D1_AUTO) {
+                translated_value = (value == UVC_AE_MODE_D1_AUTO) ? 1 : 0;
+                LOG_DEBUG("UVC_AE_MODE_D1_AUTO:translated_value:{},value:{}.", translated_value, value);
+            }
+            else {
+                LOG_DEBUG("UVC_GET_CUR:ae res mode is invalid.");
+            }
+            // if(res == (UVC_AE_MODE_D3_AP | UVC_AE_MODE_D0_MANUAL)) {
+            //     translated_value = (value == UVC_AE_MODE_D0_MANUAL) ? 0 : 1;
+            // }
+            // else if(res == (UVC_AE_MODE_D1_AUTO | UVC_AE_MODE_D2_SP)) {
+            //     translated_value = (value == UVC_AE_MODE_D2_SP) ? 0 : 1;
+            // }
+        }
+        break;
+
+    case UVC_SET_CUR:  // Translating from RS down to UVC 1.5 Spec
+        if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL) {
+            auto res = getCtrl(UVC_GET_RES, UVC_CT_AE_MODE_CONTROL, uvc_get_input_terminals(devHandle_)->bTerminalID);
+            LOG_DEBUG("UVC_SET_CUR: getAERes:{}.", res);
+            if(res & UVC_AE_MODE_D0_MANUAL) {
+                auto autoValue   = (res & (~UVC_AE_MODE_D0_MANUAL));
+                translated_value = value ? autoValue : UVC_AE_MODE_D0_MANUAL;
+                LOG_DEBUG("UVC_AE_MODE_D0_MANUAL:translated_value:{},value:{}.", translated_value, value);
+            }
+            else if(res & UVC_AE_MODE_D1_AUTO) {
+                auto manualValue = (res & (~UVC_AE_MODE_D1_AUTO));
+                translated_value = value ? UVC_AE_MODE_D1_AUTO : manualValue;
+                LOG_DEBUG("UVC_AE_MODE_D1_AUTO:translated_value:{},value:{}.", translated_value, value);
+            }
+            else {
+                LOG_DEBUG("UVC_SET_CUR:ae res mode is invalid.");
+            }
+
+            // if(res == (UVC_AE_MODE_D3_AP | UVC_AE_MODE_D0_MANUAL)) {
+            //     translated_value = value ? UVC_AE_MODE_D3_AP : UVC_AE_MODE_D0_MANUAL;
+            // }
+            // else if(res == (UVC_AE_MODE_D1_AUTO | UVC_AE_MODE_D2_SP)) {
+            //     translated_value = value ? UVC_AE_MODE_D1_AUTO : UVC_AE_MODE_D2_SP;
+            // }
+        }
+        break;
+
+    case UVC_GET_MIN:
+        if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL) {
+            translated_value = 0;  // Hardcoded MIN value
+        }
+        break;
+
+    case UVC_GET_MAX:
+        if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL) {
+            translated_value = 1;  // Hardcoded MAX value
+        }
+        break;
+
+    case UVC_GET_RES:
+        if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL) {
+            translated_value = 1;  // Hardcoded RES (step) value
+        }
+        break;
+
+    case UVC_GET_DEF:
+        if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL) {
+            translated_value = 1;  // Hardcoded DEF value
+        }
+        break;
+
+    default:
+        throw std::runtime_error("Unsupported action translation");
+    }
+    return translated_value;
+}
+
+void ObLibuvcDevicePort::onFrameCallback(uvc_frame *frame, void *userPtr) {
+    OBUvcStreamHandle *handle = (OBUvcStreamHandle *)userPtr;
+    VideoFrameObject   fo;
+    fo.frameSize = frame->data_bytes;
+    fo.frameData = frame->data;
+
+    if(frame->metadata_bytes > 255) {
+        frame->metadata_bytes = 255;
+    }
+    fo.metadataSize = frame->metadata_bytes;
+    fo.metadata     = frame->metadata;
+
+    fo.systemTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    fo.deviceTime = frame->pts;
+
+    if(frame->payload_header_bytes >= 12) {
+        fo.scrDataBuf  = (char *)frame->payload_header + UVC_PAYLOAD_HEADER_SRC_OFFSET;
+        fo.scrDataSize = UVC_PAYLOAD_HEADER_SRC_LENGTH;
+    }
+    handle->callback(fo);
+}
+
+int32_t ObLibuvcDevicePort::getCtrl(uvc_req_code action, uint8_t control, uint8_t unit) const {
+    unsigned char buffer[4] = { 0 };
+    int32_t       ret       = 0;
+
+    UsbStatus sts;
+    uint32_t  transferred;
+
+    transferred = uvc_get_ctrl(devHandle_, unit, control, buffer, sizeof(buffer), action);
+
+    if(control == UVC_PU_BRIGHTNESS_CONTROL || control == UVC_PU_HUE_CONTROL) {
+        ret = (short)SW_TO_SHORT(buffer);
+        return ret;
+    }
+
+    switch(transferred) {
+    case sizeof(uint8_t):
+        ret = *(int32_t *)buffer;
+        break;
+    case sizeof(uint16_t):
+        ret = SW_TO_SHORT(buffer);
+        break;
+    case sizeof(uint32_t):
+        ret = DW_TO_INT(buffer);
+        break;
+    default:
+        throw std::runtime_error("unsupported length");
+    }
+
+    return ret;
+}
+
+int ObLibuvcDevicePort::obPropToUvcCS(OBPropertyID propertyId, int &unit) const {
+
+    unit = uvc_get_processing_units(devHandle_)->bUnitID;
+
+    switch(propertyId) {
+    case OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT:
+        return UVC_PU_BACKLIGHT_COMPENSATION_CONTROL;
+    case OB_PROP_COLOR_BRIGHTNESS_INT:
+        return UVC_PU_BRIGHTNESS_CONTROL;
+    case OB_PROP_COLOR_CONTRAST_INT:
+        return UVC_PU_CONTRAST_CONTROL;
+    case OB_PROP_COLOR_EXPOSURE_INT:
+        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        return UVC_CT_EXPOSURE_TIME_ABSOLUTE_CONTROL;
+    case OB_PROP_COLOR_GAIN_INT:
+        return UVC_PU_GAIN_CONTROL;
+    case OB_PROP_COLOR_GAMMA_INT:
+        return UVC_PU_GAMMA_CONTROL;
+    case OB_PROP_COLOR_HUE_INT:
+        return UVC_PU_HUE_CONTROL;
+    case OB_PROP_COLOR_SATURATION_INT:
+        return UVC_PU_SATURATION_CONTROL;
+    case OB_PROP_COLOR_SHARPNESS_INT:
+        return UVC_PU_SHARPNESS_CONTROL;
+    case OB_PROP_COLOR_WHITE_BALANCE_INT:
+        return UVC_PU_WHITE_BALANCE_TEMPERATURE_CONTROL;
+    case OB_PROP_COLOR_AUTO_EXPOSURE_BOOL:
+        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        return UVC_CT_AE_MODE_CONTROL;  // Automatic gain/exposure control
+    case OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL:
+        return UVC_PU_WHITE_BALANCE_TEMPERATURE_AUTO_CONTROL;
+    case OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT:
+        return UVC_PU_POWER_LINE_FREQUENCY_CONTROL;
+    case OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT:
+        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        return UVC_CT_AE_PRIORITY_CONTROL;
+    case OB_PROP_COLOR_ROLL_INT:
+        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        return UVC_CT_ROLL_ABSOLUTE_CONTROL;
+    case OB_PROP_COLOR_FOCUS_INT:
+        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        return UVC_CT_FOCUS_ABSOLUTE_CONTROL;
+    default:
+        throw linux_pal_exception(utils::to_string() << "invalid propertyId : " << propertyId);
+    }
+}
+
+void ObLibuvcDevicePort::setCtrl(uvc_req_code action, uint8_t control, uint8_t unit, int32_t value) const {
+    unsigned char buffer[4];
+    INT_TO_DW(value, buffer);
+
+    uint32_t transferred;
+    transferred = uvc_set_ctrl(devHandle_, unit, control, buffer, sizeof(int32_t));
+}
+
+std::vector<ObLibuvcDevicePort::uvcProfile> ObLibuvcDevicePort::queryAvailableUvcProfile() const {
+    std::vector<uvcProfile> rv;
+
+    uvc_streaming_interface_t *stream_if;
+    DL_FOREACH(devHandle_->info->stream_ifs, stream_if) {
+        uvc_format_desc_t *fmt_desc;
+        // LOG(INFO)<<"stream_if.interfaceNumber ="<<(int)(stream_if->bInterfaceNumber);
+
+        DL_FOREACH(stream_if->format_descs, fmt_desc) {
+            uvc_frame_desc_t *frame_desc;
+            switch(fmt_desc->bDescriptorSubtype) {
+            case UVC_VS_FORMAT_UNCOMPRESSED:
+            case UVC_VS_FORMAT_MJPEG:
+            case UVC_VS_FORMAT_FRAME_BASED:
+
+                DL_FOREACH(fmt_desc->frame_descs, frame_desc) {
+                    uint32_t *interval_ptr;
+
+                    uvcProfile uvcFormat{};
+                    uvcFormat.width  = (uint32_t)frame_desc->wWidth;
+                    uvcFormat.height = (uint32_t)frame_desc->wHeight;
+                    uvcFormat.fourcc = fourCc2Int(fmt_desc->fourccFormat[0], fmt_desc->fourccFormat[1], fmt_desc->fourccFormat[2], fmt_desc->fourccFormat[3]);
+
+                    uvcFormat.interfaceNumber = stream_if->bInterfaceNumber;
+                    uvcFormat.endpointAddress = stream_if->bEndpointAddress;
+                    if(frame_desc->intervals) {
+                        for(interval_ptr = frame_desc->intervals; *interval_ptr; ++interval_ptr) {
+                            uvcFormat.fps = 10000000 / *interval_ptr;
+                            rv.push_back(uvcFormat);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return rv;
+}
+
+std::shared_ptr<const SourcePortInfo> ObLibuvcDevicePort::getSourcePortInfo() const {
+    return portInfo_;
+}
+
+// void ObLibuvcDevicePort::checkConnection() const {
+// #ifdef __ANDROID__
+//     auto deviceInfoList = AndroidUsbDeviceManager::getInstance()->getDeviceInfoList();
+// #else
+//     auto deviceInfoList = UsbEnumerator::queryDevicesInfo();
+// #endif
+
+//     for(auto &&usb_info: deviceInfoList) {
+//         if(usb_info.uid == portInfo->uid)
+//             return;
+//     }
+//     throw std::runtime_error("Camera is no longer connected!");
+// }
+
+#ifdef __ANDROID__
+std::string ObLibuvcDevicePort::getUsbConnectType() {
+    libusb_device_descriptor desc;
+    auto                     ret = libusb_get_device_descriptor(uvcDev_->usb_dev, &desc);
+    return usb_spec_names.find(UsbSpec(desc.bcdUSB))->second;
+}
+#endif
+
+}  // namespace pal
+}  // namespace libobsensor

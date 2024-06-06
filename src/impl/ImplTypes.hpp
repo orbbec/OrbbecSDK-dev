@@ -6,7 +6,7 @@
 #include "ISensor.hpp"
 #include "IDevice.hpp"
 
-#include "utils/StringUtils.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 class Context;

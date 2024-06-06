@@ -1,0 +1,102 @@
+#pragma once
+#include <memory>
+#include <vector>
+#include <string>
+
+#include "openobsdk/h/ObTypes.h"
+#include "stream/StreamProfile.hpp"
+#include "frame/Frame.hpp"
+
+namespace libobsensor {
+enum SourcePortType {
+    SOURCE_PORT_USB_VENDOR = 0x00,
+    SOURCE_PORT_USB_UVC,
+    SOURCE_PORT_USB_MULTI_UVC,
+    SOURCE_PORT_USB_HID,
+    SOURCE_PORT_NET_VENDOR = 0x10,
+    SOURCE_PORT_NET_VENDOR_STREAM,
+    SOURCE_PORT_NET_RTSP,
+    SOURCE_PORT_IPC_VENDOR,  // Inter-process communication port
+    SOURCE_PORT_UNKNOWN = 0xff,
+};
+
+struct SourcePortInfo {
+    virtual ~SourcePortInfo() noexcept = default;
+    SourcePortType portType;
+};
+
+struct NetSourcePortInfo : public SourcePortInfo {
+    ~NetSourcePortInfo() noexcept override = default;
+    std::string address;
+    uint16_t    port;
+    std::string mac;
+    std::string serialNumber;
+    uint32_t    pid;
+};
+
+struct ShmStreamPortInfo : public SourcePortInfo {
+    ~ShmStreamPortInfo() noexcept override = default;
+    std::string shmName;
+    int32_t     blockSize;
+    int32_t     blockCount;
+};
+
+struct USBSourcePortInfo : public SourcePortInfo {
+    ~USBSourcePortInfo() noexcept override = default;
+    std::string url;  // usb device url
+    std::string uid;
+    uint16_t    vid = 0;  // usb device vid
+    uint16_t    pid = 0;  // usb device pid
+    std::string serial;   // usb device serial number
+    std::string connSpec;
+
+    std::string infUrl;        // interface url(interface uid)
+    uint8_t     infIndex = 0;  // interface index
+    std::string infName;       // interface name
+    std::string hubId;         // hub id
+};
+
+typedef std::vector<std::shared_ptr<const SourcePortInfo>> SourcePortInfoList;
+
+class ISourcePort {
+public:
+    virtual ~ISourcePort() noexcept = default;
+
+    virtual std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const = 0;
+};
+
+// for vendor command
+class IVendorDataPort : virtual public ISourcePort {  // Virtual inheritance solves diamond inheritance problem
+public:
+    ~IVendorDataPort() noexcept override = default;
+
+    virtual std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) = 0;
+};
+
+// for imu data stream
+class IDataStreamPort : virtual public ISourcePort {  // Virtual inheritance solves diamond inheritance problem
+public:
+    class DataStreamWatcher {
+    public:
+        virtual ~DataStreamWatcher() noexcept = default;
+
+        virtual void onDataReceived(const uint8_t *data, uint32_t dataLen) = 0;
+    };
+
+    ~IDataStreamPort() noexcept override = default;
+
+    virtual void addWatcher(std::shared_ptr<DataStreamWatcher> watcher)    = 0;
+    virtual void removeWatcher(std::shared_ptr<DataStreamWatcher> watcher) = 0;
+};
+
+// for video data stream: depth, color, ir, etc.
+class IVideoStreamPort : virtual public ISourcePort {  // Virtual inheritance solves diamond inheritance problem
+public:
+    ~IVideoStreamPort() noexcept override = default;
+
+    virtual std::vector<std::shared_ptr<const VideoStreamProfile>> getStreamProfileList()                     = 0;
+    virtual void startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) = 0;
+    virtual void stopStream(std::shared_ptr<const VideoStreamProfile> profile)                               = 0;
+    virtual void stopAllStream()                                                                             = 0;
+};
+}  // namespace libobsensor

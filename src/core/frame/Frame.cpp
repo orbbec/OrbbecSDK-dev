@@ -1,6 +1,6 @@
 #include "Frame.hpp"
 #include "logger/Logger.hpp"
-#include "utils/StringUtils.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 

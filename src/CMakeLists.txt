@@ -11,7 +11,8 @@ add_subdirectory(filter)
 
 # config version info
 if(MSVC)
-    set(ORBBEC_VERSIONINFO_RC "${CMAKE_BINARY_DIR}/VersionInfo.rc")
+    set(ORBBEC_VERSIONINFO_RC "${CMAKE_BINARY_DIR}/VersionInfo.rc"
+            impl/Context.cpp)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/VersionInfo.rc.in "${ORBBEC_VERSIONINFO_RC}")
 endif()
 
@@ -24,7 +25,7 @@ file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp ${CMAKE_CURR
 file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp)
 
 target_sources(openobsdk PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
-target_link_libraries(openobsdk PRIVATE ob::shared ob::core ob::filter)
+target_link_libraries(openobsdk PRIVATE ob::shared ob::core ob::filter ob::platform ob::device)
 target_include_directories(openobsdk PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_include_directories(openobsdk PUBLIC "$<BUILD_INTERFACE:${OB_PUBLIC_HEADERS_DIR}>" "$<INSTALL_INTERFACE:include>")
 

@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace libobsensor {
 namespace utils {
@@ -69,5 +70,11 @@ template <class T, class... U> void ArgsToStream(std::ostream &out, const char *
     ArgsToStream(out, names, rest...);
 }
 
+std::vector<std::string> tokenize(const std::string &s, const char separator = ',');
+std::vector<std::string> split(const std::string &s, const std::string &separator);
+std::string              remove(const std::string &s, const std::string &rm);
+std::string              replace(const std::string &s, const std::string &src, const std::string &rep);
+std::string              toLower(const std::string &s);
+std::string              toUpper(const std::string &s);
 }  // namespace utils
 }  // namespace libobsensor

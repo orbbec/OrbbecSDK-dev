@@ -84,8 +84,7 @@ if(OB_BUILD_LINUX_ARM64)
 endif()
 
 add_definitions(-DOS_LINUX)
-set(BUILD_LINUX ON)
-set(USE_PROJECT_FOLDERS OFF)
+set(OB_BUILD_LINUX ON)
 
 # target rpath settings
 set(CMAKE_SKIP_BUILD_RPATH FALSE)

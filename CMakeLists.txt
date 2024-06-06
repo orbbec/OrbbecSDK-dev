@@ -10,6 +10,12 @@ project(
 
 # load project options
 include(cmake/options.cmake)
+if(OB_BUILD_USB_PORT)
+    add_definitions(-DBUILD_USB_PORT)
+endif()
+if(OB_BUILD_NET_PORT)
+    add_definitions(-DBUILD_NET_PORT)
+endif()
 
 # load macros
 include(cmake/macros.cmake)

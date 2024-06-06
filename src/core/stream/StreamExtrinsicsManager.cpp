@@ -1,7 +1,7 @@
 #include "StreamExtrinsicsManager.hpp"
 #include "logger/Logger.hpp"
 #include "exception/OBException.hpp"
-#include "utils/StringUtils.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 
@@ -71,7 +71,7 @@ std::shared_ptr<StreamExtrinsicsManager> StreamExtrinsicsManager::getInstance() 
 
 StreamExtrinsicsManager::StreamExtrinsicsManager() : nextId_(0), logger_(Logger::getInstance())  {}
 
-StreamExtrinsicsManager::~StreamExtrinsicsManager() noexcept {}
+StreamExtrinsicsManager::~StreamExtrinsicsManager() noexcept = default;
 
 void StreamExtrinsicsManager::registerExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to,
                                                  const OBExtrinsic &extrinsics) {

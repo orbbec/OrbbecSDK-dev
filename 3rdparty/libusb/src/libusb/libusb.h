@@ -852,7 +852,10 @@ struct libusb_bos_dev_capability_descriptor {
     uint8_t bDevCapabilityType;
 
     /** Device Capability data (bLength - 3 bytes) */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
     uint8_t dev_capability_data[ZERO_SIZED_ARRAY];
+#pragma GCC diagnostic pop
 };
 
 /** \ingroup libusb_desc
@@ -877,7 +880,10 @@ struct libusb_bos_descriptor {
     uint8_t bNumDeviceCaps;
 
     /** bNumDeviceCap Device Capability Descriptors */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
     struct libusb_bos_dev_capability_descriptor *dev_capability[ZERO_SIZED_ARRAY];
+#pragma GCC diagnostic pop
 };
 
 /** \ingroup libusb_desc
@@ -999,7 +1005,11 @@ struct libusb_platform_descriptor {
     uint8_t PlatformCapabilityUUID[16];
 
     /** Capability data (bLength - 20) */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
     uint8_t CapabilityData[ZERO_SIZED_ARRAY];
+#pragma GCC diagnostic pop
 };
 
 /** \ingroup libusb_asyncio
@@ -1378,7 +1388,10 @@ struct libusb_transfer {
     int num_iso_packets;
 
     /** Isochronous packet descriptors, for isochronous transfers only. */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
     struct libusb_iso_packet_descriptor iso_packet_desc[ZERO_SIZED_ARRAY];
+#pragma GCC diagnostic pop
 };
 
 /** \ingroup libusb_misc

@@ -5,7 +5,7 @@
 
 #include "IFrameMetadataParser.hpp"
 #include "stream/StreamProfile.hpp"
-#include "exception/OBException.hpp"
+#include "exception/ObException.hpp"
 
 #include <atomic>
 #include <memory>

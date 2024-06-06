@@ -33,8 +33,6 @@ public:
     std::vector<std::shared_ptr<DeviceEnumInfo>> getDeviceInfoList();
 
     void setDeviceChangedCallback(DeviceChangedCallback callback);
-    void setDeviceInstalledCallback(DeviceInstalledCallback callback);
-    void setDeviceRemovedCallback(DeviceRemovedCallback callback);
 
     void enableDeviceClockSync(uint64_t repeatInterval);
 

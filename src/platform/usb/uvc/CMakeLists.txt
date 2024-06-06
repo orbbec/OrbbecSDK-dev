@@ -11,8 +11,6 @@ else()
     target_sources(${OB_TARGET_PAL} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/UvcTypes.hpp")
     target_sources(${OB_TARGET_PAL} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/ObLibuvcDevicePort.cpp")
     target_sources(${OB_TARGET_PAL} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/ObLibuvcDevicePort.hpp")
-    target_sources(${OB_TARGET_PAL} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/ObMultiUvcDevice.hpp")
-    target_sources(${OB_TARGET_PAL} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/ObMultiUvcDevice.cpp")
 
     if(OB_BUILD_LINUX)
         target_sources(${OB_TARGET_PAL} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/ObV4lUvcDevicePort.hpp")

@@ -9,9 +9,9 @@
 namespace libobsensor {
 namespace pal {
 
-const int      INTERRUPT_BUFFER_SIZE = 256;
+const int INTERRUPT_BUFFER_SIZE = 256;
 HidDevicePort::HidDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
-    : usbDevice_(usbDevice), portInfo_(portInfo), isStreaming_(false) {
+    : portInfo_(portInfo), usbDevice_(usbDevice), isStreaming_(false) {
     LOG_DEBUG("obHid Device open info_.infIndex={}", (uint32_t)portInfo_->infIndex);
     auto intf = usbDevice_->getInterface(portInfo_->infIndex);
 

@@ -17,7 +17,7 @@ CPLUSPLUS_COMPILER =    /usr/bin/xcrun clang
 CPLUSPLUS_FLAGS =       $(COMPILE_OPTS) -Wall
 OBJ =                   o
 LINK =                  /usr/bin/xcrun clang -o 
-LINK_OPTS =             -v -L. -arch armv7 --sysroot=$(SDK) -L$(SDK)/usr/lib/system /usr/lib/libc++.dylib
+LINK_OPTS =             -v -L. -arch armv7 --sysroot=$(SDK) -L$(SDK)/usr/lib/system /usr/lib/libc++.Dylib
 CONSOLE_LINK_OPTS =     $(LINK_OPTS)
 LIBRARY_LINK =          /usr/bin/xcrun libtool -static -o 
 LIBRARY_LINK_OPTS =

@@ -11,8 +11,6 @@
 #include "usb/uvc/rawPhaseConverter/MSDEConverterDevice.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
-#include "usb/uvc/ObMultiUvcDevice.hpp"
-#include "usb/openni/linux/OpenNIUSBLinux.hpp"
 #endif
 
 #if defined(BUILD_NET_PORT)

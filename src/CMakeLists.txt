@@ -10,16 +10,16 @@ add_subdirectory(pipeline)
 add_subdirectory(filter)
 
 # config version info
-if(MSVC)
-    set(ORBBEC_VERSIONINFO_RC "${CMAKE_BINARY_DIR}/VersionInfo.rc"
-            impl/Context.cpp)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/VersionInfo.rc.in "${ORBBEC_VERSIONINFO_RC}")
-endif()
+if (MSVC)
+  set(ORBBEC_VERSIONINFO_RC "${CMAKE_BINARY_DIR}/VersionInfo.rc"
+      impl/Context.cpp)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/VersionInfo.rc.in "${ORBBEC_VERSIONINFO_RC}")
+endif ()
 
 # only support shared library for now
 add_library(openobsdk SHARED "" ${ORBBEC_VERSIONINFO_RC})
 include(GenerateExportHeader)
-generate_export_header(openobsdk BASE_NAME OB EXPORT_FILE_NAME ${OB_PUBLIC_HEADERS_DIR}/openobsdk/h/Export.h)
+GENERATE_EXPORT_HEADER(openobsdk BASE_NAME OB EXPORT_FILE_NAME ${OB_PUBLIC_HEADERS_DIR}/openobsdk/h/Export.h)
 
 file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp ${CMAKE_CURRENT_LIST_DIR}/context/*.cpp)
 file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp)

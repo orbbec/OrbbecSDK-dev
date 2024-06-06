@@ -51,7 +51,7 @@ static UsbStatus libusbStatusToOb(int sts) {
 class HandleLibusb {
 public:
     HandleLibusb(std::shared_ptr<UsbContext> context, libusb_device_handle *handle, std::shared_ptr<UsbInterfaceLibusb> interface)
-        : firstInterface_(interface), context_(context), handle_(handle) {
+        : context_(std::move(context)), firstInterface_(std::move(interface)), handle_(handle) {
         claimInterface(interface->getNumber());
         for(auto &&i: interface->getAssociatedInterfaces())
             claimInterface(i->getNumber());

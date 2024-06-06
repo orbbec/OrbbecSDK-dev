@@ -9,8 +9,8 @@
 #include "usb/backend/Messenger.hpp"
 #include "usb/backend/Device.hpp"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <atomic>
 #include <chrono>
@@ -18,46 +18,58 @@
 #include <string>
 #include <thread>
 #include <libuvc/libuvc.h>
-#include <libuvc/libuvc_internal.h>
 
 namespace libobsensor {
 namespace pal {
 
+const std::map<uint32_t, OBFormat> fourccToOBFormat = {
+    { fourCc2Int('U', 'Y', 'V', 'Y'), OB_FORMAT_UYVY }, { fourCc2Int('Y', 'U', 'Y', '2'), OB_FORMAT_YUYV }, { fourCc2Int('Y', 'U', 'Y', 'V'), OB_FORMAT_YUYV },
+    { fourCc2Int('N', 'V', '1', '2'), OB_FORMAT_NV12 }, { fourCc2Int('N', 'V', '2', '1'), OB_FORMAT_NV21 }, { fourCc2Int('M', 'J', 'P', 'G'), OB_FORMAT_MJPG },
+    { fourCc2Int('H', '2', '6', '4'), OB_FORMAT_H264 }, { fourCc2Int('H', '2', '6', '5'), OB_FORMAT_H265 }, { fourCc2Int('Y', '1', '2', ' '), OB_FORMAT_Y12 },
+    { fourCc2Int('Y', '1', '6', ' '), OB_FORMAT_Y16 },  { fourCc2Int('G', 'R', 'A', 'Y'), OB_FORMAT_GRAY }, { fourCc2Int('Y', '1', '1', ' '), OB_FORMAT_Y11 },
+    { fourCc2Int('Y', '8', ' ', ' '), OB_FORMAT_Y8 },   { fourCc2Int('Y', '1', '0', ' '), OB_FORMAT_Y10 },  { fourCc2Int('H', 'E', 'V', 'C'), OB_FORMAT_HEVC },
+    { fourCc2Int('Y', '1', '4', ' '), OB_FORMAT_Y14 },  { fourCc2Int('I', '4', '2', '0'), OB_FORMAT_I420 }, { fourCc2Int('Z', '1', '6', ' '), OB_FORMAT_Z16 },
+    { fourCc2Int('Y', 'V', '1', '2'), OB_FORMAT_YV12 }, { fourCc2Int('B', 'A', '8', '1'), OB_FORMAT_BA81 }, { fourCc2Int('B', 'Y', 'R', '2'), OB_FORMAT_BYR2 },
+    { fourCc2Int('R', 'W', '1', '6'), OB_FORMAT_RW16 },
+};
+
 class ObLibuvcDevicePort : public UvcDevicePort {
 private:
-    typedef struct {
-        std::shared_ptr<const VideoStreamProfile> profile;
-        VideoFrameCallback                           callback;
-        uvc_stream_handle_t                         *streamHandle;
-    } OBUvcStreamHandle;
+    struct OBUvcStreamHandle {
+        OBUvcStreamHandle(std::shared_ptr<const VideoStreamProfile> &profile_, std::function<void(std::shared_ptr<Frame>)> callback_,
+                          uvc_stream_handle_t *streamHandle_)
+            : profile(profile_), callback(std::move(callback_)), streamHandle(streamHandle_) {}
+        std::shared_ptr<const VideoStreamProfile>   profile;
+        std::function<void(std::shared_ptr<Frame>)> callback;
+        uvc_stream_handle_t                        *streamHandle;
+    };
 
     typedef struct {
         uint32_t width;
         uint32_t height;
-        uint32_t fourcc; // format fourcc code
+        uint32_t fourcc;  // format fourcc code
         uint32_t fps;
-        uint8_t interfaceNumber;
-        uint8_t endpointAddress;
+        uint8_t  interfaceNumber;
+        uint8_t  endpointAddress;
     } uvcProfile;
-
 
 public:
     ObLibuvcDevicePort(std::shared_ptr<UsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo);
     virtual ~ObLibuvcDevicePort() noexcept;
 
-    virtual std::vector<std::shared_ptr<const VideoStreamProfile>> getStreamProfileList() override;
-    virtual void                      startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) override;
-    virtual void                      stopStream(std::shared_ptr<const VideoStreamProfile> profile) override;
-    virtual void                      stopAllStream() override;
+    std::vector<std::shared_ptr<const VideoStreamProfile>> getStreamProfileList() override;
+    void startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) override;
+    void stopStream(std::shared_ptr<const VideoStreamProfile> profile) override;
+    void stopAllStream() override;
 
-    virtual bool sendData(const uint8_t *data, const uint32_t dataLen) override;
-    virtual bool recvData(uint8_t *data, uint32_t *dataLen) override;
+    virtual bool sendData(const uint8_t *data, uint32_t dataLen);
+    virtual bool recvData(uint8_t *data, uint32_t *dataLen);
 
-    virtual bool         getPu(OBPropertyID propertyId, int32_t &value) override;
-    virtual bool         setPu(OBPropertyID propertyId, int32_t value) override;
-    virtual ControlRange getPuRange(OBPropertyID propertyId) override;
+    bool         getPu(OBPropertyID propertyId, int32_t &value) override;
+    bool         setPu(OBPropertyID propertyId, int32_t value) override;
+    ControlRange getPuRange(OBPropertyID propertyId) override;
 
-    virtual std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override;
+    std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override;
 
 private:
     virtual bool getXu(uint8_t ctrl, uint8_t *data, uint32_t *len);
@@ -68,8 +80,8 @@ private:
 #endif
 
 private:
-    int32_t                   uvcCtrlValueTranslate(uvc_req_code action, OBPropertyID propertyId, int32_t value) const;
-    static void               onFrameCallback(uvc_frame *frame, void *user_ptr);
+    int32_t                 uvcCtrlValueTranslate(uvc_req_code action, OBPropertyID propertyId, int32_t value) const;
+    static void             onFrameCallback(uvc_frame *frame, void *user_ptr);
     std::vector<uvcProfile> queryAvailableUvcProfile() const;
 
     int     obPropToUvcCS(OBPropertyID propertyId, int &unit) const;

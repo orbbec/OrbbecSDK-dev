@@ -10,13 +10,13 @@
 #include <libusb.h>
 #endif
 
-#include "utils/utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 namespace pal {
 
 VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
-    : usbDev_(usbDevice), portInfo_(portInfo) {
+    : portInfo_(portInfo), usbDev_(usbDevice) {
     auto vendorIntf = usbDev_->getInterface(portInfo->infIndex);
     if(!vendorIntf || vendorIntf->getClass() != OB_USB_CLASS_VENDOR_SPECIFIC) {
         throw std::runtime_error("can't find VENDOR_SPECIFIC interface of device.");
@@ -28,20 +28,19 @@ VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDe
     bulkWriteEndpoint_ = vendorIntf->firstEndpoint(OB_USB_ENDPOINT_DIRECTION_WRITE);
 }
 
-VendorUsbDevicePort::~VendorUsbDevicePort() {
-}
+VendorUsbDevicePort::~VendorUsbDevicePort() noexcept = default;
 
 std::vector<uint8_t> VendorUsbDevicePort::sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedLength) {
     uint32_t transferred = 0;
-    auto sendBuf = const_cast<uint8_t *>(sendData.data());
-    auto ret = usbMessenger_->controlTransfer(0x40, 0, 0, 0, sendBuf, static_cast<uint32_t>(sendData.size()), transferred, 5000);
-    if(ret!= OB_USB_STATUS_SUCCESS) {
+    auto     sendBuf     = const_cast<uint8_t *>(sendData.data());
+    auto     ret         = usbMessenger_->controlTransfer(0x40, 0, 0, 0, sendBuf, static_cast<uint32_t>(sendData.size()), transferred, 5000);
+    if(ret != OB_USB_STATUS_SUCCESS) {
         LOG_WARN("control transfer send datafailed: {}", ret);
         return {};
     }
     std::vector<uint8_t> recvData(exceptedLength);
-    ret         = usbMessenger_->controlTransfer(0xc0, 0, 0, 0, recvData.data(), exceptedLength, transferred, 5000);
-    if(ret!= OB_USB_STATUS_SUCCESS) {
+    ret = usbMessenger_->controlTransfer(0xc0, 0, 0, 0, recvData.data(), exceptedLength, transferred, 5000);
+    if(ret != OB_USB_STATUS_SUCCESS) {
         LOG_WARN("control transfer recv data failed: {}", ret);
         return {};
     }

@@ -1,6 +1,6 @@
-# dylib example
+# Dylib example
 
-Here is an example about the usage of the `dylib` library in a project
+Here is an example about the usage of the `Dylib` library in a project
 
 The functions and variables of our forthcoming dynamic library are located inside [lib.cpp](lib.cpp)
 
@@ -37,10 +37,10 @@ The code that will load functions and global variables of our dynamic library at
 // main.cpp
 
 #include <iostream>
-#include "dylib.hpp"
+#include "Dylib.hpp"
 
 int main() {
-    dylib lib("./", "dynamic_lib");
+    Dylib lib("./", "dynamic_lib");
 
     auto adder = lib.get_function<double(double, double)>("adder");
     std::cout << adder(5, 10) << std::endl;
@@ -60,7 +60,7 @@ int main() {
 
 Then, we want a build system that will:
 
-- Fetch `dylib` into the project
+- Fetch `Dylib` into the project
 - Build [lib.cpp](lib.cpp) into a dynamic library
 - Build [main.cpp](main.cpp) into an executable
 
@@ -79,17 +79,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-# dylib fetch
+# Dylib fetch
 
 include(FetchContent)
 
 FetchContent_Declare(
-    dylib
-    GIT_REPOSITORY  "https://github.com/martin-olivier/dylib"
+    Dylib
+    GIT_REPOSITORY  "https://github.com/martin-olivier/Dylib"
     GIT_TAG         "v2.2.0"
 )
 
-FetchContent_MakeAvailable(dylib)
+FetchContent_MakeAvailable(Dylib)
 
 # build lib.cpp into a shared library
 
@@ -98,7 +98,7 @@ add_library(dynamic_lib SHARED lib.cpp)
 # build main.cpp into an executable
 
 add_executable(dylib_example main.cpp)
-target_link_libraries(dylib_example PRIVATE dylib)
+target_link_libraries(dylib_example PRIVATE Dylib)
 ```
 
 Let's build our code:

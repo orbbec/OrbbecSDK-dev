@@ -267,7 +267,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, profile_list, full_scale_range, sample_rat
 const ob_stream_profile *ob_stream_profile_list_get_profile(const ob_stream_profile_list *profile_list, int index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile_list);
     auto innerProfiles = profile_list->profileList;
-    if(index < 0 || index >= innerProfiles.size()) {
+    if(index < 0 ||  static_cast<size_t>(index) >= innerProfiles.size()) {
         throw libobsensor::invalid_value_exception("ob_stream_profile_list_get_profile: index out of range!");
     }
     auto innerProfile    = innerProfiles[index];

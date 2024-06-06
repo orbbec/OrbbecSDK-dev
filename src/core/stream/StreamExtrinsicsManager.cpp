@@ -1,6 +1,6 @@
 #include "StreamExtrinsicsManager.hpp"
 #include "logger/Logger.hpp"
-#include "exception/OBException.hpp"
+#include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
 
 namespace libobsensor {

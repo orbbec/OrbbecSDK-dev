@@ -1,8 +1,7 @@
-#pragma once
-
 #include "StringUtils.hpp"
 #include <algorithm>
 #include <locale>
+#include <cstring>
 
 namespace libobsensor {
 namespace utils {

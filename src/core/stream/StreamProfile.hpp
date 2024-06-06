@@ -13,6 +13,8 @@ class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
 public:
     StreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format);
 
+    virtual ~StreamProfile() noexcept = default;
+
     std::shared_ptr<ISensor> getOwner() const;
     void                     bindOwner(std::shared_ptr<ISensor> owner);
     void                     setType(OBStreamType type);
@@ -52,6 +54,10 @@ public:
     VideoStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
     VideoStreamProfile(std::shared_ptr<const VideoStreamProfile> other) = delete;
 
+    bool operator == (const VideoStreamProfile &other) const;
+
+    ~VideoStreamProfile() noexcept override = default;
+
     void               setWidth(uint32_t width);
     uint32_t           getWidth() const;
     void               setHeight(uint32_t height);
@@ -74,6 +80,8 @@ class AccelStreamProfile : public StreamProfile {
 public:
     AccelStreamProfile(std::weak_ptr<ISensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
 
+    ~AccelStreamProfile() noexcept override = default;
+
     OBAccelFullScaleRange          getFullScaleRange() const;
     OBAccelSampleRate              getSampleRate() const;
     void                           bindIntrinsic(const OBAccelIntrinsic &intrinsic);
@@ -88,6 +96,7 @@ protected:
 class GyroStreamProfile : public StreamProfile {
 public:
     GyroStreamProfile(std::weak_ptr<ISensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
+    ~GyroStreamProfile() noexcept override = default;
 
     OBGyroFullScaleRange           getFullScaleRange() const;
     OBGyroSampleRate               getSampleRate() const;

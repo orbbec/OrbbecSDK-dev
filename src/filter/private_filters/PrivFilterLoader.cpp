@@ -126,7 +126,7 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         pkgCtx_->packageName = packageName;
         auto fileName        = utils::removeExtensionOfFileName(packageName);
         try {
-            pkgCtx_->dylib                    = std::make_shared<dylib>(dir, fileName);
+            pkgCtx_->dylib                    = std::make_shared<Dylib>(dir, fileName);
             pkgCtx_->get_filter_count         = pkgCtx_->dylib->get_function<size_t(ob_error **)>("ob_get_filter_count");
             pkgCtx_->get_filter_name          = pkgCtx_->dylib->get_function<const char *(size_t, ob_error **)>("ob_get_filter_name");
             pkgCtx_->create_filter            = pkgCtx_->dylib->get_function<ob_priv_filter_context *(size_t, ob_error **)>("ob_create_filter");

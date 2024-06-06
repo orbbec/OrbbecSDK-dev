@@ -7,7 +7,7 @@
 
 namespace libobsensor {
 namespace pal {
-UsbContext::UsbContext() : ctx_(NULL), list_(NULL), count_(0) {
+UsbContext::UsbContext() : ctx_(NULL), count_(0), list_(nullptr) {
 
 #ifdef __ANDROID__
     auto rc = libusb_set_option(ctx_, LIBUSB_OPTION_WEAK_AUTHORITY, NULL);
@@ -47,7 +47,7 @@ void UsbContext::startEventHandler() {
         eventHandler_      = std::thread([&]() {
             while(!killHandlerThread_) {
                 auto rc = libusb_handle_events_completed(ctx_, &killHandlerThread_);
-                if(rc!= LIBUSB_SUCCESS) {
+                if(rc != LIBUSB_SUCCESS) {
                     LOG_WARN_INTVL("libusb_handle_events_completed failed: {}", libusb_strerror(rc));
                 }
             }

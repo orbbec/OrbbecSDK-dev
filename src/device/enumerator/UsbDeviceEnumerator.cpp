@@ -2,10 +2,15 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
+<<<<<<< HEAD
 UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(pal::ObPal::getInstance()) {
     devChangedCallback_ = [callback, this](const std::vector<std::shared_ptr<DeviceEnumInfo>> &removedList,
                                            const std::vector<std::shared_ptr<DeviceEnumInfo>> &addedList) {
         (void)this;
+=======
+UsbDeviceEnumerator::UsbDeviceEnumerator( DeviceChangedCallback callback) : obPal_(pal::ObPal::getInstance()) {
+    devChangedCallback_ = [callback, this](const DeviceEnumInfoList& removedList, const DeviceEnumInfoList& addedList) {
+>>>>>>> 2b5680b (Implementing Context and Device Manager.)
 #ifdef __ANDROID__
         // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
         callback(removedList, addedList);
@@ -58,7 +63,7 @@ UsbDeviceEnumerator::~UsbDeviceEnumerator() noexcept {
 
 void UsbDeviceEnumerator::onPalDeviceChanged(pal::OBDeviceChangedType changeType, std::string devUid) {
     if(changeType == pal::OB_DEVICE_REMOVED) {
-        std::vector<std::shared_ptr<DeviceEnumInfo>> removedDevList;
+        std::vector<std::shared_ptr<const DeviceEnumInfo>> removedDevList;
         {
             std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
             removedDevList  = queryRemovedDevice(devUid);
@@ -80,7 +85,7 @@ void UsbDeviceEnumerator::onPalDeviceChanged(pal::OBDeviceChangedType changeType
             }
             std::unique_lock<std::mutex> lock(callbackMutex_);
             if(!destroy_ && devChangedCallback_) {
-                devChangedCallback_(removedDevList, std::vector<std::shared_ptr<DeviceEnumInfo>>());
+                devChangedCallback_(removedDevList, {});
             }
         }
     }
@@ -90,7 +95,7 @@ void UsbDeviceEnumerator::onPalDeviceChanged(pal::OBDeviceChangedType changeType
     }
 }
 
-std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid) {
+DeviceEnumInfoList UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid) {
     auto portInfoList = currentUsbPortInfoList_;
     auto iter         = portInfoList.begin();
     while(iter != portInfoList.end()) {
@@ -110,14 +115,14 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::queryRemovedDe
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
     if(portInfoList != currentUsbPortInfoList_) {
-        currentUsbPortInfoList_                              = portInfoList;
-        std::vector<std::shared_ptr<DeviceEnumInfo>> curList = usbDeviceInfoMatch(portInfoList);
+        currentUsbPortInfoList_                          = portInfoList;
+        DeviceEnumInfoList curList = usbDeviceInfoMatch(portInfoList);
         return utils::subtract_sets(deviceInfoList_, curList);
     }
-    return std::vector<std::shared_ptr<DeviceEnumInfo>>();
+    return {};
 }
 
-std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::queryArrivalDevice() {
+DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
 #if defined(BUILD_USB_PORT)
     auto portInfoList = obPal_->queryUsbSourcePort();
@@ -128,15 +133,15 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::queryArrivalDe
             auto portInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(item);
             LOG_DEBUG(" - {0} | {1}", portInfo->infUrl, portInfo->infName);
         }
-        std::vector<std::shared_ptr<DeviceEnumInfo>> curList = usbDeviceInfoMatch(portInfoList);
+        DeviceEnumInfoList curList = usbDeviceInfoMatch(portInfoList);
         return utils::subtract_sets(curList, deviceInfoList_);
     }
 #endif
-    return std::vector<std::shared_ptr<DeviceEnumInfo>>();
+    return {};
 }
 
-std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
-    std::vector<std::shared_ptr<DeviceEnumInfo>> deviceInfoList;
+DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
+    DeviceEnumInfoList deviceInfoList;
     // todo: match device by pid
     (void)portInfoList;
     return deviceInfoList;
@@ -162,7 +167,7 @@ void UsbDeviceEnumerator::deviceArrivalHandleThreadFunc() {
         if(destroy_) {
             break;
         }
-        std::vector<std::shared_ptr<DeviceEnumInfo>> addedDevList;
+        DeviceEnumInfoList addedDevList;
         {
             std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
 
@@ -182,22 +187,27 @@ void UsbDeviceEnumerator::deviceArrivalHandleThreadFunc() {
             }
             std::unique_lock<std::mutex> lock(callbackMutex_);
             if(!destroy_ && devChangedCallback_) {
-                devChangedCallback_(std::vector<std::shared_ptr<DeviceEnumInfo>>(), addedDevList);
+                devChangedCallback_({}, addedDevList);
             }
         }
     }
 }
 
-std::vector<std::shared_ptr<DeviceEnumInfo>> UsbDeviceEnumerator::getDeviceInfoList() {
+DeviceEnumInfoList UsbDeviceEnumerator::getDeviceInfoList() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
     return deviceInfoList_;
 }
 
 void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callback) {
     std::unique_lock<std::mutex> lock(callbackMutex_);
+<<<<<<< HEAD
     devChangedCallback_ = [callback, this](const std::vector<std::shared_ptr<DeviceEnumInfo>> &removedList,
                                            const std::vector<std::shared_ptr<DeviceEnumInfo>> &addedList) {
         (void)this;
+=======
+    devChangedCallback_ = [callback, this](const DeviceEnumInfoList&removedList,
+                                           const DeviceEnumInfoList&addedList) {
+>>>>>>> 2b5680b (Implementing Context and Device Manager.)
 #ifdef __ANDROID__
         // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
         callback(removedList, addedList);
@@ -222,13 +232,17 @@ void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callbac
     };
 }
 
-std::shared_ptr<IDevice> UsbDeviceEnumerator::createDevice(const std::shared_ptr<DeviceEnumInfo> info) {
+std::shared_ptr<IDevice> UsbDeviceEnumerator::createDevice(const std::shared_ptr<const DeviceEnumInfo> &info) {
     LOG_DEBUG("UsbDeviceEnumerator createDevice...");
     std::shared_ptr<IDevice> device;
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
+<<<<<<< HEAD
     auto                                   info_found =
         std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [&](std::shared_ptr<DeviceEnumInfo> item) { return item->uid_ == info->uid_; });
+=======
+    auto info_found = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [&](const std::shared_ptr<const DeviceEnumInfo>& item) { return item->uid_ == info->uid_; });
+>>>>>>> 2b5680b (Implementing Context and Device Manager.)
     if(info_found == deviceInfoList_.end()) {
         return nullptr;
     }

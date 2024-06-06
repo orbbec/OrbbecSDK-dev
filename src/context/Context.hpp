@@ -17,9 +17,10 @@ private:
     static std::weak_ptr<Context> instanceWeakPtr_;
 
 public:
-    ~Context();
+    ~Context() noexcept;
 
     static std::shared_ptr<Context> getInstance(const std::string &configPath = "");
+    static bool                     hasInstance();
 
     std::shared_ptr<DeviceManager>   getDeviceManager() const;
     std::shared_ptr<Logger>          getLogger() const;
@@ -31,3 +32,13 @@ private:
     std::shared_ptr<FrameMemoryPool> frameMemoryPool_;
 };
 }  // namespace libobsensor
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+struct ob_context_t {
+    std::shared_ptr<libobsensor::Context> context;
+};
+#ifdef __cplusplus
+}
+#endif

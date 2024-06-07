@@ -138,7 +138,7 @@ private:
     float valueScale_;
 };
 
-class DisparityFrame::public DepthFrame {
+class DisparityFrame::public VideoFrame {
 public:
     DisparityFrame(uint8_t * data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 }
@@ -206,6 +206,7 @@ public:
 
     uint32_t getFrameCount();
 
+    std::shared_ptr<Frame> getDisparityFrame();
     std::shared_ptr<Frame> getDepthFrame();
     std::shared_ptr<Frame> getIRFrame();
     std::shared_ptr<Frame> getColorFrame();

@@ -299,7 +299,7 @@ void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
 }
 
 DisparityFrame::DisparityFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
-    : DepthFrame(data, dataBufSize, OB_FRAME_DISPARITY, bufferReclaimFunc) {}
+    : VideoFrame(data, dataBufSize, OB_FRAME_DISPARITY, bufferReclaimFunc) {}
 
 IRFrame::IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc, OBFrameType frameType)
     : VideoFrame(data, dataBufSize, frameType, bufferReclaimFunc) {}
@@ -359,6 +359,19 @@ uint32_t FrameSet::getFrameCount() {
         return false;
     });
     return frameCnt;
+}
+
+std::shared_ptr<Frame> FrameSet::getDisparityFrame(){
+    std::shared_ptr<Frame> frame;
+    foreachFrame([&](void *item){
+        auto pFrame=(std::shared_ptr<Frame> *)item;
+        if(*pFrame && (*pFrame)->getType()==OB_FRAME_DISPARITY){
+            frame=*pFrame;
+            return true;
+        }
+        return false;
+    });
+    return frame;
 }
 
 std::shared_ptr<Frame> FrameSet::getDepthFrame() {

@@ -5,6 +5,7 @@
 #include "DecimationProcess.hpp"
 #include "DisparityProcess.hpp"
 #include "IMUFrameReversion.hpp"
+#include "FormatConverterProcess.hpp"
 
 namespace libobsensor {
 publicFilterCreator::publicFilterCreator(std::function<std::shared_ptr<IFilter>()> creatorFunc) : creatorFunc_(creatorFunc) {}
@@ -31,6 +32,7 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         ADD_FILTER_CREATOR(DecimationFilter),
         ADD_FILTER_CREATOR(DisparityTransform),
         ADD_FILTER_CREATOR(IMUFrameReversion),
+        ADD_FILTER_CREATOR(FormatConverter),
 
 
     };

@@ -293,7 +293,7 @@ void FormatConverter::nv12ToRgb(uint8_t *src, uint8_t *target, uint32_t width, u
 
 void FormatConverter::mjpgToI420(uint8_t *src, uint32_t src_len, uint8_t *target, uint32_t width, uint32_t height) {
     if(src == nullptr || target == nullptr) {
-        LOG_ERROR_INTVL("ImageProcessor mjpegFrame is null or dstFrame is null");
+        LOG_ERROR_INTVL("FormatConverter mjpegFrame is null or dstFrame is null");
         return;
     }
 

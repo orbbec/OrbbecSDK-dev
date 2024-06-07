@@ -278,7 +278,7 @@ void uvc_print_frameformats(uvc_device_handle_t *devh) {
                 case UVC_VS_FORMAT_UNCOMPRESSED:
                 case UVC_VS_FORMAT_MJPEG:
                 case UVC_VS_FORMAT_FRAME_BASED:
-                    printf("         \%s(%d)\n"
+                    printf("         \\%s(%d)\n"
                            "            bits per pixel: %d\n"
                            "            GUID: ",
                            _uvc_name_for_format_subtype(fmt_desc->bDescriptorSubtype), fmt_desc->bFormatIndex, fmt_desc->bBitsPerPixel);

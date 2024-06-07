@@ -1,7 +1,7 @@
 message(STATUS "Setting Linux configurations")
 
 set(CMAKE_C_FLAGS
-    "${CMAKE_C_FLAGS}   -Wl,-Bsymbolic -fPIC -pedantic -D_DEFAULT_SOURCE -fpermissive -fvisibility=hidden"
+    "${CMAKE_C_FLAGS}   -Wl,-Bsymbolic -fPIC -pedantic -D_DEFAULT_SOURCE -fvisibility=hidden"
 )
 set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS}  -Wl,-Bsymbolic -fPIC -pedantic -Wno-missing-field-initializers -fpermissive -fvisibility=hidden"

@@ -103,6 +103,7 @@ foreach(target_name IN LISTS UVC_TARGETS)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
       $<INSTALL_INTERFACE:include>
+      ${LibUSB_INCLUDE_DIRS}
   )
   target_link_libraries(${target_name} ob_usb)
 

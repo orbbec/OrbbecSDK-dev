@@ -774,7 +774,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
     case LIBUSB_TRANSFER_CANCELLED:
     case LIBUSB_TRANSFER_ERROR:
     case LIBUSB_TRANSFER_NO_DEVICE: {
-        int i;
+        uint32_t i;
         UVC_DEBUG("not retrying transfer, status = %d", transfer->status);
         pthread_mutex_lock(&strmh->cb_mutex);
 
@@ -810,7 +810,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
         if(strmh->running) {
             int libusbRet = libusb_submit_transfer(transfer);
             if(libusbRet < 0) {
-                int i;
+                uint32_t i;
                 pthread_mutex_lock(&strmh->cb_mutex);
 
                 /* Mark transfer as deleted. */
@@ -832,7 +832,7 @@ void LIBUSB_CALL _uvc_stream_callback(struct libusb_transfer *transfer) {
             }
         }
         else {
-            int i;
+            uint32_t i;
             pthread_mutex_lock(&strmh->cb_mutex);
 
             /* Mark transfer as deleted. */
@@ -1047,6 +1047,7 @@ fail:
  * is reserved for backward compatibility.
  */
 uvc_error_t uvc_stream_start(uvc_stream_handle_t *strmh, uvc_frame_callback_t *cb, void *user_ptr, uint8_t flags) {
+    (void)flags;
     /* USB interface we'll be using */
     const struct libusb_interface *interface;
     int                            interface_id;
@@ -1058,7 +1059,7 @@ uvc_error_t uvc_stream_start(uvc_stream_handle_t *strmh, uvc_frame_callback_t *c
     /* Total amount of data per transfer */
     size_t                  total_transfer_size = 0;
     struct libusb_transfer *transfer;
-    int                     transfer_id;
+    uint32_t                    transfer_id;
 
     ctrl = &strmh->cur_ctrl;
 
@@ -1342,7 +1343,7 @@ void _uvc_populate_frame(uvc_stream_handle_t *strmh) {
         memcpy(frame->payload_header, strmh->payload_header_holdbuf, frame->payload_header_bytes);
     }
     else {
-        printf("strmh->payload_header_hold_bytes is invalid,size:%d\n", strmh->payload_header_hold_bytes);
+        printf("strmh->payload_header_hold_bytes is invalid,size:%ld\n", strmh->payload_header_hold_bytes);
     }
 }
 
@@ -1454,7 +1455,7 @@ void uvc_stop_streaming(uvc_device_handle_t *devh) {
  * @param devh UVC device
  */
 uvc_error_t uvc_stream_stop(uvc_stream_handle_t *strmh) {
-    int i;
+    uint32_t i;
 
     if(!strmh->running)
         return UVC_ERROR_INVALID_PARAM;

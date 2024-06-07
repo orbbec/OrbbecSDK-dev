@@ -18,6 +18,7 @@ Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferRec
       dataBufSize_(dataBufSize),
       bufferReclaimFunc_(bufferReclaimFunc) {}
 
+
 Frame::~Frame() noexcept {
     if(bufferReclaimFunc_) {
         bufferReclaimFunc_();
@@ -296,6 +297,9 @@ void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
         valueScale_ = df->valueScale_;
     }
 }
+
+DisparityFrame::DisparityFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : DepthFrame(data, dataBufSize, OB_FRAME_DISPARITY, bufferReclaimFunc) {}
 
 IRFrame::IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc, OBFrameType frameType)
     : VideoFrame(data, dataBufSize, frameType, bufferReclaimFunc) {}

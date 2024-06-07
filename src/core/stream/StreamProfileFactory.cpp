@@ -16,6 +16,7 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFo
     case OB_STREAM_GYRO:
         return createGyroStreamProfile(OB_GYRO_FS_16dps, OB_SAMPLE_RATE_1_5625_HZ);
     case OB_STREAM_VIDEO:
+    case OB_STREAM_DISPARITY:
     case OB_STREAM_DEPTH:
     case OB_STREAM_COLOR:
     case OB_STREAM_IR:

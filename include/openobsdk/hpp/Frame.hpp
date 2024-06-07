@@ -19,15 +19,15 @@
  *          |
  *      +-----------+----------+----------+-----------+
  *      |           |          |          |           |
- *   VideoFrame PointsFrame AccelFrame GyroFrame FrameSet
+ *   VideoFrame PointsFrame AccelFrame GyroFrame   FrameSet
  *        |
- *    +-------+--------------+-------------------+
- *   |               |                      |
- * ColorFrame    DepthFrame              IRFrame
- *                   |                      |
- *               +-------+         +--------+--------+
- *                   |                 |        |
- *             DisparityFrame   IRLeftFrame  IRRightFrame
+ *   +----+----------+---------------+----------------+
+ *   |               |               |                |
+ * ColorFrame    DepthFrame    DisparityFrame      IRFrame
+ *                                                    |
+ *                                              +-----+-----+
+ *                                              |           |
+ *                                         IRLeftFrame  IRRightFrame
  */
 
 namespace ob {
@@ -475,7 +475,7 @@ public:
 /**
  * @brief Define the DisparityFrame class, which inherits from the VideoFrame class
  */
-class DisparityFrame : public DepthFrame {
+class DisparityFrame : public VideoFrame {
 private:
     /**
      * @brief Construct a new DisparityFrame object with a given pointer to the internal frame object.
@@ -488,7 +488,7 @@ private:
      * @param impl The pointer to the internal frame object.
      *
      */
-    explicit DisparityFrame(const ob_frame *impl) : DepthFrame(impl){};
+    explicit DisparityFrame(const ob_frame *impl) : VideoFrame(impl){};
     friend class FrameFactory;
 
 public:

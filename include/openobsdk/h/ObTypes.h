@@ -135,6 +135,7 @@ typedef enum {
     OB_SENSOR_IR_LEFT   = 6, /**< left IR */
     OB_SENSOR_IR_RIGHT  = 7, /**< Right IR */
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
+    OB_SENSOR_DISPARITY = 9, /**< Disparity */
     OB_SENSOR_COUNT,
 } OBSensorType,
     ob_sensor_type;
@@ -154,7 +155,7 @@ typedef enum {
     OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream */
     OB_STREAM_RAW_PHASE = 8,  /**< RawPhase Stream */
     OB_STREAM_DISPARITY = 9,  /**< Disparity Stream*/
-
+    OB_STREAM_COUNT,          /**< The total number of stream type,is not a valid stream type */
 } OBStreamType,
     ob_stream_type;
 
@@ -970,7 +971,6 @@ typedef struct {
     uint16_t              disp_diff;
     OBDDONoiseRemovalType type;
 } OBNoiseRemovalFilterParams, ob_noise_removal_filter_params;
-
 
 /**
  * @brief Control command protocol version number

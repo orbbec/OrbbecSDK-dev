@@ -6,6 +6,7 @@ project(libuvc
 # subdirectory_include(CORE_INC)
 # Additional search scripts path for libusb-1.0, libjpeg, OpenCV
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+include(${CMAKE_MODULE_PATH}/FindLibUSB.cmake)
 
 # Xcode and Visual Studio do not using CMAKE_BUILD_TYPE cache variable
 # so we use Release build type only with single configuration generators.

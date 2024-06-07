@@ -131,7 +131,6 @@ private:
 
 private:
     std::shared_ptr<const USBSourcePortInfo>      portInfo_     = nullptr;
-    bool                                          useMemoryMap_ = false;
     std::vector<std::shared_ptr<V4lDeviceHandle>> deviceHandles_;
 };
 }  // namespace pal

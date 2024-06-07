@@ -15,7 +15,7 @@ class UsbEndpointLibusb : public UsbEndpoint {
 public:
     UsbEndpointLibusb(libusb_endpoint_descriptor desc, uint8_t interfaceNumber) : desc_(desc), interfaceNumber_(interfaceNumber) {}
 
-    ~UsbEndpointLibusb() noexcept = default;
+    ~UsbEndpointLibusb()  noexcept override = default;
 
     uint8_t getAddress() const override {
         return desc_.bEndpointAddress;

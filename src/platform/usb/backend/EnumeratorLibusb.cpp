@@ -138,7 +138,7 @@ std::string getStringDescriptorStr(libusb_device *device, uint8_t desc_index) {
                 }
             }
 
-            delete str_desc;
+            delete []str_desc;
         }
         safe_close_device(device, dev_handle);
     }
@@ -247,7 +247,7 @@ UsbEnumerator::UsbEnumerator() {
     usbCtx_ = std::make_shared<UsbContext>();
 }
 
-UsbEnumerator::~UsbEnumerator() {
+UsbEnumerator::~UsbEnumerator()noexcept {
     usbCtx_.reset();  // 析构后自动释放
 }
 

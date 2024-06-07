@@ -33,7 +33,6 @@ private:
     std::weak_ptr<UsbRequest>        shared_;
     std::shared_ptr<libusb_transfer> transfer_;
     bool                             isIso_                  = false;
-    uint32_t                         numIsoPacket_           = 0;
     uint32_t                         endpointBytesPerPacket_ = 0;
     libusb_device_handle            *devHandle_;
 };

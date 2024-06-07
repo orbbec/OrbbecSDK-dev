@@ -12,7 +12,7 @@ namespace libobsensor {
 namespace pal {
 class UsbEndpoint {
 public:
-    ~UsbEndpoint() noexcept                              = default;
+    virtual ~UsbEndpoint() noexcept                      = default;
     virtual uint8_t           getAddress() const         = 0;
     virtual EndpointType      getType() const            = 0;
     virtual EndpointDirection getDirection() const       = 0;

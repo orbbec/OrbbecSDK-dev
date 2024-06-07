@@ -37,6 +37,12 @@ endif()
 # configure global settings: install rules, output directories, global variables, etc.
 include(cmake/global_config.cmake)
 
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy" REQUIRED)
+
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+endif()
+
 # configure global directories variables
 set(OB_PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include/)
 set(OB_3RDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/3rdparty)

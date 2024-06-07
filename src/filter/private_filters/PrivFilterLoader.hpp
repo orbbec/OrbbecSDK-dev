@@ -34,11 +34,12 @@ public:
 
     std::shared_ptr<IFilter> create() override;
     std::shared_ptr<IFilter> create(const std::string &activationKey) override;
-    std::string              getVendorSpecificCode() const override;
+    const std::string&              getVendorSpecificCode() const override;
 
 private:
     std::shared_ptr<PrivFilterPackageContext> pkgCtx_;
     size_t                               index_;
+    std::string  code_;
 };
 
 namespace PrivFilterCreatorLoader {

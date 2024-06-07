@@ -6,7 +6,15 @@
 #include "utils/Utils.hpp"
 namespace libobsensor {
 
-PrivFilterCreator::PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index) : pkgCtx_(pkgCtx), index_(index) {}
+PrivFilterCreator::PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index) : pkgCtx_(pkgCtx), index_(index) {
+    ob_error *error = nullptr;
+    code_           = pkgCtx_->get_vendor_specific_code(&error);
+    if(error) {
+        std::string errorMsg = "Failed to get filter UID: " + std::string(error->message);
+        delete error;
+        throw unsupported_operation_exception(errorMsg);
+    }
+}
 
 std::shared_ptr<IFilter> PrivFilterCreator::create() {
     ob_error *error = nullptr;
@@ -100,15 +108,8 @@ std::shared_ptr<IFilter> PrivFilterCreator::create(const std::string &activation
     return std::make_shared<PrivFilterCppWrapper>(filterName, privFilterCtxShared);
 }
 
-std::string PrivFilterCreator::getVendorSpecificCode() const {
-    ob_error *error = nullptr;
-    auto      code  = pkgCtx_->get_vendor_specific_code(&error);
-    if(error) {
-        std::string errorMsg = "Failed to get filter UID: " + std::string(error->message);
-        delete error;
-        throw unsupported_operation_exception(errorMsg);
-    }
-    return code;
+const std::string &PrivFilterCreator::getVendorSpecificCode() const {
+    return code_;
 }
 
 namespace PrivFilterCreatorLoader {

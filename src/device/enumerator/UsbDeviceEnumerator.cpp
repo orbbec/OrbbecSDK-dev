@@ -5,6 +5,7 @@ namespace libobsensor {
 UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(pal::ObPal::getInstance()) {
     devChangedCallback_ = [callback, this](const std::vector<std::shared_ptr<DeviceEnumInfo>> &removedList,
                                            const std::vector<std::shared_ptr<DeviceEnumInfo>> &addedList) {
+        (void)this;
 #ifdef __ANDROID__
         // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
         callback(removedList, addedList);
@@ -17,12 +18,6 @@ UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal
         if(devChangedCallbackThread_.joinable()) {
             devChangedCallbackThread_.join();
         }
-        // auto cb = [this, removedList, addedList](){
-        //     LOG_ERROR("device changed callback begin";
-        //     callback(removedList, addedList);
-        //     LOG_ERROR("device changed callback end";
-        // };
-        // devChangedCallbackThread_ = std::thread(cb);
         devChangedCallbackThread_ = std::thread(callback, removedList, addedList);
 #endif
     };
@@ -47,7 +42,7 @@ UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal
     }
 }
 
-UsbDeviceEnumerator::~UsbDeviceEnumerator() {
+UsbDeviceEnumerator::~UsbDeviceEnumerator() noexcept {
     destroy_ = true;
     obPal_   = nullptr;
 
@@ -202,6 +197,7 @@ void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callbac
     std::unique_lock<std::mutex> lock(callbackMutex_);
     devChangedCallback_ = [callback, this](const std::vector<std::shared_ptr<DeviceEnumInfo>> &removedList,
                                            const std::vector<std::shared_ptr<DeviceEnumInfo>> &addedList) {
+        (void)this;
 #ifdef __ANDROID__
         // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
         callback(removedList, addedList);

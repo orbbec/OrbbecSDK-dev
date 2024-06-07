@@ -687,7 +687,10 @@ void ObV4lUvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> pr
         devHandle->isCapturing = false;
         // signal the capture loop to stop
         char buff[1] = { 0 };
-        write(devHandle->stopPipeFd[1], buff, 1);
+        ssize_t ret = write(devHandle->stopPipeFd[1], buff, 1);
+        if(ret < 0){
+            throw libobsensor::io_exception("failed to write stop pipe " + std::string(strerror(errno)));
+        }
 
         // wait for the capture loop to stop
         if(devHandle->captureThread && devHandle->captureThread->joinable()) {

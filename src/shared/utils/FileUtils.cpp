@@ -61,8 +61,10 @@ int mkDirs(const char *dir) {
     size_t i, len;
     char   str[512];
     int    error = 0;
+
 #ifdef WIN32
-    strncpy_s(str, dir, 512);
+    // 使用 snprintf 来确保字符串被安全地复制
+    snprintf(str, sizeof(str), "%s", dir);
     len = strlen(str);
     for(i = 0; i < len; i++) {
         if(str[i] == '/' || str[i] == '\\') {
@@ -81,7 +83,8 @@ int mkDirs(const char *dir) {
     }
     return error;
 #else
-    strncpy(str, dir, 512);
+    // 使用 snprintf 来确保字符串被安全地复制
+    snprintf(str, sizeof(str), "%s", dir);
     len = strlen(str);
     umask(0000);
     for(i = 0; i < len; i++) {

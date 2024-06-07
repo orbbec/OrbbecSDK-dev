@@ -5,7 +5,7 @@
 
 namespace libobsensor {
 
-const OBExtrinsic IdentityExtrinsic = { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
+const OBExtrinsic IdentityExtrinsic = { {1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0} };
 
 OBExtrinsic multiplyExtrinsics(const OBExtrinsic &a, const OBExtrinsic &b) {
     OBExtrinsic result;

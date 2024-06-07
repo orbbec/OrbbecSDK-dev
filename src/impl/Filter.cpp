@@ -24,7 +24,7 @@ const char *ob_filter_get_vendor_specific_code(const char *name, ob_error **erro
     if(privateFilterCreator == nullptr) {
         return nullptr;
     }
-    auto code = privateFilterCreator->getVendorSpecificCode();
+    const auto& code = privateFilterCreator->getVendorSpecificCode();
     return code.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, name)

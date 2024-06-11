@@ -11,8 +11,7 @@ add_subdirectory(filter)
 
 # config version info
 if (MSVC)
-  set(ORBBEC_VERSIONINFO_RC "${CMAKE_BINARY_DIR}/VersionInfo.rc"
-      impl/Context.cpp)
+  set(ORBBEC_VERSIONINFO_RC "${CMAKE_BINARY_DIR}/VersionInfo.rc")
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/VersionInfo.rc.in "${ORBBEC_VERSIONINFO_RC}")
 endif ()
 

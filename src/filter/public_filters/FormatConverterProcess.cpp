@@ -67,8 +67,7 @@ std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame>
         return nullptr;
     }
 
-    auto outFrame           = FrameFactory::cloneFrame(frame);
-    auto videoStreamProfile = outFrame->getStreamProfile()->as<VideoStreamProfile>();
+    auto videoStreamProfile = frame->getStreamProfile()->as<VideoStreamProfile>();
     auto tarStreamProfile   = videoStreamProfile->clone();
 
     tarFrame->copyInfo(frame);

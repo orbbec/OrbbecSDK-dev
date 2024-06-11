@@ -6,8 +6,8 @@
 namespace libobsensor {
 class UsbDeviceEnumerator : public IDeviceEnumerator {
 public:
-                             UsbDeviceEnumerator(DeviceChangedCallback callback);
-    ~                        UsbDeviceEnumerator() noexcept override;
+    UsbDeviceEnumerator(DeviceChangedCallback callback);
+    ~UsbDeviceEnumerator() noexcept override;
     DeviceEnumInfoList       getDeviceInfoList() override;
     std::shared_ptr<IDevice> createDevice(const std::shared_ptr<const DeviceEnumInfo> &info) override;
     void                     setDeviceChangedCallback(DeviceChangedCallback callback) override;
@@ -23,7 +23,7 @@ private:
 
 private:
     std::shared_ptr<ObPal> obPal_;
-    bool                        destroy_ = false;
+    bool                   destroy_ = false;
 
     std::shared_ptr<DeviceWatcher> deviceWatcher_;
 

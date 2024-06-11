@@ -2,7 +2,7 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-UsbDeviceEnumerator::UsbDeviceEnumerator( DeviceChangedCallback callback) : obPal_(pal::ObPal::getInstance()) {
+UsbDeviceEnumerator::UsbDeviceEnumerator( DeviceChangedCallback callback) : obPal_(ObPal::getInstance()) {
     devChangedCallback_ = [callback, this](const DeviceEnumInfoList& removedList, const DeviceEnumInfoList& addedList) {
 #ifdef __ANDROID__
         // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
@@ -25,7 +25,7 @@ UsbDeviceEnumerator::UsbDeviceEnumerator( DeviceChangedCallback callback) : obPa
     deviceArrivalHandleThread_ = std::thread(&UsbDeviceEnumerator::deviceArrivalHandleThreadFunc, this);
 
     deviceWatcher_ = obPal_->createUsbDeviceWatcher();
-    deviceWatcher_->start([this](pal::OBDeviceChangedType changedType, std::string url) { onPalDeviceChanged(changedType, url); });
+    deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPalDeviceChanged(changedType, url); });
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
     if(!deviceInfoList_.empty()) {
@@ -54,8 +54,8 @@ UsbDeviceEnumerator::~UsbDeviceEnumerator() noexcept {
     }
 }
 
-void UsbDeviceEnumerator::onPalDeviceChanged(pal::OBDeviceChangedType changeType, std::string devUid) {
-    if(changeType == pal::OB_DEVICE_REMOVED) {
+void UsbDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {
+    if(changeType == OB_DEVICE_REMOVED) {
         std::vector<std::shared_ptr<const DeviceEnumInfo>> removedDevList;
         {
             std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);

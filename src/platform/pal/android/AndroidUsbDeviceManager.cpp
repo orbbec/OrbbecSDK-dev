@@ -13,7 +13,7 @@
 #include "utility/StringUtils.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 
 AndroidUsbDeviceManager::AndroidUsbDeviceManager() : jObjDeviceWatcher_(nullptr), gJVM_(nullptr) {
     usbCtx_ = std::make_shared<UsbContext>();
@@ -227,7 +227,7 @@ void AndroidUsbDeviceManager::registerDeviceWatcher(JNIEnv *env, jclass typeDevi
 }
 
 void AndroidUsbDeviceManager::addUsbDevice(JNIEnv *env, jobject usbDevInfo) {
-    libobsensor::pal::UsbDeviceInfo usbDeviceInfo;
+    libobsensor::UsbDeviceInfo usbDeviceInfo;
     jclass                          jcUsbDevInfo = env->GetObjectClass(usbDevInfo);
     jfieldID                        jfUid        = env->GetFieldID(jcUsbDevInfo, "mUid", "I");
     jfieldID                        jfVid        = env->GetFieldID(jcUsbDevInfo, "mVid", "I");
@@ -248,13 +248,13 @@ void AndroidUsbDeviceManager::addUsbDevice(JNIEnv *env, jobject usbDevInfo) {
             env->ReleaseStringUTFChars(jsSerialNum, szSerial);
         }
     }
-    usbDeviceInfo.cls    = static_cast<libobsensor::pal::UsbClass>(env->GetIntField(usbDevInfo, jfCls));
+    usbDeviceInfo.cls    = static_cast<libobsensor::UsbClass>(env->GetIntField(usbDevInfo, jfCls));
     usbDeviceInfo.infUrl = libobsensor::StringUtils::convert2String(usbDeviceInfo.uid) + libobsensor::StringUtils::convert2String(usbDeviceInfo.infIndex);
-    onDeviceChanged(libobsensor::pal::OB_DEVICE_ARRIVAL, usbDeviceInfo);
+    onDeviceChanged(libobsensor::OB_DEVICE_ARRIVAL, usbDeviceInfo);
 }
 
 void AndroidUsbDeviceManager::removeUsbDevice(JNIEnv *env, jobject usbDevInfo) {
-    libobsensor::pal::UsbDeviceInfo usbDeviceInfo;
+    libobsensor::UsbDeviceInfo usbDeviceInfo;
     jclass                          jcUsbDevInfo = env->GetObjectClass(usbDevInfo);
     jfieldID                        jfUid        = env->GetFieldID(jcUsbDevInfo, "mUid", "I");
     jfieldID                        jfVid        = env->GetFieldID(jcUsbDevInfo, "mVid", "I");
@@ -275,12 +275,12 @@ void AndroidUsbDeviceManager::removeUsbDevice(JNIEnv *env, jobject usbDevInfo) {
             env->ReleaseStringUTFChars(jsSerialNum, szSerial);
         }
     }
-    usbDeviceInfo.cls    = static_cast<libobsensor::pal::UsbClass>(env->GetIntField(usbDevInfo, jfCls));
+    usbDeviceInfo.cls    = static_cast<libobsensor::UsbClass>(env->GetIntField(usbDevInfo, jfCls));
     usbDeviceInfo.infUrl = libobsensor::StringUtils::convert2String(usbDeviceInfo.uid) + libobsensor::StringUtils::convert2String(usbDeviceInfo.infIndex);
-    onDeviceChanged(libobsensor::pal::OB_DEVICE_REMOVED, usbDeviceInfo);
+    onDeviceChanged(libobsensor::OB_DEVICE_REMOVED, usbDeviceInfo);
 }
 
-}  // namespace pal
+
 }  // namespace libobsensor
 
 static inline void throw_error(JNIEnv *env, const char *function_name, const char *message) {
@@ -304,7 +304,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nRegist
     if(!libobsensor::Context::isInstanceExist()) {
         throw_error(env, "nRegisterClassObj", "Error invalid state. Must create instance of OBContext/ob::Context/ob_context before nRegisterClassObj");
     }
-    auto androidPal = std::dynamic_pointer_cast<libobsensor::pal::AndroidPal>(libobsensor::Context::getInstance()->getDeviceManager()->getObPal());
+    auto androidPal = std::dynamic_pointer_cast<libobsensor::AndroidPal>(libobsensor::Context::getInstance()->getDeviceManager()->getObPal());
     androidPal->getAndroidUsbManager()->registerDeviceWatcher(env, typeDeviceWatcher, jDeviceWatcher);
 }
 
@@ -320,7 +320,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nAddUsb
     if(0 == nativeHandle) {
         throw_error(env, "nAddUsbDevice", "mNativeHandle=0, invalid pointer");
     }
-    auto androidUsbManager = reinterpret_cast<libobsensor::pal::AndroidUsbDeviceManager *>(nativeHandle);
+    auto androidUsbManager = reinterpret_cast<libobsensor::AndroidUsbDeviceManager *>(nativeHandle);
 
     try {
         androidUsbManager->addUsbDevice(env, usbDevInfo);
@@ -342,7 +342,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nRemove
     if(0 == nativeHandle) {
         throw_error(env, "nRemovedUsbDevice", "mNativeHandle=0, invalid pointer");
     }
-    auto androidUsbManager = reinterpret_cast<libobsensor::pal::AndroidUsbDeviceManager *>(nativeHandle);
+    auto androidUsbManager = reinterpret_cast<libobsensor::AndroidUsbDeviceManager *>(nativeHandle);
 
     try {
         androidUsbManager->removeUsbDevice(env, usbDevInfo);
@@ -358,7 +358,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nRemove
 //        throw_error(env, "nAddUsbDevice", "libobsensor::Context is not instance yet.");
 //    }
 //    auto obContext = libobsensor::Context::getInstance();
-//    auto androidUsbManager = std::dynamic_pointer_cast<libobsensor::pal::AndroidPal>(obContext->getDeviceManager()->getObPal())->getAndroidUsbManager();
+//    auto androidUsbManager = std::dynamic_pointer_cast<libobsensor::AndroidPal>(obContext->getDeviceManager()->getObPal())->getAndroidUsbManager();
 //    try {
 //        androidUsbManager->addUsbDevice(env, usbDevInfo);
 //    } catch (libobsensor::libobsensor_exception &e) {
@@ -371,7 +371,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nRemove
 //        throw_error(env, "nRemoveUsbDevice", "libobsensor::Context is not instance yet.");
 //    }
 //    auto obContext = libobsensor::Context::getInstance();
-//    auto androidUsbManager = std::dynamic_pointer_cast<libobsensor::pal::AndroidPal>(obContext->getDeviceManager()->getObPal())->getAndroidUsbManager();
+//    auto androidUsbManager = std::dynamic_pointer_cast<libobsensor::AndroidPal>(obContext->getDeviceManager()->getObPal())->getAndroidUsbManager();
 //    try {
 //        androidUsbManager->removeUsbDevice(env, usbDevInfo);
 //    } catch (libobsensor::libobsensor_exception &e) {

@@ -6,7 +6,7 @@
 #include <thread>
 
 namespace libobsensor {
-namespace pal {
+
 VendorTCPClient::VendorTCPClient(std::string address, uint16_t port, uint32_t connectTimeout, uint32_t commTimeout)
     : address_(address), port_(port), socketFd_(INVALID_SOCKET), flushed_(false), CONNECT_TIMEOUT_MS(connectTimeout), COMM_TIMEOUT_MS(commTimeout) {
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
@@ -211,5 +211,5 @@ void VendorTCPClient::flush() {
     }
 }
 
-}  // namespace pal
+
 }  // namespace libobsensor

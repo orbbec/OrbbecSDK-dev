@@ -13,7 +13,7 @@ public:
     void                     setDeviceChangedCallback(DeviceChangedCallback callback) override;
 
 private:
-    void               onPalDeviceChanged(pal::OBDeviceChangedType changeType, std::string devUid);
+    void               onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid);
     DeviceEnumInfoList queryRemovedDevice(std::string rmDevUid);
     DeviceEnumInfoList queryArrivalDevice();
 
@@ -22,10 +22,10 @@ private:
     static DeviceEnumInfoList usbDeviceInfoMatch(const SourcePortInfoList infoList);
 
 private:
-    std::shared_ptr<pal::ObPal> obPal_;
+    std::shared_ptr<ObPal> obPal_;
     bool                        destroy_ = false;
 
-    std::shared_ptr<pal::DeviceWatcher> deviceWatcher_;
+    std::shared_ptr<DeviceWatcher> deviceWatcher_;
 
     DeviceChangedCallback devChangedCallback_ = nullptr;
     std::thread           devChangedCallbackThread_;

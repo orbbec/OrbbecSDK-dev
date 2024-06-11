@@ -6,7 +6,6 @@
 #include <mutex>
 
 namespace libobsensor {
-namespace pal {
 
 struct dataStreamWatcherWeakPtrCompare {
     bool operator()(const std::weak_ptr<DataStreamWatcher> &a, const std::weak_ptr<DataStreamWatcher> &b) const {
@@ -62,5 +61,4 @@ private:
     bool isStreaming_;
 };
 
-}  // namespace pal
 }  // namespace libobsensor

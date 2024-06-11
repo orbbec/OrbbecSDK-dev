@@ -5,7 +5,7 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 #define H264_NAL_SPS 7  // Sequence parameter set
 #define H264_NAL_PPS 8  // Picture parameter set
 
@@ -351,5 +351,5 @@ void ObRTPSink::outputFrameFunc() {
     }
 }
 
-}  // namespace pal
+
 }  // namespace libobsensor

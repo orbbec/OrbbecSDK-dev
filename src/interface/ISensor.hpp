@@ -2,40 +2,45 @@
 #include "openobsdk/h/ObTypes.h"
 #include "stream/StreamProfile.hpp"
 #include "frame/Frame.hpp"
-
 #include <memory>
 
 namespace libobsensor {
 class IDevice;
 
-typedef std::function<void(std::shared_ptr<Frame>)> FramePreProcessFunc;
+typedef enum {
+    STREAM_STATE_STARTING,   // starting (change to this state at the beginning of start function)
+    STREAM_STATE_STREAMING,  // streaming (change to this state when recived first frame from backend)
+    STREAM_STATE_STOPPING,   // stopping (change to this state at the beginning of stop function)
+    STREAM_STATE_STOPED,     // stoped (change to this state after stop function called, it is also the initial state)
+    STREAM_STATE_ERROR,      // error (change to this state when error occurred)
+} OBStreamState;
+
+typedef std::function<void(OBStreamState, std::shared_ptr<const StreamProfile>)> StreamStateChangedCallback;
 
 class ISensor {
 public:
-    ISensor(std::weak_ptr<IDevice> owner) : owner_(owner){};
     virtual ~ISensor() noexcept = default;
 
-    std::shared_ptr<IDevice> getOwner() {
-        return owner_.lock();
-    }
+    virtual OBSensorType             getSensorType() const = 0;
+    virtual std::shared_ptr<IDevice> getOwner() const      = 0;
 
-    using FrameCallback                                         = std::function<void(std::shared_ptr<Frame> frame)>;
-    virtual void setFrameCallback(FrameCallback callback)       = 0;
-    virtual void start(std::shared_ptr<const StreamProfile> sp) = 0;
-    virtual void stop()                                         = 0;
+    virtual void start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) = 0;
+    virtual void stop()                                                                 = 0;
 
-    virtual OBSensorType                         getSensorType()           = 0;
-    virtual StreamProfileList                    getStreamProfileList()    = 0;
-    virtual std::shared_ptr<const StreamProfile> getCurrentStreamProfile() = 0;
+    virtual StreamProfileList                    getStreamProfileList() const      = 0;
+    virtual std::shared_ptr<const StreamProfile> getActivatedStreamProfile() const = 0;
+    virtual FrameCallback                        getFrameCallback() const          = 0;
 
-    // When the device switches the camera depth mode, the sensor also needs to handle related work.
-    virtual void handleDepthAlgModeChanged() = 0;
-    virtual void handleDeviceDetached()      = 0;
+    virtual OBStreamState getStreamState() const    = 0;
+    virtual bool          isStreamActivated() const = 0;
 
-    virtual bool isStreamStarted() = 0;
+    virtual void setStreamStateChangedCallback(StreamStateChangedCallback callback) = 0;
+};
 
-private:
-    std::weak_ptr<IDevice> owner_;
+struct LazySensor {
+    explicit LazySensor(std::weak_ptr<IDevice> device, OBSensorType type) : device(device), sensorType(type) {}
+    std::weak_ptr<IDevice> device;  // sensor is lazy create base on device
+    OBSensorType                        sensorType;
 };
 
 }  // namespace libobsensor
@@ -45,7 +50,7 @@ extern "C" {
 #endif
 
 struct ob_sensor_t {
-    std::shared_ptr<libobsensor::IDevice> device; // sensor is lazy create base on device
+    std::shared_ptr<libobsensor::IDevice> device;  // sensor is lazy create base on device
     OBSensorType                          type;
 };
 

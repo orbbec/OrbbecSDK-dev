@@ -30,7 +30,7 @@ struct PrivFilterPackageContext {
 class PrivFilterCreator : public IPrivFilterCreator {
 public:
     PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index);
-    virtual ~PrivFilterCreator() = default;
+    ~PrivFilterCreator() override = default;
 
     std::shared_ptr<IFilter> create() override;
     std::shared_ptr<IFilter> create(const std::string &activationKey) override;

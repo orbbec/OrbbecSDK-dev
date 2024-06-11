@@ -73,7 +73,7 @@ StreamExtrinsicsManager::StreamExtrinsicsManager() : nextId_(0), logger_(Logger:
 
 StreamExtrinsicsManager::~StreamExtrinsicsManager() noexcept = default;
 
-void StreamExtrinsicsManager::registerExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to,
+void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const StreamProfile>& from, const std::shared_ptr<const StreamProfile>& to,
                                                  const OBExtrinsic &extrinsics) {
     if(from == nullptr || to == nullptr) {
         throw invalid_value_exception("Invalid stream profile, from or to is null");
@@ -123,7 +123,7 @@ void StreamExtrinsicsManager::registerExtrinsics(std::shared_ptr<const StreamPro
     }
 }
 
-void StreamExtrinsicsManager::registerSameExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) {
+void StreamExtrinsicsManager::registerSameExtrinsics(const std::shared_ptr<const StreamProfile>& from, const std::shared_ptr<const StreamProfile>& to) {
     std::unique_lock<std::mutex> lock(mutex_);
     cleanExpiredStreamProfiles();
 
@@ -347,13 +347,13 @@ public:
         StreamExtrinsicsManager manager;
 
         // Using the width as the identifier of the stream profile for print purpose
-        auto sp1 = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, OB_FORMAT_YUYV, 1, 0, 0);
-        auto sp2 = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, OB_FORMAT_YUYV, 2, 0, 0);
-        auto sp3 = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, OB_FORMAT_YUYV, 3, 0, 0);
-        auto sp4 = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, OB_FORMAT_YUYV, 4, 0, 0);
-        auto sp5 = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, OB_FORMAT_YUYV, 5, 0, 0);
-        auto sp6 = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, OB_FORMAT_YUYV, 6, 0, 0);
-        auto sp7 = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, OB_FORMAT_YUYV, 7, 0, 0);
+        auto sp1 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 1, 0, 0);
+        auto sp2 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 2, 0, 0);
+        auto sp3 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 3, 0, 0);
+        auto sp4 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 4, 0, 0);
+        auto sp5 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 5, 0, 0);
+        auto sp6 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 6, 0, 0);
+        auto sp7 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 7, 0, 0);
 
         manager.registerExtrinsics(sp1, sp2, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0 });
         manager.registerExtrinsics(sp1, sp3, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0 });

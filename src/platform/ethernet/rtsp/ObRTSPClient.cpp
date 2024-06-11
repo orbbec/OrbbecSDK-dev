@@ -6,7 +6,7 @@
 #include <chrono>
 
 namespace libobsensor {
-namespace pal {
+
 
 #define WAIT_CMD_RESPONES(timeout)                                                                                              \
     {                                                                                                                           \
@@ -356,5 +356,5 @@ void ObRTSPClient::streamStopEventHandler(void *clientData) {
     // stop the stream:
     TRY_EXECUTE(rtspClient->stopStream());
 }
-}  // namespace pal
+
 }  // namespace libobsensor

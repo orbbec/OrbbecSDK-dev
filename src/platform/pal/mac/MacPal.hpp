@@ -16,7 +16,7 @@
 #include <libusb.h>
 #endif
 namespace libobsensor {
-namespace pal {
+
 class MacPal : public ObPal {
 public:
     MacPal();
@@ -83,6 +83,6 @@ private:
     friend int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 };
 #endif
-}  // namespace pal
+
 
 }  // namespace libobsensor

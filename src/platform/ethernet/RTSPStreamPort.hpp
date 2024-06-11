@@ -10,7 +10,6 @@
 #include <thread>
 
 namespace libobsensor {
-namespace pal {
 struct RTSPStreamPortInfo : public NetSourcePortInfo {
     RTSPStreamPortInfo(std::string address, uint16_t port, uint16_t vendorPort, OBStreamType streamType, std::string mac = "unknown",
                        std::string serialNumber = "unknown", uint32_t pid = 0)
@@ -57,5 +56,4 @@ private:
     std::shared_ptr<const VideoStreamProfile> currentStreamProfile_;
     std::vector<std::shared_ptr<const VideoStreamProfile>>                    streamProfileList_;
 };
-}  // namespace pal
 }  // namespace libobsensor

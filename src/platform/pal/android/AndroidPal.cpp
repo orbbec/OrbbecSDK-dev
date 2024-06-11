@@ -18,7 +18,7 @@
 #endif
 
 namespace libobsensor {
-namespace pal {
+
 
 AndroidPal::AndroidPal() {
 #if defined(BUILD_USB_PORT)
@@ -180,5 +180,5 @@ std::shared_ptr<ISourcePort> AndroidPal::createMultiUvcDevicePort(std::shared_pt
 
 #endif
 
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -14,7 +14,7 @@
 #endif
 
 namespace libobsensor {
-namespace pal {
+
 #ifdef __ANDROID__
 UsbDeviceLibusb::UsbDeviceLibusb(std::shared_ptr<AndroidUsbDeviceManager> usbManager, libusb_device *device, libusb_device_handle *deviceHandle,
                                  libusb_device_descriptor &desc, std::shared_ptr<UsbContext> context, std::string devUrl)
@@ -194,5 +194,5 @@ const std::shared_ptr<UsbMessenger> UsbDeviceLibusb::open(uint8_t interface_numb
         return nullptr;
     return std::make_shared<UsbMessengerLibusb>(shared_from_this(), h);
 }
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -3,7 +3,7 @@
 #include <string>
 
 namespace libobsensor {
-namespace pal {
+
 class VendorTCPClient {
 public:
     VendorTCPClient(std::string address, uint16_t port, uint32_t connectTimeout = 2000, uint32_t commTimeout = 5000);
@@ -28,5 +28,5 @@ private:
     const int         MAX_RECV_PACKET_SIZE = 1024;
     bool              flushed_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

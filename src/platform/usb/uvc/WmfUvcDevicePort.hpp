@@ -46,7 +46,7 @@ struct UvcHeader {
 constexpr uint8_t uvcHeaderSize = sizeof(UvcHeader);
 namespace libobsensor {
 
-namespace pal {
+
 class WinPal;
 
 struct StreamObject {
@@ -86,14 +86,14 @@ public:
     explicit WmfUvcDevicePort(std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~WmfUvcDevicePort() noexcept override;
     std::shared_ptr<const SourcePortInfo> getSourcePortInfo(void) const override;
-    std::vector<std::shared_ptr<const VideoStreamProfile>>             getStreamProfileList() override;
-    void                                  startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) override;
-    void                                  stopStream(std::shared_ptr<const VideoStreamProfile> profile) override;
+    StreamProfileListUnsafe            getStreamProfileList() override;
+    void                                  startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
+    void                                  stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void                                  stopAllStream() override;
 
-    bool         getPu(OBPropertyID propertyId, int32_t &value) override;
-    bool         setPu(OBPropertyID propertyId, int32_t value) override;
-    ControlRange getPuRange(OBPropertyID propertyId) override;
+    bool         getPu(uint64_t propertyId, int32_t &value) override;
+    bool         setPu(uint64_t propertyId, int32_t value) override;
+    UvcControlRange getPuRange(uint64_t propertyId) override;
 
     std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) override;
 
@@ -153,7 +153,7 @@ private:
     std::atomic<bool> isStarted_ = {false};
     std::wstring      deviceId_;
 
-    std::vector<std::shared_ptr<const VideoStreamProfile>> profileList_;
+    StreamProfileListUnsafe profileList_;
 
     std::string             timeoutMsg_;
     std::mutex              timeoutMutex_;
@@ -173,5 +173,5 @@ public:
 private:
     long refCount_ = 1;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

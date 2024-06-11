@@ -13,7 +13,7 @@
 #include <jni.h>
 
 namespace libobsensor {
-namespace pal {
+
 struct AndroidUsbDeviceHandle {
     std::string              url = "";
     intptr_t                 fd  = NULL;
@@ -54,5 +54,5 @@ private:
     JavaVM          *gJVM_;
     volatile jobject jObjDeviceWatcher_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

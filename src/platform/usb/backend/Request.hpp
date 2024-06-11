@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace libobsensor {
-namespace pal {
+
 class UsbRequestCallback;
 typedef std::shared_ptr<UsbRequestCallback> obUsbRequestCallback;
 
@@ -97,5 +97,5 @@ public:
             callback_(response);
     }
 };
-}  // namespace pal
+
 }  // namespace libobsensor

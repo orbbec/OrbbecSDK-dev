@@ -10,7 +10,7 @@
 #include <libusb.h>
 
 namespace libobsensor {
-namespace pal {
+
 class UsbInterfaceLibusb : public UsbInterface {
 public:
     UsbInterfaceLibusb(libusb_interface inf);
@@ -47,5 +47,5 @@ private:
     std::vector<std::shared_ptr<UsbEndpoint>>  _endpoints;
     std::vector<std::shared_ptr<UsbInterface>> _associatedInterfaces;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

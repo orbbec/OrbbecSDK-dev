@@ -43,7 +43,7 @@ struct NetSourcePortInfo : public SourcePortInfo {
     }
 };
 
-struct ShmStreamPortInfo : public SourcePortInfo {
+struct ShmStreamPortInfo : public SourcePortInfo {  // shared memory stream port
     ~ShmStreamPortInfo() noexcept override = default;
     std::string  shmName;
     int32_t      blockSize;
@@ -104,17 +104,10 @@ public:
 // for imu data stream
 class IDataStreamPort : virtual public ISourcePort {  // Virtual inheritance solves diamond inheritance problem
 public:
-    class DataStreamWatcher {
-    public:
-        virtual ~DataStreamWatcher() noexcept = default;
-
-        virtual void onDataReceived(const uint8_t *data, uint32_t dataLen) = 0;
-    };
-
     ~IDataStreamPort() noexcept override = default;
 
-    virtual void addWatcher(std::shared_ptr<DataStreamWatcher> watcher)    = 0;
-    virtual void removeWatcher(std::shared_ptr<DataStreamWatcher> watcher) = 0;
+    virtual void startStream(FrameCallbackUnsafe callback) = 0;
+    virtual void stopStream()                              = 0;
 };
 
 // for video data stream: depth, color, ir, etc.
@@ -122,9 +115,9 @@ class IVideoStreamPort : virtual public ISourcePort {  // Virtual inheritance so
 public:
     ~IVideoStreamPort() noexcept override = default;
 
-    virtual std::vector<std::shared_ptr<const VideoStreamProfile>> getStreamProfileList()                     = 0;
-    virtual void startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) = 0;
-    virtual void stopStream(std::shared_ptr<const VideoStreamProfile> profile)                                = 0;
-    virtual void stopAllStream()                                                                              = 0;
+    virtual StreamProfileListUnsafe getStreamProfileList()                     = 0;
+    virtual void startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) = 0;
+    virtual void stopStream(std::shared_ptr<const StreamProfile> profile)                               = 0;
+    virtual void stopAllStream()                                                                             = 0;
 };
 }  // namespace libobsensor

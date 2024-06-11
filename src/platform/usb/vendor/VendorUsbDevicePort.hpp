@@ -3,7 +3,7 @@
 #include "usb/backend/Device.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 class VendorUsbDevicePort : public IVendorDataPort {
 public:
     VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo);
@@ -28,5 +28,5 @@ protected:
     std::shared_ptr<UsbEndpoint>  bulkWriteEndpoint_;
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

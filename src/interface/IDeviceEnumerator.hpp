@@ -1,5 +1,6 @@
 #pragma once
 #include "IDevice.hpp"
+#include "ISourcePort.hpp"
 
 namespace libobsensor {
 

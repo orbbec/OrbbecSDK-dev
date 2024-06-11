@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace libobsensor {
-namespace pal {
+
 class UsbDevice {
 public:
     virtual ~UsbDevice() noexcept = default;
@@ -22,5 +22,5 @@ public:
     virtual const std::vector<UsbDescriptor>                 getDescriptors() const                       = 0;
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

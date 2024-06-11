@@ -81,11 +81,6 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<F
     uint32_t h               = depthVideoFrame->getHeight();
     uint32_t w               = depthVideoFrame->getWidth();
     if(cachePointsBufferManagerWidth_ != w || cachePointsBufferManagerHeight_ != h) {
-        /*if(pointsFrameBufferManager_) {
-            pointsFrameBufferManager_.reset();
-            pointsFrameBufferManager_ = nullptr;
-        }*/
-
         if(tablesData_) {
             tablesData_.reset();
         }

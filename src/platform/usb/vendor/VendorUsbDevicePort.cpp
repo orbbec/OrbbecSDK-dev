@@ -13,7 +13,7 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 
 VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
     : portInfo_(portInfo), usbDev_(usbDevice) {
@@ -72,5 +72,5 @@ std::string VendorUsbDevicePort::getUsbConnectType() {
 }
 #endif
 
-}  // namespace pal
+
 }  // namespace libobsensor

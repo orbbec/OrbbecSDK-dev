@@ -136,7 +136,9 @@ typedef enum {
     OB_SENSOR_IR_RIGHT  = 7, /**< Right IR */
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
     OB_SENSOR_DISPARITY = 9, /**< Disparity */
-    OB_SENSOR_COUNT,
+    OB_SENSOR_COUNT,      /**The total number of sensor types, is not a valid sensor type */
+    OB_SENSOR_SYNTHETIC,     /**< Synthetic sensor, used inside the SDK to handle multi sensor streams on one class/object, not a valid sensor type for external use */
+
 } OBSensorType,
     ob_sensor_type;
 
@@ -184,46 +186,55 @@ typedef enum {
  * @brief Enumeration value describing the pixel format
  */
 typedef enum {
-    OB_FORMAT_YUYV       = 0,    /**< YUYV format */
-    OB_FORMAT_YUY2       = 1,    /**< YUY2 format (the actual format is the same as YUYV) */
-    OB_FORMAT_UYVY       = 2,    /**< UYVY format */
-    OB_FORMAT_NV12       = 3,    /**< NV12 format */
-    OB_FORMAT_NV21       = 4,    /**< NV21 format */
-    OB_FORMAT_MJPG       = 5,    /**< MJPEG encoding format */
-    OB_FORMAT_H264       = 6,    /**< H.264 encoding format */
-    OB_FORMAT_H265       = 7,    /**< H.265 encoding format */
-    OB_FORMAT_Y16        = 8,    /**< Y16 format, 16-bit per pixel, single-channel*/
-    OB_FORMAT_Y8         = 9,    /**< Y8 format, 8-bit per pixel, single-channel */
-    OB_FORMAT_Y10        = 10,   /**< Y10 format, 10-bit per pixel, single-channel(SDK will unpack into Y16 by default) */
-    OB_FORMAT_Y11        = 11,   /**< Y11 format, 11-bit per pixel, single-channel (SDK will unpack into Y16 by default) */
-    OB_FORMAT_Y12        = 12,   /**< Y12 format, 12-bit per pixel, single-channel(SDK will unpack into Y16 by default) */
-    OB_FORMAT_GRAY       = 13,   /**< GRAY (the actual format is the same as YUYV) */
-    OB_FORMAT_HEVC       = 14,   /**< HEVC encoding format (the actual format is the same as H265) */
-    OB_FORMAT_I420       = 15,   /**< I420 format */
-    OB_FORMAT_ACCEL      = 16,   /**< Acceleration data format */
-    OB_FORMAT_GYRO       = 17,   /**< Gyroscope data format */
-    OB_FORMAT_POINT      = 19,   /**< XYZ 3D coordinate point format, @ref OBPoint */
-    OB_FORMAT_RGB_POINT  = 20,   /**< XYZ 3D coordinate point format with RGB information, @ref OBColorPoint */
-    OB_FORMAT_RLE        = 21,   /**< RLE pressure test format (SDK will be unpacked into Y16 by default) */
-    OB_FORMAT_RGB        = 22,   /**< RGB format (actual RGB888)  */
-    OB_FORMAT_BGR        = 23,   /**< BGR format (actual BGR888) */
-    OB_FORMAT_Y14        = 24,   /**< Y14 format, 14-bit per pixel, single-channel (SDK will unpack into Y16 by default) */
-    OB_FORMAT_BGRA       = 25,   /**< BGRA format */
-    OB_FORMAT_COMPRESSED = 26,   /**< Compression format */
-    OB_FORMAT_RVL        = 27,   /**< RVL pressure test format (SDK will be unpacked into Y16 by default) */
-    OB_FORMAT_Z16        = 28,   /**< Is same as Y16*/
-    OB_FORMAT_YV12       = 29,   /**< Is same as Y12, using for right ir stream*/
-    OB_FORMAT_BA81       = 30,   /**< Is same as Y8, using for right ir stream*/
-    OB_FORMAT_RGBA       = 31,   /**< RGBA format */
-    OB_FORMAT_BYR2       = 32,   /**< byr2 format */
-    OB_FORMAT_RW16       = 33,   /**< RAW16 format */
-    OB_FORMAT_DISP16     = 34,   /**< Y16 format for disparity map*/
-    OB_FORMAT_UNKNOWN    = 0xff, /**< unknown format */
+    OB_FORMAT_UNKNOWN    = -1, /*< unknown format */
+    OB_FORMAT_YUYV       = 0,  /**< YUYV format */
+    OB_FORMAT_YUY2       = 1,  /**< YUY2 format (the actual format is the same as YUYV) */
+    OB_FORMAT_UYVY       = 2,  /**< UYVY format */
+    OB_FORMAT_NV12       = 3,  /**< NV12 format */
+    OB_FORMAT_NV21       = 4,  /**< NV21 format */
+    OB_FORMAT_MJPG       = 5,  /**< MJPEG encoding format */
+    OB_FORMAT_H264       = 6,  /**< H.264 encoding format */
+    OB_FORMAT_H265       = 7,  /**< H.265 encoding format */
+    OB_FORMAT_Y16        = 8,  /**< Y16 format, 16-bit per pixel, single-channel*/
+    OB_FORMAT_Y8         = 9,  /**< Y8 format, 8-bit per pixel, single-channel */
+    OB_FORMAT_Y10        = 10, /**< Y10 format, 10-bit per pixel, single-channel(SDK will unpack into Y16 by default) */
+    OB_FORMAT_Y11        = 11, /**< Y11 format, 11-bit per pixel, single-channel (SDK will unpack into Y16 by default) */
+    OB_FORMAT_Y12        = 12, /**< Y12 format, 12-bit per pixel, single-channel(SDK will unpack into Y16 by default) */
+    OB_FORMAT_GRAY       = 13, /**< GRAY (the actual format is the same as YUYV) */
+    OB_FORMAT_HEVC       = 14, /**< HEVC encoding format (the actual format is the same as H265) */
+    OB_FORMAT_I420       = 15, /**< I420 format */
+    OB_FORMAT_ACCEL      = 16, /**< Acceleration data format */
+    OB_FORMAT_GYRO       = 17, /**< Gyroscope data format */
+    OB_FORMAT_POINT      = 19, /**< XYZ 3D coordinate point format, @ref OBPoint */
+    OB_FORMAT_RGB_POINT  = 20, /**< XYZ 3D coordinate point format with RGB information, @ref OBColorPoint */
+    OB_FORMAT_RLE        = 21, /**< RLE pressure test format (SDK will be unpacked into Y16 by default) */
+    OB_FORMAT_RGB        = 22, /**< RGB format (actual RGB888)  */
+    OB_FORMAT_BGR        = 23, /**< BGR format (actual BGR888) */
+    OB_FORMAT_Y14        = 24, /**< Y14 format, 14-bit per pixel, single-channel (SDK will unpack into Y16 by default) */
+    OB_FORMAT_BGRA       = 25, /**< BGRA format */
+    OB_FORMAT_COMPRESSED = 26, /**< Compression format */
+    OB_FORMAT_RVL        = 27, /**< RVL pressure test format (SDK will be unpacked into Y16 by default) */
+    OB_FORMAT_Z16        = 28, /**< Is same as Y16*/
+    OB_FORMAT_YV12       = 29, /**< Is same as Y12, using for right ir stream*/
+    OB_FORMAT_BA81       = 30, /**< Is same as Y8, using for right ir stream*/
+    OB_FORMAT_RGBA       = 31, /**< RGBA format */
+    OB_FORMAT_BYR2       = 32, /**< byr2 format */
+    OB_FORMAT_RW16       = 33, /**< RAW16 format */
+    OB_FORMAT_DISP16     = 34, /**< Y16 format for disparity map*/
 } OBFormat,
     ob_format;
 
 #define OB_FORMAT_RGB888 OB_FORMAT_RGB  // Alias of OB_FORMAT_RGB for compatibility
 #define OB_FORMAT_MJPEG OB_FORMAT_MJPG  // Alias of OB_FORMAT_MJPG for compatibility
+
+// Check if the format is a fixed data size format
+#define IS_FIXED_SIZE_FORMAT(format)                                                                                                         \
+    (format != OB_FORMAT_MJPG && format != OB_FORMAT_H264 && format != OB_FORMAT_H265 && format != OB_FORMAT_HEVC && format != OB_FORMAT_RLE \
+     && format != OB_FORMAT_RVL)
+
+// Check if the format is a packed format, which means the data of pixels is not continuous or bytes aligned in memory
+#define IS_PACKED_FORMAT(format) \
+    (format == OB_FORMAT_Y10 || format == OB_FORMAT_Y11 || format == OB_FORMAT_Y12 || format == OB_FORMAT_Y14 || format == OB_FORMAT_RLE)
 
 /**
  * @brief Enumeration value describing the firmware upgrade status
@@ -243,8 +254,8 @@ typedef enum {
     ERR_OTHER           = -6, /**< other errors */
     ERR_DDR             = -7, /**< DDR access error */
     ERR_TIMEOUT         = -8  /**< timeout error */
-} OBUpgradeState,
-    ob_upgrade_state;
+} OBUpgradeState, OBFwUpdateState,
+    ob_upgrade_state, ob_fw_update_state;
 
 /**
  * @brief Enumeration value describing the file transfer status

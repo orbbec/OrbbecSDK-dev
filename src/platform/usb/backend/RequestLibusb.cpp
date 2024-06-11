@@ -8,7 +8,7 @@
 #include "Request.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 
 void LIBUSB_CALL internalCallback(struct libusb_transfer *transfer) {
 
@@ -169,5 +169,5 @@ std::shared_ptr<UsbRequest> UsbRequestLibusb::getShared() const {
 void UsbRequestLibusb::setShared(const std::shared_ptr<UsbRequest> &shared) {
     shared_ = shared;
 }
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -8,7 +8,7 @@
 #include <condition_variable>
 
 namespace libobsensor {
-namespace pal {
+
 const static uint16_t RTSP_RESPONSE_TIMEOUT_MS          = 12000;
 const static uint16_t RTSP_RESPONSE_TIMEOUT_TEARDOWN_MS = 2000;
 const static bool     RTP_STREAMING_OVER_TCP            = true;
@@ -87,5 +87,5 @@ private:
     double    duration_;
     TaskToken streamTimerTask_ = NULL;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -18,14 +18,14 @@ const std::map<uint16_t, std::string> pidToNameMap = {
     { 0x0671, "Orbbec Gemini2 XL" },
 };
 
-NetDeviceEnumerator::NetDeviceEnumerator(std::shared_ptr<pal::ObPal> obPal, DeviceChangedCallback callback)
+NetDeviceEnumerator::NetDeviceEnumerator(std::shared_ptr<ObPal> obPal, DeviceChangedCallback callback)
     : IDeviceEnumerator(obPal), deviceChangedCallback_(callback) {
     // std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_); // 在构造函数可以不用对deviceInfoList_加锁
     deviceInfoList_ = queryDeviceList();
     if(!deviceInfoList_.empty()) {
         LOG_DEBUG("Current net device list: ({})", deviceInfoList_.size());
         for(auto &&item: deviceInfoList_) {
-            auto info = std::dynamic_pointer_cast<pal::NetSourcePortInfo>(item->sourcePortInfoList_.front());
+            auto info = std::dynamic_pointer_cast<NetSourcePortInfo>(item->sourcePortInfoList_.front());
             LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->name_, item->pid_, item->deviceSn_, info->mac, info->address);
         }
     }
@@ -34,7 +34,7 @@ NetDeviceEnumerator::NetDeviceEnumerator(std::shared_ptr<pal::ObPal> obPal, Devi
     }
 
     deviceWatcher_ = obPal_->createNetDeviceWatcher();
-    deviceWatcher_->start([this](pal::OBDeviceChangedType changedType, std::string url) { onPalDeviceChanged(changedType, url); });
+    deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPalDeviceChanged(changedType, url); });
 }
 
 NetDeviceEnumerator::~NetDeviceEnumerator() {
@@ -52,7 +52,7 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> NetDeviceEnumerator::queryDeviceLis
 
     LOG_DEBUG("Current net source port list:");
     for(const auto &item: sourcePortInfoList_) {
-        auto info = std::dynamic_pointer_cast<pal::NetSourcePortInfo>(item);
+        auto info = std::dynamic_pointer_cast<NetSourcePortInfo>(item);
         LOG_DEBUG(" - mac:{}, ip:{}, port:{}", info->mac, info->address, info->port);
     }
     return deviceInfoMatch(sourcePortInfoList_);
@@ -67,7 +67,7 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> NetDeviceEnumerator::deviceInfoMatc
     std::vector<std::shared_ptr<DeviceEnumInfo>>       deviceInfoList;
     std::map<std::string, SourcePortInfoList> infoGroups;
     for(auto &&item: infoList) {
-        auto info = std::dynamic_pointer_cast<pal::NetSourcePortInfo>(item);
+        auto info = std::dynamic_pointer_cast<NetSourcePortInfo>(item);
         auto iter = infoGroups.find(info->mac);
         if(iter == infoGroups.end()) {
             iter = infoGroups.insert(iter, { info->mac, SourcePortInfoList() });
@@ -77,7 +77,7 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> NetDeviceEnumerator::deviceInfoMatc
 
     for(auto &&group: infoGroups) {
         auto                       &item    = group.second.front();
-        auto                        info    = std::dynamic_pointer_cast<pal::NetSourcePortInfo>(item);
+        auto                        info    = std::dynamic_pointer_cast<NetSourcePortInfo>(item);
         std::shared_ptr<DeviceEnumInfo> devInfo = std::make_shared<DeviceEnumInfo>();
 
         auto pidToNameIter = pidToNameMap.find(info->pid);
@@ -106,7 +106,7 @@ void NetDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callbac
     // };
 }
 
-void NetDeviceEnumerator::onPalDeviceChanged(pal::OBDeviceChangedType changeType, std::string devUid) {
+void NetDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {
     std::vector<std::shared_ptr<DeviceEnumInfo>> addDevs;
     std::vector<std::shared_ptr<DeviceEnumInfo>> rmDevs;
 
@@ -125,7 +125,7 @@ void NetDeviceEnumerator::onPalDeviceChanged(pal::OBDeviceChangedType changeType
         if(!addDevs.empty()) {
             LOG_DEBUG("{} net device(s) found:", addDevs.size());
             for(auto &&item: addDevs) {
-                auto info = std::dynamic_pointer_cast<pal::NetSourcePortInfo>(item->sourcePortInfoList_.front());
+                auto info = std::dynamic_pointer_cast<NetSourcePortInfo>(item->sourcePortInfoList_.front());
                 LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->name_, item->pid_, item->deviceSn_, info->mac, info->address);
             }
         }
@@ -133,14 +133,14 @@ void NetDeviceEnumerator::onPalDeviceChanged(pal::OBDeviceChangedType changeType
         if(!rmDevs.empty()) {
             LOG_DEBUG("{} net device(s) removed:", rmDevs.size());
             for(auto &&item: rmDevs) {
-                auto info = std::dynamic_pointer_cast<pal::NetSourcePortInfo>(item->sourcePortInfoList_.front());
+                auto info = std::dynamic_pointer_cast<NetSourcePortInfo>(item->sourcePortInfoList_.front());
                 LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->name_, item->pid_, item->deviceSn_, info->mac, info->address);
             }
         }
 
         LOG_DEBUG("Current net device list: ({})", deviceInfoList_.size());
         for(auto &&item: deviceInfoList_) {
-            auto info = std::dynamic_pointer_cast<pal::NetSourcePortInfo>(item->sourcePortInfoList_.front());
+            auto info = std::dynamic_pointer_cast<NetSourcePortInfo>(item->sourcePortInfoList_.front());
             LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->name_, item->pid_, item->deviceSn_, info->mac, info->address);
         }
 
@@ -158,7 +158,7 @@ std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<Devic
         return nullptr;
     }
 
-    auto netPortInfo   = std::dynamic_pointer_cast<pal::NetSourcePortInfo>(info->sourcePortInfoList_.front());
+    auto netPortInfo   = std::dynamic_pointer_cast<NetSourcePortInfo>(info->sourcePortInfoList_.front());
     auto rstDeviceInfo = associatedSourcePortCompletion(obPal_, info);
     if(isMatchDeviceByPid(rstDeviceInfo->pid_, gFemtoMegaPids)) {
         device = std::make_shared<FemtoMegaNetDevice>(obPal_, rstDeviceInfo);
@@ -175,7 +175,7 @@ std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<Devic
     return device;
 }
 
-std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<pal::ObPal> obPal, std::string address, uint16_t port) {
+std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<ObPal> obPal, std::string address, uint16_t port) {
     auto vendorPort = obPal->queryNetVendorPort(address, port);
     if(!vendorPort) {
         throw invalid_value_exception(ObUtils::to_string() << "Could not find device, address=" << address << ", port=" << port);
@@ -201,7 +201,7 @@ std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<pal::
     return device;
 }
 
-std::shared_ptr<DeviceEnumInfo> NetDeviceEnumerator::associatedSourcePortCompletion(std::shared_ptr<pal::ObPal> obPal, std::shared_ptr<DeviceEnumInfo> info) {
+std::shared_ptr<DeviceEnumInfo> NetDeviceEnumerator::associatedSourcePortCompletion(std::shared_ptr<ObPal> obPal, std::shared_ptr<DeviceEnumInfo> info) {
     auto rstDeviceInfo = std::make_shared<DeviceEnumInfo>(info);
     if(rstDeviceInfo->sourcePortInfoList_.size() == 1) {
         auto associatedPortList = obPal->queryAssociatedNetSourcePort(rstDeviceInfo->sourcePortInfoList_.front());

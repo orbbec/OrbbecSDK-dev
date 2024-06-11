@@ -6,7 +6,7 @@
 #include "Request.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 class UsbMessenger {
 public:
     virtual ~UsbMessenger() noexcept = default;
@@ -21,5 +21,5 @@ public:
     virtual obUsbRequest createRequest(std::shared_ptr<UsbEndpoint> endpoint)                             = 0;
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

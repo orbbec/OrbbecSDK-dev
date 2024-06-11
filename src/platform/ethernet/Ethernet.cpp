@@ -6,7 +6,6 @@
 
 
 namespace libobsensor {
-namespace pal {
 
 const uint16_t DEFAULT_CMD_PORT                     = 8090;
 const uint16_t PID_FEMTO_MEGA                       = 0x0669;
@@ -197,5 +196,4 @@ SourcePortInfoList Ethernet::queryAssociatedNetSourcePort(const std::shared_ptr<
     return list;
 }
 
-}  // namespace pal
 }  // namespace libobsensor

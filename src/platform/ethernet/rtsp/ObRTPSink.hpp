@@ -11,7 +11,7 @@
 #include <condition_variable>
 
 namespace libobsensor {
-namespace pal {
+
 
 struct ObRTPFrame {
     ObRTPFrame(uint32_t maxDataSize) : maxBuffSize(maxDataSize) {
@@ -80,5 +80,5 @@ private:
     std::thread outputFrameThread_;
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

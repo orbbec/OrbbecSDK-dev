@@ -14,7 +14,7 @@
 #include <libusb.h>
 
 namespace libobsensor {
-namespace pal {
+
 std::string getDeviceHubID(const std::string &devicePath) {
     auto sstart = devicePath.find_first_of('-');
     auto send   = devicePath.find_last_of('-');
@@ -395,6 +395,6 @@ bool UsbEnumerator::getStringDesc(UsbDeviceInfo &info) {
     return false;
 }
 
-}  // namespace pal
+
 }  // namespace libobsensor
 #endif  // __ANDROID__

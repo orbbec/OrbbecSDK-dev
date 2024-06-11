@@ -12,7 +12,7 @@
 #include <libusb.h>
 
 namespace libobsensor {
-namespace pal {
+
 static UsbStatus libusbStatusToOb(int sts) {
     switch(sts) {
     case LIBUSB_SUCCESS:
@@ -88,5 +88,5 @@ private:
     std::shared_ptr<UsbInterfaceLibusb> firstInterface_;
     libusb_device_handle               *handle_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

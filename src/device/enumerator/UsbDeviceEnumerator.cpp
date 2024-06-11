@@ -2,15 +2,8 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-<<<<<<< HEAD
-UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(pal::ObPal::getInstance()) {
-    devChangedCallback_ = [callback, this](const std::vector<std::shared_ptr<DeviceEnumInfo>> &removedList,
-                                           const std::vector<std::shared_ptr<DeviceEnumInfo>> &addedList) {
-        (void)this;
-=======
 UsbDeviceEnumerator::UsbDeviceEnumerator( DeviceChangedCallback callback) : obPal_(pal::ObPal::getInstance()) {
     devChangedCallback_ = [callback, this](const DeviceEnumInfoList& removedList, const DeviceEnumInfoList& addedList) {
->>>>>>> 2b5680b (Implementing Context and Device Manager.)
 #ifdef __ANDROID__
         // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
         callback(removedList, addedList);
@@ -200,14 +193,8 @@ DeviceEnumInfoList UsbDeviceEnumerator::getDeviceInfoList() {
 
 void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callback) {
     std::unique_lock<std::mutex> lock(callbackMutex_);
-<<<<<<< HEAD
-    devChangedCallback_ = [callback, this](const std::vector<std::shared_ptr<DeviceEnumInfo>> &removedList,
-                                           const std::vector<std::shared_ptr<DeviceEnumInfo>> &addedList) {
-        (void)this;
-=======
     devChangedCallback_ = [callback, this](const DeviceEnumInfoList&removedList,
                                            const DeviceEnumInfoList&addedList) {
->>>>>>> 2b5680b (Implementing Context and Device Manager.)
 #ifdef __ANDROID__
         // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
         callback(removedList, addedList);
@@ -237,12 +224,7 @@ std::shared_ptr<IDevice> UsbDeviceEnumerator::createDevice(const std::shared_ptr
     std::shared_ptr<IDevice> device;
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-<<<<<<< HEAD
-    auto                                   info_found =
-        std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [&](std::shared_ptr<DeviceEnumInfo> item) { return item->uid_ == info->uid_; });
-=======
     auto info_found = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [&](const std::shared_ptr<const DeviceEnumInfo>& item) { return item->uid_ == info->uid_; });
->>>>>>> 2b5680b (Implementing Context and Device Manager.)
     if(info_found == deviceInfoList_.end()) {
         return nullptr;
     }

@@ -6,24 +6,24 @@
 #include "openobsdk/h/Property.h"
 
 namespace libobsensor {
-namespace pal {
-
 
 #undef min
 #undef max
-// data struct
-struct ControlRange {
-    ControlRange() = default;
+struct UvcControlRange {
+    UvcControlRange() {}
 
-    ControlRange(int32_t in_min, int32_t in_max, int32_t in_step, int32_t in_def) {
+    UvcControlRange(int32_t in_min, int32_t in_max, int32_t in_step, int32_t in_def) {
         populate_raw_data(min, in_min);
         populate_raw_data(max, in_max);
         populate_raw_data(step, in_step);
         populate_raw_data(def, in_def);
     }
-    ControlRange(std::vector<uint8_t> in_min, std::vector<uint8_t> in_max, std::vector<uint8_t> in_step, std::vector<uint8_t> in_def)
-        : min(std::move(in_min)), max(std::move(in_max)), step(std::move(in_step)), def(std::move(in_def)) {}
-
+    UvcControlRange(std::vector<uint8_t> in_min, std::vector<uint8_t> in_max, std::vector<uint8_t> in_step, std::vector<uint8_t> in_def) {
+        min  = in_min;
+        max  = in_max;
+        step = in_step;
+        def  = in_def;
+    }
     std::vector<uint8_t> min;
     std::vector<uint8_t> max;
     std::vector<uint8_t> step;
@@ -39,9 +39,9 @@ private:
 
 class UvcDevicePort : public IVideoStreamPort, public IVendorDataPort {
 public:
-    virtual bool         getPu(OBPropertyID propertyId, int32_t &value) = 0;
-    virtual bool         setPu(OBPropertyID propertyId, int32_t value)  = 0;
-    virtual ControlRange getPuRange(OBPropertyID propertyId)            = 0;
+    virtual bool         getPu(uint64_t propertyId, int32_t &value) = 0;
+    virtual bool         setPu(uint64_t propertyId, int32_t value)  = 0;
+    virtual UvcControlRange getPuRange(uint64_t propertyId)            = 0;
 
     ~UvcDevicePort() noexcept override = default;
 
@@ -57,5 +57,4 @@ protected:
     ObExtensionUnit xuUnit_ = OB_COMMON_XU_UNIT;
 };
 
-}  // namespace pal
 }  // namespace libobsensor

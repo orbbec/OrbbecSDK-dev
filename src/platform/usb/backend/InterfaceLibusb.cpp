@@ -6,7 +6,7 @@
 #include "MessengerLibusb.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 UsbInterfaceLibusb::UsbInterfaceLibusb(libusb_interface intf) : _desc(*intf.altsetting) {
     inf_ = intf;
     for(int e = 0; e < _desc.bNumEndpoints; ++e) {
@@ -79,5 +79,5 @@ void UsbInterfaceLibusb::addAssociatedInterface(const std::shared_ptr<UsbInterfa
     if(interface)
         _associatedInterfaces.push_back(interface);
 }
-}  // namespace pal
+
 }  // namespace libobsensor

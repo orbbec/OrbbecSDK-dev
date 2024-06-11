@@ -8,7 +8,7 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 UsbMessengerLibusb::UsbMessengerLibusb(const std::shared_ptr<UsbDeviceLibusb> &device, std::shared_ptr<HandleLibusb> handle)
     : device_(device), handle_(handle) {}
 
@@ -99,5 +99,5 @@ UsbStatus UsbMessengerLibusb::cancelRequest(const obUsbRequest &request) {
     }
     return OB_USB_STATUS_SUCCESS;
 }
-}  // namespace pal
+
 }  // namespace libobsensor

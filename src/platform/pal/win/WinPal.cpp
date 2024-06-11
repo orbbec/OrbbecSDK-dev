@@ -25,7 +25,7 @@
 constexpr GUID     GUID_DEVINTERFACE_USB_DEVICE = { 0xA5DCBF10, 0x6530, 0x11D2, { 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED } };
 constexpr uint16_t PID_BOOTLOADER_UVC           = 0x0501;
 namespace libobsensor {
-namespace pal {
+
 
 std::vector<std::string> stringSplit(const std::string &string, char separator) {
     std::vector<std::string> tokens;
@@ -423,5 +423,5 @@ bool WinUsbDeviceWatcher::registerDeviceInterfaceToHwnd(HWND hWnd) {
 
     return true;
 }
-}  // namespace pal
+
 }  // namespace libobsensor

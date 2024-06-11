@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace libobsensor {
-namespace pal {
+
 class UsbContext {
 public:
     UsbContext();
@@ -35,5 +35,5 @@ private:
     // todo-lingyi
     // std::vector<std::thread> eventHandlerList_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -6,8 +6,8 @@
 #include "logger/LoggerInterval.hpp"
 
 namespace libobsensor {
-namespace pal {
-UsbContext::UsbContext() : ctx_(NULL), count_(0), list_(nullptr) {
+
+UsbContext::UsbContext() : ctx_(nullptr), count_(0), list_(nullptr) {
 
 #ifdef __ANDROID__
     auto rc = libusb_set_option(ctx_, LIBUSB_OPTION_WEAK_AUTHORITY, NULL);
@@ -83,5 +83,5 @@ void UsbContext::refreshDeviceList() {
     count_ = libusb_get_device_list(ctx_, &list_);
 #endif
 }
-}  // namespace pal
+
 }  // namespace libobsensor

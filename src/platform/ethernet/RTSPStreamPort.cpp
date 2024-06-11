@@ -3,7 +3,6 @@
 #include "exception/ObException.hpp"
 #include <map>
 namespace libobsensor {
-namespace pal {
 std::string mapFormatToString(OBFormat format) {
     static std::map<OBFormat, std::string> formatToStringMap = {
         { OB_FORMAT_YUYV, "yuyv" },     { OB_FORMAT_YUY2, "yuyv" }, { OB_FORMAT_UYVY, "uyvy" }, { OB_FORMAT_NV12, "nv12" }, { OB_FORMAT_NV21, "nv21" },
@@ -327,5 +326,4 @@ std::shared_ptr<const SourcePortInfo> RTSPStreamPort::getSourcePortInfo() const 
     return portInfo_;
 }
 
-}  // namespace pal
 }  // namespace libobsensor

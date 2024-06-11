@@ -6,11 +6,7 @@
  * @brief Control command property list maintenance
  */
 
-#ifdef OB_SENSOR_SDK_DEVELOPER
-#include "openobsdk/internal/InternalProperty.h"
-#else  // not define OB_SENSOR_SDK_DEVELOPER
-#ifndef _OB_PROPERTY_H_
-#define _OB_PROPERTY_H_
+#pragma once
 
 #include "ObTypes.h"
 
@@ -731,5 +727,3 @@ typedef struct OBPropertyItem {
 }
 #endif
 
-#endif  // _OB_PROPERTY_H_
-#endif  // OB_SENSOR_SDK_DEVELOPER

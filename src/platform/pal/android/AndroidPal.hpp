@@ -12,7 +12,7 @@
 #endif
 
 namespace libobsensor {
-namespace pal {
+
 class AndroidPal : public ObPal {
 public:
     AndroidPal();
@@ -37,5 +37,5 @@ private:
     std::mutex                                                                 sourcePortMapMutex_;
     std::map<std::shared_ptr<const SourcePortInfo>, std::weak_ptr<ISourcePort>> sourcePortMap_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

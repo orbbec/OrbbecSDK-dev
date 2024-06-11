@@ -3,6 +3,7 @@
 #include "exception/ObException.hpp"
 #include "frame/FrameFactory.hpp"
 #include "context/Context.hpp"
+#include "ISensor.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -273,22 +274,17 @@ ob_sensor *ob_frame_get_sensor(const ob_frame *frame, ob_error **error) BEGIN_AP
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
-        return nullptr;
+        throw libobsensor::invalid_value_exception("Frame has no owner stream profile!");
     }
 
-    auto innerSensor = innerProfile->getOwner();
-    if(!innerSensor) {
-        return nullptr;
-    }
-
-    auto innerDevice = innerSensor->getOwner();
-    if(!innerDevice) {
-        return nullptr;
+    auto lazySensor = innerProfile->getOwner();
+    if(!lazySensor) {
+        throw libobsensor::invalid_value_exception("Frame has no owner sensor!");
     }
 
     auto sensorImpl    = new ob_sensor();
-    sensorImpl->device = innerDevice;
-    sensorImpl->type   = innerSensor->getSensorType();
+    sensorImpl->device = lazySensor->device.lock();
+    sensorImpl->type   = lazySensor->sensorType;
     return sensorImpl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
@@ -297,21 +293,21 @@ ob_device *ob_frame_get_device(const ob_frame *frame, ob_error **error) BEGIN_AP
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
-        return nullptr;
+        throw libobsensor::invalid_value_exception("Frame has no owner stream profile!");
     }
 
-    auto innerSensor = innerProfile->getOwner();
-    if(!innerSensor) {
-        return nullptr;
+    auto lazySensor = innerProfile->getOwner();
+    if(!lazySensor) {
+        throw libobsensor::invalid_value_exception("Frame has no owner sensor!");
     }
 
-    auto innerDevice = innerSensor->getOwner();
-    if(!innerDevice) {
-        return nullptr;
+    auto device = lazySensor->device.lock();
+    if(!device) {
+        throw libobsensor::invalid_value_exception("Frame has no owner device or device has been destroyed!");
     }
 
     auto deviceImpl    = new ob_device();
-    deviceImpl->device = innerDevice;
+    deviceImpl->device = device;
     return deviceImpl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)

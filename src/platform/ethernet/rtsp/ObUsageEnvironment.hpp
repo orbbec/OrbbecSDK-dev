@@ -7,7 +7,7 @@
 #include <thread>
 
 namespace libobsensor {
-namespace pal {
+
 /**
  * @brief ObUsageEnvironment 覆盖BasicUsageEnvironment的log输出
  *
@@ -40,5 +40,5 @@ private:
     bool                    destroy_;
     bool                    newLog_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

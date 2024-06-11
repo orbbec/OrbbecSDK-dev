@@ -36,7 +36,7 @@ DEFINE_GUID(GUID_DEVINTERFACE_CAMERA_WIN10, 0xca3e7ab9, 0xb4c3, 0x4ae6, 0x82, 0x
 #define CREATE_MUTEX_RETRY_NUM (5)
 
 namespace libobsensor {
-namespace pal {
+
 template <typename T> size_t vector_bytes_size(const typename std::vector<T> &vec) {
     static_assert((std::is_arithmetic<T>::value), "vector_bytes_size requires numeric type for input data");
     return sizeof(T) * vec.size();
@@ -760,5 +760,5 @@ std::string winapi_error::last_error_string(DWORD lastError) {
 
     return message;
 }
-}  // namespace pal
+
 }  // namespace libobsensor

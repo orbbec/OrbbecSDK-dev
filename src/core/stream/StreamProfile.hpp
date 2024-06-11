@@ -7,20 +7,22 @@
 
 namespace libobsensor {
 
-class ISensor;
+struct LazySensor;
 
 class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
 public:
-    StreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format);
+    StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format);
 
     virtual ~StreamProfile() noexcept = default;
 
-    std::shared_ptr<ISensor> getOwner() const;
-    void                     bindOwner(std::shared_ptr<ISensor> owner);
-    void                     setType(OBStreamType type);
-    OBStreamType             getType() const;
-    void                     setFormat(OBFormat format);
-    OBFormat                 getFormat() const;
+   std::shared_ptr<LazySensor> getOwner() const;
+    void                        bindOwner(std::shared_ptr<LazySensor> owner);
+    void                        setType(OBStreamType type);
+    OBStreamType                getType() const;
+    void                        setFormat(OBFormat format);
+    OBFormat                    getFormat() const;
+    void                        setIndex(uint8_t index);
+    uint8_t                     getIndex() const;
 
     OBExtrinsic getExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile) const;
     void        bindExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile, const OBExtrinsic &extrinsic);
@@ -44,9 +46,10 @@ public:
     }
 
 protected:
-    std::weak_ptr<ISensor> owner_;
+    std::weak_ptr<LazySensor> owner_;
     OBStreamType           type_;
     OBFormat               format_;
+    uint8_t                index_;  // for multi-stream sensor (multi pin uvc device)
 };
 
 struct StreamProfileWeakPtrCompare {
@@ -64,7 +67,8 @@ struct StreamProfileWeakPtrCompare {
 
 class VideoStreamProfile : public StreamProfile {
 public:
-    VideoStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
+    VideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
+
     VideoStreamProfile(std::shared_ptr<const VideoStreamProfile> other) = delete;
 
     bool operator==(const VideoStreamProfile &other) const;
@@ -81,6 +85,8 @@ public:
     OBCameraDistortion getDistortion() const;
     void               bindDistortion(const OBCameraDistortion &distortion);
 
+    uint32_t getMaxFrameDataSize() const;
+
     std::shared_ptr<StreamProfile> clone() const override;
 
 protected:
@@ -91,7 +97,7 @@ protected:
 
 class DisparityStreamProfile : public VideoStreamProfile {
 public:
-    DisparityStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
+    DisparityStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
     ~DisparityStreamProfile() noexcept override = default;
 
     OBDisparityProcessParam getDisparityProcessParam() const;
@@ -100,7 +106,7 @@ public:
 
 class AccelStreamProfile : public StreamProfile {
 public:
-    AccelStreamProfile(std::weak_ptr<ISensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
+    AccelStreamProfile(std::shared_ptr<LazySensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
 
     ~AccelStreamProfile() noexcept override = default;
 
@@ -117,7 +123,8 @@ protected:
 
 class GyroStreamProfile : public StreamProfile {
 public:
-    GyroStreamProfile(std::weak_ptr<ISensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
+    GyroStreamProfile(std::shared_ptr<LazySensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
+
     ~GyroStreamProfile() noexcept override = default;
 
     OBGyroFullScaleRange           getFullScaleRange() const;
@@ -154,6 +161,7 @@ template <typename T> bool StreamProfile::is() const {
 }
 
 typedef std::vector<std::shared_ptr<const StreamProfile>> StreamProfileList;
+typedef std::vector<std::shared_ptr<StreamProfile>>       StreamProfileListUnsafe;
 
 std::vector<std::shared_ptr<const VideoStreamProfile>> matchVideoStreamProfile(const StreamProfileList &profileList, uint32_t width, uint32_t height,
                                                                                uint32_t fps, OBFormat format);

@@ -23,7 +23,7 @@
 #include <algorithm>
 
 namespace libobsensor {
-namespace pal {
+
 
 const std::vector<uint16_t> gFemtoMegaPids = {
     0x0669,  // Femto Mega
@@ -33,6 +33,7 @@ const std::vector<uint16_t> gFemtoMegaPids = {
 template <class T> static bool isMatchDeviceByPid(uint16_t pid, T &pids) {
     return std::any_of(pids.begin(), pids.end(), [pid](uint16_t pid_) { return pid_ == pid; });
 }
+
 LinuxPal::LinuxPal() {
 #if defined(BUILD_USB_PORT)
     usbEnumerator_ = std::make_shared<UsbEnumerator>();
@@ -247,5 +248,5 @@ void LinuxPal::loadXmlConfig() {
 
 #endif
 
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -9,7 +9,8 @@ namespace libobsensor {
 namespace pal {
 
 
-
+#undef min
+#undef max
 // data struct
 struct ControlRange {
     ControlRange() = default;

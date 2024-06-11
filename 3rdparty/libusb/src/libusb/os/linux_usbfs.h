@@ -91,11 +91,7 @@ struct usbfs_urb {
     int          error_count;
     unsigned int signr;
     void        *usercontext;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-
     struct usbfs_iso_packet_desc iso_frame_desc[0];
-#pragma GCC diagnostic pop
 };
 
 struct usbfs_connectinfo {
@@ -128,10 +124,7 @@ struct usbfs_disconnect_claim {
 struct usbfs_streams {
     unsigned int num_streams; /* Not used by USBDEVFS_FREE_STREAMS */
     unsigned int num_eps;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
     unsigned char eps[0];
-#pragma GCC diagnostic pop
 };
 
 #define USBFS_SPEED_UNKNOWN 0

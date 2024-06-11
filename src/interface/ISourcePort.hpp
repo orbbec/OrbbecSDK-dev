@@ -59,7 +59,8 @@ struct ShmStreamPortInfo : public SourcePortInfo {
 
 struct USBSourcePortInfo : public SourcePortInfo {
     ~USBSourcePortInfo() noexcept override = default;
-    explicit USBSourcePortInfo(SourcePortType type) {
+    USBSourcePortInfo(){}
+    USBSourcePortInfo(SourcePortType type) {
         portType = type;
     }
     std::string url;  // usb device url
@@ -97,6 +98,7 @@ class IVendorDataPort : virtual public ISourcePort {  // Virtual inheritance sol
 public:
     ~IVendorDataPort() noexcept override = default;
 
+    virtual std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) = 0;
 };
 
 // for imu data stream

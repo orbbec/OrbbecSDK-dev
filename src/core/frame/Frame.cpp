@@ -1,25 +1,22 @@
 #include "Frame.hpp"
 #include "logger/Logger.hpp"
-#include "utils/StringUtils.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 
 Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
-    : frameData_(data),
-      dataBufSize_(dataBufSize),
-      dataSize_(dataBufSize),
-      type_(type),
-      bufferReclaimFunc_(bufferReclaimFunc),
+    : dataSize_(dataBufSize),
       number_(0),
       timeStampUsec_(0),
       systemTimeStampUsec_(0),
       globalTimeStampUsec_(0),
       metadataSize_(0),
       metadataPhasers_(nullptr),
-      streamProfile_(nullptr)
-{
-
-}
+      streamProfile_(nullptr),
+      type_(type),
+      frameData_(data),
+      dataBufSize_(dataBufSize),
+      bufferReclaimFunc_(bufferReclaimFunc) {}
 
 Frame::~Frame() noexcept {
     if(bufferReclaimFunc_) {
@@ -291,7 +288,7 @@ float DepthFrame::getValueScale() const {
 void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
     VideoFrame::copyInfo(sourceFrame);
     if(sourceFrame->is<DepthFrame>()) {
-        auto df = sourceFrame->as<DepthFrame>();
+        auto df     = sourceFrame->as<DepthFrame>();
         valueScale_ = df->valueScale_;
     }
 }
@@ -340,14 +337,14 @@ float GyroFrame ::temperature() {
 
 FrameSet::FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc) : Frame(data, dataBufSize, OB_FRAME_SET, bufferReclaimFunc) {}
 
-FrameSet::~FrameSet() {
+FrameSet::~FrameSet() noexcept {
     clearAllFrame();
 }
 
 uint32_t FrameSet::getFrameCount() {
     uint32_t frameCnt = 0;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame) {
             frameCnt++;
         }
@@ -359,7 +356,7 @@ uint32_t FrameSet::getFrameCount() {
 std::shared_ptr<Frame> FrameSet::getDepthFrame() {
     std::shared_ptr<Frame> frame;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == OB_FRAME_DEPTH) {
             frame = *pFrame;
             return true;
@@ -372,7 +369,7 @@ std::shared_ptr<Frame> FrameSet::getDepthFrame() {
 std::shared_ptr<Frame> FrameSet::getIRFrame() {
     std::shared_ptr<Frame> frame;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == OB_FRAME_IR) {
             frame = *pFrame;
             return true;
@@ -385,7 +382,7 @@ std::shared_ptr<Frame> FrameSet::getIRFrame() {
 std::shared_ptr<Frame> FrameSet::getColorFrame() {
     std::shared_ptr<Frame> frame;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == OB_FRAME_COLOR) {
             frame = *pFrame;
             return true;
@@ -398,7 +395,7 @@ std::shared_ptr<Frame> FrameSet::getColorFrame() {
 std::shared_ptr<Frame> FrameSet::getAccelFrame() {
     std::shared_ptr<Frame> frame;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == OB_FRAME_ACCEL) {
             frame = *pFrame;
             return true;
@@ -411,7 +408,7 @@ std::shared_ptr<Frame> FrameSet::getAccelFrame() {
 std::shared_ptr<Frame> FrameSet::getGyroFrame() {
     std::shared_ptr<Frame> frame;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto *pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == OB_FRAME_GYRO) {
             frame = *pFrame;
             return true;
@@ -424,7 +421,7 @@ std::shared_ptr<Frame> FrameSet::getGyroFrame() {
 std::shared_ptr<Frame> FrameSet::getPointsFrame() {
     std::shared_ptr<Frame> frame;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto *pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == OB_FRAME_POINTS) {
             frame = *pFrame;
             return true;
@@ -437,7 +434,7 @@ std::shared_ptr<Frame> FrameSet::getPointsFrame() {
 std::shared_ptr<Frame> FrameSet::getFrame(OBFrameType frameType) {
     std::shared_ptr<Frame> frame;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == frameType) {
             frame = *pFrame;
             return true;
@@ -456,8 +453,8 @@ std::shared_ptr<Frame> FrameSet::getFrame(int index) {
     }
     auto pItem = getData();
     pItem += itemSize * index;
-    std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)pItem;
-    frame                          = *pFrame;
+    auto pFrame = (std::shared_ptr<Frame> *)pItem;
+    frame       = *pFrame;
     return frame;
 }
 
@@ -469,7 +466,7 @@ std::shared_ptr<Frame> FrameSet::getFrame(int index) {
 void FrameSet::pushFrame(std::shared_ptr<Frame> &&frame) {
     OBFrameType type = frame->getType();
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == type) {
             (*pFrame).reset();
             *pFrame = nullptr;
@@ -485,7 +482,7 @@ void FrameSet::pushFrame(std::shared_ptr<Frame> &&frame) {
 
 void FrameSet::clearAllFrame() {
     foreachFrame([](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame) {
             (*pFrame).reset();
         }

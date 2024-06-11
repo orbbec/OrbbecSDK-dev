@@ -5,7 +5,7 @@
 
 #include "IFrameMetadataParser.hpp"
 #include "stream/StreamProfile.hpp"
-#include "exception/OBException.hpp"
+#include "exception/ObException.hpp"
 
 #include <atomic>
 #include <memory>
@@ -165,7 +165,7 @@ private:
 class AccelFrame : public Frame {
 public:
     typedef struct {
-        float accelData[3];  // Acceleration values ​​in three directions (xyz), unit: g (9.80665 m/s^2)
+        float accelData[3];  // Acceleration values in three directions (xyz), unit: g (9.80665 m/s^2)
         float temp;          // Temperature in Celsius
     } OBAccelFrameData;
 
@@ -246,6 +246,9 @@ template <typename T> bool Frame::is() const {
     return false;
 }
 
+typedef std::function<void(std::shared_ptr<const Frame>)> FrameCallback;
+typedef std::function<void(std::shared_ptr<Frame>)> FrameCallbackUnsafe;
+
 }  // namespace libobsensor
 
 #ifdef __cplusplus
@@ -253,7 +256,7 @@ extern "C" {
 #endif
 struct ob_frame_t {
     std::shared_ptr<libobsensor::Frame> frame;
-    std::atomic<int>                    refCnt = 1;
+    std::atomic<int>                    refCnt = {1};
 };
 #ifdef __cplusplus
 }

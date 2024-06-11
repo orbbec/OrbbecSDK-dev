@@ -39,10 +39,10 @@ public:
 
 class IPrivFilterCreator : public IFilterCreator {
 public:
-    virtual ~IPrivFilterCreator() noexcept = default;
-
+    ~IPrivFilterCreator() noexcept override                                   = default;
+    std::shared_ptr<IFilter>         create() override                        = 0;
     virtual std::shared_ptr<IFilter> create(const std::string &activationKey) = 0;
-    virtual std::string              getVendorSpecificCode() const            = 0;
+    virtual const std::string       &getVendorSpecificCode() const            = 0;
 };
 
 }  // namespace libobsensor

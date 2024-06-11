@@ -245,7 +245,7 @@ ob_stream_profile *ob_frame_get_stream_profile(const ob_frame *frame, ob_error *
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
-        return NULL;
+        return nullptr;
     }
     auto impl     = new ob_stream_profile();
     impl->profile = innerProfile;
@@ -266,17 +266,17 @@ ob_sensor *ob_frame_get_sensor(const ob_frame *frame, ob_error **error) BEGIN_AP
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
-        return NULL;
+        return nullptr;
     }
 
     auto innerSensor = innerProfile->getOwner();
     if(!innerSensor) {
-        return NULL;
+        return nullptr;
     }
 
     auto innerDevice = innerSensor->getOwner();
     if(!innerDevice) {
-        return NULL;
+        return nullptr;
     }
 
     auto sensorImpl    = new ob_sensor();
@@ -290,17 +290,17 @@ ob_device *ob_frame_get_device(const ob_frame *frame, ob_error **error) BEGIN_AP
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
-        return NULL;
+        return nullptr;
     }
 
     auto innerSensor = innerProfile->getOwner();
     if(!innerSensor) {
-        return NULL;
+        return nullptr;
     }
 
     auto innerDevice = innerSensor->getOwner();
     if(!innerDevice) {
-        return NULL;
+        return nullptr;
     }
 
     auto deviceImpl    = new ob_device();

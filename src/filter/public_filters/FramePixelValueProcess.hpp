@@ -6,7 +6,7 @@ namespace libobsensor {
 class PixelValueScaler : public FilterBase {
 public:
     PixelValueScaler(const std::string &name);
-    virtual ~PixelValueScaler() noexcept;
+    ~PixelValueScaler() noexcept override;
 
     void               updateConfig(std::vector<std::string> &params) override;
     const std::string &getConfigSchema() const override;

@@ -1,4 +1,5 @@
 #include "Context.hpp"
+#include "utils/Utils.hpp"
 
 #include <mutex>
 
@@ -7,7 +8,7 @@ namespace libobsensor {
 std::mutex             Context::instanceMutex_;
 std::weak_ptr<Context> Context::instanceWeakPtr_;
 
-std::shared_ptr<Context> Context::getInstance(std::string configPath) {
+std::shared_ptr<Context> Context::getInstance(const std::string& configPath) {
     std::unique_lock<std::mutex> lock(instanceMutex_);
     auto                         ctxInstance = instanceWeakPtr_.lock();
     if(!ctxInstance) {
@@ -17,7 +18,9 @@ std::shared_ptr<Context> Context::getInstance(std::string configPath) {
     return ctxInstance;
 }
 
-Context::Context(std::string configFilePath) {}
+Context::Context(const std::string& configFilePath):  deviceManager_(DeviceManager::getInstance()),logger_(Logger::getInstance()), frameMemoryPool_(FrameMemoryPool::getInstance()  ) {
+    utils::unusedVar(configFilePath); // todo: use to load config file
+}
 
 Context::~Context() {}
 

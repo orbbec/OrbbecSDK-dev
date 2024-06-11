@@ -11,10 +11,5 @@ uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t hei
 OBFrameType mapStreamTypeToFrameType(OBStreamType type);
 OBStreamType mapFrameTypeToStreamType(OBFrameType type);
 
-template <typename T>
-void unusedVar(T& var){
-    (void)var;
-}
-
 }
 }

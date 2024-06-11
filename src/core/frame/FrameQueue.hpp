@@ -6,9 +6,9 @@
 
 namespace libobsensor {
 
-template <typename T = Frame> class FrameQueue{
+template <typename T = Frame> class FrameQueue {
 public:
-    explicit FrameQueue(size_t capacity) : capacity_(capacity), stoped_(true), stopping_(false), flushing_(false), callback_(nullptr) {}
+    explicit FrameQueue(size_t capacity) : capacity_(capacity), stoped_(true), stopping_(false), callback_(nullptr), flushing_(false) {}
 
     ~FrameQueue() noexcept {
         clear();
@@ -124,10 +124,10 @@ private:
     const size_t                   capacity_;
 
     std::thread                             dequeueThread_;
-    std::function<void(std::shared_ptr<T>)> callback_;
     std::atomic<bool>                       stoped_;
     std::atomic<bool>                       stopping_;
-    std::atomic<bool>                       flushing_;
+    std::function<void(std::shared_ptr<T>)> callback_;
+    std::atomic<bool> flushing_;
 };
 
 }  // namespace libobsensor

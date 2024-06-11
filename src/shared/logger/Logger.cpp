@@ -335,7 +335,7 @@ void Logger::setLogToFile(OBLogSeverity severity, const std::string &directory, 
     }
     fileSink_ = createFileSink();
     updateDefaultSpdLogger();
-};
+}
 
 void Logger::setLogToFileDir(const std::string &directory) {
     if(!directory.empty()) {

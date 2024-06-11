@@ -1,5 +1,9 @@
 #pragma once
+
+#include "ISourcePort.hpp"
+
 namespace libobsensor {
+
 // todo: complete this class
 class IDevice {
 public:

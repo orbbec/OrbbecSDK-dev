@@ -3,8 +3,8 @@
 
 namespace libobsensor {
 
-std::mutex                               StreamIntrinsicsManager::instanceMutex_;
-std::weak_ptr<StreamIntrinsicsManager>   StreamIntrinsicsManager::instanceWeakPtr_;
+std::mutex                             StreamIntrinsicsManager::instanceMutex_;
+std::weak_ptr<StreamIntrinsicsManager> StreamIntrinsicsManager::instanceWeakPtr_;
 
 std::shared_ptr<StreamIntrinsicsManager> StreamIntrinsicsManager::getInstance() {
     std::unique_lock<std::mutex> lock(instanceMutex_);
@@ -16,9 +16,9 @@ std::shared_ptr<StreamIntrinsicsManager> StreamIntrinsicsManager::getInstance() 
     return instance;
 }
 
-StreamIntrinsicsManager::StreamIntrinsicsManager():logger_(Logger::getInstance())  {}
+StreamIntrinsicsManager::StreamIntrinsicsManager() : logger_(Logger::getInstance()) {}
 
-StreamIntrinsicsManager::~StreamIntrinsicsManager() noexcept {}
+StreamIntrinsicsManager::~StreamIntrinsicsManager() noexcept = default;
 
 void StreamIntrinsicsManager::registerVideoStreamIntrinsics(std::shared_ptr<const StreamProfile> profile, const OBCameraIntrinsic &intrinsics) {
     if(!profile) {

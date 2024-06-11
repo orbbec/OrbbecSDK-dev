@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <memory>
+#include <limits>
 
 #ifdef WIN32
 #include <direct.h>
@@ -11,10 +12,10 @@
 #include <Windows.h>
 #include <locale>
 #include <codecvt>
-#else
+#elif defined(__linux__)
 #include <sys/stat.h>
 #include <unistd.h>
-#include <limits.h>
+#include <dirent.h>
 #endif
 
 #include "logger/Logger.hpp"
@@ -60,8 +61,10 @@ int mkDirs(const char *dir) {
     size_t i, len;
     char   str[512];
     int    error = 0;
+
 #ifdef WIN32
-    strncpy_s(str, dir, 512);
+    // 使用 snprintf 来确保字符串被安全地复制
+    snprintf(str, sizeof(str), "%s", dir);
     len = strlen(str);
     for(i = 0; i < len; i++) {
         if(str[i] == '/' || str[i] == '\\') {
@@ -80,7 +83,8 @@ int mkDirs(const char *dir) {
     }
     return error;
 #else
-    strncpy(str, dir, 512);
+    // 使用 snprintf 来确保字符串被安全地复制
+    snprintf(str, sizeof(str), "%s", dir);
     len = strlen(str);
     umask(0000);
     for(i = 0; i < len; i++) {
@@ -111,8 +115,8 @@ std::string getCurrentWorkDirectory() {
     return pathStr;
 #else
     char cwd[PATH_MAX] = {};
-    if(getcwd(cwd, sizeof(cwd)) != NULL) {
-        return std::string(cwd);
+    if(getcwd(cwd, sizeof(cwd)) != nullptr) {
+        return cwd;
     }
     else {
         perror("getcwd() error");
@@ -135,43 +139,42 @@ std::string joinPaths(const std::string &parent, const std::string &fileName) {
 }
 
 std::string readFile(const std::string &filePath) {
-    FILE *pFile = nullptr;
-    pFile       = fopen(filePath.c_str(), "rb");
+    auto pFile = fopen(filePath.c_str(), "rb");
     if(nullptr == pFile) {
         LOG_WARN("open file failed. filePath: {}", filePath);
-        return std::string();
+        return "";
     }
 
     // obtain file size:
     fseek(pFile, 0, SEEK_END);
-    long lSize = ftell(pFile);
+    auto lSize = ftell(pFile);
     rewind(pFile);
 
     if(lSize <= 0) {
         fclose(pFile);
-        return std::string();
+        return "";
     }
 
     auto bufPtr = std::shared_ptr<char>(new char[lSize + 1], std::default_delete<char[]>());
     memset(bufPtr.get(), 0, lSize + 1);
     auto result = fread(bufPtr.get(), 1, lSize, pFile);
 
-    if(result != lSize) {
+    if(result != static_cast<size_t>(lSize)) {
         if(0 != feof(pFile)) {
             fclose(pFile);
-            return std::string(bufPtr.get());
+            return bufPtr.get();
         }
 
         int errCode = ferror(pFile);
         if(0 != errCode) {
             LOG_WARN("Read file failed. filePath: {}, errorCode: {}", filePath, errCode);
             fclose(pFile);
-            return std::string();
+            return "";
         }
     }
 
     fclose(pFile);
-    return std::string(bufPtr.get());
+    return bufPtr.get();
 }
 
 void forEachFileInDirectory(const std::string &directory, const std::function<void(const std::string &)> &callback) {
@@ -185,7 +188,7 @@ void forEachFileInDirectory(const std::string &directory, const std::function<vo
     }
     do {
         if(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-           continue;
+            continue;
         }
         else {
             std::string fileName = converter.to_bytes(findData.cFileName);
@@ -196,8 +199,8 @@ void forEachFileInDirectory(const std::string &directory, const std::function<vo
 #else
     DIR           *dir;
     struct dirent *ent;
-    if((dir = opendir(directory.c_str())) != NULL) {
-        while((ent = readdir(dir)) != NULL) {
+    if((dir = opendir(directory.c_str())) != nullptr) {
+        while((ent = readdir(dir)) != nullptr) {
             if(ent->d_type == DT_DIR) {
                 if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
                     std::string subDir = joinPaths(directory, ent->d_name);
@@ -234,7 +237,7 @@ void forEachSubDirInDirectory(const std::string &directory, const std::function<
 #else
     DIR           *dir;
     struct dirent *ent;
-    if((dir = opendir(directory.c_str())) != NULL) {
+    if((dir = opendir(directory.c_str())) != nullptr) {
         while((ent = readdir(dir)) != NULL) {
             if(ent->d_type == DT_DIR) {
                 if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
@@ -248,7 +251,7 @@ void forEachSubDirInDirectory(const std::string &directory, const std::function<
 #endif
 }
 
-std::string removeExtensionOfFileName(const std::string &fileName){
+std::string removeExtensionOfFileName(const std::string &fileName) {
     size_t pos = fileName.find_last_of(".");
     if(pos == std::string::npos) {
         return fileName;

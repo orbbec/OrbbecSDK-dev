@@ -31,6 +31,7 @@ VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDe
 VendorUsbDevicePort::~VendorUsbDevicePort() noexcept = default;
 
 uint32_t VendorUsbDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) {
+    std::unique_lock<std::mutex> lock(mutex_);
     uint32_t transferred = 0;
     auto     sendBuf     = const_cast<uint8_t *>(sendData);
     auto     ret         = usbMessenger_->controlTransfer(0x40, 0, 0, 0, sendBuf, sendLen, transferred, 5000);
@@ -41,17 +42,19 @@ uint32_t VendorUsbDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t s
     ret = usbMessenger_->controlTransfer(0xc0, 0, 0, 0, recvData, exceptedRecvLen, transferred, 5000);
     if(ret != OB_USB_STATUS_SUCCESS) {
         LOG_WARN("control transfer recv data failed: {}", ret);
-        return {};
+        return 0;
     }
     return transferred;
 }
 
 bool VendorUsbDevicePort::readFromBulkEndPoint(std::vector<uint8_t> &data) {
     utils::unusedVar(data);
+    std::unique_lock<std::mutex> lock(mutex_);
     return false;
 }
 
 bool VendorUsbDevicePort::writeToBulkEndPoint(std::vector<uint8_t> &data) {
+    std::unique_lock<std::mutex> lock(mutex_);
     uint32_t transferred = 0;
     auto     ret         = usbMessenger_->bulkTransfer(bulkWriteEndpoint_, data.data(), (uint32_t)data.size(), transferred, 5000);
     return ret == OB_USB_STATUS_SUCCESS;

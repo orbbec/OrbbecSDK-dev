@@ -15,11 +15,11 @@ namespace libobsensor {
 
 #pragma pack(2)
 typedef struct {
-    uint64_t frameCounter;  // 帧序号
-    uint16_t extentionLen;  // 扩展数据长度，默认为0
-    uint64_t timestamp;     // 时间戳
-    uint32_t width;         // 帧像素宽度
-    uint32_t height;        // 帧像素高度
+    uint64_t frameCounter;  // Frame number
+    uint16_t extentionLen;  // Extended data length, default is 0
+    uint64_t timestamp;     // timestamp
+    uint32_t width;         // Frame pixel width
+    uint32_t height;        // Frame pixel height
 } OBNetworkFrameHeader;
 #pragma pack()
 
@@ -33,7 +33,7 @@ ObRTPSink::ObRTPSink(UsageEnvironment &env, MediaSubsession &subsession, FrameCa
     envir() << "ObRTPSink created! streamId = " << streamId_ << "\n";
 
     auto frame = std::make_shared<ObRTPFrame>(MAX_FRAME_DATA_SIZE);
-    // 将vps/pps/sps 装填到帧头
+    // Load vps/pps/sps into the frame header
     if(strcmp(subsession_.codecName(), "H264") == 0) {
         unsigned int  nalUnitNum;
         SPropRecord  *pSPropRecord;
@@ -102,7 +102,7 @@ void ObRTPSink::afterGettingFrame(void *clientData, unsigned frameSize, unsigned
     sink->afterGettingFrame(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
 }
 
-void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned /*durationInMicroseconds*/) {
+void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned /*duration in microseconds*/) {
     // uint64_t start  = utils::getNowTimesUs();
     uint64_t curTsp = utils::getNowTimesUs();
 
@@ -114,22 +114,22 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
 
     // dataLenCnt_ += frameSize;
     // frameCnt_ += 1;
-    // if(lastTsp != 0 && curTsp - lastTsp >= 1000) {
-    //     auto timeDiff = curTsp - lastTsp;
-    //     fps           = (double)frameCnt_ / timeDiff * 1000;
-    //     frameCnt_     = 0;
-    //     dataRate_     = (double)dataLenCnt_ * 8 / 1000 / 1000 / timeDiff * 1000;
-    //     dataLenCnt_   = 0;
-    //     lastTsp       = curTsp;
+    // if(lastTsp != 0 && curTsp -lastTsp >= 1000) {
+    // auto timeDiff = curTsp -lastTsp;
+    // fps = (double)frameCnt_/timeDiff *1000;
+    // frameCnt_ = 0;
+    // dataRate_ = (double)dataLenCnt_ *8 /1000 /1000 /timeDiff *1000;
+    // dataLenCnt_ = 0;
+    // lastTsp = curTsp;
     // }
     // if(lastTsp == 0) {
-    //     lastTsp = curTsp;
+    // lastTsp = curTsp;
     // }
     // char uSecsStr[7] = { 0 };
     // sprintf(uSecsStr, "%06u", (unsigned)presentationTime.tv_usec);
 
     // std::string logStr = utils::to_string() << "New frame received: type=" << subsession_.codecName() << ", tsp=" << (int)presentationTime.tv_sec <<
-    // "."
+    //"."
     //                                           << uSecsStr << ", framesize=" << frameSize << ", index=" << *(uint32_t *)frame->frameObj->frameData;
     // if(fps != 0) {
     //     logStr = logStr + ", avrFps=" + std::to_string(fps) + ", avrBitRate=" + std::to_string(dataRate_) + "Mbps";
@@ -145,11 +145,11 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
             // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
             frameObj->format       = OB_FORMAT_Y16;
             frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y16格式需要去除网络头
+            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y16 format needs to remove the network header
             frameObj->metadataSize = 0;
             frameObj->metadata     = nullptr;
         }
-        // todo-lingyi 增加 Y8 、 yuyv格式 、 RVL格式 和 Y10格式
+        // todo-lingyi adds Y8, yuyv format, RVL format and Y10 format
         else if(strcmp(subsession_.codecName(), "OB_FMT_Y8") == 0) {
             auto header            = (OBNetworkFrameHeader *)currentFrame_->frameDataBuffer;
             frameObj->index        = header->frameCounter;
@@ -157,7 +157,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
             frameObj->deviceTime   = header->timestamp;
             frameObj->format       = OB_FORMAT_Y8;
             frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y8格式需要去除网络头
+            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y8 format needs to remove the network header
             frameObj->metadataSize = 0;
             frameObj->metadata     = nullptr;
         }
@@ -168,7 +168,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
             frameObj->deviceTime   = header->timestamp;
             frameObj->format       = OB_FORMAT_Y10;
             frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y10格式需要去除网络头
+            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y10 format needs to remove the network header
             frameObj->metadataSize = 0;
             frameObj->metadata     = nullptr;
         }
@@ -179,7 +179,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
             frameObj->deviceTime   = header->timestamp;
             frameObj->format       = OB_FORMAT_RVL;
             frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // RVL格式需要去除网络头
+            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // The RVL format needs to remove the network header
             frameObj->metadataSize = 0;
             frameObj->metadata     = nullptr;
         }
@@ -189,14 +189,15 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
             frameObj->systemTime = curTsp;
             frameObj->deviceTime = header->timestamp;
             // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
-            frameObj->format       = OB_FORMAT_YUYV;
-            frameObj->frameSize    = frameSize - sizeof(OBNetworkFrameHeader) - header->extentionLen;
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader) + header->extentionLen;  // YUYV格式需要去除网络头
+            frameObj->format    = OB_FORMAT_YUYV;
+            frameObj->frameSize = frameSize - sizeof(OBNetworkFrameHeader) - header->extentionLen;
+            frameObj->frameData =
+                currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader) + header->extentionLen;  // YUYV format needs to remove the network header
             frameObj->metadataSize = header->extentionLen;
             frameObj->metadata     = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);
         }
         else if(strcmp(subsession_.codecName(), "H264") == 0) {
-            // frame->frameHeaderSize 其实是frame->frameObj->frameData有效数据的起始地址
+            // frame->frameHeaderSize is actually the starting address of frame->frameObj->frameData valid data
             if((currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x1f) == H264_NAL_SPS
                || (currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x1f) == H264_NAL_PPS) {  // SPS(7) or PPS(8)
                 break;
@@ -204,7 +205,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
             else {
                 frameObj->index      = frameCount_;
                 frameObj->systemTime = curTsp;
-                // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec * 1000000 + (int)presentationTime.tv_usec;
+                // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
                 // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
                 frameObj->deviceTime   = subsession_.getNormalPlayTime(presentationTime);
                 frameObj->format       = OB_FORMAT_H264;
@@ -215,7 +216,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
             }
         }
         else if(strcmp(subsession_.codecName(), "H265") == 0) {
-            // frame->frameHeaderSize 其实是frame->frameObj->frameData有效数据的起始地址
+            // frame->frameHeaderSize is actually the starting address of frame->frameObj->frameData valid data
             if(((currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_VPS
                || ((currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_SPS
                || ((currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_PPS) {
@@ -224,7 +225,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
             else {
                 frameObj->index      = frameCount_;
                 frameObj->systemTime = curTsp;
-                // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec * 1000000 + (int)presentationTime.tv_usec;
+                // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
                 // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
                 frameObj->deviceTime   = subsession_.getNormalPlayTime(presentationTime);
                 frameObj->format       = OB_FORMAT_H265;
@@ -237,14 +238,14 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
         else if(strcmp(subsession_.codecName(), "JPEG") == 0) {
             frameObj->index      = frameCount_;
             frameObj->systemTime = curTsp;
-            // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec * 1000000 + (int)presentationTime.tv_usec;
+            // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
             // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
             frameObj->deviceTime = subsession_.getNormalPlayTime(presentationTime);
             // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
             frameObj->format    = OB_FORMAT_MJPG;
             frameObj->frameSize = frameSize + currentFrame_->frameHeaderSize;
-            // 单机任意触发彩色，存在长度556包非帧包，调用帧回调 @LingYi
-            // if(frameObj->frameSize == 556) 跳过次包
+            // Single machine can trigger color arbitrarily. There are non-frame packets with a length of 556. Call the frame callback @LingYi
+            // if(frameObj->frameSize == 556) skip secondary packets
             frameObj->frameData    = currentFrame_->frameDataBuffer;
             frameObj->metadataSize = 0;
             frameObj->metadata     = nullptr;
@@ -273,7 +274,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
         }
         else {
             // VideoFrameObject fo = { frameSize, 0,      frame->frameObj->frameData,
-            //                    nullptr,   curTsp, (uint64_t)presentationTime.tv_sec * 1000 + (int)presentationTime.tv_usec / 1000 };
+            //                    nullptr,   curTsp, (uint64_t)presentationTime.tv_sec *1000 + (int)presentationTime.tv_usec /1000 };
             break;
         }
 
@@ -289,7 +290,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     // Then continue, to request the next frame of data:
     continuePlaying();
 
-    // auto dur = utils::getNowTimesUs() - start;
+    // auto dur = utils::getNowTimesUs() -start;
     // if(dur > 1000) {
     //     LOG_ERROR("Live555 afterGettingFrame dur=" << dur << "usec > 1000 usec";
     // }
@@ -312,7 +313,7 @@ Boolean ObRTPSink::continuePlaying() {
     }
 
     if(!currentFrame_) {
-        // 主动丢帧
+        // Actively drop frames
         std::unique_lock<std::mutex> lk(outputRTPFrameQueueMutex_);
         if(!outputRTPFrameQueue_.empty()) {
             currentFrame_ = outputRTPFrameQueue_.front();
@@ -350,6 +351,5 @@ void ObRTPSink::outputFrameFunc() {
         }
     }
 }
-
 
 }  // namespace libobsensor

@@ -46,7 +46,7 @@ std::shared_ptr<Frame> FrameFactory::createVideoFrame(OBFrameType frameType, OBF
     auto                                 memoryPool = FrameMemoryPool::getInstance();
     size_t                               frameDataSize;
     if(strideBytes == 0) {
-        strideBytes = utils::getBytesPerPixel(frameFormat) * width;
+        strideBytes = utils::calcDefaultStrideBytes(frameFormat, width);
     }
     frameDataSize = height * strideBytes;
     bufferManager = memoryPool->createFrameBufferManager(frameType, frameDataSize);
@@ -130,7 +130,7 @@ std::shared_ptr<Frame> FrameFactory::createVideoFrameFromUserBuffer(OBFrameType 
     frame->setStreamProfile(sp);
 
     if(strideBytes == 0) {
-        strideBytes = utils::getBytesPerPixel(format) * width;
+        strideBytes =  utils::calcDefaultStrideBytes(format, width);
     }
     frame->as<VideoFrame>()->setStride(strideBytes);
     if(strideBytes * height > bufferSize) {

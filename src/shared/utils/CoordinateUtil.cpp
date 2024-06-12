@@ -1,16 +1,13 @@
 #include "CoordinateUtil.hpp"
 #include "logger/Logger.hpp"
 #include "logger/LoggerInterval.hpp"
-//#include "core/device/AbstractDevice.hpp"
-//#include "core/frame/process/advance/D2CFilter.hpp"
-//#include "core/frame/process/advance/PostProcessFilter.hpp"
 
 #include <cmath>
 
 namespace libobsensor {
 static bool judgeTransformValid(OBCameraParam cameraParam) {
-    // 旋转矩阵的正交性
-    // r1 .* r2 = 0 ;
+    // Orthogonality of rotation matrix
+    // r1 .*r2 = 0 ;
     float r1r2 = cameraParam.transform.rot[0] * cameraParam.transform.rot[3] + cameraParam.transform.rot[1] * cameraParam.transform.rot[4]
                  + cameraParam.transform.rot[2] * cameraParam.transform.rot[5];
 
@@ -37,7 +34,7 @@ static void undistortIterativeUnproject(OBCameraIntrinsic K, OBCameraDistortion 
     *valid          = 1;
 
     for(int i = 0; i < 20; i++) {
-        // 迭代去畸变
+        // Iterate to remove distortion
         r2     = x * x + y * y;
         r4     = r2 * r2;
         r6     = r4 * r2;
@@ -47,7 +44,7 @@ static void undistortIterativeUnproject(OBCameraIntrinsic K, OBCameraDistortion 
         x      = (xd - dx) * kr_inv;
         y      = (yd - dy) * kr_inv;
 
-        // 无畸变点进行加畸变，
+        // Add distortion to distortion-free points,
         // double a1, a2, a3, cdist, icdist2;
         double a1, a2, a3, cdist;
         double xd0, yd0;
@@ -91,7 +88,7 @@ bool CoordinateUtil::calibration3dTo3d(const OBCalibrationParam calibrationParam
     memcpy(&cameraParam.depthIntrinsic, &calibrationParam.intrinsics[OB_SENSOR_DEPTH], sizeof(OBCameraIntrinsic));
     memcpy(&cameraParam.transform, &calibrationParam.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_COLOR], sizeof(OBD2CTransform));
 
-    // step 1 ： 数据有效性判断
+    // step 1: Data validity judgment
     if(!judgeTransformValid(cameraParam)) {
         return false;
     }
@@ -100,14 +97,14 @@ bool CoordinateUtil::calibration3dTo3d(const OBCalibrationParam calibrationParam
         return false;
     }
 
-    // step 2: 计算转换关系
-    if(sourceSensorType == targetSensorType)  // 源相机与目标相机为同一相机
+    // step 2: Calculate conversion relationship
+    if(sourceSensorType == targetSensorType)  // The source camera and the target camera are the same camera
     {
         *targetPoint3f = sourcePoint3f;
     }
-    else if((OB_SENSOR_DEPTH == sourceSensorType) && (OB_SENSOR_COLOR == targetSensorType))  // 从DEPTH 到rgb的转换
+    else if((OB_SENSOR_DEPTH == sourceSensorType) && (OB_SENSOR_COLOR == targetSensorType))  // Conversion from DEPTH to rgb
     {
-        // R * X + t
+        // R *X + t
         float rx =
             cameraParam.transform.rot[0] * sourcePoint3f.x + cameraParam.transform.rot[1] * sourcePoint3f.y + cameraParam.transform.rot[2] * sourcePoint3f.z;
         float ry =
@@ -119,7 +116,7 @@ bool CoordinateUtil::calibration3dTo3d(const OBCalibrationParam calibrationParam
         (*targetPoint3f).y = ry + cameraParam.transform.trans[1];
         (*targetPoint3f).z = rz + cameraParam.transform.trans[2];
     }
-    else if((OB_SENSOR_COLOR == sourceSensorType) && (OB_SENSOR_DEPTH == targetSensorType))  // 从rgb到DEPTH的转换
+    else if((OB_SENSOR_COLOR == sourceSensorType) && (OB_SENSOR_DEPTH == targetSensorType))  // Conversion from rgb to DEPTH
     {
         // R_inv *(X-b)
         float tx = sourcePoint3f.x - cameraParam.transform.trans[0];
@@ -144,8 +141,8 @@ bool CoordinateUtil::calibration2dTo3d(const OBCalibrationParam calibrationParam
     memcpy(&cameraParam.depthIntrinsic, &calibrationParam.intrinsics[OB_SENSOR_DEPTH], sizeof(OBCameraIntrinsic));
     memcpy(&cameraParam.transform, &calibrationParam.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_COLOR], sizeof(OBD2CTransform));
 
-    // step 1: 判断有效性
-    // sourcePoint2f 为图像的像素坐标，或者亚像素坐标
+    // step 1: Determine validity
+    // sourcePoint2f is the pixel coordinates of the image, or sub-pixel coordinates
     if(sourcePoint2f.x < 0 || sourcePoint2f.y < 0) {
         return false;
     }
@@ -162,10 +159,10 @@ bool CoordinateUtil::calibration2dTo3d(const OBCalibrationParam calibrationParam
         }
     }
 
-    // step 2: 将2D 转3d点
+    // step 2: Convert 2D to 3D point
     OBPoint3f source_3f;
-    source_3f.z = sourceDepthPixelValue;  // z方向赋值
-    // 2d 转3d （和转点云一样）
+    source_3f.z = sourceDepthPixelValue;  // Assignment in z direction
+    // Convert 2d to 3d (same as converting point cloud)
     if(OB_SENSOR_DEPTH == sourceSensorType) {
         source_3f.x = sourceDepthPixelValue * (sourcePoint2f.x - cameraParam.depthIntrinsic.cx) / cameraParam.depthIntrinsic.fx;
         source_3f.y = sourceDepthPixelValue * (sourcePoint2f.y - cameraParam.depthIntrinsic.cy) / cameraParam.depthIntrinsic.fy;
@@ -174,12 +171,12 @@ bool CoordinateUtil::calibration2dTo3d(const OBCalibrationParam calibrationParam
         source_3f.x = sourceDepthPixelValue * (sourcePoint2f.x - cameraParam.rgbIntrinsic.cx) / cameraParam.rgbIntrinsic.fx;
         source_3f.y = sourceDepthPixelValue * (sourcePoint2f.y - cameraParam.rgbIntrinsic.cy) / cameraParam.rgbIntrinsic.fy;
     }
-    else  // 2d 点仅存在depth 或者rgb 上
+    else  // 2d points only exist on depth or rgb
     {
         return false;
     }
 
-    // step 3: 将source 下的3d点转换到target相机坐标下
+    // step 3: Convert the 3D point under the source to the target camera coordinates
     bool ret = calibration3dTo3d(calibrationParam, source_3f, sourceSensorType, targetSensorType, targetPoint3f);
 
     return ret;
@@ -194,8 +191,8 @@ bool CoordinateUtil::calibration2dTo3dUndistortion(const OBCalibrationParam cali
     memcpy(&cameraParam.depthDistortion, &calibrationParam.distortion[OB_SENSOR_DEPTH], sizeof(OBCameraDistortion));
     memcpy(&cameraParam.transform, &calibrationParam.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_COLOR], sizeof(OBD2CTransform));
 
-    // step 1: 判断有效性
-    // sourcePoint2f 为图像的像素坐标，或者亚像素坐标
+    // step 1: Determine validity
+    // sourcePoint2f is the pixel coordinates of the image, or sub-pixel coordinates
     if(sourcePoint2f.x < 0 || sourcePoint2f.y < 0) {
         return false;
     }
@@ -212,11 +209,11 @@ bool CoordinateUtil::calibration2dTo3dUndistortion(const OBCalibrationParam cali
         }
     }
 
-    // step 2: 将2D 转3d点
+    // step 2: Convert 2D to 3D point
     OBPoint3f source_3f;
-    source_3f.z = sourceDepthPixelValue;  // z方向赋值
+    source_3f.z = sourceDepthPixelValue;  // Assignment in z direction
     int valid   = 0;
-    // 2d 转3d （和转点云一样）
+    // Convert 2d to 3d (same as converting point cloud)
     if(OB_SENSOR_DEPTH == sourceSensorType) {
         undistortIterativeUnproject(cameraParam.depthIntrinsic, cameraParam.depthDistortion, sourcePoint2f.x, sourcePoint2f.y, &(source_3f.x), &(source_3f.y),
                                     &valid);
@@ -225,7 +222,7 @@ bool CoordinateUtil::calibration2dTo3dUndistortion(const OBCalibrationParam cali
         undistortIterativeUnproject(cameraParam.rgbIntrinsic, cameraParam.rgbDistortion, sourcePoint2f.x, sourcePoint2f.y, &(source_3f.x), &(source_3f.y),
                                     &valid);
     }
-    else  // 2d 点仅存在depth 或者rgb 上
+    else  // 2d points only exist on depth or rgb
     {
         return false;
     }
@@ -236,7 +233,7 @@ bool CoordinateUtil::calibration2dTo3dUndistortion(const OBCalibrationParam cali
 
     source_3f.x *= source_3f.z;
     source_3f.y *= source_3f.z;
-    // step 3: 将source 下的3d点转换到target相机坐标下
+    // step 3: Convert the 3D point under the source to the target camera coordinates
     bool ret = calibration3dTo3d(calibrationParam, source_3f, sourceSensorType, targetSensorType, targetPoint3f);
 
     return ret;
@@ -249,14 +246,14 @@ bool CoordinateUtil::calibration3dTo2d(const OBCalibrationParam calibrationParam
     memcpy(&cameraParam.depthIntrinsic, &calibrationParam.intrinsics[OB_SENSOR_DEPTH], sizeof(OBCameraIntrinsic));
     memcpy(&cameraParam.transform, &calibrationParam.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_COLOR], sizeof(OBD2CTransform));
 
-    // step1: 将source 下的3d点转换到target相机坐标下
+    // step1: Convert the 3D point under the source to the target camera coordinates
     OBPoint3f targetPoint3f;
     bool      ret = calibration3dTo3d(calibrationParam, sourcePoint3f, sourceSensorType, targetSensorType, &targetPoint3f);
     if(!ret) {
         return ret;
     }
 
-    // step 2： 将target相机坐标下的3d点转2d点 (小孔成像的原理)
+    // step 2: Convert the 3D point under the target camera coordinates to a 2D point (the principle of small hole imaging)
     if(OB_SENSOR_DEPTH == targetSensorType) {
         (*targetPoint2f).x = cameraParam.depthIntrinsic.fx * targetPoint3f.x / targetPoint3f.z + cameraParam.depthIntrinsic.cx;
         (*targetPoint2f).y = cameraParam.depthIntrinsic.fy * targetPoint3f.y / targetPoint3f.z + cameraParam.depthIntrinsic.cy;
@@ -267,7 +264,7 @@ bool CoordinateUtil::calibration3dTo2d(const OBCalibrationParam calibrationParam
         (*targetPoint2f).y = cameraParam.rgbIntrinsic.fy * targetPoint3f.y / targetPoint3f.z + cameraParam.rgbIntrinsic.cy;
         ret = ((*targetPoint2f).x > (cameraParam.rgbIntrinsic.width - 1) || (*targetPoint2f).y > (cameraParam.rgbIntrinsic.height - 1)) ? false : true;
     }
-    else  // 2d 点仅存在depth 或者rgb 上
+    else  // 2d points only exist on depth or rgb
     {
         return false;
     }
@@ -284,14 +281,14 @@ bool CoordinateUtil::calibration2dTo2d(const OBCalibrationParam calibrationParam
     memcpy(&cameraParam.depthIntrinsic, &calibrationParam.intrinsics[OB_SENSOR_DEPTH], sizeof(OBCameraIntrinsic));
     memcpy(&cameraParam.transform, &calibrationParam.extrinsics[OB_SENSOR_DEPTH][OB_SENSOR_COLOR], sizeof(OBD2CTransform));
 
-    // step 1: 先将source的2d转成target下的 3d
+    // step 1: First convert the 2d of the source into the 3d of the target.
     OBPoint3f targetPoint3f;
     bool      ret = calibration2dTo3dUndistortion(calibrationParam, sourcePoint2f, sourceDepthPixelValue, sourceSensorType, targetSensorType, &targetPoint3f);
     if(!ret) {
         return ret;
     }
 
-    // step 2 ：将target相机坐标下的3d点转图像下的2d点 (小孔成像的原理)
+    // step 2: Convert the 3D point under the target camera coordinates to the 2D point under the image (the principle of small hole imaging)
     if(OB_SENSOR_DEPTH == targetSensorType) {
         (*targetPoint2f).x = cameraParam.depthIntrinsic.fx * targetPoint3f.x / targetPoint3f.z + cameraParam.depthIntrinsic.cx;
         (*targetPoint2f).y = cameraParam.depthIntrinsic.fy * targetPoint3f.y / targetPoint3f.z + cameraParam.depthIntrinsic.cy;
@@ -302,7 +299,7 @@ bool CoordinateUtil::calibration2dTo2d(const OBCalibrationParam calibrationParam
         (*targetPoint2f).y = cameraParam.rgbIntrinsic.fy * targetPoint3f.y / targetPoint3f.z + cameraParam.rgbIntrinsic.cy;
         ret = ((*targetPoint2f).x > (cameraParam.rgbIntrinsic.width - 1) || (*targetPoint2f).y > (cameraParam.rgbIntrinsic.height - 1)) ? false : true;
     }
-    else  // 2d 点仅存在depth 或者rgb 上
+    else  // 2d points only exist on depth or rgb
     {
         return false;
     }
@@ -312,63 +309,65 @@ bool CoordinateUtil::calibration2dTo2d(const OBCalibrationParam calibrationParam
     return ret;
 }
 
-//std::shared_ptr<Frame> CoordinateUtil::transformationDepthFrameToColorCamera(std::shared_ptr<IDevice> device, std::shared_ptr<Frame> depthFrame,
-//                                                                             uint32_t targetColorCameraWidth, uint32_t targetColorCameraHeight) {
-//    auto absDevice = std::dynamic_pointer_cast<AbstractDevice>(device);
-//    if(absDevice == nullptr) {
-//        throw std::runtime_error("Device is invalid!");
-//    }
+// std::shared_ptr<Frame> CoordinateUtil::transformationDepthFrameToColorCamera(std::shared_ptr<IDevice> device, std::shared_ptr<Frame> depthFrame,
+// uint32_t targetColorCameraWidth, uint32_t targetColorCameraHeight) {
+// auto absDevice = std::dynamic_pointer_cast<AbstractDevice>(device);
+// if(absDevice == nullptr) {
+// throw std::runtime_error("Device is invalid!");
+// }
 //
-//    auto cameraParamList = absDevice->getCalibrationCameraParamList();
-//    if(cameraParamList.empty()) {
-//        LOG_WARN("Get calibration param failed,cameraParamList is empty!");
-//        return nullptr;
-//    }
+// auto cameraParamList = absDevice->getCalibrationCameraParamList();
+// if(cameraParamList.empty()) {
+// LOG_WARN("Get calibration param failed,cameraParamList is empty!");
+// return nullptr;
+// }
 //
-//    auto profileInfo =
-//        absDevice->getSupportedProfileInfo(targetColorCameraWidth, targetColorCameraHeight, depthFrame->getWidth(), depthFrame->getHeight(), ALIGN_D2C_SW_MODE);
-//    if(!profileInfo.valid()) {
-//        LOG_ERROR("Input invalid");
-//        return nullptr;
-//    }
+// auto profileInfo =
+// absDevice->getSupportedProfileInfo(targetColorCameraWidth, targetColorCameraHeight, depthFrame->getWidth(), depthFrame->getHeight(), ALIGN_D2C_SW_MODE);
+// if(!profileInfo.valid()) {
+// LOG_ERROR("Input invalid");
+// return nullptr;
+// }
 //
-//    auto cameraParam = cameraParamList[profileInfo.paramIndex];
-//    auto depthWidth = depthFrame->getWidth();
-//    auto depthHeight = depthFrame->getHeight();
-//    // 由于模组存储的默认参数与当前图像状态可能对不上，例如MX6600项目参数是镜像状态下标定的，但是输出的图像是非镜像的，因此需要对参数进行处理。
-//    cameraParam = absDevice->preProcessCameraParam(cameraParam);
-//    // soft D2C filter
-//    auto d2cFilter = std::make_shared<D2CFilter>();
-//    d2cFilter->setCameraParam(cameraParam);
-//    OBD2CAlignParam alignParam = absDevice->getD2CAlignParam();
-//    d2cFilter->setD2CAlignParam(&alignParam);
-//    d2cFilter->setColorSize(targetColorCameraWidth, targetColorCameraHeight);
+// auto cameraParam = cameraParamList[profileInfo.paramIndex];
+// auto depthWidth = depthFrame->getWidth();
+// auto depthHeight = depthFrame->getHeight();
+////Since the default parameters stored in the module may not match the current image state, for example, the MX6600 project parameters are calibrated in the
+///mirrored state, but the output image is non-mirrored, so the parameters need to be processed.
+// cameraParam = absDevice->preProcessCameraParam(cameraParam);
+////soft D2C filter
+// auto d2cFilter = std::make_shared<D2CFilter>();
+// d2cFilter->setCameraParam(cameraParam);
+// OBD2CAlignParam alignParam = absDevice->getD2CAlignParam();
+// d2cFilter->setD2CAlignParam(&alignParam);
+// d2cFilter->setColorSize(targetColorCameraWidth, targetColorCameraHeight);
 //
-//    // post process filter
-//    auto postProcessFilter = std::make_shared<PostProcessFilter>();
-//    postProcessFilter->setPostProcessParam(profileInfo.postProcessParam);
-//    postProcessFilter->setDepthScaleRequire(true);
-//    postProcessFilter->setDepthSize(depthWidth, depthHeight);
+////post process filter
+// auto postProcessFilter = std::make_shared<PostProcessFilter>();
+// postProcessFilter->setPostProcessParam(profileInfo.postProcessParam);
+// postProcessFilter->setDepthScaleRequire(true);
+// postProcessFilter->setDepthSize(depthWidth, depthHeight);
 //
-//    depthFrame = d2cFilter->process(depthFrame);
-//    if(depthFrame == nullptr) {
-//        LOG_ERROR("D2C process failed.");
-//        return nullptr;
-//    }
+// depthFrame = d2cFilter->process(depthFrame);
+// if(depthFrame == nullptr) {
+// LOG_ERROR("D2C process failed.");
+// return nullptr;
+// }
 //
-//    bool isParamTransform = absDevice->getCameraParamTransformState();
-//    cameraParam = absDevice->transformCameraParamToD2CDstParam(cameraParam, profileInfo.postProcessParam, targetColorCameraWidth, targetColorCameraHeight, depthWidth, depthHeight);
-//    cameraParam = CameraParamProcessor::postProcessCameraParam(profileInfo.postProcessParam, cameraParam, isParamTransform, ALIGN_D2C_SW_MODE,targetColorCameraWidth, targetColorCameraHeight, depthWidth, depthHeight, true);
-//    postProcessFilter->setTargetIntrinsic(cameraParam.depthIntrinsic);
+// bool isParamTransform = absDevice->getCameraParamTransformState();
+// cameraParam = absDevice->transformCameraParamToD2CDstParam(cameraParam, profileInfo.postProcessParam, targetColorCameraWidth, targetColorCameraHeight,
+// depthWidth, depthHeight); cameraParam = CameraParamProcessor::postProcessCameraParam(profileInfo.postProcessParam, cameraParam, isParamTransform,
+// ALIGN_D2C_SW_MODE,targetColorCameraWidth, targetColorCameraHeight, depthWidth, depthHeight, true);
+// postProcessFilter->setTargetIntrinsic(cameraParam.depthIntrinsic);
 //
-//    depthFrame = postProcessFilter->process(depthFrame);
-//    if(depthFrame == nullptr) {
-//        LOG_ERROR("Post process failed.");
-//        return nullptr;
-//    }
+// depthFrame = postProcessFilter->process(depthFrame);
+// if(depthFrame == nullptr) {
+// LOG_ERROR("Post process failed.");
+// return nullptr;
+// }
 //
-//    return depthFrame;
-//}
+// return depthFrame;
+// }
 
 bool CoordinateUtil::transformationInitXYTables(const OBCalibrationParam calibrationParam, const OBSensorType sensorType, float *data, uint32_t *dataSize,
                                                 OBXYTables *xyTables) {
@@ -388,13 +387,13 @@ bool CoordinateUtil::transformationInitXYTables(const OBCalibrationParam calibra
     }
 
     size_t tableSize = (size_t)(width * height);
-    if(data == NULL)  // 如果外部没有申请内存，就报错
+    if(data == NULL)  // If no external memory is requested, an error will be reported
     {
         (*dataSize) = 2 * (uint32_t)tableSize;
         return false;
     }
     else {
-        // 如果外部申请的内存大小不够，就报错
+        // If the externally requested memory size is not enough, an error will be reported.
         if(*dataSize < 2 * tableSize) {
             LOG_ERROR("Unexpected xy table size {}, should be larger or equal than {}.", int(*dataSize), int(2 * tableSize));
             return false;
@@ -407,7 +406,7 @@ bool CoordinateUtil::transformationInitXYTables(const OBCalibrationParam calibra
 
         OBPoint2f point2d;
         OBPoint3f point3d;
-        //int       valid = 1;
+        // int       valid = 1;
 
         for(int y = 0, idx = 0; y < height; y++) {
             point2d.y = (float)y;
@@ -442,39 +441,37 @@ bool CoordinateUtil::transformationInitXYTables(const OBCameraParam cameraParam,
     return transformationInitXYTables(calibrationParam, sensorType, data, dataSize, xyTables);
 }
 
-bool CoordinateUtil::transformationInitAddDistortionUVTables(const OBCameraParam cameraParam, float *data, uint32_t *dataSize,
-                                                             OBXYTables *uvTables) {
+bool CoordinateUtil::transformationInitAddDistortionUVTables(const OBCameraParam cameraParam, float *data, uint32_t *dataSize, OBXYTables *uvTables) {
     OBCameraDistortion disto     = cameraParam.rgbDistortion;
     OBCameraIntrinsic  intrinsic = cameraParam.rgbIntrinsic;
     int                width     = intrinsic.width;
     int                height    = intrinsic.height;
 
     size_t tableSize = (size_t)(width * height);
-    if(data == NULL)  // 如果外部没有申请内存，就报错
+    if(data == NULL)  // If no external memory is requested, an error will be reported
     {
         (*dataSize) = 2 * (uint32_t)tableSize;
         return false;
     }
     else {
-        // 如果外部申请的内存大小不够，就报错
+        // If the externally requested memory size is not enough, an error will be reported.
         if(*dataSize < 2 * tableSize) {
             LOG_ERROR("Unexpected xy table size {}, should be larger or equal than {}.", int(*dataSize), int(2 * tableSize));
             return false;
         }
 
-        // data 与 ob_xy_tables_t 共用内存
+        // data and ob_xy_tables_t share memory
         uvTables->width  = width;
         uvTables->height = height;
         uvTables->xTable = data;
         uvTables->yTable = data + tableSize;
-
 
         for(int row = 0, idx = 0; row < height; row++) {
             double y = (double)(row - intrinsic.cy) / intrinsic.fy;
             for(int col = 0; col < width; col++, idx++) {
                 double x = (double)(col - intrinsic.cx) / intrinsic.fx;
 
-                // 加畸变，仅支持布朗模型，k2,k3,k6模型， 不支持KB
+                // Add distortion, only supports Brown model, k2, k3, k6 model, KB is not supported
                 // double a1, a2, a3, cdist, icdist2;
                 double a1, a2, a3, cdist;
                 double xd, yd;
@@ -491,15 +488,15 @@ bool CoordinateUtil::transformationInitAddDistortionUVTables(const OBCameraParam
                 float x_proj = (float)xd * intrinsic.fx + intrinsic.cx;
                 float y_proj = (float)yd * intrinsic.fy + intrinsic.cy;
 
-                // 判断加畸变后的点，是否超过图像范围，如果超过，这个点无效
+                // Determine whether the point after adding distortion exceeds the image range. If it exceeds, the point is invalid.
                 if(x_proj < 0 || x_proj > (width - 1) || y_proj < 0 || y_proj > (height - 1)) {
-                    // 无效数据输出
+                    // Invalid data output
                     // x table value of NAN marks invalid
                     uvTables->xTable[idx] = NAN;
                     // set y table value to 0 to speed up SSE implementation
                     uvTables->yTable[idx] = 0.f;
                 }
-                else  // 有效数据输出
+                else  // Valid data output
                 {
                     uvTables->xTable[idx] = x_proj;
                     uvTables->yTable[idx] = y_proj;
@@ -601,8 +598,8 @@ void CoordinateUtil::transformationDepthToRGBDPointCloudByUVTables(const OBCamer
 
     OBCameraIntrinsic rgbIntrinsic = cameraParam.rgbIntrinsic;
     for(int i = 0; i < uvTables->width * uvTables->height; i++) {
-        //int u_tab = (int)uvTables->xTable[i];
-        //int v_tab = (int)uvTables->yTable[i];
+        // int u_tab = (int)uvTables->xTable[i];
+        // int v_tab = (int)uvTables->yTable[i];
 
         int xValue = i % uvTables->width;
         int yValue = i / uvTables->width;

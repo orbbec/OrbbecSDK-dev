@@ -5,7 +5,8 @@
 namespace libobsensor{
 namespace utils {
 
-uint32_t getBytesPerPixel(OBFormat format);
+float getBytesPerPixel(OBFormat format);
+uint32_t calcDefaultStrideBytes(OBFormat format, uint32_t width);
 uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t height);
 
 OBFrameType mapStreamTypeToFrameType(OBStreamType type);

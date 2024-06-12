@@ -257,9 +257,6 @@ std::shared_ptr<Frame> DecimationFilter::processFunc(std::shared_ptr<const Frame
                 decimateOthers(frameFormat, (void *)outFrame->getData(), (void *)newViodeFrame->getData(), oldVideoFrame->getWidth(), patch_size_);
             }
 
-            // TODO: DataSize need to be reset
-            // newFrame->setDataSize(padded_width_ * padded_height_ * outFrame->getBytesPerPixel());
-
             return newOutFrame;
         }
     }

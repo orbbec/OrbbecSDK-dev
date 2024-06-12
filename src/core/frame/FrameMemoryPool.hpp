@@ -28,13 +28,11 @@ private:
 
     static std::mutex                     instanceMutex_;
     static std::weak_ptr<FrameMemoryPool> instanceWeakPtr_;
-    static bool                           reuseFrameBufferManager_;
 
 public:
-    ~FrameMemoryPool();
+    ~FrameMemoryPool() noexcept;
     static std::shared_ptr<FrameMemoryPool> getInstance();
     static void                             setMaxFrameMemorySize(uint64_t sizeInMB);
-    static void                             activateFrameBufferManagerReuse(bool enable);
 
     std::shared_ptr<IFrameBufferManager> createFrameBufferManager(OBFrameType type, size_t frameBufferSize);
     std::shared_ptr<IFrameBufferManager> createFrameBufferManager(OBFrameType type, std::shared_ptr<const StreamProfile> streamProfile);

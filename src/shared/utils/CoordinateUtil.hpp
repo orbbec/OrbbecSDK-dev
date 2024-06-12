@@ -1,7 +1,7 @@
 #pragma once
 #include "openobsdk/h/ObTypes.h"
-//#include "core/device/IDevice.hpp"
-//#include "core/frame/Frame.hpp"
+// #include "core/device/IDevice.hpp"
+// #include "core/frame/Frame.hpp"
 #include <memory>
 #include <cmath>
 
@@ -26,10 +26,10 @@ public:
                                   const OBSensorType sourceSensorType, const OBSensorType targetSensorType, OBPoint2f *targetPoint2f);
 
     /*static std::shared_ptr<Frame> transformationDepthFrameToColorCamera(std::shared_ptr<IDevice> device, std::shared_ptr<Frame> depthFrame,
-                                                                        uint32_t targetColorCameraWidth, uint32_t targetColorCameraHeight);*/
+    uint32_t targetColorCameraWidth, uint32_t targetColorCameraHeight);*/
 
-    // data 的内存需要在外部申请，在初始化的时候，外部申请的大小是 data_size，例如datasize = 1920*1080 *2 (1920*1080表示图像分辨率，2表示有两个lut，
-    // 分别为x和y的坐标)
+    // The memory of data needs to be applied externally. During initialization, the size of the external application is data_size, for example, datasize =
+    // 1920*1080 *2 (1920*1080 means image resolution, 2 means there are two luts, The coordinates of x and y respectively)
     static bool transformationInitXYTables(const OBCalibrationParam calibrationParam, const OBSensorType sensorType, float *data, uint32_t *dataSize,
                                            OBXYTables *xyTables);
 
@@ -38,8 +38,7 @@ public:
 
     // static bool transformationInitAddDistortionUVTables(const OBCameraParam cameraParam, const OBSensorType sensorType, float *data, uint32_t *dataSize,
     //                                                     OBXYTables *uvTables);
-    static bool transformationInitAddDistortionUVTables(const OBCameraParam cameraParam, float *data, uint32_t *dataSize,
-                                                        OBXYTables *uvTables);
+    static bool transformationInitAddDistortionUVTables(const OBCameraParam cameraParam, float *data, uint32_t *dataSize, OBXYTables *uvTables);
 
     static void transformationDepthToPointCloud(OBXYTables *xyTables, const void *depthImageData, void *pointCloudData, float positionDataScale = 1.0f,
                                                 OBCoordinateSystemType type = OB_RIGHT_HAND_COORDINATE_SYSTEM);

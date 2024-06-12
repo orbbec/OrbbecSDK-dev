@@ -12,7 +12,7 @@ OBPropertyRange UvcCtrlRangeToPropRange(const UvcControlRange &ran) {
     return range;
 }
 
-uint64_t convertToUvcCompatibleID(uint64_t propertyId) {
+uint32_t convertToUvcCompatibleID(uint32_t propertyId) {
     switch(propertyId) {
     case OB_PROP_COLOR_AUTO_EXPOSURE_BOOL:
     case OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL:
@@ -45,7 +45,7 @@ uint64_t convertToUvcCompatibleID(uint64_t propertyId) {
         return propertyId;
 
     default:
-        throw unsupported_operation_exception("Unsupported property id!");
+        throw unsupported_operation_exception("Unsupported property requestId!");
     }
 }
 
@@ -57,7 +57,7 @@ UvcPropertyPort::UvcPropertyPort(const std::shared_ptr<ISourcePort> &backend)
     }
 }
 
-void UvcPropertyPort::setPropertyValue(uint64_t propertyId, OBPropertyValue value) {
+void UvcPropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     auto    uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(backend_);
     int32_t val;
 
@@ -97,7 +97,7 @@ void UvcPropertyPort::setPropertyValue(uint64_t propertyId, OBPropertyValue valu
     }
 }
 
-void UvcPropertyPort::getPropertyValue(uint64_t propertyId, OBPropertyValue *value) {
+void UvcPropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     auto    uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(backend_);
     int32_t val;
 
@@ -130,7 +130,7 @@ void UvcPropertyPort::getPropertyValue(uint64_t propertyId, OBPropertyValue *val
     }
 }
 
-void UvcPropertyPort::getPropertyRange(uint64_t propertyId, OBPropertyRange *range) {
+void UvcPropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     auto            uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(backend_);
     int32_t         val;
     UvcControlRange rangeControl;

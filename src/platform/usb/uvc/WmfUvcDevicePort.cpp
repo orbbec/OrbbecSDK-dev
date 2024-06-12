@@ -189,7 +189,7 @@ bool WmfUvcDevicePort::isConnected(std::shared_ptr<const USBSourcePortInfo> info
 }
 
 struct pu_control {
-    uint64_t propertyId;
+    uint32_t propertyId;
     long         ksProperty;
     bool         enable_auto;
 };
@@ -213,7 +213,7 @@ static const pu_control ct_controls[] = {
     { OB_PROP_COLOR_FOCUS_INT, KSPROPERTY_CAMERACONTROL_FOCUS },
 };
 
-bool WmfUvcDevicePort::getPu(uint64_t propertyId, int32_t &retValue) {
+bool WmfUvcDevicePort::getPu(uint32_t propertyId, int32_t &retValue) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -258,7 +258,7 @@ bool WmfUvcDevicePort::getPu(uint64_t propertyId, int32_t &retValue) {
     throw std::runtime_error(utils::to_string() << "Unsupported control - " << propertyId);
 }
 
-bool WmfUvcDevicePort::setPu(uint64_t propertyId, int32_t tarValue) {
+bool WmfUvcDevicePort::setPu(uint32_t propertyId, int32_t tarValue) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -369,7 +369,7 @@ bool WmfUvcDevicePort::setPu(uint64_t propertyId, int32_t tarValue) {
     throw std::runtime_error(utils::to_string() << "Unsupported control - " << propertyId);
 }
 
-UvcControlRange WmfUvcDevicePort::getPuRange(uint64_t propertyId) {
+UvcControlRange WmfUvcDevicePort::getPuRange(uint32_t propertyId) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -416,7 +416,7 @@ UvcControlRange WmfUvcDevicePort::getPuRange(uint64_t propertyId) {
     throw std::runtime_error("unsupported control");
 }
 
-std::vector<uint8_t> WmfUvcDevicePort::sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) {
+uint32_t WmfUvcDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -426,48 +426,46 @@ std::vector<uint8_t> WmfUvcDevicePort::sendAndReceive(const std::vector<uint8_t>
     }
 
     // sendData
-    auto    data         = sendData;
     uint8_t ctrl         = OB_VENDOR_XU_CTRL_ID_64;
-    auto    alignDataLen = data.size();
+    auto    alignDataLen = sendLen;
     if(alignDataLen <= 64) {
         ctrl = OB_VENDOR_XU_CTRL_ID_64;
-        data.resize(64);
+        alignDataLen = 64;
     }
     else if(alignDataLen > 512) {
         ctrl = OB_VENDOR_XU_CTRL_ID_1024;
-        data.resize(1024);
+        alignDataLen = 1024;
     }
     else {
         ctrl = OB_VENDOR_XU_CTRL_ID_512;
-        data.resize(512);
+        alignDataLen = 512;
     }
 
-    if(!setXu(ctrl, data.data(), static_cast<uint32_t>(data.size()))) {
+    if(!setXu(ctrl, sendData, alignDataLen)) {
         LOG_ERROR("setXu failed!");
-        return {};
+        return 0;
     }
 
     // receiveData
     ctrl = OB_VENDOR_XU_CTRL_ID_512;
-    if(exceptedRevLen <= 64) {
+    uint32_t recvLen = exceptedRecvLen;
+    if(exceptedRecvLen <= 64) {
         ctrl = OB_VENDOR_XU_CTRL_ID_64;
-        data.resize(64);
+        recvLen = 64;
     }
-    else if(exceptedRevLen > 512) {
+    else if(exceptedRecvLen > 512) {
         ctrl = OB_VENDOR_XU_CTRL_ID_1024;
-        data.resize(1024);
+        recvLen = 1024;
     }
     else {
         ctrl = OB_VENDOR_XU_CTRL_ID_512;
-        data.resize(512);
+        recvLen = 512;
     }
-    uint32_t dataLen = static_cast<uint32_t>(data.size());
-    if(!getXu(ctrl, data.data(), &dataLen)) {
+    if(!getXu(ctrl, recvData, &recvLen)) {
         LOG_ERROR("getXu failed!");
-        return {};
+        return 0;
     }
-    data.resize(dataLen);
-    return data;
+    return recvLen;
 }
 
 // std::string wcharToString(wchar_t *wchar) {

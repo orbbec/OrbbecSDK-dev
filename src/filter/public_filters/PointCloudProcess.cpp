@@ -106,15 +106,18 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<F
     }
 
     auto streamProfile    = depthVideoFrame->getStreamProfile();
-    auto newStreamProfile = streamProfile->clone();
+    auto videoStreamProfile = frame->getStreamProfile();
+    if(!currentStreamProfile_ || currentStreamProfile_.get() != videoStreamProfile.get()) {
+        tarStreamProfile_ = videoStreamProfile->clone();
+    }
 
     CoordinateUtil::transformationDepthToPointCloud(&xyTables_, depthFrame->getData(), (void *)pointFrame->getData(), positionDataScale_,
                                                     coordinateSystemType_);
 
     //float depthValueScale = depthFrame->as<DepthFrame>()->getValueScale();
     pointFrame->copyInfo(depthFrame);
-    newStreamProfile->setFormat(OB_FORMAT_POINT);
-    pointFrame->setStreamProfile(newStreamProfile);
+    tarStreamProfile_->setFormat(OB_FORMAT_POINT);
+    pointFrame->setStreamProfile(tarStreamProfile_);
     //pointFrame->setDataSize(w * h * sizeof(OBPoint));
     //pointFrame->as<PointsFrame>()->setPositionValueScale(depthValueScale / positionDataScale_);  // 实际坐标缩放 = 深度值缩放系数/设置的坐标缩放系数
 

@@ -38,6 +38,9 @@ private:
     void resetDistortionType();
 
 protected:
+    std::shared_ptr<const StreamProfile> currentStreamProfile_;
+    std::shared_ptr<StreamProfile>       tarStreamProfile_;
+
     OBFormat               pointFormat_;
     OBCameraParam          cameraParam_;
     int                    coordinateSystemCoefficient_;  // Coordinate system coefficient, default right-hand coordinate system

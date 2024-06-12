@@ -67,93 +67,95 @@ std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame>
         return nullptr;
     }
 
-    auto videoStreamProfile = frame->getStreamProfile()->as<VideoStreamProfile>();
-    auto tarStreamProfile   = videoStreamProfile->clone();
+    auto videoStreamProfile = frame->getStreamProfile();
+    if(!currentStreamProfile_ || currentStreamProfile_.get() != videoStreamProfile.get()) {
+        tarStreamProfile_ = videoStreamProfile->clone();
+    }
 
     tarFrame->copyInfo(frame);
     //TODO:Missing API for setting data size
-    //arFrame->setDataSize(dataSize);
+    //tarFrame->setDataSize(dataSize);
     switch(convertType_) {
     case FORMAT_YUYV_TO_RGB:
         yuyvToRgb((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_RGB);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_YUYV_TO_RGBA:
         yuyvToRgba((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_RGBA);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGBA);
         break;
     case FORMAT_YUYV_TO_BGR:
         yuyvToBgr((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_RGB);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_YUYV_TO_BGRA:
         yuyvToBgra((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_BGRA);
+        tarStreamProfile_->setFormat(OB_FORMAT_BGRA);
         break;
     case FORMAT_YUYV_TO_Y16:
         yuyvToy16((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_Y16);
+        tarStreamProfile_->setFormat(OB_FORMAT_Y16);
         break;
     case FORMAT_YUYV_TO_Y8:
         yuyvToy8((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_Y8);
+        tarStreamProfile_->setFormat(OB_FORMAT_Y8);
         break;
     case FORMAT_UYVY_TO_RGB:
         uyvyToRgb((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_RGB);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_I420_TO_RGB:
         i420ToRgb((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_RGB);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_NV21_TO_RGB:
         nv21ToRgb((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_RGB);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_NV12_TO_RGB:
         nv12ToRgb((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_RGB);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_MJPG_TO_I420:
         mjpgToI420((uint8_t *)frame->getData(), (uint32_t)frame->getDataSize(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_I420);
+        tarStreamProfile_->setFormat(OB_FORMAT_I420);
         break;
     case FORMAT_RGB_TO_BGR:
         exchangeRAndB((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
         //tarFrame->setDataSize(frame->getDataSize());
-        tarStreamProfile->setFormat(OB_FORMAT_BGR);
+        tarStreamProfile_->setFormat(OB_FORMAT_BGR);
         break;
     case FORMAT_BGR_TO_RGB:
         exchangeRAndB((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
         //tarFrame->setDataSize(frame->getDataSize());
-        tarStreamProfile->setFormat(OB_FORMAT_RGB);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_MJPG_TO_NV21:
         mjpgToNv21((uint8_t *)frame->getData(), (uint32_t)frame->getDataSize(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_NV21);
+        tarStreamProfile_->setFormat(OB_FORMAT_NV21);
         break;
     case FORMAT_MJPG_TO_RGB:
         if(!mjpgToRgb((uint8_t *)frame->getData(), (uint32_t)frame->getDataSize(), (uint8_t *)tarFrame->getData(), w, h))
             return nullptr;
-        tarStreamProfile->setFormat(OB_FORMAT_RGB);
+        tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_MJPG_TO_BGR:
         mjpgToBgr((uint8_t *)frame->getData(), (uint32_t)frame->getDataSize(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_BGR);
+        tarStreamProfile_->setFormat(OB_FORMAT_BGR);
         break;
     case FORMAT_MJPG_TO_BGRA:
         mjpegToBgra((uint8_t *)frame->getData(), (uint32_t)frame->getDataSize(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_BGRA);
+        tarStreamProfile_->setFormat(OB_FORMAT_BGRA);
         break;
     case FORMAT_MJPG_TO_NV12:
         mjpgToNv12((uint8_t *)frame->getData(), (uint32_t)frame->getDataSize(), (uint8_t *)tarFrame->getData(), w, h);
-        tarStreamProfile->setFormat(OB_FORMAT_NV12);
+        tarStreamProfile_->setFormat(OB_FORMAT_NV12);
         break;
     default:
         LOG_WARN_INTVL("Unsupported data format conversion.");
         break;
     }
-    tarFrame->setStreamProfile(tarStreamProfile);
+    tarFrame->setStreamProfile(tarStreamProfile_);
     return tarFrame;
 }
 

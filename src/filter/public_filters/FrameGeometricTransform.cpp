@@ -364,4 +364,102 @@ OBCameraDistortion FrameMirror::mirrorOBCameraDistortion(const OBCameraDistortio
 
 
 
+
+
+
+FrameFlip::FrameFlip(const std::string &name) : FilterBase(name) {}
+FrameFlip::~FrameFlip() noexcept {}
+
+void FrameFlip::updateConfig(std::vector<std::string> &params) {
+    if(params.size() != 0) {
+        throw unsupported_operation_exception("Frame flip update config error: unsupported operation.");
+    }
+}
+
+const std::string &FrameFlip::getConfigSchema() const {
+    throw unsupported_operation_exception("Frame flip get config schema error: unsupported operation.");
+}
+
+std::shared_ptr<Frame> FrameFlip::processFunc(std::shared_ptr<const Frame> frame) {
+    if(!frame) {
+        return nullptr;
+    }
+
+    if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV && frame->getFormat() != OB_FORMAT_BGR
+       && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
+        LOG_WARN_INTVL("FrameFlip unsupported to process this format:{}", frame->getFormat());
+        return FrameFactory::cloneFrame(frame);
+    }
+
+    auto outFrame = FrameFactory::cloneFrame(frame);
+    if(outFrame == nullptr) {
+        LOG_ERROR_INTVL("Acquire frame from frameBufferManager failed!");
+        return nullptr;
+    }
+
+    bool isSupportFlip = true;
+    auto videoFrame    = frame->as<VideoFrame>();
+    switch(frame->getFormat()) {
+    case OB_FORMAT_Y8:
+        imageFlip<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        break;
+    case OB_FORMAT_YUYV:
+    case OB_FORMAT_Y16:
+        imageFlip<uint16_t>((uint16_t *)videoFrame->getData(), (uint16_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        break;
+    case OB_FORMAT_BGR:
+    case OB_FORMAT_RGB888:
+        flipRGBImage(3, (uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        break;
+    case OB_FORMAT_RGBA:
+    case OB_FORMAT_BGRA:
+        flipRGBImage(4, (uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        break;
+    default:
+        isSupportFlip = false;
+        break;
+    }
+    outFrame->copyInfo(frame);
+
+    try {
+        if(isSupportFlip) {
+            auto streampProfile = frame->getStreamProfile();
+            if(!srcStreamProfile_ || srcStreamProfile_ != streampProfile) {
+                srcStreamProfile_          = streampProfile;
+                auto srcVideoStreamProfile = srcStreamProfile_->as<VideoStreamProfile>();
+                auto srcIntrinsic          = srcVideoStreamProfile->getIntrinsic();
+                auto rstIntrinsic          = flipOBCameraIntrinsic(srcIntrinsic);
+                auto srcDistortion         = srcVideoStreamProfile->getDistortion();
+                auto rstDistortion         = flipOBCameraDistortion(srcDistortion);
+                auto srcExtrinsic          = srcVideoStreamProfile->getExtrinsicTo(streampProfile);
+                rstStreamProfile_          = srcVideoStreamProfile->clone()->as<VideoStreamProfile>();
+                rstStreamProfile_->bindIntrinsic(rstIntrinsic);
+                rstStreamProfile_->bindDistortion(rstDistortion);
+
+                OBExtrinsic rstExtrinsic = { 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0 };
+                rstStreamProfile_->bindExtrinsicTo(srcStreamProfile_, rstExtrinsic);
+            }
+            outFrame->setStreamProfile(rstStreamProfile_);
+        }
+    }
+    catch(libobsensor_exception &error) {
+        LOG_WARN_INTVL("Frame flip camera intrinsic conversion failed{0}, exception type: {1}", error.get_message(), error.get_exception_type());
+    }
+
+    return outFrame;
+}
+
+OBCameraIntrinsic FrameFlip::flipOBCameraIntrinsic(const OBCameraIntrinsic &src) {
+    auto intrinsic = src;
+    libobsensor::CameraParamProcessor::cameraIntrinsicParamsFlip(&intrinsic);
+    return intrinsic;
+}
+
+OBCameraDistortion FrameFlip::flipOBCameraDistortion(const OBCameraDistortion &src) {
+    auto distortion = src;
+    libobsensor::CameraParamProcessor::distortionParamFlip(&distortion);
+    return distortion;
+}
+
+
 }  // namespace libobsensor

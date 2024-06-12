@@ -22,4 +22,23 @@ protected:
     std::shared_ptr<VideoStreamProfile>  rstStreamProfile_;
 };
 
+class FrameFlip : public FilterBase {
+public:
+    FrameFlip(const std::string &name);
+    virtual ~FrameFlip() noexcept;
+
+    void               updateConfig(std::vector<std::string> &params) override;
+    const std::string &getConfigSchema() const override;
+
+private:
+    std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
+
+    static OBCameraIntrinsic  flipOBCameraIntrinsic(const OBCameraIntrinsic &src);
+    static OBCameraDistortion flipOBCameraDistortion(const OBCameraDistortion &src);
+
+protected:
+    std::shared_ptr<const StreamProfile> srcStreamProfile_;
+    std::shared_ptr<VideoStreamProfile>  rstStreamProfile_;
+};
+
 }  // namespace libobsensor

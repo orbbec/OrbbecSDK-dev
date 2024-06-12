@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 G330SensorStartStrategy::G330SensorStartStrategy(std::weak_ptr<IDevice> device) {
     initializeValidateSensor();
     device_ = device;
@@ -41,7 +41,7 @@ bool G330SensorStartStrategy::validatePresetProfile(OBSensorType sensorType,std:
    {
         switch(sensorType) {
         case OB_SENSOR_IR_LEFT:
-        case OB_SENSOR_IR_RIGHT: 
+        case OB_SENSOR_IR_RIGHT:
         {
             auto valVideoStreamProfile = streamProfile->as<VideoStreamProfile>();
             auto width  = valVideoStreamProfile->getWidth();
@@ -107,5 +107,5 @@ void G330SensorStartStrategy::clearValidateSensor(OBSensorType sensorType) {
     }
 }
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

@@ -635,8 +635,7 @@ void WmfUvcDevicePort::foreachUvcDevice(const USBDeviceInfoEnumCallback &action)
                 info.vid      = vid;
                 info.pid      = pid;
                 info.infIndex = (uint8_t)infIndex;
-                info.infUrl   = symbolicLink;
-                utils::toUpper(info.infUrl);
+                info.infUrl = utils::toUpper(symbolicLink);
                 info.infName = friendlyName;
                 TRY_EXECUTE({ action(info, ppDevices[i]); });
             }

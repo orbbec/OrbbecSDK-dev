@@ -4,7 +4,7 @@
 #include "core/device/IDevice.hpp"
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
 class G330AlgParamManager : public StructuredLightAlgParamManager {
 public:
@@ -74,5 +74,5 @@ private:
     std::map<const StreamProfile *, std::pair<std::weak_ptr<const StreamProfile>, OBDisparityProcessParam>> disparityProcessParamMap_;
 };
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

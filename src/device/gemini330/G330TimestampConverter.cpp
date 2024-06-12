@@ -2,7 +2,7 @@
 #include "common/exception/ObException.hpp"
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 G330TimestampConverter::G330TimestampConverter(OBFrameMetadataType frameTimestampMetadataType, std::shared_ptr<GlobalTimestampFitter> globalTspFitter)
     : globalTspFitter_(globalTspFitter), frameTimestampMetadataType_(frameTimestampMetadataType) {}
 
@@ -39,5 +39,5 @@ void G330TimestampConverter::calculateGlobalTimestamp(std::shared_ptr<Frame> out
     outFrame->setGlobalTimeStampUS(globalTsp);
 }
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

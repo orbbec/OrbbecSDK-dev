@@ -1,6 +1,7 @@
 #pragma once
 #include "IFilter.hpp"
 #include "frame/FrameQueue.hpp"
+#include "stream/StreamProfile.hpp"
 #include <atomic>
 #include <memory>
 #include <mutex>

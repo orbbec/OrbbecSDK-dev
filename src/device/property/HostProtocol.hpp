@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ISourcePort.hpp"
+#include <sstream>
 
 namespace libobsensor {
 namespace protocol {

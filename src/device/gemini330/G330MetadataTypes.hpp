@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 #define G330_UVC_METADATA_SIZE 96
 #pragma pack(push, 1)
 typedef struct {
@@ -30,9 +30,9 @@ typedef struct {
     };
     uint32_t bitmap_union_0;
     uint32_t timestamp_offset_usec;
-} g2r_common_uvc_metadata_t;
+} G330CommonUvcMetadata;
 
-struct g2r_color_uvc_metadata_t : public g2r_common_uvc_metadata_t {
+struct G330ColorUvcMetadata : public G330CommonUvcMetadata {
     uint8_t  low_light_compensation;
     uint8_t  power_line_frequency;
     uint16_t gain_level;
@@ -54,7 +54,7 @@ struct g2r_color_uvc_metadata_t : public g2r_common_uvc_metadata_t {
     int32_t  sensor_timestamp_offset_usec;
 };
 
-struct g2r_depth_uvc_metadata_t : public g2r_common_uvc_metadata_t {
+struct G330DepthUvcMetadata : public G330CommonUvcMetadata {
     uint16_t height;
     uint16_t width;
     uint16_t gain_level;
@@ -82,7 +82,7 @@ struct g2r_depth_uvc_metadata_t : public g2r_common_uvc_metadata_t {
 
 #pragma pack(pop)
 
-static_assert(sizeof(g2r_color_uvc_metadata_t) == G330_UVC_METADATA_SIZE, "g2r_color_uvc_metadata_t size mismatch!");
-static_assert(sizeof(g2r_depth_uvc_metadata_t) == G330_UVC_METADATA_SIZE, "g2r_depth_uvc_metadata_t size mismatch!");
-}  // namespace g2r
+static_assert(sizeof(G330ColorUvcMetadata) == G330_UVC_METADATA_SIZE, "G330ColorUvcMetadata size mismatch!");
+static_assert(sizeof(G330DepthUvcMetadata) == G330_UVC_METADATA_SIZE, "G330DepthUvcMetadata size mismatch!");
+}  // namespace g330
 }  // namespace libobsensor

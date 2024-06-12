@@ -1,7 +1,7 @@
 #pragma once
 #include "openobsdk/h/ObTypes.h"
-#include "stream/StreamProfile.hpp"
-#include "frame/Frame.hpp"
+#include "IStreamProfile.hpp"
+#include "IFrame.hpp"
 #include <memory>
 
 namespace libobsensor {

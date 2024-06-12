@@ -4,8 +4,9 @@
 #pragma once
 
 #include "IFrameMetadataParser.hpp"
-#include "stream/StreamProfile.hpp"
+#include "IStreamProfile.hpp"
 #include "exception/ObException.hpp"
+#include "IFrame.hpp"
 
 #include <atomic>
 #include <memory>
@@ -247,18 +248,4 @@ template <typename T> bool Frame::is() const {
     return false;
 }
 
-typedef std::function<void(std::shared_ptr<const Frame>)> FrameCallback;
-typedef std::function<void(std::shared_ptr<Frame>)>       FrameCallbackUnsafe;
-
 }  // namespace libobsensor
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-struct ob_frame_t {
-    std::shared_ptr<libobsensor::Frame> frame;
-    std::atomic<int>                    refCnt = { 1 };
-};
-#ifdef __cplusplus
-}
-#endif

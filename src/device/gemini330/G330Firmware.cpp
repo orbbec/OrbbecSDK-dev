@@ -6,7 +6,7 @@
 #include <memory>
 #include <functional>
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
 G330Firmware::G330Firmware(const uint8_t *data, size_t dataSize) {
     if(dataSize < sizeof(uint32_t)) {
@@ -22,7 +22,7 @@ G330Firmware::G330Firmware(const uint8_t *data, size_t dataSize) {
 
     auto offset = fileHeader_.headerSize;
     for(int i = 0; i < fileHeader_.firmwareDataCount; i++) {
-        g2r_firmware_data firmwareData;
+        g330_firmware_data firmwareData;
         firmwareData.header.headerSize = *(uint32_t *)(data + offset);
         if(dataSize < offset + firmwareData.header.headerSize || firmwareData.header.headerSize > sizeof(G330FirmwareDataHeader)) {
             throw libobsensor::invalid_value_exception(ObUtils::to_string()
@@ -51,7 +51,7 @@ G330Firmware::G330Firmware(const uint8_t *data, size_t dataSize) {
     LOG_DEBUG("{} firmware data successfully loaded.", firmwareDataList_.size());
 }
 
-const std::vector<g2r_firmware_data> &G330Firmware::getFirmwareDataList() const {
+const std::vector<g330_firmware_data> &G330Firmware::getFirmwareDataList() const {
     return firmwareDataList_;
 }
 
@@ -59,7 +59,7 @@ const G330FirmwareFileHeader &G330Firmware::getFileHeader() const {
     return fileHeader_;
 }
 
-bool G330Firmware::isFirmwareDataAdaptable(const g2r_firmware_data &firmwareData, uint16_t pid) {
+bool G330Firmware::isFirmwareDataAdaptable(const g330_firmware_data &firmwareData, uint16_t pid) {
     auto listSize = sizeof(firmwareData.header.adapterDevPidList) / sizeof(firmwareData.header.adapterDevPidList[0]);
     if(firmwareData.header.adapterDevPidList[0] == G330_FIRMWARE_DATA_ADAPTER_ALL_PIDS) {
         return true;
@@ -72,7 +72,7 @@ bool G330Firmware::isFirmwareDataAdaptable(const g2r_firmware_data &firmwareData
     return false;
 }
 
-void G330Firmware::checkFirmwareData(const g2r_firmware_data &firmwareData) {
+void G330Firmware::checkFirmwareData(const g330_firmware_data &firmwareData) {
     uint32_t checksum = 0;
     for(auto byte: firmwareData.data) {
         checksum += byte;
@@ -82,5 +82,5 @@ void G330Firmware::checkFirmwareData(const g2r_firmware_data &firmwareData) {
     }
 }
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

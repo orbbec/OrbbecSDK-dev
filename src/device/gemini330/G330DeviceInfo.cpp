@@ -1,17 +1,21 @@
 #include "G330DeviceInfo.hpp"
+#include "utils/UsbGroup.hpp"
+#include "DevicePids.hpp"
+
+#include <map>
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
-const std::map<uint16_t, std::string> G300DeviceNameMap = {
+const std::map<int, std::string> G300DeviceNameMap = {
     { 0x06d0, "Orbbec Gemini 2R" },     { 0x06d1, "Orbbec Gemini 2RL" },   { 0x0800, "Orbbec Gemini 335" },   { 0x0801, "Orbbec Gemini 330" },
     { 0x0802, "Orbbec Gemini dm330" },  { 0x0803, "Orbbec Gemini 336" },   { 0x0804, "Orbbec Gemini 335L" },  { 0x0805, "Orbbec Gemini 330L" },
     { 0x0806, "Orbbec Gemini dm330L" }, { 0x0807, "Orbbec Gemini 336L" },  { 0x080B, "Orbbec Gemini 335Lg" }, { 0x080C, "Orbbec Gemini 330Lg" },
     { 0x080D, "Orbbec Gemini 336Lg" },  { 0x080E, "Orbbec Gemini 335Le" }, { 0x080F, "Orbbec Gemini 330Le" }, { 0x0810, "Orbbec Gemini 336Le" },
 };
 
-G330DeviceInfo::G330DeviceInfo(const SourcePortInfoList groupedInfoList) : DeviceInfo(groupedInfoList) {
-    auto portInfo = std::dynamic_pointer_cast<USBSourcePortInfo>(groupedInfoList.front());
+G330DeviceInfo::G330DeviceInfo(const SourcePortInfoList groupedInfoList) {
+    auto portInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(groupedInfoList.front());
 
     auto iter = G300DeviceNameMap.find(portInfo->pid);
     if(iter != G300DeviceNameMap.end()) {
@@ -26,19 +30,19 @@ G330DeviceInfo::G330DeviceInfo(const SourcePortInfoList groupedInfoList) : Devic
     uid_            = portInfo->uid;
     deviceSn_       = portInfo->serial;
     connectionType_ = portInfo->connSpec;
+    sourcePortInfoList_ = groupedInfoList;
 }
 
 G330DeviceInfo::~G330DeviceInfo() noexcept {}
 
-std::vector<std::shared_ptr<DeviceInfo>> G330DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
-    std::vector<std::shared_ptr<DeviceInfo>> G330DeviceInfos;
-
-    auto remainder = FilterUSBPortInfoByPid(infoList, gG330Pids);
-    auto groups    = GroupUSBSourcePortInfo(remainder, GroupUSBSourcePortByUrl);
+std::vector<std::shared_ptr<DeviceEnumInfo>> G330DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
+    std::vector<std::shared_ptr<DeviceEnumInfo>> G330DeviceInfos;
+    auto remainder = utils::FilterUSBPortInfoByPid(infoList, gG330Pids);
+    auto groups    = utils::GroupUSBSourcePortInfo(remainder, utils::GroupUSBSourcePortByUrl);
     auto iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 3) {
-            auto info = std::dynamic_pointer_cast<DeviceInfo>(std::make_shared<G330DeviceInfo>(*iter));
+            auto info = std::make_shared<G330DeviceInfo>( *iter);
             G330DeviceInfos.push_back(info);
         }
         iter++;
@@ -47,5 +51,5 @@ std::vector<std::shared_ptr<DeviceInfo>> G330DeviceInfo::createDeviceInfos(const
     return G330DeviceInfos;
 }
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

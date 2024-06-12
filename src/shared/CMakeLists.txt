@@ -11,7 +11,7 @@ target_sources(shared PRIVATE ${SOURCE_FILES} ${HEADERS_FILES})
 
 add_subdirectory(${OB_3RDPARTY_DIR}/spdlog spdlog)
 target_link_libraries(shared PUBLIC spdlog::spdlog)
-target_include_directories(shared PUBLIC ${OB_PUBLIC_HEADERS_DIR} ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(shared PUBLIC ${OB_PUBLIC_HEADERS_DIR} ${OB_INTERFACE_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
 add_library(ob::shared ALIAS shared)
 ob_source_group(ob::shared)

@@ -1,18 +1,23 @@
 #include "UsbDeviceEnumerator.hpp"
 #include "utils/Utils.hpp"
 
+#include "gemini330/G330DeviceInfo.hpp"
+
 namespace libobsensor {
-UsbDeviceEnumerator::UsbDeviceEnumerator( DeviceChangedCallback callback) : obPal_(ObPal::getInstance()) {
-    devChangedCallback_ = [callback, this](const DeviceEnumInfoList& removedList, const DeviceEnumInfoList& addedList) {
+UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(ObPal::getInstance()) {
+    devChangedCallback_ = [callback, this](const DeviceEnumInfoList &removedList, const DeviceEnumInfoList &addedList) {
 #ifdef __ANDROID__
-        // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
+        // On the Android platform, it is necessary to call back to Java in the same thread, and complete the release of relevant resources in the callback
+        // function.
         callback(removedList, addedList);
 #elif defined(__linux__)
-        // 解决linux短时间内多次回调，并且用户回调函数内调用有访问libusb的相关接口导致死锁问题。
+        // Solve the problem of deadlock caused by multiple callbacks in a short period of time in Linux, and the related interfaces that access libusb are
+        // called in the user callback function.
         auto cbThread = std::thread(callback, removedList, addedList);
         cbThread.detach();
 #else
-        // WIN 平台由于回调是MF相关线程调用，如果不切换线程直接回调到用户程序，用户程序需要更新MFC界面，会导致程序崩溃；
+        // On the WIN platform, since the callback is called by MF-related threads, if the callback is directly made to the user program without switching
+        // threads, the user program needs to update the MFC interface, which will cause the program to crash;
         if(devChangedCallbackThread_.joinable()) {
             devChangedCallbackThread_.join();
         }
@@ -108,7 +113,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid)
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
     if(portInfoList != currentUsbPortInfoList_) {
-        currentUsbPortInfoList_                          = portInfoList;
+        currentUsbPortInfoList_    = portInfoList;
         DeviceEnumInfoList curList = usbDeviceInfoMatch(portInfoList);
         return utils::subtract_sets(deviceInfoList_, curList);
     }
@@ -117,7 +122,6 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid)
 
 DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-#if defined(BUILD_USB_PORT)
     auto portInfoList = obPal_->queryUsbSourcePort();
     if(portInfoList != currentUsbPortInfoList_) {
         currentUsbPortInfoList_ = portInfoList;
@@ -129,14 +133,13 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
         DeviceEnumInfoList curList = usbDeviceInfoMatch(portInfoList);
         return utils::subtract_sets(curList, deviceInfoList_);
     }
-#endif
     return {};
 }
 
 DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
     DeviceEnumInfoList deviceInfoList;
-    // todo: match device by pid
-    (void)portInfoList;
+    auto g330Devs =       g330::G330DeviceInfo::createDeviceInfos(portInfoList);
+    std::copy(g330Devs.begin(), g330Devs.end(), std::back_inserter(deviceInfoList));
     return deviceInfoList;
 }
 
@@ -193,17 +196,19 @@ DeviceEnumInfoList UsbDeviceEnumerator::getDeviceInfoList() {
 
 void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callback) {
     std::unique_lock<std::mutex> lock(callbackMutex_);
-    devChangedCallback_ = [callback, this](const DeviceEnumInfoList&removedList,
-                                           const DeviceEnumInfoList&addedList) {
+    devChangedCallback_ = [callback, this](const DeviceEnumInfoList &removedList, const DeviceEnumInfoList &addedList) {
 #ifdef __ANDROID__
-        // 在安卓平台需要在同线程内回调到java，并在回调函数内完成相关资源释放
+        // On the Android platform, it is necessary to call back to Java in the same thread, and complete the release of relevant resources in the callback
+        // function.
         callback(removedList, addedList);
 #elif defined(__linux__)
-        // 解决linux短时间内多次回调，并且用户回调函数内调用有访问libusb的相关接口导致死锁问题。
+        // Solve the problem of deadlock caused by multiple callbacks in a short period of time in Linux, and the related interfaces that access libusb are
+        // called in the user callback function.
         auto cbThread = std::thread(callback, removedList, addedList);
         cbThread.detach();
 #else
-        // WIN 平台由于回调是MF相关线程调用，如果不切换线程直接回调到用户程序，用户程序需要更新MFC界面，会导致程序崩溃；
+        // On the WIN platform, since the callback is called by MF-related threads, if the callback is directly made to the user program without switching
+        // threads, the user program needs to update the MFC interface, which will cause the program to crash;
 
         if(devChangedCallbackThread_.joinable()) {
             devChangedCallbackThread_.join();
@@ -224,7 +229,8 @@ std::shared_ptr<IDevice> UsbDeviceEnumerator::createDevice(const std::shared_ptr
     std::shared_ptr<IDevice> device;
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    auto info_found = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [&](const std::shared_ptr<const DeviceEnumInfo>& item) { return item->uid_ == info->uid_; });
+    auto                                   info_found = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(),
+                                                                     [&](const std::shared_ptr<const DeviceEnumInfo> &item) { return item->uid_ == info->uid_; });
     if(info_found == deviceInfoList_.end()) {
         return nullptr;
     }

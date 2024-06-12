@@ -15,6 +15,9 @@ add_subdirectory(enumerator)
 add_subdirectory(property)
 add_subdirectory(sensor)
 
+# devices support:
+add_subdirectory(gemini330) # Gemini 330 series
+
 add_library(ob::device ALIAS ${OB_TARGET_DEVICE})
 ob_source_group(ob::device)
 set_target_properties(${OB_TARGET_DEVICE} PROPERTIES FOLDER "modules")

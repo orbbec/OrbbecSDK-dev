@@ -2,7 +2,7 @@
 #include "core/device/component/DeviceSyncConfigurator.hpp"
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 class G330DeviceSyncConfigurator : public DeviceSyncConfigurator {
 public:
     G330DeviceSyncConfigurator(std::shared_ptr<PropertyManager> propertyManager, std::vector<OBMultiDeviceSyncMode> supportedSyncModes)
@@ -21,5 +21,5 @@ private:
     OBMultiDeviceSyncConfig            currentMultiDevSyncConfig_;
     std::vector<OBMultiDeviceSyncMode> supportedSyncModes_;
 };
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

@@ -9,6 +9,7 @@
 #include "usb/backend/Enumerator.hpp"
 #include "usb/backend/UsbTypes.hpp"
 #include "UvcDevicePort.hpp"
+#include "stream/StreamProfile.hpp"
 
 #include <mfapi.h>
 #include <Ks.h>

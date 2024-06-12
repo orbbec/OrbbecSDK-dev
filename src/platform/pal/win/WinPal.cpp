@@ -321,7 +321,7 @@ LRESULT CALLBACK WinUsbDeviceWatcher::onWinEvent(HWND hWnd, UINT message, WPARAM
             std::string symbolicLink = wideCharToUTF8(devIntf->dbcc_name);
             if(parseSymbolicLink(symbolicLink, vid, pid, mi, uid, device_guid) && vid == 0x2bc5) {
                 auto watcherExtraData = reinterpret_cast<extra_data *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-                utils::toUpper(symbolicLink);
+                symbolicLink = utils::toUpper(symbolicLink);
                 if(wParam == DBT_DEVICEARRIVAL) {
                     LOG_DEBUG("Device arrival event occurred! symbolicLink={}", symbolicLink);
                     if(devIntf->dbcc_classguid != GUID_DEVINTERFACE_USB_DEVICE || PID_BOOTLOADER_UVC == pid) {

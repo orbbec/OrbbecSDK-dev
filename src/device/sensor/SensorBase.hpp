@@ -3,6 +3,10 @@
 #include "ISensor.hpp"
 #include "ISourcePort.hpp"
 
+#include <mutex>
+#include <thread>
+#include <condition_variable>
+
 namespace libobsensor {
 
 class SensorBase : public ISensor, public std::enable_shared_from_this<SensorBase> {

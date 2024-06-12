@@ -155,21 +155,6 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<Fr
     uint32_t dstWidth        = depthVideoFrame->getWidth();
 
     auto colorVideoFrame = colorFrame->as<VideoFrame>();
-    if(dstWidth != colorVideoFrame->getWidth() || dstHeight != colorVideoFrame->getHeight()) {
-        // RGBD点云默认缩放深度到彩色分辨率
-        /*float             scaled = colorVideoFrame->getWidth() / (float)dstWidth;
-        PostProcessParams param  = { scaled, 0, 0, 0, 0 };
-        auto newFrame = FrameFactory::createFrame(OB_FRAME_DEPTH, depthVideoFrame->getFormat(), colorVideoFrame->getWidth() * colorVideoFrame->getHeight() * 2);
-        if(newFrame != nullptr) {
-            newFrame->copyInfo(depthFrame);
-            D2CPostProcess((uint16_t *)depthFrame->getData(), depthVideoFrame->getWidth(), depthVideoFrame->getHeight(), param, (uint16_t *)newFrame->getData(),
-                           colorVideoFrame->getWidth(), colorVideoFrame->getHeight());
-        }
-        dstWidth   = colorVideoFrame->getWidth();
-        dstHeight  = colorVideoFrame->getHeight();
-        depthFrame = newFrame;*/
-    }
-
     if(cacheRGBDPointsBufferManagerWidth_ != dstWidth || cacheRGBDPointsBufferManagerHeight_ != dstHeight) {
         if(tablesData_) {
             tablesData_.reset();
@@ -251,6 +236,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<Fr
     if(tablesData_ == nullptr) {
         uint32_t tablesSize = dstWidth * dstHeight * 2;
         tablesData_         = std::shared_ptr<float>(new float[tablesSize], std::default_delete<float[]>());
+        // TODO: need to get cameraParam
         if(distortionType_ == OBPointcloudDistortionType::OB_POINTCLOUD_UN_DISTORTION_TYPE) {
             if(!CoordinateUtil::transformationInitXYTables(cameraParam_, OB_SENSOR_COLOR, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
                                                            &xyTables_)) {

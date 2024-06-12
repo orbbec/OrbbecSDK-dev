@@ -1,0 +1,367 @@
+#include "FrameGeometricTransform.hpp"
+#include "exception/ObException.hpp"
+#include "logger/LoggerInterval.hpp"
+#include "frame/FrameFactory.hpp"
+#include "openobsdk/h/ObTypes.h"
+#include "utils/CameraParamProcess.hpp"
+#include <libyuv.h>
+#include <turbojpeg.h>
+
+namespace libobsensor {
+
+template <typename T> void imageMirror(const T *src, T *dst, uint32_t width, uint32_t height) {
+    const T *srcPixel;
+    T       *dstPixel = dst;
+    for(uint32_t h = 0; h < height; h++) {
+        srcPixel = src + (h + 1) * width - 1;
+        for(uint32_t w = 0; w < width; w++) {
+            // mirror row
+            *dstPixel = *srcPixel;
+            srcPixel--;
+            dstPixel++;
+        }
+    }
+}
+
+void mirrorRGBImage(const uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height) {
+    const uint8_t *srcPixel;
+    uint8_t       *dstPixel = dst;
+    for(uint32_t h = 0; h < height; h++) {
+        srcPixel = src + (h + 1) * width * 3 - 3;
+        for(uint32_t w = 0; w < width; w++) {
+            // mirror row for each RGB component
+            for(int i = 0; i < 3; i++) {
+                dstPixel[i] = srcPixel[i];
+            }
+            srcPixel -= 3;
+            dstPixel += 3;
+        }
+    }
+}
+
+void mirrorRGBAImage(const uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height) {
+    const uint8_t *srcPixel;
+    uint8_t       *dstPixel = dst;
+    for(uint32_t h = 0; h < height; h++) {
+        srcPixel = src + (h + 1) * width * 4 - 4;
+        for(uint32_t w = 0; w < width; w++) {
+            // mirror row for each RGB component
+            for(int i = 0; i < 4; i++) {
+                dstPixel[i] = srcPixel[i];
+            }
+            srcPixel -= 4;
+            dstPixel += 4;
+        }
+    }
+}
+
+void mirrorYUYVImage(uint8_t *src, uint8_t *dst, int width, int height) {
+    uint8_t *dstPixel = dst;
+    for(int h = 0; h < height; h++) {
+        uint8_t *srcPixel = src + width * 2 * (h + 1) - 4;
+        for(int w = 0; w < width / 2; w++) {
+            *dstPixel       = *(srcPixel + 2);
+            *(dstPixel + 1) = *(srcPixel + 1);
+            *(dstPixel + 2) = *srcPixel;
+            *(dstPixel + 3) = *(srcPixel + 3);
+
+            srcPixel -= 4;
+            dstPixel += 4;
+        }
+    }
+}
+
+template <typename T> void imageFlip(const T *src, T *dst, uint32_t width, uint32_t height) {
+    const auto tSize   = sizeof(T);
+    const T   *flipSrc = src + (width * height);
+    for(uint32_t h = 0; h < height; h++) {
+        flipSrc -= width;
+        memcpy(dst, flipSrc, width * sizeof(T));
+        dst += width;
+    }
+}
+
+void flipRGBImage(int pixelSize, const uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height) {
+    // const uint32_t pixelSize = 3;  // RGB888格式每个像素占用3个字节
+    const uint32_t rowSize   = width * pixelSize;
+    const uint32_t totalSize = width * height * pixelSize;
+
+    for(uint32_t h = 0; h < height; h++) {
+        const uint8_t *flipSrc = src + (height - h - 1) * rowSize;
+        memcpy(dst, flipSrc, rowSize);
+        dst += rowSize;
+    }
+}
+
+// #define imageRotate180 imageFlip
+
+// 顺时针旋转90度
+template <typename T> void imageRotate90(const T *src, T *dst, uint32_t width, uint32_t height) {
+    const T *srcPixel;
+    T       *dstPixel = dst;
+    for(uint32_t h = 0; h < width; h++) {
+        for(uint32_t w = 0; w < height; w++) {
+            srcPixel  = src + width * (height - w - 1) + h;
+            *dstPixel = *srcPixel;
+            dstPixel++;
+        }
+    }
+}
+
+template <typename T> void imageRotate180(const T *src, T *dst, uint32_t width, uint32_t height) {
+    const T *srcPixel;
+    T       *dstPixel = dst;
+    for(uint32_t h = 0; h < height; h++) {
+        for(uint32_t w = 0; w < width; w++) {
+            srcPixel  = src + width * (height - h - 1) + (width - w - 1);
+            *dstPixel = *srcPixel;
+            dstPixel++;
+        }
+    }
+}
+
+template <typename T> void imageRotate270(const T *src, T *dst, uint32_t width, uint32_t height) {
+    const T *srcPixel;
+    T       *dstPixel = dst;
+    for(uint32_t h = 0; h < width; h++) {
+        for(uint32_t w = 0; w < height; w++) {
+            srcPixel  = src + width * w + (width - h - 1);
+            *dstPixel = *srcPixel;
+            dstPixel++;
+        }
+    }
+}
+
+template <typename T> void imageRotate(const T *src, T *dst, uint32_t width, uint32_t height, uint32_t rotateDegree) {
+    switch(rotateDegree) {
+    case 90:
+        imageRotate90<T>(src, dst, width, height);
+        break;
+    case 180:
+        imageRotate180<T>(src, dst, width, height);
+        break;
+    case 270:
+        imageRotate270<T>(src, dst, width, height);
+        break;
+    default:
+        LOG_WARN_INTVL_THREAD("Unsupported rotate degree!");
+        break;
+    }
+}
+
+template <typename T> void rgbImageRotate90(const uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height, uint32_t pixelSize) {
+    for(uint32_t h = 0; h < width; h++) {
+        for(uint32_t w = 0; w < height; w++) {
+            const uint8_t *srcPixel = src + (height - w - 1) * width * pixelSize + h * pixelSize;
+            uint8_t       *dstPixel = dst + h * height * pixelSize + w * pixelSize;
+            memcpy(dstPixel, srcPixel, pixelSize);
+        }
+    }
+}
+
+template <typename T> void rgbImageRotate180(const uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height, uint32_t pixelSize) {
+    for(uint32_t h = 0; h < height; h++) {
+        for(uint32_t w = 0; w < width; w++) {
+            const uint8_t *srcPixel = src + (height - h - 1) * width * pixelSize + (width - w - 1) * pixelSize;
+            uint8_t       *dstPixel = dst + h * width * pixelSize + w * pixelSize;
+            memcpy(dstPixel, srcPixel, pixelSize);
+        }
+    }
+}
+
+template <typename T> void rgbImageRotate270(const uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height, uint32_t pixelSize) {
+    for(uint32_t h = 0; h < width; h++) {
+        for(uint32_t w = 0; w < height; w++) {
+            const T *srcPixel = src + ((w * width + h) * pixelSize);
+            T       *dstPixel = dst + (((width - h - 1) * height + w) * pixelSize);
+            memcpy(dstPixel, srcPixel, pixelSize * sizeof(T));
+        }
+    }
+}
+
+template <typename T> void roateRGBImage(const T *src, T *dst, uint32_t width, uint32_t height, uint32_t rotateDegree, uint32_t pixelSize) {
+    switch(rotateDegree) {
+    case 90:
+        rgbImageRotate90<T>(src, dst, width, height, pixelSize);
+        break;
+    case 180:
+        rgbImageRotate180<T>(src, dst, width, height, pixelSize);
+        break;
+    case 270:
+        rgbImageRotate270<T>(src, dst, width, height, pixelSize);
+        break;
+    default:
+        LOG_WARN_INTVL_THREAD("Unsupported rotate degree!");
+        break;
+    }
+}
+
+void yuyvImageRotate(uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height, uint32_t rotateDegree) {
+    libyuv::RotationMode rotationMode;
+    switch(rotateDegree) {
+    case 90:
+        rotationMode = libyuv::kRotate90;
+        break;
+    case 180:
+        rotationMode = libyuv::kRotate180;
+        break;
+    case 270:
+        rotationMode = libyuv::kRotate270;
+        break;
+    default:
+        LOG_WARN_INTVL_THREAD("Unsupported rotate degree!");
+        return;
+    }
+
+    // 1. yuyv 转 I420，由于yuyv是packed格式，只有plane格式才可以旋转； 转plane会有数据丢失
+    uint32_t dst_width    = width;
+    uint32_t dst_height   = height;
+    uint8_t *dst_y        = dst;
+    uint32_t dst_stride_y = dst_width;
+    uint8_t *dst_u        = dst + dst_width * dst_height;
+    uint32_t dst_stride_u = dst_width / 2;
+    uint8_t *dst_v        = dst + dst_width * dst_height + (dst_width * dst_height) / 4;
+    uint32_t dst_stride_v = dst_width / 2;
+    libyuv::YUY2ToI420(src, width * 2, dst_y, dst_stride_y, dst_u, dst_stride_u, dst_v, dst_stride_v, dst_width, dst_height);
+
+    // 2. rotate
+    uint8_t *src_y        = dst_y;
+    uint32_t src_stride_y = dst_stride_y;
+    uint8_t *src_u        = dst_u;
+    uint32_t src_stride_u = dst_stride_u;
+    uint8_t *src_v        = dst_v;
+    uint32_t src_stride_v = dst_stride_v;
+    if(rotationMode != libyuv::kRotate180) {
+        dst_width  = height;
+        dst_height = width;
+    }
+    std::swap(src, dst);
+    dst_y        = dst;
+    dst_stride_y = dst_width;
+    dst_u        = dst + dst_width * dst_height;
+    dst_stride_u = dst_width / 2;
+    dst_v        = dst + dst_width * dst_height + (dst_width * dst_height) / 4;
+    dst_stride_v = dst_width / 2;
+    libyuv::I420Rotate(src_y, src_stride_y, src_u, src_stride_u, src_v, src_stride_v, dst_y, dst_stride_y, dst_u, dst_stride_u, dst_v, dst_stride_v, width,
+                       height, rotationMode);
+
+    // 3.I420 to yuyv
+    src_y        = dst_y;
+    src_stride_y = dst_stride_y;
+    src_u        = dst_u;
+    src_stride_u = dst_stride_u;
+    src_v        = dst_v;
+    src_stride_v = dst_stride_v;
+    std::swap(src, dst);
+    uint8_t *dst_yuy2        = dst;
+    uint32_t dst_stride_yuy2 = dst_width * 2;
+    libyuv::I420ToYUY2(src_y, src_stride_y, src_u, src_stride_u, src_v, src_stride_v, dst_yuy2, dst_stride_yuy2, dst_width, dst_height);
+}
+
+FrameMirror::FrameMirror(const std::string &name) : FilterBase(name) {}
+FrameMirror::~FrameMirror() noexcept {}
+
+void FrameMirror::updateConfig(std::vector<std::string> &params) {
+    if(params.size() != 0) {
+        throw unsupported_operation_exception("Frame mirror update config error: unsupported operation.");
+    }
+}
+
+const std::string &FrameMirror::getConfigSchema() const {
+    throw unsupported_operation_exception("Frame mirror get config schema error: unsupported operation.");
+}
+
+std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> frame) {
+    if(!frame) {
+        return nullptr;
+    }
+
+    if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV
+       && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA
+       && frame->getFormat() != OB_FORMAT_BGRA) {
+        LOG_WARN_INTVL("FrameMirror unsupported to process this format: {}", frame->getFormat());
+        return FrameFactory::cloneFrame(frame);
+    }
+
+    auto outFrame = FrameFactory::cloneFrame(frame);
+    if(outFrame == nullptr) {
+        LOG_ERROR_INTVL("Acquire frame from frameBufferManager failed!");
+        return nullptr;
+    }
+
+    auto videoFrame = frame->as<VideoFrame>();
+    bool isMirrorSupport = true;
+    switch(frame->getFormat()) {
+    case OB_FORMAT_Y8:
+        imageMirror<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        break;
+    case OB_FORMAT_Y16:
+        imageMirror<uint16_t>((uint16_t *)videoFrame->getData(), (uint16_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        break;
+    case OB_FORMAT_YUYV:
+        if(frame->getType() == OB_FRAME_COLOR) {
+            mirrorYUYVImage((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        }
+        else {
+            imageMirror<uint32_t>((uint32_t *)videoFrame->getData(), (uint32_t *)outFrame->getData(), videoFrame->getWidth() / 2, videoFrame->getHeight());
+        }
+        break;
+    case OB_FORMAT_RGB888:
+    case OB_FORMAT_BGR:
+        mirrorRGBImage((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        break;
+    case OB_FORMAT_RGBA:
+    case OB_FORMAT_BGRA:
+        mirrorRGBAImage((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
+        break;
+    default:
+        isMirrorSupport = false;
+        break;
+    }
+
+    outFrame->copyInfo(frame);
+
+    try {
+        if(isMirrorSupport) {
+            auto streampProfile = frame->getStreamProfile();
+            if(!srcStreamProfile_ || srcStreamProfile_ != streampProfile) {
+                srcStreamProfile_          = streampProfile;
+                auto srcVideoStreamProfile = srcStreamProfile_->as<VideoStreamProfile>();
+                auto srcIntrinsic          = srcVideoStreamProfile->getIntrinsic();
+                auto rstIntrinsic          = mirrorOBCameraIntrinsic(srcIntrinsic);
+                auto srcDistortion         = srcVideoStreamProfile->getDistortion();
+                auto rstDistortion         = mirrorOBCameraDistortion(srcDistortion);
+                auto srcExtrinsic          = srcVideoStreamProfile->getExtrinsicTo(streampProfile);
+                rstStreamProfile_          = srcVideoStreamProfile->clone()->as<VideoStreamProfile>();
+                rstStreamProfile_->bindIntrinsic(rstIntrinsic);
+                rstStreamProfile_->bindDistortion(rstDistortion);
+
+                OBExtrinsic rstExtrinsic = { -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
+                rstStreamProfile_->bindExtrinsicTo(srcStreamProfile_, rstExtrinsic);
+            }
+            outFrame->setStreamProfile(rstStreamProfile_);
+        }
+    }
+    catch(libobsensor_exception &error) {
+        LOG_WARN_INTVL("Frame mirror camera intrinsic conversion failed{0}, exception type: {1}", error.get_message(), error.get_exception_type());
+    }
+
+    return outFrame;
+}
+
+OBCameraIntrinsic FrameMirror::mirrorOBCameraIntrinsic(const OBCameraIntrinsic &src) {
+    auto intrinsic = src;
+    libobsensor::CameraParamProcessor::cameraIntrinsicParamsMirror(&intrinsic);
+    return intrinsic;
+}
+
+OBCameraDistortion FrameMirror::mirrorOBCameraDistortion(const OBCameraDistortion &src) {
+    auto distortion = src;
+    libobsensor::CameraParamProcessor::distortionParamMirror(&distortion);
+    return distortion;
+}
+
+
+
+
+}  // namespace libobsensor

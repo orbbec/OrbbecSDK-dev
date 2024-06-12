@@ -6,6 +6,7 @@
 #include "DisparityProcess.hpp"
 #include "IMUFrameReversion.hpp"
 #include "FormatConverterProcess.hpp"
+#include "FrameGeometricTransform.hpp"
 #include "PointCloudProcess.hpp"
 
 namespace libobsensor {
@@ -34,6 +35,7 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         ADD_FILTER_CREATOR(DisparityTransform),
         ADD_FILTER_CREATOR(IMUFrameReversion),
         ADD_FILTER_CREATOR(FormatConverter),
+        ADD_FILTER_CREATOR(FrameMirror),
         ADD_FILTER_CREATOR(PointCloudFilter),
 
 

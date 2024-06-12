@@ -386,7 +386,7 @@ const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_err
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = innerFrame();
+    impl->frame = innerFrame;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)

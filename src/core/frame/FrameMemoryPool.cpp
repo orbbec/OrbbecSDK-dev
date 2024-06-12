@@ -48,7 +48,7 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {
     case OB_FRAME_DISPARITY:
-        frameBufManager = std::shared_ptr<FrameBufferManager<DisparityFrame>>(new FrameBufferManager<DisparityFrame>(frameBufferSize));
+        frameBufMgr = std::shared_ptr<FrameBufferManager<DisparityFrame>>(new FrameBufferManager<DisparityFrame>(frameBufferSize));
         LOG_DEBUG("DisparityFrame bufferManager created!");
         break;
     case OB_FRAME_DEPTH:

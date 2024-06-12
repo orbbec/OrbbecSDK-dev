@@ -472,7 +472,7 @@ void FrameRotate::updateConfig(std::vector<std::string> &params) {
     try {
         int rotateDegree = static_cast<int>(std::stoi(params[0]));
         if(rotateDegree == 0 || rotateDegree == 90 || rotateDegree == 180 || rotateDegree == 270) {
-            std::lock_guard<std::mutex> rorateLock(mtx_);
+            std::lock_guard<std::mutex> rotateLock(mtx_);
             rotateDegree_        = rotateDegree;
             rotateDegreeUpdated_ = true;
         }
@@ -510,7 +510,7 @@ std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> fra
         return nullptr;
     }
 
-    std::lock_guard<std::mutex> rorateLock(mtx_);
+    std::lock_guard<std::mutex> rotateLock(mtx_);
     bool                        isSupportRotate = true;
     auto                        videoFrame      = frame->as<VideoFrame>();
     switch(frame->getFormat()) {

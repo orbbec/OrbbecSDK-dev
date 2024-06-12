@@ -42,6 +42,7 @@ protected:
     std::shared_ptr<StreamProfile>       tarStreamProfile_;
 
     OBFormat               pointFormat_;
+    float                      positionDataScale_;
     OBCameraParam          cameraParam_;
     int                    coordinateSystemCoefficient_;  // Coordinate system coefficient, default right-hand coordinate system
     bool                   isColorDataNormalization_;
@@ -54,7 +55,6 @@ protected:
     std::shared_ptr<FormatConverter> formatConverter_;
 
     OBFormat                   cacheColorFormat_;
-    float                      positionDataScale_;
     OBCoordinateSystemType     coordinateSystemType_;
     OBPointcloudDistortionType distortionType_;
     std::shared_ptr<float>     tablesData_;

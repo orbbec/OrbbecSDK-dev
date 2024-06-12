@@ -117,6 +117,8 @@ public:
     ControlRange getPuRange(OBPropertyID propertyId) override;
 
     virtual std::shared_ptr<const SourcePortInfo>      getSourcePortInfo() const override;
+
+    std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) override;
     static std::vector<std::shared_ptr<V4lDeviceInfo>> queryRelatedDevices(std::shared_ptr<const USBSourcePortInfo> portInfo);
     static bool                                        isContainedMetadataDevice(std::shared_ptr<const USBSourcePortInfo> portInfo);
 

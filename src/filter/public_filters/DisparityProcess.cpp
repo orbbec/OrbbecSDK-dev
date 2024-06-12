@@ -128,6 +128,7 @@ void DisparityTransform::singleCameraInitLookUpTable() {
 }
 
 void DisparityTransform::checkDisparityConverterParams(std::shared_ptr<Frame> frame) {
+    (void)frame;
     // bool  scaleValueChanged = false;
     // float scaleValue        = frame->as<DepthFrame>()->getValueScale();
 

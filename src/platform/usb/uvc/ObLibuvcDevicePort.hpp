@@ -55,6 +55,8 @@ public:
     virtual bool sendData(const uint8_t *data, uint32_t dataLen);
     virtual bool recvData(uint8_t *data, uint32_t *dataLen);
 
+    std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) override;
+
     bool         getPu(OBPropertyID propertyId, int32_t &value) override;
     bool         setPu(OBPropertyID propertyId, int32_t value) override;
     ControlRange getPuRange(OBPropertyID propertyId) override;

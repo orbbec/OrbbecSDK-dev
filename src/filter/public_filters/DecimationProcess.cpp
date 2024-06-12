@@ -179,8 +179,6 @@ template <class pixelvalue> inline pixelvalue opt_med9(pixelvalue *p) {
     return PIX_MIN(p[4], p[2]);
 }
 
-
-
 DecimationFilter::DecimationFilter(const std::string &name)
     : FilterBase(name),
       decimation_factor_(2),
@@ -192,9 +190,7 @@ DecimationFilter::DecimationFilter(const std::string &name)
       padded_width_(0),
       padded_height_(0),
       recalc_profile_(false),
-      options_changed_(false) {
-
-}
+      options_changed_(false) {}
 
 DecimationFilter::~DecimationFilter() noexcept {}
 
@@ -254,15 +250,15 @@ std::shared_ptr<Frame> DecimationFilter::processFunc(std::shared_ptr<const Frame
             auto oldVideoFrame = outFrame->as<VideoFrame>();
             auto newViodeFrame = newOutFrame->as<VideoFrame>();
 
-            if(frameType == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16 || OB_FORMAT_DISP16)) {
+            if(frameType == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16 || frameFormat == OB_FORMAT_DISP16)) {
                 decimateDepth((uint16_t *)outFrame->getData(), (uint16_t *)newViodeFrame->getData(), oldVideoFrame->getWidth(), patch_size_);
             }
             else {
                 decimateOthers(frameFormat, (void *)outFrame->getData(), (void *)newViodeFrame->getData(), oldVideoFrame->getWidth(), patch_size_);
             }
 
-            //TODO: DataSize need to be reset
-            //newFrame->setDataSize(padded_width_ * padded_height_ * outFrame->getBytesPerPixel());
+            // TODO: DataSize need to be reset
+            // newFrame->setDataSize(padded_width_ * padded_height_ * outFrame->getBytesPerPixel());
 
             return newOutFrame;
         }

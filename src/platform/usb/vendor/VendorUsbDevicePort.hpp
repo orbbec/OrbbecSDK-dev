@@ -9,7 +9,7 @@ public:
     VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~VendorUsbDevicePort() noexcept override;
 
-    std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedLength) ;
+    std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedLength) override;
 
     virtual bool readFromBulkEndPoint(std::vector<uint8_t> &data);  // bulk transfer
     virtual bool writeToBulkEndPoint(std::vector<uint8_t> &data);   // bulk transfer

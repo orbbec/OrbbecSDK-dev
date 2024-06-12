@@ -686,9 +686,9 @@ void ObV4lUvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> pr
 
         devHandle->isCapturing = false;
         // signal the capture loop to stop
-        char buff[1] = { 0 };
-        ssize_t ret = write(devHandle->stopPipeFd[1], buff, 1);
-        if(ret < 0){
+        char    buff[1] = { 0 };
+        ssize_t ret     = write(devHandle->stopPipeFd[1], buff, 1);
+        if(ret < 0) {
             throw libobsensor::io_exception("failed to write stop pipe " + std::string(strerror(errno)));
         }
 
@@ -909,6 +909,13 @@ ControlRange ObV4lUvcDevicePort::getPuRange(OBPropertyID propertyId) {
 
 std::shared_ptr<const SourcePortInfo> ObV4lUvcDevicePort::getSourcePortInfo() const {
     return portInfo_;
+}
+
+std::vector<uint8_t> ObV4lUvcDevicePort::sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) {
+    // TODO: implement
+    (void)sendData;
+    (void)exceptedRevLen;
+    return {};
 }
 
 bool ObV4lUvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {

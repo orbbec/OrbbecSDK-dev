@@ -3,8 +3,10 @@
 #include "DeviceWatcher.hpp"
 #include "ObPal.hpp"
 
+#include <memory>
+
 namespace libobsensor {
-class UsbDeviceEnumerator : public IDeviceEnumerator {
+class UsbDeviceEnumerator : public IDeviceEnumerator, public std::enable_shared_from_this<IDeviceEnumerator> {
 public:
     UsbDeviceEnumerator(DeviceChangedCallback callback);
     ~UsbDeviceEnumerator() noexcept override;

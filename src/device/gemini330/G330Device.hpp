@@ -6,7 +6,7 @@
 #include "G330SensorStartStrategy.hpp"
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
 class Gemini2ProfileFilter;
 
@@ -105,5 +105,5 @@ private:
 };
 /* #endregion ------------G330Device declare end---------------- */
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

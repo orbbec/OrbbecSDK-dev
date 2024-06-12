@@ -1,5 +1,6 @@
 #include "FrameMemoryPool.hpp"
 #include "utils/PublicTypeHelper.hpp"
+#include "stream/StreamProfile.hpp"
 #include <sstream>
 
 namespace libobsensor {

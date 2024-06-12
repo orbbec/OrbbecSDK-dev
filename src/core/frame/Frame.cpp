@@ -1,6 +1,7 @@
 #include "Frame.hpp"
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
+#include "stream/StreamProfile.hpp"
 
 namespace libobsensor {
 

@@ -1,6 +1,8 @@
 
 #include "SensorBase.hpp"
 #include "utils/PublicTypeHelper.hpp"
+#include "frame/Frame.hpp"
+#include "stream/StreamProfile.hpp"
 
 namespace libobsensor {
 SensorBase::SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)

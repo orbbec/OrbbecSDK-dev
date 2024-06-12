@@ -5,7 +5,7 @@
 #include <json/json.h>
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
 void G330PresetDevice::initPreset(std::shared_ptr<EventBus> bus) {
     auto depthAlgModeList = getDepthAlgModeChecksumList();
@@ -339,5 +339,5 @@ void G330PresetDevice::restoreCustomPreset(std::string presetName) {
     storedAvailablePreset_                = customPresets_[presetName].depthAlgMode;
 }
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

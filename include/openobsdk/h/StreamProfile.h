@@ -33,20 +33,6 @@ OB_EXPORT ob_stream_profile* ob_create_stream_profile(ob_stream_type type, ob_fo
 OB_EXPORT ob_stream_profile* ob_create_video_stream_profile(ob_stream_type type, ob_format format, uint32_t width, uint32_t height, uint32_t fps,ob_error **error);
 
 /**
- * @brief Create a disparity stream profile object
- *
- * @param[in] type Stream type
- * @param[in] format Stream format
- * @param[in] width Stream width
- * @param[in] height Stream height
- * @param[in] fps Stream frame rate
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- * @return ob_stream_profile* return the video stream profile object
- */
-OB_EXPORT ob_stream_profile* ob_create_disparity_stream_profile(ob_stream_type type, ob_format format, uint32_t width, uint32_t height, uint32_t fps,ob_error **error);
-
-
-/**
  * @brief Create a accel stream profile object
  *
  * @param[in] full_scale_range Accel full scale range

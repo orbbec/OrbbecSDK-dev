@@ -2,6 +2,8 @@
 #include "exception/OBException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "utils/utils.hpp"
+#include "stream/StreamProfile.hpp"
+#include "frame/Frame.hpp"
 
 namespace libobsensor {
 

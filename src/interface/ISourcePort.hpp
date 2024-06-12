@@ -4,8 +4,8 @@
 #include <string>
 
 #include "openobsdk/h/ObTypes.h"
-#include "stream/StreamProfile.hpp"
-#include "frame/Frame.hpp"
+#include "IFrame.hpp"
+#include "IStreamProfile.hpp"
 
 namespace libobsensor {
 enum SourcePortType {

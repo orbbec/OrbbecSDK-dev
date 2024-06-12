@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
 #pragma pack(1)
 typedef struct {
@@ -37,24 +37,24 @@ typedef struct {
 typedef struct {
     G330FirmwareDataHeader header;
     std::vector<uint8_t>  data;
-} g2r_firmware_data;
+} g330_firmware_data;
 #pragma pack()
 
 class G330Firmware {
 public:
     G330Firmware(const uint8_t *data, size_t size);
-    const std::vector<g2r_firmware_data> &getFirmwareDataList() const;
+    const std::vector<g330_firmware_data> &getFirmwareDataList() const;
     const G330FirmwareFileHeader          &getFileHeader() const;
 
-    static bool isFirmwareDataAdaptable(const g2r_firmware_data &firmwareData, uint16_t pid);
+    static bool isFirmwareDataAdaptable(const g330_firmware_data &firmwareData, uint16_t pid);
 
 private:
-    static void checkFirmwareData(const g2r_firmware_data &firmwareData);
+    static void checkFirmwareData(const g330_firmware_data &firmwareData);
 
 private:
     G330FirmwareFileHeader          fileHeader_{};
-    std::vector<g2r_firmware_data> firmwareDataList_;
+    std::vector<g330_firmware_data> firmwareDataList_;
 };
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

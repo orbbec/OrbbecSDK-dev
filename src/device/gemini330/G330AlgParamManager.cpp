@@ -9,7 +9,7 @@
 #include <vector>
 #include <sstream>
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
 bool findBestMatchedCameraParam(const std::vector<OBCameraParam> &cameraParamList, const std::shared_ptr<const VideoStreamProfile> &profile,
                                 OBCameraParam &result) {
@@ -629,5 +629,5 @@ bool G330AlgParamManager::isBinocularCamera() const {
     return depthCalib.depthMode == (uint32_t)DEPTH_MODE_STEREO;
 }
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

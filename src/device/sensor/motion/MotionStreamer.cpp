@@ -1,4 +1,6 @@
 #include "MotionStreamer.hpp"
+#include "frame/Frame.hpp"
+#include "stream/StreamProfile.hpp"
 
 namespace libobsensor {
 MotionStreamer::MotionStreamer(const std::shared_ptr<IDataStreamPort> &backend, const std::shared_ptr<IFilter> &dataPhaser)

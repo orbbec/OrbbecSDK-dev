@@ -4,8 +4,9 @@
 #include <string>
 #include <vector>
 
+#include "IFrame.hpp"
+
 namespace libobsensor {
-class Frame;
 
 typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
 class IFilter {

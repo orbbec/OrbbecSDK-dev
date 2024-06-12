@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 
 #include <openobsdk/h/Context.h>
@@ -15,13 +15,13 @@ void check_ob_error(ob_error **err) {
     *err = NULL;
 }
 
-void printf_device_list(ob_device_list *device_list) {
+// void printf_device_list(ob_device_list *device_list) {
 
-}
+// }
 
-void printf_device_info(ob_device_info *device_info) {
+// void printf_device_info(ob_device_info *device_info) {
 
-}
+// }
 
 int main() {
     // define the error pointer to handle errors
@@ -35,10 +35,10 @@ int main() {
     ob_context* ctx = ob_create_context(&err);
     check_ob_error(&err);
 
-    ob_device_list *device_list = ob_query_device_list(ctx, &err);
-    check_ob_error(&err);
+    // ob_device_list *device_list = ob_query_device_list(ctx, &err);
+    // check_ob_error(&err);
 
-    printf_device_list(device_list);
+    // printf_device_list(device_list);
 
     // todo：create device and print device info
     // todo： delete device_list, device, etc.

@@ -27,15 +27,6 @@ ob_stream_profile *ob_create_video_stream_profile(ob_stream_type type, ob_format
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, type, format, width, height, fps)
 
-ob_stream_profile *ob_create_disparity_stream_profile(ob_stream_type type, ob_format format, uint32_t width, uint32_t height, uint32_t fps,
-                                                      ob_error **error) BEGIN_API_CALL {
-    auto profile         = libobsensor::StreamProfileFactory::createDisparityStreamProfile(type, format, width, height, fps);
-    auto profileImpl     = new ob_stream_profile();
-    profileImpl->profile = profile;
-    return profileImpl;
-}
-HANDLE_EXCEPTIONS_AND_RETURN(nullptr, type, format, width, height, fps)
-
 ob_stream_profile *ob_create_accel_stream_profile(ob_accel_full_scale_range full_scale_range, ob_accel_sample_rate sample_rate,
                                                   ob_error **error) BEGIN_API_CALL {
     auto profile         = libobsensor::StreamProfileFactory::createAccelStreamProfile(full_scale_range, sample_rate);

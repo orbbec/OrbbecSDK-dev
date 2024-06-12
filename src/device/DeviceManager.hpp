@@ -4,9 +4,10 @@
 #pragma once
 #include "IDeviceEnumerator.hpp"
 
-#include <mutex>
 #include <string>
 #include <vector>
+#include <map>
+#include <mutex>
 #include <thread>
 #include <condition_variable>
 

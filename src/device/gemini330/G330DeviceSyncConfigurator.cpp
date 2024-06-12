@@ -2,7 +2,7 @@
 #include "common/exception/ObException.hpp"
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
 OBDeviceSyncConfig G330DeviceSyncConfigurator::getSyncConfig() {
     throw libobsensor::unsupported_operation_exception("Current device does not support this operation!");
@@ -90,5 +90,5 @@ uint16_t G330DeviceSyncConfigurator::getSupportedSyncModeBitmap() {
     return supportedSyncModeBitmap;
 }
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

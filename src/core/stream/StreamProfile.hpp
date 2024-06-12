@@ -1,13 +1,12 @@
 #pragma once
-
+ #include "IStreamProfile.hpp"
+ #include "ISensor.hpp"
 #include "openobsdk/h/ObTypes.h"
 #include "exception/ObException.hpp"
 #include <memory>
 #include <vector>
 
 namespace libobsensor {
-
-struct LazySensor;
 
 class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
 public:
@@ -160,9 +159,6 @@ template <typename T> bool StreamProfile::is() const {
     return false;
 }
 
-typedef std::vector<std::shared_ptr<const StreamProfile>> StreamProfileList;
-typedef std::vector<std::shared_ptr<StreamProfile>>       StreamProfileListUnsafe;
-
 std::vector<std::shared_ptr<const VideoStreamProfile>> matchVideoStreamProfile(const StreamProfileList &profileList, uint32_t width, uint32_t height,
                                                                                uint32_t fps, OBFormat format);
 
@@ -174,17 +170,3 @@ std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(con
 
 }  // namespace libobsensor
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-struct ob_stream_profile_t {
-    std::shared_ptr<const libobsensor::StreamProfile> profile;
-};
-
-struct ob_stream_profile_list_t {
-    std::vector<std::shared_ptr<const libobsensor::StreamProfile>> profileList;
-};
-#ifdef __cplusplus
-}
-#endif

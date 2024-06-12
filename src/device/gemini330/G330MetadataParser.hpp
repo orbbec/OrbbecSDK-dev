@@ -7,7 +7,7 @@
 #include "common/logger/LoggerInterval.hpp"
 
 namespace libobsensor {
-namespace g2r {
+namespace g330 {
 
 template <typename T, typename Field> class StructureMetadataParser : public IMetadataParser {
 public:
@@ -72,14 +72,14 @@ public:
             LOG_WARN_INTVL("Current metadata does not contain timestamp!");
             return 0;
         }
-        auto md          = reinterpret_cast<g2r_common_uvc_metadata_t *>(metadata);
+        auto md          = reinterpret_cast<G330CommonUvcMetadata *>(metadata);
         auto exp_in_usec = exp_to_usec_ ? exp_to_usec_(md->exposure) : md->exposure;
         return (int64_t)md->timestamp_sof_sec * 1000000 + md->timestamp_sof_nsec / 1000 - md->timestamp_offset_usec - exp_in_usec / 2;
     }
 
     virtual bool isSupported(uint8_t *metadata, uint32_t dataSize) override {
         (void *)metadata;
-        return dataSize >= sizeof(g2r_common_uvc_metadata_t);
+        return dataSize >= sizeof(G330CommonUvcMetadata);
     }
 
 private:
@@ -98,19 +98,19 @@ public:
             LOG_WARN_INTVL("Current metadata does not contain timestamp!");
             return 0;
         }
-        auto md          = reinterpret_cast<g2r_color_uvc_metadata_t *>(metadata);
+        auto md          = reinterpret_cast<G330ColorUvcMetadata *>(metadata);
         auto exp_in_usec = exp_to_usec_ ? exp_to_usec_(md->exposure) : md->exposure;
         return (int64_t)md->timestamp_sof_sec * 1000000 + md->timestamp_sof_nsec / 1000 - md->timestamp_offset_usec + md->sensor_timestamp_offset_usec;
     }
 
     virtual bool isSupported(uint8_t *metadata, uint32_t dataSize) override {
         (void *)metadata;
-        return dataSize >= sizeof(g2r_common_uvc_metadata_t);
+        return dataSize >= sizeof(G330CommonUvcMetadata);
     }
 
 private:
     MetadataModifier exp_to_usec_ = nullptr;
 };
 
-}  // namespace g2r
+}  // namespace g330
 }  // namespace libobsensor

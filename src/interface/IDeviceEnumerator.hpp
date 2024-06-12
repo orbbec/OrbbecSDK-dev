@@ -7,6 +7,8 @@ namespace libobsensor {
 class IDeviceEnumerator;  // forward declaration
 
 struct DeviceEnumInfo {
+    virtual ~DeviceEnumInfo() = default;
+
     std::string connectionType_;  // "Ethernet", "USB2.0", "USB3.0", etc.
 
     // device identification info
@@ -20,9 +22,6 @@ struct DeviceEnumInfo {
 
     // source port info list
     SourcePortInfoList sourcePortInfoList_;
-
-    // device enumerator for creating device object
-    std::weak_ptr<IDeviceEnumerator> deviceEnumerator_;
 
     virtual bool operator==(const DeviceEnumInfo &other) const {
         bool rst = (other.uid_ == uid_ && other.sourcePortInfoList_.size() == sourcePortInfoList_.size());

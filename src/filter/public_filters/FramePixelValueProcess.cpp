@@ -101,6 +101,7 @@ std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame
         imagePixelValueScale<uint16_t>((uint16_t *)frame->getData(), (uint16_t *)outFrame->getData(), depthFrame->getWidth(), depthFrame->getHeight(), scale_);
         break;
     default:
+        LOG_ERROR_INTVL("PixelValueScaler: unsupported format: {}", frame->getFormat());
         break;
     }
 
@@ -110,7 +111,6 @@ std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame
 
     return outFrame;
 }
-
 
 PixelValueCutOff::PixelValueCutOff(const std::string &name) : FilterBase(name) {}
 PixelValueCutOff::~PixelValueCutOff() noexcept {}
@@ -138,7 +138,7 @@ void PixelValueCutOff::updateConfig(std::vector<std::string> &params) {
 const std::string &PixelValueCutOff::getConfigSchema() const {
     // csv format: name，type， min，max，step，default，description
     static const std::string schema = "min, int, 0, 16000, 1, 0, min depth range\n"
-           "max, int, 0, 16000, 1, 16000, max depth range";
+                                      "max, int, 0, 16000, 1, 16000, max depth range";
     return schema;
 }
 
@@ -173,7 +173,6 @@ std::shared_ptr<Frame> PixelValueCutOff::processFunc(std::shared_ptr<const Frame
     return outFrame;
 }
 
-
 PixelValueOffset::PixelValueOffset(const std::string &name) : FilterBase(name) {}
 PixelValueOffset::~PixelValueOffset() noexcept {}
 
@@ -201,7 +200,7 @@ std::shared_ptr<Frame> PixelValueOffset::processFunc(std::shared_ptr<const Frame
     }
 
     auto videoFrame = frame->as<VideoFrame>();
-    auto outFrame = FrameFactory::cloneFrame(frame);
+    auto outFrame   = FrameFactory::cloneFrame(frame);
     if(offset_ != 0) {
         switch(frame->getFormat()) {
         case OB_FORMAT_Y16:

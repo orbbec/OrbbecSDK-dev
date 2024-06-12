@@ -6,7 +6,6 @@ namespace libobsensor {
 
 std::mutex                     FrameMemoryPool::instanceMutex_;
 std::weak_ptr<FrameMemoryPool> FrameMemoryPool::instanceWeakPtr_;
-bool                           FrameMemoryPool::reuseFrameBufferManager_;
 
 std::shared_ptr<FrameMemoryPool> FrameMemoryPool::getInstance() {
     std::unique_lock<std::mutex> lk(instanceMutex_);
@@ -22,9 +21,6 @@ void FrameMemoryPool::setMaxFrameMemorySize(uint64_t sizeInMB) {
     FrameMemoryAllocator::getInstance()->setMaxFrameMemorySize(sizeInMB);
 }
 
-void FrameMemoryPool::activateFrameBufferManagerReuse(bool enable) {
-    reuseFrameBufferManager_ = enable;
-}
 
 FrameMemoryPool::FrameMemoryPool():logger_(Logger::getInstance()) {
     LOG_DEBUG("FrameMemoryPool created!");
@@ -38,12 +34,10 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
     std::unique_lock<std::mutex> lock(bufMgrMapMutex_);
     FrameBufferManagerInfo       info = { type, frameBufferSize };
 
-    if(reuseFrameBufferManager_) {
         auto iter = bufMgrMap_.find(info);
         if(iter != bufMgrMap_.end()) {
             return iter->second;
         }
-    }
 
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {
@@ -90,20 +84,7 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
         break;
     }
 
-    if(reuseFrameBufferManager_) {
-        bufMgrMap_.insert({ info, frameBufMgr });
-    }
-    else {
-        auto iter = bufMgrWeakList_.begin();
-        while(iter != bufMgrWeakList_.end()) {
-            if(iter->expired()) {
-                iter = bufMgrWeakList_.erase(iter);
-                continue;
-            }
-            iter++;
-        }
-        bufMgrWeakList_.push_back(frameBufMgr);
-    }
+    bufMgrMap_.insert({ info, frameBufMgr });
 
     return frameBufMgr;
 }

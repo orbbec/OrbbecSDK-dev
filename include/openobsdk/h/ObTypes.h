@@ -340,6 +340,18 @@ typedef struct {
     bool def;   ///< Default value
 } OBBoolPropertyRange, ob_bool_property_range;
 
+/** \brief Distortion model: defines how pixel coordinates should be mapped to sensor coordinates. */
+typedef enum {
+    OB_DISTORTION_NONE,                   /**< Rectilinear images. No distortion compensation required. */
+    OB_DISTORTION_MODIFIED_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except that tangential distortion is applied to radially distorted points
+                                           */
+    OB_DISTORTION_INVERSE_BROWN_CONRADY,  /**< Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it */
+    OB_DISTORTION_BROWN_CONRADY,          /**< Unmodified Brown-Conrady distortion model */
+    OB_DISTORTION_BROWN_CONRADY_K6,       /**< Unmodified Brown-Conrady distortion model with k6 supported */
+    OB_DISTORTION_KANNALA_BRANDT4,        /**< Kannala-Brandt distortion model */
+} OBCameraDistortionModel,
+    ob_camera_distortion_model;
+
 /**
  * @brief Structure for camera intrinsic parameters
  */
@@ -350,6 +362,7 @@ typedef struct {
     float   cy;      ///< Optical center ordinate
     int16_t width;   ///< Image width
     int16_t height;  ///< Image height
+    OBCameraDistortionModel model;
 } OBCameraIntrinsic, ob_camera_intrinsic;
 
 /**
@@ -391,28 +404,18 @@ typedef struct {
     float p2;  ///< Tangential distortion factor 2
 } OBCameraDistortion, ob_camera_distortion;
 
-/** \brief Distortion model: defines how pixel coordinates should be mapped to sensor coordinates. */
-typedef enum {
-    OB_DISTORTION_NONE,                   /**< Rectilinear images. No distortion compensation required. */
-    OB_DISTORTION_MODIFIED_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except that tangential distortion is applied to radially distorted points
-                                           */
-    OB_DISTORTION_INVERSE_BROWN_CONRADY,  /**< Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it */
-    OB_DISTORTION_BROWN_CONRADY,          /**< Unmodified Brown-Conrady distortion model */
-} OBCameraDistortionModel,
-    ob_camera_distortion_model;
-
 /** \brief Video stream intrinsics. */
-typedef struct {
-    int                     width;  /**< Width of the image in pixels */
-    int                     height; /**< Height of the image in pixels */
-    float                   ppx;    /**< Horizontal coordinate of the principal point of the image, as a pixel offset from the left edge */
-    float                   ppy;    /**< Vertical coordinate of the principal point of the image, as a pixel offset from the top edge */
-    float                   fx;     /**< Focal length of the image plane, as a multiple of pixel width */
-    float                   fy;     /**< Focal length of the image plane, as a multiple of pixel height */
-    OBCameraDistortionModel model;  /**< Distortion model of the image */
-    float coeffs[5]; /**< Distortion coefficients. Order for Brown-Conrady: [k1, k2, p1, p2, k3]. Order for F-Theta Fish-eye: [k1, k2, k3, k4, 0]. Other models
-                        are subject to their own interpretations */
-} OBCameraAlignIntrinsic, ob_camera_align_intrinsic;
+//typedef struct {
+//    int                     width;  /**< Width of the image in pixels */
+//    int                     height; /**< Height of the image in pixels */
+//    float                   ppx;    /**< Horizontal coordinate of the principal point of the image, as a pixel offset from the left edge */
+//    float                   ppy;    /**< Vertical coordinate of the principal point of the image, as a pixel offset from the top edge */
+//    float                   fx;     /**< Focal length of the image plane, as a multiple of pixel width */
+//    float                   fy;     /**< Focal length of the image plane, as a multiple of pixel height */
+//    OBCameraDistortionModel model;  /**< Distortion model of the image */
+//    float coeffs[5]; /**< Distortion coefficients. Order for Brown-Conrady: [k1, k2, p1, p2, k3]. Order for F-Theta Fish-eye: [k1, k2, k3, k4, 0]. Other models
+//                        are subject to their own interpretations */
+//} OBCameraAlignIntrinsic, ob_camera_align_intrinsic;
 
 /**
  * @brief Structure for rotation/transformation

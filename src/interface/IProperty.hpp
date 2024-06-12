@@ -45,17 +45,17 @@ class IPropertyAccessor {
 public:
     virtual ~IPropertyAccessor() noexcept = default;
 
-    void registerProperty(uint32_t protectedId, OBPermissionType permission, std::shared_ptr<IPropertyPort> port);
-    void aliasProperty(uint32_t aliasId, uint32_t protectedId);
+    virtual void registerProperty(uint32_t propertyId, OBPermissionType permission, std::shared_ptr<IPropertyPort> port) = 0;
+    virtual void aliasProperty(uint32_t aliasId, uint32_t protectedId)                                                   = 0;
 
-    bool checkProperty(uint32_t propertyId, OBPermissionType permission) const;
+    virtual bool checkProperty(uint32_t propertyId, OBPermissionType permission) const = 0;
 
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value)  = 0;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) = 0;
     virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) = 0;
 
-    virtual void                 setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
-    virtual std::vector<uint8_t> getFirmwareData(uint32_t propertyId)                                   = 0;
+    virtual void                        setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
+    virtual const std::vector<uint8_t> &getFirmwareData(uint32_t propertyId)                                   = 0;
 
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type setPropertyValueT(uint32_t propertyId, const T &value) {

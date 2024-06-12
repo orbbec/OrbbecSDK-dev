@@ -21,6 +21,7 @@ public:
 #endif
 
 protected:
+    std::mutex mutex_;
     std::shared_ptr<const USBSourcePortInfo> portInfo_;
     std::shared_ptr<UsbDevice>               usbDev_;
 

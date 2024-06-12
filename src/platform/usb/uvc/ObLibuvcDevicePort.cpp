@@ -206,7 +206,7 @@ void ObLibuvcDevicePort::stopAllStream() {
     LOG_DEBUG("ObLibuvcDevicePort::stopAllStream() done");
 }
 
-bool ObLibuvcDevicePort::getPu(uint64_t propertyId, int32_t &value) {
+bool ObLibuvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {
     std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
     int                                   unit;
     int                                   control = obPropToUvcCS(propertyId, unit);
@@ -216,7 +216,7 @@ bool ObLibuvcDevicePort::getPu(uint64_t propertyId, int32_t &value) {
     return true;
 }
 
-bool ObLibuvcDevicePort::setPu(uint64_t propertyId, int32_t value) {
+bool ObLibuvcDevicePort::setPu(uint32_t propertyId, int32_t value) {
     std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
     int                                   unit;
     int                                   control = obPropToUvcCS(propertyId, unit);
@@ -226,7 +226,7 @@ bool ObLibuvcDevicePort::setPu(uint64_t propertyId, int32_t value) {
     return true;
 }
 
-UvcControlRange ObLibuvcDevicePort::getPuRange(uint64_t propertyId) {
+UvcControlRange ObLibuvcDevicePort::getPuRange(uint32_t propertyId) {
     std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
     int                                   unit = 0;
     int                                   min, max, step, def;
@@ -475,7 +475,7 @@ int32_t ObLibuvcDevicePort::getCtrl(uvc_req_code action, uint8_t control, uint8_
     return ret;
 }
 
-int ObLibuvcDevicePort::obPropToUvcCS(uint64_t propertyId, int &unit) const {
+int ObLibuvcDevicePort::obPropToUvcCS(uint32_t propertyId, int &unit) const {
 
     unit = uvc_get_processing_units(devHandle_)->bUnitID;
 

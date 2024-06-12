@@ -46,16 +46,15 @@ struct UvcHeader {
 constexpr uint8_t uvcHeaderSize = sizeof(UvcHeader);
 namespace libobsensor {
 
-
 class WinPal;
 
 struct StreamObject {
-    bool                                         streaming = false;
-    manual_reset_event                           isFlushed;
-    manual_reset_event                           hasStarted;
+    bool                                      streaming = false;
+    manual_reset_event                        isFlushed;
+    manual_reset_event                        hasStarted;
     std::shared_ptr<const VideoStreamProfile> profile = nullptr;
-    uint32_t                                     frameCounter;
-    FrameCallbackUnsafe                           callback = nullptr;
+    uint32_t                                  frameCounter;
+    FrameCallbackUnsafe                       callback = nullptr;
 };
 
 typedef std::function<void(const UsbDeviceInfo &, IMFActivate *)> USBDeviceInfoEnumCallback;
@@ -66,9 +65,9 @@ typedef struct FrameRate {
 } FrameRate;
 
 typedef struct MFProfile {
-    uint32_t                               index;
-    FrameRate                              min_rate;
-    FrameRate                              max_rate;
+    uint32_t                            index;
+    FrameRate                           min_rate;
+    FrameRate                           max_rate;
     std::shared_ptr<VideoStreamProfile> profile;
 } MFProfile;
 
@@ -80,25 +79,25 @@ template <class T> static void safe_release(T &ppT) {
 }
 
 class WmfUvcDevicePort : public std::enable_shared_from_this<WmfUvcDevicePort>,
-                     public UvcDevicePort,
-                     public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, IMFSourceReaderCallback> {
+                         public UvcDevicePort,
+                         public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, IMFSourceReaderCallback> {
 public:
     explicit WmfUvcDevicePort(std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~WmfUvcDevicePort() noexcept override;
     std::shared_ptr<const SourcePortInfo> getSourcePortInfo(void) const override;
-    StreamProfileListUnsafe            getStreamProfileList() override;
+    StreamProfileListUnsafe               getStreamProfileList() override;
     void                                  startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
     void                                  stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void                                  stopAllStream() override;
 
-    bool         getPu(uint64_t propertyId, int32_t &value) override;
-    bool         setPu(uint64_t propertyId, int32_t value) override;
-    UvcControlRange getPuRange(uint64_t propertyId) override;
+    bool            getPu(uint32_t propertyId, int32_t &value) override;
+    bool            setPu(uint32_t propertyId, int32_t value) override;
+    UvcControlRange getPuRange(uint32_t propertyId) override;
 
-    std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) override;
+    uint32_t sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) override;
 
     static bool isConnected(std::shared_ptr<const USBSourcePortInfo> info);
-    static void foreachUvcDevice(const USBDeviceInfoEnumCallback& action);
+    static void foreachUvcDevice(const USBDeviceInfoEnumCallback &action);
 
 private:
     IAMVideoProcAmp  *getVideoProc() const;
@@ -122,7 +121,7 @@ private:
     void setPowerStateD3();  // release device source and source reader
     void reloadSourceAndReader();
 
-    void queryXuNodeId(const CComPtr<IKsTopologyInfo>& topologyInfo);
+    void queryXuNodeId(const CComPtr<IKsTopologyInfo> &topologyInfo);
 
     void initTimeoutThread();
     void terminateTimeoutThread();
@@ -150,7 +149,7 @@ private:
     std::map<uint32_t, StreamObject> streams_;  // <index, StreamObj>
     std::mutex                       streamsMutex_;
 
-    std::atomic<bool> isStarted_ = {false};
+    std::atomic<bool> isStarted_ = { false };
     std::wstring      deviceId_;
 
     StreamProfileListUnsafe profileList_;

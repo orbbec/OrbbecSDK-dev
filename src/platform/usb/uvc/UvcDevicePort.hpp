@@ -39,9 +39,9 @@ private:
 
 class UvcDevicePort : public IVideoStreamPort, public IVendorDataPort {
 public:
-    virtual bool         getPu(uint64_t propertyId, int32_t &value) = 0;
-    virtual bool         setPu(uint64_t propertyId, int32_t value)  = 0;
-    virtual UvcControlRange getPuRange(uint64_t propertyId)            = 0;
+    virtual bool         getPu(uint32_t propertyId, int32_t &value) = 0;
+    virtual bool         setPu(uint32_t propertyId, int32_t value)  = 0;
+    virtual UvcControlRange getPuRange(uint32_t propertyId)            = 0;
 
     ~UvcDevicePort() noexcept override = default;
 

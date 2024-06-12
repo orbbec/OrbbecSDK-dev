@@ -98,7 +98,7 @@ class IVendorDataPort : virtual public ISourcePort {  // Virtual inheritance sol
 public:
     ~IVendorDataPort() noexcept override = default;
 
-    virtual std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) = 0;
+    virtual uint32_t sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) = 0;
 };
 
 // for imu data stream

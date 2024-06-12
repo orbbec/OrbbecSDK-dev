@@ -29,16 +29,16 @@ template <typename T> struct OBPropertyRangeT {
 class IPropertyPort {
 public:
     virtual ~IPropertyPort() noexcept                                          = default;
-    virtual void setPropertyValue(uint64_t propertyId, OBPropertyValue value)  = 0;
-    virtual void getPropertyValue(uint64_t propertyId, OBPropertyValue *value) = 0;
-    virtual void getPropertyRange(uint64_t propertyId, OBPropertyRange *range) = 0;
+    virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value)  = 0;
+    virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) = 0;
+    virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) = 0;
 };
 
-class IPropertyExtensionPort {
+class IPropertyExtensionPort : public IPropertyPort {
 public:
-    virtual ~IPropertyExtensionPort() noexcept                                                          = default;
-    virtual void                 setFirmwareData(uint64_t propertyId, const std::vector<uint8_t> &data) = 0;
-    virtual std::vector<uint8_t> getFirmwareData(uint64_t propertyId)                                   = 0;
+    virtual ~IPropertyExtensionPort() noexcept                                                                 = default;
+    virtual void                        setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
+    virtual const std::vector<uint8_t> &getFirmwareData(uint32_t propertyId)                                   = 0;
 };
 
 class IPropertyAccessor {
@@ -48,42 +48,42 @@ public:
     void registerProperty(uint32_t protectedId, OBPermissionType permission, std::shared_ptr<IPropertyPort> port);
     void aliasProperty(uint32_t aliasId, uint32_t protectedId);
 
-    bool checkProperty(uint64_t propertyId, OBPermissionType permission) const;
+    bool checkProperty(uint32_t propertyId, OBPermissionType permission) const;
 
-    virtual void setPropertyValue(uint64_t propertyId, OBPropertyValue value)  = 0;
-    virtual void getPropertyValue(uint64_t propertyId, OBPropertyValue *value) = 0;
-    virtual void getPropertyRange(uint64_t propertyId, OBPropertyRange *range) = 0;
+    virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value)  = 0;
+    virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) = 0;
+    virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) = 0;
 
-    virtual void                 setFirmwareData(uint64_t propertyId, const std::vector<uint8_t> &data) = 0;
-    virtual std::vector<uint8_t> getFirmwareData(uint64_t propertyId)                                   = 0;
+    virtual void                 setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
+    virtual std::vector<uint8_t> getFirmwareData(uint32_t propertyId)                                   = 0;
 
     template <typename T>
-    typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type setPropertyValueT(uint64_t propertyId, const T &value) {
+    typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type setPropertyValueT(uint32_t propertyId, const T &value) {
         OBPropertyValue obValue;
         obValue.intValue = static_cast<int32_t>(value);
         setPropertyValue(propertyId, obValue);
     }
 
-    template <typename T> typename std::enable_if<std::is_same<T, float>::value, T>::type setPropertyValueT(uint64_t propertyId) {
+    template <typename T> typename std::enable_if<std::is_same<T, float>::value, T>::type setPropertyValueT(uint32_t propertyId) {
         OBPropertyValue obValue;
         obValue.floatValue = static_cast<float>(value);
         setPropertyValue(propertyId, obValue);
     }
 
-    template <typename T> typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, T>::type getPropertyValueT(uint64_t propertyId) {
+    template <typename T> typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, T>::type getPropertyValueT(uint32_t propertyId) {
         OBPropertyValue obValue;
         getPropertyValue(propertyId, &obValue);
         return static_cast<T>(obValue.intValue);
     }
 
-    template <typename T> typename std::enable_if<std::is_same<T, float>::value, T>::type getPropertyValueT(uint64_t propertyId) {
+    template <typename T> typename std::enable_if<std::is_same<T, float>::value, T>::type getPropertyValueT(uint32_t propertyId) {
         OBPropertyValue obValue;
         getPropertyValue(propertyId, &obValue);
         return static_cast<T>(obValue.floatValue);
     }
 
     template <typename T>
-    typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, OBPropertyRangeT<T>>::type getPropertyRangeT(uint64_t propertyId) {
+    typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, OBPropertyRangeT<T>>::type getPropertyRangeT(uint32_t propertyId) {
         OBPropertyRangeT<T> rangeT;
         OBPropertyRange     range;
         getPropertyRange(propertyId, (OBPropertyRange *)&range);
@@ -97,7 +97,7 @@ public:
         return rangeT;
     }
 
-    template <typename T> typename std::enable_if<std::is_same<T, float>::value, OBPropertyRangeT<T>>::type getPropertyRangeT(uint64_t propertyId) {
+    template <typename T> typename std::enable_if<std::is_same<T, float>::value, OBPropertyRangeT<T>>::type getPropertyRangeT(uint32_t propertyId) {
         OBPropertyRangeT<T> rangeT;
         OBPropertyRange     range;
         getPropertyRange(propertyId, (OBPropertyRange *)&range);
@@ -111,13 +111,13 @@ public:
         return rangeT;
     }
 
-    template <typename T> void setFirmwareDataT(uint64_t propertyId, const T &data) {
+    template <typename T> void setFirmwareDataT(uint32_t propertyId, const T &data) {
         std::vector<uint8_t> vec(sizeof(T));
         std::memcpy(vec.data(), &data, sizeof(T));
         setFirmwareData(propertyId, vec);
     }
 
-    template <typename T> T getFirmwareDataT(uint64_t propertyId) {
+    template <typename T> T getFirmwareDataT(uint32_t propertyId) {
         std::vector<uint8_t> vec = getFirmwareData(propertyId);
         T                    data;
         if(vec.size() != sizeof(T)) {

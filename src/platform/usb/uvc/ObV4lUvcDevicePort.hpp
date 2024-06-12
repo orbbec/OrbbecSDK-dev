@@ -93,9 +93,9 @@ public:
     bool sendData(const uint8_t *data, uint32_t dataLen);
     bool recvData(uint8_t *data, uint32_t *dataLen);
 
-    bool         getPu(uint64_t propertyId, int32_t &value) override;
-    bool         setPu(uint64_t propertyId, int32_t value) override;
-    UvcControlRange getPuRange(uint64_t propertyId) override;
+    bool         getPu(uint32_t propertyId, int32_t &value) override;
+    bool         setPu(uint32_t propertyId, int32_t value) override;
+    UvcControlRange getPuRange(uint32_t propertyId) override;
 
     virtual std::shared_ptr<const SourcePortInfo>      getSourcePortInfo() const override;
 

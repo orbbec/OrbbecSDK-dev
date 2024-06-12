@@ -765,7 +765,7 @@ bool ObV4lUvcDevicePort::recvData(uint8_t *data, uint32_t *dataLen) {
     return getXu(ctrl, data, dataLen);
 }
 
-bool ObV4lUvcDevicePort::getPu(uint64_t propertyId, int32_t &value) {
+bool ObV4lUvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {
     auto                fd      = deviceHandles_.front()->fd;
     auto                cid     = CIDFromOBPropertyID(propertyId);
     struct v4l2_control control = { cid, 0 };
@@ -782,7 +782,7 @@ bool ObV4lUvcDevicePort::getPu(uint64_t propertyId, int32_t &value) {
     return true;
 }
 
-bool ObV4lUvcDevicePort::setPu(uint64_t propertyId, int32_t value) {
+bool ObV4lUvcDevicePort::setPu(uint32_t propertyId, int32_t value) {
     auto                fd      = deviceHandles_.front()->fd;
     auto                cid     = CIDFromOBPropertyID(propertyId);
     struct v4l2_control control = { cid, value };
@@ -883,7 +883,7 @@ UvcControlRange ObV4lUvcDevicePort::getXuRange(uint8_t control, int len) const {
     return range;
 }
 
-UvcControlRange ObV4lUvcDevicePort::getPuRange(uint64_t propertyId) {
+UvcControlRange ObV4lUvcDevicePort::getPuRange(uint32_t propertyId) {
     auto fd = deviceHandles_.front()->fd;
     if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT || propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL
        || propertyId == OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL) {

@@ -1,6 +1,16 @@
-#  minimum required cmake version: 3.1.15 support vs2019
+# minimum required cmake version: 3.1.15 support vs2019
 cmake_minimum_required(VERSION 3.1.15)
-target_sources(${OB_TARGET_DEVICE} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/InternalProperty.hpp)
+
+target_sources(
+    ${OB_TARGET_DEVICE}
+    PRIVATE ${CMAKE_CURRENT_LIST_DIR}/InternalProperty.hpp ${CMAKE_CURRENT_LIST_DIR}/VendorPropertyPort.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/VendorPropertyPort.hpp ${CMAKE_CURRENT_LIST_DIR}/HostProtocol.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/HostProtocol.hpp
+)
+
 if(OB_BUILD_USB_PORT)
-    target_sources(${OB_TARGET_DEVICE} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/UvcPropertyPort.cpp ${CMAKE_CURRENT_LIST_DIR}/UvcPropertyPort.hpp)
+    target_sources(
+        ${OB_TARGET_DEVICE} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/UvcPropertyPort.cpp
+                                    ${CMAKE_CURRENT_LIST_DIR}/UvcPropertyPort.hpp
+    )
 endif()

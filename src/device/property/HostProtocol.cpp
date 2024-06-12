@@ -1,0 +1,248 @@
+#include "HostProtocol.hpp"
+#include "logger/Logger.hpp"
+#include "exception/ObException.hpp"
+
+#include <sstream>
+
+namespace libobsensor {
+namespace protocol {
+
+bool checkStatus(HpStatus stat, bool throwException) {
+    std::string retMsg;
+    switch(stat.statusCode) {
+    case HP_STATUS_OK:
+        break;
+    case HP_STATUS_DEVICE_RESPONSE_WARNING:
+        LOG_WARN("Request failed, device response with warning, errorCode: {0}, msg:{1}", stat.respErrorCode, stat.msg);
+        return false;
+    case HP_STATUS_DEVICE_RESPONSE_ERROR:
+        retMsg = std::string("Request failed, device response with error, errorCode: ") + std::to_string(stat.respErrorCode) + ", msg: " + stat.msg;
+        if(throwException) {
+            throw io_exception(retMsg);
+        }
+        else {
+            LOG_ERROR(retMsg);
+            return false;
+        }
+        break;
+    case HP_STATUS_DEVICE_RESPONSE_ERROR_UNKNOWN:
+        if(throwException) {
+            throw io_exception("Request failed, device response with unknown error!");
+        }
+        else {
+            LOG_ERROR("Request failed, device response with unknown error!");
+            return false;
+        }
+        break;
+
+    default:
+        retMsg = std::string("Request failed, statusCode: ") + std::to_string(stat.statusCode) + ", msg: " + stat.msg;
+        if(throwException) {
+            throw io_exception(retMsg);
+        }
+        else {
+            LOG_ERROR(retMsg);
+            return false;
+        }
+        break;
+    }
+    return true;
+}
+
+uint16_t getExpectedRespSize(HpOpCodes opcode) {
+    uint16_t size = 64;
+    if(opcode == OPCODE_GET_FIRMWARE_DATA || opcode == OPCODE_GET_STRUCT_DATA || opcode == OPCODE_HEARTBEAT_AND_STATE) {
+        size = 512;
+    }
+    return size;
+}
+
+HpStatus validateResp(uint8_t *dataBuf, uint16_t dataSize, uint16_t expectedOpcode, uint16_t requestId) {
+    HpStatus    retStatus;
+    RespHeader *header = (RespHeader *)dataBuf;
+
+    if(header->magic != HP_RESPONSE_MAGIC) {
+        std::ostringstream ssMsg;
+        ssMsg << "device response with bad magic " << std::hex << ", magic=0x" << header->magic << ", expectOpCode=0x" << HP_RESPONSE_MAGIC;
+        retStatus.statusCode    = HP_STATUS_DEVICE_RESPONSE_BAD_MAGIC;
+        retStatus.respErrorCode = HP_RESP_ERROR_UNKNOWN;
+        retStatus.msg           = ssMsg.str();
+        return retStatus;
+    }
+
+    if(header->requestId != requestId) {
+        std::ostringstream ssMsg;
+        ssMsg << "device response with inconsistent response requestId, cmdId=" << header->requestId << ", requestId=" << requestId;
+        retStatus.statusCode    = HP_STATUS_DEVICE_RESPONSE_WRONG_ID;
+        retStatus.respErrorCode = HP_RESP_ERROR_UNKNOWN;
+        retStatus.msg           = ssMsg.str();
+        return retStatus;
+    }
+
+    if(header->opcode != expectedOpcode) {
+        std::ostringstream ssMsg;
+        ssMsg << "device response with inconsistent opcode, opcode=" << header->opcode << ", expectedOpcode=" << expectedOpcode;
+        retStatus.statusCode    = HP_STATUS_DEVICE_RESPONSE_WRONG_OPCODE;
+        retStatus.respErrorCode = HP_RESP_ERROR_UNKNOWN;
+        retStatus.msg           = ssMsg.str();
+        return retStatus;
+    }
+
+    uint16_t respDataSize = header->sizeInHalfWords * 2 - sizeof(RespHeader::errorCode);
+    if(respDataSize + HP_RESP_HEADER_SIZE > dataSize) {
+        retStatus.statusCode    = HP_STATUS_DEVICE_RESPONSE_WRONG_DATA_SIZE;
+        retStatus.respErrorCode = HP_RESP_ERROR_UNKNOWN;
+        retStatus.msg           = "device response with wrong data size";
+        return retStatus;
+    }
+
+    if(header->errorCode == HP_RESP_OK) {
+        retStatus.statusCode    = HP_STATUS_OK;
+        retStatus.respErrorCode = HP_RESP_OK;
+        retStatus.msg           = "";
+        return retStatus;
+    }
+    else if(header->errorCode == HP_RESP_ERROR_UNKNOWN) {
+        retStatus.statusCode    = HP_STATUS_DEVICE_RESPONSE_ERROR_UNKNOWN;
+        retStatus.respErrorCode = (HpRespErrorCode)header->errorCode;
+        retStatus.msg           = "device response with unknown error";
+        return retStatus;
+    }
+
+    std::string msg = respDataSize > 0 ? (char *)(dataBuf + sizeof(RespHeader)) : "";
+    if(header->errorCode >= 0x8000 && header->errorCode <= 0xfffe) {
+        retStatus.statusCode = HP_STATUS_DEVICE_RESPONSE_WARNING;
+    }
+    else {
+        retStatus.statusCode = HP_STATUS_DEVICE_RESPONSE_ERROR;
+    }
+    retStatus.respErrorCode = (HpRespErrorCode)header->errorCode;
+    retStatus.msg           = msg;
+    return retStatus;
+}
+
+HpStatus execute(const std::shared_ptr<IVendorDataPort> &dataPort, uint8_t *reqData, uint16_t reqDataSize, uint8_t *respData, uint16_t *respDataSize) {
+    HpStatusCode rc = HP_STATUS_OK;
+    HpStatus     hpStatus;
+
+    uint16_t requestId    = ((ReqHeader *)(reqData))->requestId;
+    uint16_t opcode       = ((ReqHeader *)(reqData))->opcode;
+    uint16_t nRetriesLeft = HP_NOT_READY_RETRIES;
+    uint32_t exceptRecLen = getExpectedRespSize(static_cast<HpOpCodes>(opcode));
+
+    while(nRetriesLeft-- > 0)  // loop until device is ready
+    {
+        rc = HP_STATUS_OK;
+        try {
+            *respDataSize = static_cast<uint16_t>(dataPort->sendAndReceive(reqData, static_cast<uint32_t>(reqDataSize), respData, exceptRecLen));
+        }
+        catch(...) {
+            rc = HP_STATUS_CONTROL_TRANSFER_FAILED;
+        }
+
+        if(rc == HP_STATUS_OK) {
+            hpStatus = validateResp(respData, *respDataSize, opcode, requestId);
+
+            if(hpStatus.statusCode != HP_STATUS_DEVICE_RESPONSE_WRONG_ID && hpStatus.respErrorCode != HP_RESP_ERROR_DEVICE_BUSY) {
+                break;
+            }
+        }
+        else {
+            hpStatus.statusCode    = rc;
+            hpStatus.respErrorCode = HP_RESP_ERROR_UNKNOWN;
+            hpStatus.msg           = "send control transfer failed!";
+            break;
+        }
+
+        // Retry after delay
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    return hpStatus;
+}
+
+uint16_t generateRequestId() {
+    static uint16_t requestId = 0;
+    requestId++;
+    return requestId;
+}
+
+GetPropertyReq *initGetPropertyReq(uint8_t *dataBuf, uint32_t propertyId) {
+    auto *req                   = reinterpret_cast<GetPropertyReq *>(dataBuf);
+    req->header.magic           = HP_REQUEST_MAGIC;
+    req->header.sizeInHalfWords = 2;
+    req->header.opcode          = OPCODE_GET_PROPERTY;
+    req->header.requestId       = generateRequestId();
+    req->propertyId             = propertyId;
+    return req;
+}
+
+SetPropertyReq *initSetPropertyReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t value) {
+    auto *req                   = reinterpret_cast<SetPropertyReq *>(dataBuf);
+    req->header.magic           = HP_REQUEST_MAGIC;
+    req->header.sizeInHalfWords = 4;
+    req->header.opcode          = OPCODE_SET_PROPERTY;
+    req->header.requestId       = generateRequestId();
+    req->propertyId             = propertyId;
+    req->value                  = value;
+    return req;
+}
+
+GetFirmwareDataReq *initGetFirmwareDataReq(uint8_t *dataBuf, uint32_t propertyId) {
+    auto *req                   = reinterpret_cast<GetFirmwareDataReq *>(dataBuf);
+    req->header.magic           = HP_REQUEST_MAGIC;
+    req->header.sizeInHalfWords = 2;
+    req->header.opcode          = OPCODE_GET_FIRMWARE_DATA;
+    req->header.requestId       = generateRequestId();
+    req->propertyId             = propertyId;
+    return req;
+}
+
+SetFirmwareDataReq *initSetFirmwareDataReq(uint8_t *dataBuf, uint32_t propertyId, const uint8_t *data, uint16_t dataSize) {
+    auto *req                   = reinterpret_cast<SetFirmwareDataReq *>(dataBuf);
+    req->header.magic           = HP_REQUEST_MAGIC;
+    req->header.sizeInHalfWords = 2 + (dataSize + 1) / 2;
+    req->header.opcode          = OPCODE_SET_FIRMWARE_DATA;
+    req->header.requestId       = generateRequestId();
+    req->propertyId             = propertyId;
+    memcpy(req->data, data, dataSize);
+    return req;
+}
+
+GetPropertyResp *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<GetPropertyResp *>(dataBuf);
+    if(dataSize < sizeof(GetPropertyResp)) {
+        throw io_exception("device response with wrong data size");
+    }
+    return resp;
+}
+
+SetPropertyResp *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<SetPropertyResp *>(dataBuf);
+    if(dataSize < sizeof(SetPropertyResp)) {
+        throw io_exception("device response with wrong data size");
+    }
+    return resp;
+}
+
+GetFirmwareDataResp *parseGetFirmwareDataResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<GetFirmwareDataResp *>(dataBuf);
+    if(dataSize < sizeof(GetFirmwareDataResp)) {
+        throw io_exception("device response with wrong data size");
+    }
+    return resp;
+}
+
+uint16_t getFirmwareDataSize(const GetFirmwareDataResp *resp) {
+    return resp->header.sizeInHalfWords * 2 - sizeof(RespHeader::errorCode);
+}
+
+SetFirmwareDataResp *parseSetFirmwareDataResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<SetFirmwareDataResp *>(dataBuf);
+    if(dataSize < sizeof(SetFirmwareDataResp)) {
+        throw io_exception("device response with wrong data size");
+    }
+    return resp;
+}
+
+}  // namespace protocol
+}  // namespace libobsensor

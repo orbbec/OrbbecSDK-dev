@@ -365,8 +365,6 @@ OBCameraDistortion FrameMirror::mirrorOBCameraDistortion(const OBCameraDistortio
 
 
 
-
-
 FrameFlip::FrameFlip(const std::string &name) : FilterBase(name) {}
 FrameFlip::~FrameFlip() noexcept {}
 
@@ -461,5 +459,164 @@ OBCameraDistortion FrameFlip::flipOBCameraDistortion(const OBCameraDistortion &s
     return distortion;
 }
 
+
+
+
+FrameRotate::FrameRotate(const std::string &name) : FilterBase(name) {}
+FrameRotate::~FrameRotate() noexcept {}
+
+void FrameRotate::updateConfig(std::vector<std::string> &params) {
+    if(params.size() != 1) {
+        throw invalid_value_exception("Frame rotate config error: params size not match");
+    }
+    try {
+        int rotateDegree = static_cast<int>(std::stoi(params[0]));
+        if(rotateDegree == 0 || rotateDegree == 90 || rotateDegree == 180 || rotateDegree == 270) {
+            std::lock_guard<std::mutex> rorateLock(mtx_);
+            rotateDegree_        = rotateDegree;
+            rotateDegreeUpdated_ = true;
+        }
+    }
+    catch(const std::exception &e) {
+        throw invalid_value_exception("Frame rotate config error: " + std::string(e.what()));
+    }
+}
+
+const std::string &FrameRotate::getConfigSchema() const {
+    // csv format: name，type， min，max，step，default，description
+    static const std::string schema = "rotate, int, 0, 270, 90, 0, frame image rotation angle";
+    return schema;
+}
+
+std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> frame) {
+    if(!frame) {
+        return nullptr;
+    }
+
+    if(rotateDegree_ == 0) {
+        return FrameFactory::cloneFrame(frame);
+    }
+
+    if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV
+       && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA
+       && frame->getFormat() != OB_FORMAT_BGRA) {
+        LOG_WARN_INTVL("FrameRotate unsupported to process this format: {}", frame->getFormat());
+        return FrameFactory::cloneFrame(frame);
+    }
+
+    auto outFrame = FrameFactory::cloneFrame(frame);
+    if(outFrame == nullptr) {
+        LOG_ERROR_INTVL("Acquire frame from frameBufferManager failed!");
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> rorateLock(mtx_);
+    bool                        isSupportRotate = true;
+    auto                        videoFrame      = frame->as<VideoFrame>();
+    switch(frame->getFormat()) {
+    case OB_FORMAT_Y8:
+        imageRotate<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), rotateDegree_);
+        break;
+    case OB_FORMAT_Y16:
+        imageRotate<uint16_t>((uint16_t *)videoFrame->getData(), (uint16_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(),
+                              rotateDegree_);
+        break;
+    case OB_FORMAT_YUYV:
+        // Note: This operation will also modify the data content of the original data frame.
+        yuyvImageRotate((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), rotateDegree_);
+        break;
+    case OB_FORMAT_RGB:
+    case OB_FORMAT_BGR:
+        roateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), rotateDegree_,
+                               3);
+        break;
+    case OB_FORMAT_RGBA:
+    case OB_FORMAT_BGRA:
+        roateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), rotateDegree_,
+                               4);
+        break;
+    default:
+        isSupportRotate = false;
+        break;
+    }
+
+    outFrame->copyInfo(frame);
+
+    try {
+        if(isSupportRotate) {
+            auto streampProfile = frame->getStreamProfile();
+            if(!rstStreamProfile_ || !srcStreamProfile_ || srcStreamProfile_ != streampProfile || rotateDegreeUpdated_) {
+                rotateDegreeUpdated_       = false;
+                srcStreamProfile_          = streampProfile;
+                auto srcVideoStreamProfile = srcStreamProfile_->as<VideoStreamProfile>();
+                auto srcIntrinsic          = srcVideoStreamProfile->getIntrinsic();
+                auto rstIntrinsic          = rotateOBCameraIntrinsic(srcIntrinsic, rotateDegree_);
+                auto srcDistortion         = srcVideoStreamProfile->getDistortion();
+                auto rstDistortion         = rotateOBCameraDistortion(srcDistortion, rotateDegree_);
+                auto srcExtrinsic          = srcVideoStreamProfile->getExtrinsicTo(streampProfile);
+                auto rstExtrinsic          = rotateOBExtrinsic(rotateDegree_);
+                rstStreamProfile_          = srcVideoStreamProfile->clone()->as<VideoStreamProfile>();
+                rstStreamProfile_->bindIntrinsic(rstIntrinsic);
+                rstStreamProfile_->bindDistortion(rstDistortion);
+                rstStreamProfile_->bindExtrinsicTo(srcStreamProfile_, rstExtrinsic);
+            }
+            if(rotateDegree_ == 90 || rotateDegree_ == 270) {
+                rstStreamProfile_->setWidth(videoFrame->getHeight());
+                rstStreamProfile_->setHeight(videoFrame->getWidth());
+            }
+            outFrame->setStreamProfile(rstStreamProfile_);
+        }
+    }
+    catch(libobsensor_exception &error) {
+        LOG_WARN_INTVL("Frame rotate camera intrinsic conversion failed{0}, exception type: {1}", error.get_message(), error.get_exception_type());
+    }
+
+    return outFrame;
+}
+
+OBCameraIntrinsic FrameRotate::rotateOBCameraIntrinsic(const OBCameraIntrinsic &src, uint32_t rotateDegree) {
+    auto intrinsic = src;
+    if(rotateDegree == 90) {
+        libobsensor::CameraParamProcessor::cameraIntrinsicParamsRotate90(&intrinsic);
+    }
+    else if(rotateDegree == 180) {
+        libobsensor::CameraParamProcessor::cameraIntrinsicParamsRotate180(&intrinsic);
+    }
+    else if(rotateDegree == 270) {
+        libobsensor::CameraParamProcessor::cameraIntrinsicParamsRotate270(&intrinsic);
+    }
+
+    return intrinsic;
+}
+
+OBCameraDistortion FrameRotate::rotateOBCameraDistortion(const OBCameraDistortion &src, uint32_t rotateDegree) {
+    auto distortion = src;
+
+    if(rotateDegree == 90) {
+        libobsensor::CameraParamProcessor::distortionParamRotate90(&distortion);
+    }
+    else if(rotateDegree == 180) {
+        libobsensor::CameraParamProcessor::distortionParamRotate180(&distortion);
+    }
+    else if(rotateDegree == 270) {
+        libobsensor::CameraParamProcessor::distortionParamRotate270(&distortion);
+    }
+
+    return distortion;
+}
+
+OBExtrinsic FrameRotate::rotateOBExtrinsic(uint32_t rotateDegree) {
+    // rotate clockwise
+    if(rotateDegree == 90) {
+        return { 0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0 };
+    }
+    else if(rotateDegree == 180) {
+        return { -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0 };
+    }
+    else if(rotateDegree == 270) {
+        return { 0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 };
+    }
+    return { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
+}
 
 }  // namespace libobsensor

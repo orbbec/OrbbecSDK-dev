@@ -37,6 +37,7 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         ADD_FILTER_CREATOR(FormatConverter),
         ADD_FILTER_CREATOR(FrameMirror),
         ADD_FILTER_CREATOR(FrameFlip),
+        ADD_FILTER_CREATOR(FrameRotate),
         ADD_FILTER_CREATOR(PointCloudFilter),
 
 

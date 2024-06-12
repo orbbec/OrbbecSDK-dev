@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.1.15)
 
 # add the shared library with version number
-add_library(shared STATIC
-        config/Config.cpp
-        config/Config.hpp)
+add_library(shared STATIC config/Config.cpp config/Config.hpp)
 set_target_properties(shared PROPERTIES VERSION ${CMAKE_PROJECT_VERSION})
 
 # add the shared library sources
-file(GLOB_RECURSE SOURCE_FILES "*.cpp" EXCLUDE)
-file(GLOB_RECURSE HEADERS_FILES "*.hpp" EXCLUDE)
+file(GLOB_RECURSE SOURCE_FILES "*.cpp" EXCLUDE unittest)
+file(GLOB_RECURSE HEADERS_FILES "*.hpp" EXCLUDE unittest)
 target_sources(shared PRIVATE ${SOURCE_FILES} ${HEADERS_FILES})
 
 add_subdirectory(${OB_3RDPARTY_DIR}/spdlog spdlog)

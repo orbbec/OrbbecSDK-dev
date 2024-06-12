@@ -1,12 +1,10 @@
 # minimum required cmake version: 3.1.15 support vs2019
 cmake_minimum_required(VERSION 3.1.15)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-project(
-    OpenOrbbecSDK
-    VERSION 0.0.1
-    LANGUAGES CXX C)
+project(OpenOrbbecSDK VERSION 0.0.1 LANGUAGES CXX C)
 
 # load project options
 include(cmake/options.cmake)

@@ -37,6 +37,7 @@ public:
     void           setNumber(const uint64_t number);
     size_t         getDataSize() const;
     const uint8_t *getData() const;
+    uint8_t       *getDataUnsafe() const;  // use with caution, data may be changed while other threads are using it
     void           updateData(const uint8_t *data, size_t dataSize);
     uint64_t       getTimeStampUsec() const;
     void           setTimeStampUsec(uint64_t ts);
@@ -247,7 +248,7 @@ template <typename T> bool Frame::is() const {
 }
 
 typedef std::function<void(std::shared_ptr<const Frame>)> FrameCallback;
-typedef std::function<void(std::shared_ptr<Frame>)> FrameCallbackUnsafe;
+typedef std::function<void(std::shared_ptr<Frame>)>       FrameCallbackUnsafe;
 
 }  // namespace libobsensor
 
@@ -256,7 +257,7 @@ extern "C" {
 #endif
 struct ob_frame_t {
     std::shared_ptr<libobsensor::Frame> frame;
-    std::atomic<int>                    refCnt = {1};
+    std::atomic<int>                    refCnt = { 1 };
 };
 #ifdef __cplusplus
 }

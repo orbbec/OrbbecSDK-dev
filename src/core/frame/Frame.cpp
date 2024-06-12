@@ -54,6 +54,10 @@ const uint8_t *Frame::getData() const {
     return frameData_;
 }
 
+uint8_t *Frame::getDataUnsafe() const {
+    return const_cast<uint8_t *>(frameData_);
+}
+
 void Frame::updateData(const uint8_t *data, size_t dataSize) {
     if(dataSize > dataBufSize_) {
         throw memory_exception(utils::to_string() << "Update data size(" << dataSize << ") > data buffer size! (" << dataBufSize_ << ")");

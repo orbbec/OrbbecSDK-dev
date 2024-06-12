@@ -124,13 +124,28 @@ public:
     }
 
     /**
-     * @brief Get the timestamp of the frame.
+     * @brief Get frame data
      *
      * @return const uint8_t * The frame data pointer.
      */
     virtual const uint8_t *getData() const {
         ob_error *error = nullptr;
         auto      data  = ob_frame_get_data(impl_, &error);
+        Error::handle(&error);
+
+        return data;
+    }
+
+    /**
+     * @brief Get frame data (unsafe)
+     *
+     * @warning This function is unsafe. Ensure the returned data is not modified when the frame is accessed by multiple threads.
+     *
+     * @return uint8_t* The frame data pointer.
+     */
+    virtual uint8_t* getDataUnsafe() const {
+        ob_error *error = nullptr;
+        auto data = ob_frame_get_data_unsafe(impl_, &error);
         Error::handle(&error);
 
         return data;

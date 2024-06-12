@@ -224,6 +224,17 @@ OB_EXPORT uint64_t ob_frame_get_global_timestamp_us(const ob_frame *frame, ob_er
 OB_EXPORT const uint8_t *ob_frame_get_data(const ob_frame *frame, ob_error **error);
 
 /**
+ * @brief Get frame data (unsafe)
+ *
+ * @warning This function is unsafe. Ensure the returned data is not modified when the frame is accessed by multiple threads.
+ *
+ * @param frame Frame object
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return uin8_t* return frame data pointer
+ */
+OB_EXPORT uint8_t *ob_frame_get_data_unsafe(const ob_frame *frame, ob_error **error);
+
+/**
  * @brief Update frame data
  *
  * @attention The data size should be the equal to or less than the data size of the frame, otherwise it may cause memory exception.

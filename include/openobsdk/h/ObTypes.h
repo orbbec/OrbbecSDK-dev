@@ -701,18 +701,18 @@ typedef enum {
  *
  */
 typedef struct {
-    double  zpd;           // 表示标定平面距离
+    double  zpd;           // the distance to calib plane
     double  zpps;          // zpps=z0/fx
-    float   baseline;      // 基线长度, 对于单目结构光指的是激光到 IR-CMOS 的中心距离
-    double  fx;            // 焦距，可能只能获取到zpps（双目时需求）
-    uint8_t bitSize;       // 视差位数（指原始视差位数，比如: MX6000为12, MX6600为14）
-    float   unit;          // 参考单位：unit=10表示1cm; unit=1表示1mm; unit=0.5表示0.5mm;以此类推
-    float   minDisparity;  // 双目视差系数
-    int32_t packMode;      // 数据打包方式
-    float   dispOffset;    // 视差偏移，真实视差=芯片输出的视差 + disp_offset
-    int32_t invalidDisp;   // 无效视差，一般情况下无效视差为0，双目IR图下定义增加的一个辅助值
-    int32_t dispIntPlace;  // 视差整数位，一般情况下为8，xl为10
-    int32_t isDualCamera;  // 0 单目，1 双目
+    float   baseline;      // baseline length, for monocular camera,it means the distance of laser to the center of IR-CMOS
+    double  fx;            // focus
+    uint8_t bitSize;       // disparity bit size（raw disp bit size，for example: MX6000 is 12, MX6600 is 14）
+    float   unit;          // reference units：unit=10 denote 1cm; unit=1 denote 1mm; unit=0.5 denote 0.5mm; and so on
+    float   minDisparity;  // dual disparity coefficient
+    uint8_t packMode;      // data pack mode
+    float   dispOffset;    // disparity offset，actual disp=chip disp + disp_offset
+    int32_t invalidDisp;   // invalid disparity，usually is 0，dual IR add a auxiliary value.
+    int32_t dispIntPlace;  // disp integer digits，default is 8，Gemini2 XL is 10
+    uint8_t isDualCamera;  // 0 monocular camera，1 dual camera
 
 } OBDisparityProcessParam,ob_disparity_process_param;
 /**

@@ -23,7 +23,7 @@ GENERATE_EXPORT_HEADER(openobsdk BASE_NAME OB EXPORT_FILE_NAME ${OB_PUBLIC_HEADE
 file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp ${CMAKE_CURRENT_LIST_DIR}/context/*.cpp)
 file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp)
 
-target_sources(openobsdk PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
+target_sources(openobsdk PRIVATE ${SOURCE_FILES} ${HEADER_FILES} ${GLOB_RECURSE})
 target_link_libraries(openobsdk PRIVATE ob::shared ob::core ob::filter ob::platform ob::device)
 target_include_directories(openobsdk PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_include_directories(openobsdk PUBLIC "$<BUILD_INTERFACE:${OB_PUBLIC_HEADERS_DIR}>" "$<INSTALL_INTERFACE:include>")

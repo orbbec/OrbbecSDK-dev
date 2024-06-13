@@ -7,7 +7,18 @@
 
 namespace libobsensor {
 
-const OBExtrinsic IdentityExtrinsic = { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
+const OBExtrinsic IdentityExtrinsic = { {
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            1,
+                                        },
+                                        { 0, 0, 0 } };
 
 class CameraParamProcessor {
 public:

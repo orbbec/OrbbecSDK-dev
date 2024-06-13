@@ -3,7 +3,6 @@
 #include "HdrMergeProcess.hpp"
 #include "SequenceIdProcess.hpp"
 #include "DecimationProcess.hpp"
-#include "DisparityProcess.hpp"
 #include "IMUFrameReversion.hpp"
 #include "FormatConverterProcess.hpp"
 #include "FrameGeometricTransform.hpp"
@@ -33,7 +32,6 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         ADD_FILTER_CREATOR(HdrMerge),
         ADD_FILTER_CREATOR(SequenceIdFilter),
         ADD_FILTER_CREATOR(DecimationFilter),
-        ADD_FILTER_CREATOR(DisparityTransform),
         ADD_FILTER_CREATOR(IMUFrameReversion),
         ADD_FILTER_CREATOR(FormatConverter),
         ADD_FILTER_CREATOR(FrameMirror),

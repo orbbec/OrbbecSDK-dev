@@ -33,6 +33,20 @@ OB_EXPORT ob_stream_profile* ob_create_stream_profile(ob_stream_type type, ob_fo
 OB_EXPORT ob_stream_profile* ob_create_video_stream_profile(ob_stream_type type, ob_format format, uint32_t width, uint32_t height, uint32_t fps,ob_error **error);
 
 /**
+ * @brief Create a disparity stream profile object
+ *
+ * @param[in] type Stream type
+ * @param[in] format Stream format
+ * @param[in] width Stream width
+ * @param[in] height Stream height
+ * @param[in] fps Stream frame rate
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ * @return ob_stream_profile* return the video stream profile object
+ */
+OB_EXPORT ob_stream_profile* ob_create_disparity_stream_profile(ob_stream_type type, ob_format format, uint32_t width, uint32_t height, uint32_t fps,ob_error **error);
+
+
+/**
  * @brief Create a accel stream profile object
  *
  * @param[in] full_scale_range Accel full scale range
@@ -160,6 +174,24 @@ OB_EXPORT ob_camera_distortion ob_video_stream_get_distortion(const ob_stream_pr
  * @param[out] error   Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_video_stream_set_distortion(ob_stream_profile *profile, ob_camera_distortion distortion, ob_error **error);
+
+/**
+ * @brief Get the process param of the disparity stream
+ *
+ * @param[in]  profile Stream profile object
+ * @param[out] error   Pointer to an error object that will be set if an error occurs.
+ * @return ob_disparity_process_param Return the disparity process param of the stream
+ */
+OB_EXPORT ob_disparity_process_param ob_disparity_stream_get_process_param(const ob_stream_profile *profile, ob_error **error);
+
+/**
+ * @brief Set the disparity process param of the disparity stream.
+ *
+ * @param[in] profile Stream profile object. If the profile is not for the disparity stream, an error will be returned.
+ * @param[in]  intrinsic The disparity process param of the disparity stream.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_disparity_stream_profile_set_process_param(ob_stream_profile *profile, ob_disparity_process_param param, ob_error **error);
 
 /**
  * @brief Get the full-scale range of the accelerometer stream.

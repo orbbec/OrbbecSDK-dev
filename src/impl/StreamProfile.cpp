@@ -27,6 +27,15 @@ ob_stream_profile *ob_create_video_stream_profile(ob_stream_type type, ob_format
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, type, format, width, height, fps)
 
+ob_stream_profile *ob_create_disparity_stream_profile(ob_stream_type type, ob_format format, uint32_t width, uint32_t height, uint32_t fps,
+                                                      ob_error **error) BEGIN_API_CALL {
+    auto profile         = libobsensor::StreamProfileFactory::createDisparityStreamProfile(type, format, width, height, fps);
+    auto profileImpl     = new ob_stream_profile();
+    profileImpl->profile = profile;
+    return profileImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, type, format, width, height, fps)
+
 ob_stream_profile *ob_create_accel_stream_profile(ob_accel_full_scale_range full_scale_range, ob_accel_sample_rate sample_rate,
                                                   ob_error **error) BEGIN_API_CALL {
     auto profile         = libobsensor::StreamProfileFactory::createAccelStreamProfile(full_scale_range, sample_rate);
@@ -142,6 +151,28 @@ void ob_video_stream_set_distortion(ob_stream_profile *profile, ob_camera_distor
     videoProfile->bindDistortion(distortion);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(profile /*, distortion*/)  // TODO: add ob_camera_distortion operator<<
+
+ob_disparity_process_param ob_disparity_stream_get_process_param(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(profile);
+    if(!profile->profile->is<libobsensor::DisparityStreamProfile>()) {
+        throw libobsensor::unsupported_operation_exception("It's not a disparity stream profile!");
+    }
+    auto noneConstProfile = std::const_pointer_cast<libobsensor::StreamProfile>(profile->profile);
+    auto videoProfile     = noneConstProfile->as<libobsensor::DisparityStreamProfile>();
+    videoProfile->getDisparityProcessParam();
+}
+HANDLE_EXCEPTIONS_AND_RETURN(ob_disparity_process_param(), profile)
+
+void ob_disparity_stream_profile_set_process_param(ob_stream_profile *profile, ob_disparity_process_param param, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(profile);
+    if(!profile->profile->is<libobsensor::DisparityStreamProfile>()) {
+        throw libobsensor::unsupported_operation_exception("It's not a disparity stream profile!");
+    }
+    auto noneConstProfile = std::const_pointer_cast<libobsensor::StreamProfile>(profile->profile);
+    auto videoProfile     = noneConstProfile->as<libobsensor::DisparityStreamProfile>();
+    videoProfile->bindDisparityProcessParam(param);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(profile /*, disparityprocessparam*/)  // TODO: add ob_disparity_process_param operator<<
 
 ob_accel_full_scale_range ob_accel_stream_profile_get_full_scale_range(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);

@@ -1,6 +1,7 @@
 #include "StreamProfile.hpp"
 #include "StreamExtrinsicsManager.hpp"
 #include "StreamIntrinsicsManager.hpp"
+#include "StreamDisparityParamManager.hpp"
 
 #include "frame/Frame.hpp"
 
@@ -92,6 +93,17 @@ std::shared_ptr<StreamProfile> VideoStreamProfile::clone() const {
     sp->bindDistortion(getDistortion());
     sp->bindSameExtrinsicTo(shared_from_this());
     return sp;
+}
+
+DisparityStreamProfile::DisparityStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps)
+    : VideoStreamProfile(owner, type, format, width, height, fps) {}
+
+OBDisparityProcessParam DisparityStreamProfile::getDisparityProcessParam() const {
+    return StreamDisparityParamManager::getInstance()->getVideoStreamDisparityParam(shared_from_this());
+}
+
+void DisparityStreamProfile::bindDisparityProcessParam(const OBDisparityProcessParam &param) {
+    StreamDisparityParamManager::getInstance()->registerDisparityProcessParam(shared_from_this(), param);
 }
 
 AccelStreamProfile::AccelStreamProfile(std::weak_ptr<ISensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate)

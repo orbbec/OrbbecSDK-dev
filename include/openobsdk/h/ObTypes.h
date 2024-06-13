@@ -697,6 +697,25 @@ typedef enum {
     ob_depth_precision_level, OB_DEPTH_PRECISION_LEVEL;
 
 /**
+ * @brief disparity to depth param
+ *
+ */
+typedef struct {
+    double  zpd;           // 表示标定平面距离
+    double  zpps;          // zpps=z0/fx
+    float   baseline;      // 基线长度, 对于单目结构光指的是激光到 IR-CMOS 的中心距离
+    double  fx;            // 焦距，可能只能获取到zpps（双目时需求）
+    uint8_t bitSize;       // 视差位数（指原始视差位数，比如: MX6000为12, MX6600为14）
+    float   unit;          // 参考单位：unit=10表示1cm; unit=1表示1mm; unit=0.5表示0.5mm;以此类推
+    float   minDisparity;  // 双目视差系数
+    int32_t packMode;      // 数据打包方式
+    float   dispOffset;    // 视差偏移，真实视差=芯片输出的视差 + disp_offset
+    int32_t invalidDisp;   // 无效视差，一般情况下无效视差为0，双目IR图下定义增加的一个辅助值
+    int32_t dispIntPlace;  // 视差整数位，一般情况下为8，xl为10
+    int32_t isDualCamera;  // 0 单目，1 双目
+
+} OBDisparityProcessParam,ob_disparity_process_param;
+/**
  * @brief Enumeration for TOF filter scene ranges
  */
 typedef enum {

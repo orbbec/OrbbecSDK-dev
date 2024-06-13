@@ -7,6 +7,7 @@
 #include <vector>
 #include <mutex>
 
+
 namespace libobsensor {
 
 struct StreamProfileWeakPtrCompare {

@@ -74,6 +74,7 @@ std::shared_ptr<Frame> FrameFactory::createFrameFromUserBuffer(OBFrameType frame
     case OB_FRAME_IR_RIGHT:
     case OB_FRAME_IR:
     case OB_FRAME_COLOR:
+    case OB_FRAME_DISPARITY:
         return createVideoFrameFromUserBuffer(frameType, format, 0, 0, 0, buffer, bufferSize, bufferReclaimFunc);
     case OB_FRAME_ACCEL:
         frame = std::make_shared<AccelFrame>(buffer, bufferSize, bufferReclaimFunc);

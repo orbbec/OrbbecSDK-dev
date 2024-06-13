@@ -54,7 +54,7 @@ public:
     VideoStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
     VideoStreamProfile(std::shared_ptr<const VideoStreamProfile> other) = delete;
 
-    bool operator == (const VideoStreamProfile &other) const;
+    bool operator==(const VideoStreamProfile &other) const;
 
     ~VideoStreamProfile() noexcept override = default;
 
@@ -74,6 +74,15 @@ protected:
     uint32_t width_;
     uint32_t height_;
     uint32_t fps_;
+};
+
+class DisparityStreamProfile : public VideoStreamProfile {
+public:
+    DisparityStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
+    ~DisparityStreamProfile() noexcept override = default;
+
+    OBDisparityProcessParam getDisparityProcessParam() const;
+    void                    bindDisparityProcessParam(const OBDisparityProcessParam &param);
 };
 
 class AccelStreamProfile : public StreamProfile {
@@ -123,6 +132,8 @@ template <typename T> bool StreamProfile::is() const {
         return typeid(T) == typeid(AccelStreamProfile);
     case OB_STREAM_GYRO:
         return typeid(T) == typeid(GyroStreamProfile);
+    case OB_STREAM_DISPARITY:
+        return typeid(T) == typeid(DisparityStreamProfile);
     default:
         break;
     }
@@ -141,6 +152,7 @@ std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(con
                                                                              OBGyroSampleRate sampleRate);
 
 }  // namespace libobsensor
+
 
 #ifdef __cplusplus
 extern "C" {

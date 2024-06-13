@@ -3,7 +3,7 @@
 #include "core/device/component/GlobalTimestampFitter.hpp"
 
 namespace libobsensor {
-namespace g330 {
+
 class G330TimestampConverter : public IFrameTimestampConverter {
 public:
     G330TimestampConverter(OBFrameMetadataType frameTimestampMetadataType, std::shared_ptr<GlobalTimestampFitter> globalTspFitter);
@@ -21,5 +21,5 @@ private:
 
     const OBFrameMetadataType frameTimestampMetadataType_;
 };
-}  // namespace g330
+
 }  // namespace libobsensor

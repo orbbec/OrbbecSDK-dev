@@ -2,6 +2,7 @@
 #include "openobsdk/h/ObTypes.h"
 #include "IStreamProfile.hpp"
 #include "IFrame.hpp"
+#include "ISourcePort.hpp"
 #include <memory>
 
 namespace libobsensor {
@@ -40,7 +41,12 @@ public:
 struct LazySensor {
     explicit LazySensor(std::weak_ptr<IDevice> device, OBSensorType type) : device(device), sensorType(type) {}
     std::weak_ptr<IDevice> device;  // sensor is lazy create base on device
-    OBSensorType                        sensorType;
+    OBSensorType           sensorType;
+};
+
+struct SensorEntry {
+    std::shared_ptr<ISensor>     sensor;
+    std::shared_ptr<ISourcePort> backend;
 };
 
 }  // namespace libobsensor

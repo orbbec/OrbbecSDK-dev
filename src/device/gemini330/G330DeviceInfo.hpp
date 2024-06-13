@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace libobsensor {
-namespace g330 {
+
 
 class G330DeviceInfo : public DeviceEnumInfo {
 public:
@@ -18,5 +18,5 @@ public:
     static std::vector<std::shared_ptr<DeviceEnumInfo>> createDeviceInfos( const SourcePortInfoList infoList);
 };
 
-}  // namespace g330
+
 }  // namespace libobsensor

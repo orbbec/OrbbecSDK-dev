@@ -35,6 +35,8 @@ int main() {
     ob_context* ctx = ob_create_context(&err);
     check_ob_error(&err);
 
+    while(true){}
+
     // ob_device_list *device_list = ob_query_device_list(ctx, &err);
     // check_ob_error(&err);
 
@@ -46,4 +48,5 @@ int main() {
     // delete the context
     ob_delete_context(ctx, &err);
     check_ob_error(&err);
+
 }

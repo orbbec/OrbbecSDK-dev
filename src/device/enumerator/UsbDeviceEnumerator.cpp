@@ -138,7 +138,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
 
 DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
     DeviceEnumInfoList deviceInfoList;
-    auto g330Devs =       g330::G330DeviceInfo::createDeviceInfos(portInfoList);
+    auto g330Devs =       G330DeviceInfo::createDeviceInfos(portInfoList);
     std::copy(g330Devs.begin(), g330Devs.end(), std::back_inserter(deviceInfoList));
     return deviceInfoList;
 }

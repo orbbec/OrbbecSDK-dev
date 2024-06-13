@@ -7,7 +7,7 @@
 #include "common/logger/LoggerInterval.hpp"
 
 namespace libobsensor {
-namespace g330 {
+
 
 template <typename T, typename Field> class StructureMetadataParser : public IMetadataParser {
 public:
@@ -112,5 +112,5 @@ private:
     MetadataModifier exp_to_usec_ = nullptr;
 };
 
-}  // namespace g330
+
 }  // namespace libobsensor

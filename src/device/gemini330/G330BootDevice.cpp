@@ -4,7 +4,7 @@
 #include "core/command/MX6600VendorCommand.hpp"
 #include "libobsensor/internal/InternalProperty.h"
 namespace libobsensor {
-namespace g330 {
+
 G330BootDevice::G330BootDevice(std::shared_ptr<ObPal> obPal, const std::shared_ptr<DeviceInfo> info) : AbstractDevice(obPal, info) {
     LOG_DEBUG("G330BootDevice init ...");
     LOG_DEBUG("Create command start!");
@@ -180,5 +180,5 @@ void G330BootDevice::deviceUpgrade(const char *fileData, uint32_t fileSize, Devi
     }
 }
 
-}  // namespace g330
+
 }  // namespace libobsensor

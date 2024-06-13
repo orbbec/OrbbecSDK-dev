@@ -27,19 +27,19 @@ typedef std::function<void(OBFwUpdateState state, const char *message, uint8_t p
 
 class IDevice {
 public:
-    typedef std::unique_lock<std::recursive_timed_mutex> ComponentLock;
+    typedef std::unique_lock<std::recursive_timed_mutex> ResourceLock;
 
-    template <typename T> class ComponentPtr {
+    template <typename T> class ResourcePtr {
     public:
-        ComponentPtr(std::shared_ptr<T> ptr, ComponentLock &&lock) : ptr_(ptr), lock_(std::move(lock)) {}
+        ResourcePtr(std::shared_ptr<T> ptr, ResourceLock &&lock) : ptr_(ptr), lock_(std::move(lock)) {}
 
         // copy constructor and assignment operator are deleted to avoid accidental copies of the lock
-        ComponentPtr(const ComponentPtr &other)            = delete;
-        ComponentPtr &operator=(const ComponentPtr &other) = delete;
+        ResourcePtr(const ResourcePtr &other)            = delete;
+        ResourcePtr &operator=(const ResourcePtr &other) = delete;
 
         // move constructor and assignment operator are deleted to avoid accidental moves of the lock
-        ComponentPtr(ComponentPtr &&other)            = default;
-        ComponentPtr &operator=(ComponentPtr &&other) = default;
+        ResourcePtr(ResourcePtr &&other)            = default;
+        ResourcePtr &operator=(ResourcePtr &&other) = default;
 
         T *operator->() const {
             return ptr_.get();
@@ -55,20 +55,20 @@ public:
 
     private:
         std::shared_ptr<T> ptr_;
-        ComponentLock       lock_;
+        ResourceLock       lock_;
     };
 
 public:
     virtual ~IDevice() = default;
 
-    virtual const DeviceInfo  &getInfo() const                              = 0;
-    virtual const std::string &getExtensionInfo(const std::string &infoKey) = 0;
+    virtual const std::shared_ptr<const DeviceInfo> &getInfo() const                              = 0;
+    virtual const std::string                       &getExtensionInfo(const std::string &infoKey) = 0;
 
-    virtual ComponentPtr<IPropertyAccessor> getPropertyAccessor() const = 0;
+    virtual ResourcePtr<IPropertyAccessor> getPropertyAccessor() = 0;
 
-    virtual std::vector<OBSensorType>             getSupportedSensorTypeList() const                           = 0;
-    virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilterList(OBSensorType type) = 0;
-    virtual ComponentPtr<ISensor>                 getSensor(OBSensorType type)    = 0;
+    virtual std::vector<OBSensorType>             getSupportedSensorTypeList() const                        = 0;
+    virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) = 0;
+    virtual ResourcePtr<ISensor>                  getSensor(OBSensorType type)                              = 0;
 
     virtual void enableHeadBeat(bool enable) = 0;
 

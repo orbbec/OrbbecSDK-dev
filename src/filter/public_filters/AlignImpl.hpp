@@ -48,7 +48,7 @@ public:
     /**
      * @brief Prepare LUTs of depth undistortion and rotation
      */
-    bool prepareDepthResolution();
+    void prepareDepthResolution();
 
     /**
      * @brief Clear buffer and de-initialize
@@ -66,55 +66,14 @@ public:
      * @retval  -1  failed
      * @retval  0   success
      */
-    int D2C(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
+    int D2C(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height, int *depth_xy = nullptr);
 
     int D2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
 
     int C2D(const uint16_t *depth_buffer, int depth_width, int depth_height, const void *rgb_buffer, void *out_rgb, int color_width, int color_height, OBFormat format);
 
     /// TODO(timon): make private
-    template <typename T>
-    int C2DBytes(const uint16_t *depth_buffer, int depth_width, int depth_height, const T *rgb_buffer, T *out_rgb, int color_width, int color_height);
-    /**
-     * @brief	彩色图坐标点转换到深度相机坐标系（单点）
-     * @param[in]   depth_buffer  输入深度图buffer，行优先存储
-     * @param[in]   depth_width   输入深度图宽度
-     * @param[in]   depth_height  输入深度图高度
-     * @param[in]   color_x		 输入彩色图坐标点x列坐标
-     * @param[in]   color_y		 输入彩色图坐标点y行坐标
-     * @param[in]   roi_w		 在深度图中的搜索起始位置x
-     * @param[in]   roi_h		 在深度图中的搜索起始位置y
-     * @param[in]   roi_w		 在深度图中的搜索范围width
-     * @param[in]   roi_h		 在深度图中的搜索范围height
-     * @param[out]  depth_x		 输出深度图对应坐标点x列坐标
-     * @param[out]  depth_y		 输出深度图对应坐标点y行坐标
-     * @param[in]   color_width   对齐后的深度图宽度
-     * @param[in]   color_height  对齐后的深度图高度
-     * @retval -1   failed
-     * @retval  0   success
-     */
-    //int C2D(const uint16_t *depth_buffer, int depth_width, int depth_height, int color_x, int color_y, int roi_x, int roi_y, int roi_w, int roi_h, int &depth_x,
-            //int &depth_y, int color_width, int color_height);
-
-    /**
-     * @brief	彩色图坐标点转换到深度相机坐标系（多点）
-     * @param[in]   depth_buffer   输入深度图buffer，行优先存储
-     * @param[in]   depth_width    输入深度图宽度
-     * @param[in]   depth_height   输入深度图高度
-     * @param[in]   color_xy		  输入彩色图坐标点xy坐标，在数组中使用{x1, y1, x2, y2...}的方式存储
-     * @param[in]   color_xy_count 输入彩色图坐标点的个数，需要和输入输出数组中存储的值个数一致
-     * @param[out]  depth_xy		  输入深度图对应坐标点xy坐标，在数组中使用{x1, y1, x2, y2...}的方式存储
-     * @param[in]   color_width    对齐后的深度图宽度
-     * @param[in]   color_height   对齐后的深度图高度
-     * @retval -1   failed
-     * @retval  0   success
-     */
-    //int C2D(const uint16_t *depth_buffer, int depth_width, int depth_height, int *color_xy, int color_xy_count, int *depth_xy, int color_width,
-    //        int color_height);
-    //int C2DWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, int *color_xy, int color_xy_count, int *depth_xy, int color_width,
-    //               int color_height);
-
-    //int C2DPts(const uint16_t *d2c_depth, int *color_xy, int color_xy_count, int *depth_xy, int color_width, int color_height);
+    template <typename T> void mapBytes(const int *map, const T *src_buffer, int src_width, int src_height, T *dst_buffer, int dst_width);
 
     /**
      *@brief         Initialize LUTs for color image undistortion
@@ -133,21 +92,14 @@ public:
     bool undistortRGB(const uint8_t *src, int width, int height, uint8_t *dst);
 
 protected:
-    bool prepareDepthResDistort(int width, int height);
-    bool prepareDepthResLinear(int width, int height);
-
     bool prepareRGBDistort();
 
     void clearMatrixCache();
-
-    int distortedD2C(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
 
     virtual int distortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
 
     virtual int KBDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
     virtual int BMDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
-
-    int linearD2C(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
 
     int linearD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
 
@@ -168,7 +120,7 @@ private:
     OBCameraIntrinsic  rgb_intric_;
     OBCameraDistortion depth_disto_;
     OBCameraDistortion rgb_disto_;
-    OBExtrinsic        transform_;  // depth-to-rgb or rgb-to-depth according to initialization
+    OBExtrinsic        transform_;  // should be depth-to-rgb all the time
     float              scaled_trans_[3];
 
     // possible inflection point of the calibrated K6 distortion curve

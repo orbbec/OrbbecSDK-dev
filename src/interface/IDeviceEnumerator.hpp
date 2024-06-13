@@ -4,8 +4,6 @@
 
 namespace libobsensor {
 
-class IDeviceEnumerator;  // forward declaration
-
 struct DeviceEnumInfo {
     virtual ~DeviceEnumInfo() = default;
 
@@ -39,10 +37,10 @@ typedef std::function<void(const DeviceEnumInfoList &removed, const DeviceEnumIn
 
 class IDeviceEnumerator {
 public:
-    virtual ~                        IDeviceEnumerator()                                      = default;
-    virtual DeviceEnumInfoList       getDeviceInfoList()                                      = 0;
-    virtual std::shared_ptr<IDevice> createDevice(const std::shared_ptr<const DeviceEnumInfo>& info)       = 0;
-    virtual void                     setDeviceChangedCallback(DeviceChangedCallback callback) = 0;
+    virtual ~IDeviceEnumerator()                                                                     = default;
+    virtual DeviceEnumInfoList       getDeviceInfoList()                                             = 0;
+    virtual std::shared_ptr<IDevice> createDevice(const std::shared_ptr<const DeviceEnumInfo> &info) = 0;
+    virtual void                     setDeviceChangedCallback(DeviceChangedCallback callback)        = 0;
 };
 }  // namespace libobsensor
 

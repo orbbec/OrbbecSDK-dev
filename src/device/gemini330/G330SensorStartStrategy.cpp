@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace libobsensor {
-namespace g330 {
+
 G330SensorStartStrategy::G330SensorStartStrategy(std::weak_ptr<IDevice> device) {
     initializeValidateSensor();
     device_ = device;
@@ -107,5 +107,5 @@ void G330SensorStartStrategy::clearValidateSensor(OBSensorType sensorType) {
     }
 }
 
-}  // namespace g330
+
 }  // namespace libobsensor

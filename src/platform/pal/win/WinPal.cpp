@@ -287,7 +287,7 @@ std::string wideCharToUTF8(const wchar_t *wStr) {
     if(size <= 0) {
         return "";
     }
-    std::string result(size, '\0');
+    std::string result(size-1, '\0');
     if(WideCharToMultiByte(CP_UTF8, 0, wStr, -1, &result[0], size, nullptr, nullptr) != size) {
         return "";
     }

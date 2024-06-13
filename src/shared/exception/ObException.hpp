@@ -5,7 +5,7 @@
 #include <typeinfo>
 #include "logger/Logger.hpp"
 
-namespace libobsensor{
+namespace libobsensor {
 class libobsensor_exception : public std::exception {
 public:
     const char *get_message() const noexcept {
@@ -39,14 +39,17 @@ public:
         LOG_WARN(msg);
     }
 };
+
 class io_exception : public unrecoverable_exception {
 public:
     io_exception(const std::string &msg) noexcept : unrecoverable_exception(msg, OB_EXCEPTION_TYPE_IO) {}
 };
+
 class memory_exception : public unrecoverable_exception {
 public:
     memory_exception(const std::string &msg) noexcept : unrecoverable_exception(msg, OB_EXCEPTION_TYPE_MEMORY) {}
 };
+
 class camera_disconnected_exception : public unrecoverable_exception {
 public:
     camera_disconnected_exception(const std::string &msg) noexcept : unrecoverable_exception(msg, OB_EXCEPTION_TYPE_CAMERA_DISCONNECTED) {}
@@ -69,7 +72,6 @@ private:
 
 class windows_pal_exception : public pal_exception {
 public:
-    // TODO: get last error
     windows_pal_exception(const std::string &msg) noexcept : pal_exception(msg, OB_EXCEPTION_TYPE_PLATFORM) {}
 };
 
@@ -111,7 +113,7 @@ public:
     }
 
 #define CATCH_EXCEPTION_AND_EXECUTE(statement)                                                                                                         \
-    catch(const  libobsensor::libobsensor_exception &e) {                                                                                               \
+    catch(const libobsensor::libobsensor_exception &e) {                                                                                               \
         LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n\t - where:{0}#{1}\n\t - msg:{2}\n\t - type:{3}", __LINE__, __FUNCTION__,    \
                  e.get_message(), typeid(e).name());                                                                                                   \
         statement;                                                                                                                                     \
@@ -200,4 +202,4 @@ public:
         throw std::logic_error(msg);                                      \
     }
 
-}  // namespace ob
+}  // namespace libobsensor

@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 namespace libobsensor {
-namespace g330 {
+
 #define G330_UVC_METADATA_SIZE 96
 #pragma pack(push, 1)
 typedef struct {
@@ -84,5 +84,5 @@ struct G330DepthUvcMetadata : public G330CommonUvcMetadata {
 
 static_assert(sizeof(G330ColorUvcMetadata) == G330_UVC_METADATA_SIZE, "G330ColorUvcMetadata size mismatch!");
 static_assert(sizeof(G330DepthUvcMetadata) == G330_UVC_METADATA_SIZE, "G330DepthUvcMetadata size mismatch!");
-}  // namespace g330
+
 }  // namespace libobsensor

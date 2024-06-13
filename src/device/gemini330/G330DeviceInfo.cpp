@@ -5,7 +5,7 @@
 #include <map>
 
 namespace libobsensor {
-namespace g330 {
+
 
 const std::map<int, std::string> G300DeviceNameMap = {
     { 0x06d0, "Orbbec Gemini 2R" },     { 0x06d1, "Orbbec Gemini 2RL" },   { 0x0800, "Orbbec Gemini 335" },   { 0x0801, "Orbbec Gemini 330" },
@@ -51,5 +51,5 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> G330DeviceInfo::createDeviceInfos(c
     return G330DeviceInfos;
 }
 
-}  // namespace g330
+
 }  // namespace libobsensor

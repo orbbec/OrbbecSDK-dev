@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace libobsensor {
-namespace g330 {
+
 
 #pragma pack(1)
 typedef struct {
@@ -56,5 +56,5 @@ private:
     std::vector<g330_firmware_data> firmwareDataList_;
 };
 
-}  // namespace g330
+
 }  // namespace libobsensor

@@ -4,7 +4,7 @@
 #include "core/device/IDevice.hpp"
 
 namespace libobsensor {
-namespace g330 {
+
 
 class G330SensorStartStrategy : public ISensorStartStrategy {
 public:
@@ -26,5 +26,5 @@ private:
     std::weak_ptr<IDevice>                                       device_;
 };
 
-}  // namespace g330
+
 }  // namespace libobsensor

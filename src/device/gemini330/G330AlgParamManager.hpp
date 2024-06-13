@@ -1,14 +1,14 @@
 #pragma once
 
-#include "interface/IAlgParamManager.hpp"
-#include "core/device/IDevice.hpp"
+#include "IDevice.hpp"
+#include "IProperty.hpp"
 
 namespace libobsensor {
-namespace g330 {
 
-class G330AlgParamManager : public StructuredLightAlgParamManager {
+
+class G330AlgParamManager {
 public:
-    G330AlgParamManager(const std::shared_ptr<IDeviceCommand> &cmd, uint16_t pid);
+    G330AlgParamManager(const std::shared_ptr<IPropertyAccessor> &propertyAccessor, uint16_t pid);
     virtual ~G330AlgParamManager() = default;
 
     OBCameraIntrinsic  getCameraIntrinsic(std::shared_ptr<const StreamProfile> profile) const override;
@@ -58,7 +58,7 @@ private:
     std::shared_ptr<const StreamProfile> accelEmptyStreamProfile_;
     std::shared_ptr<const StreamProfile> gyroEmptyStreamProfile_;
 
-    std::shared_ptr<IDeviceCommand>      devCommand_;
+    std::shared_ptr<IPropertyAccessor>      devCommand_;
     std::vector<OBDepthCalibrationParam> depthCalibParamList_;
     IMUCalibrateParams                   imuCalibParam_;
 
@@ -74,5 +74,5 @@ private:
     std::map<const StreamProfile *, std::pair<std::weak_ptr<const StreamProfile>, OBDisparityProcessParam>> disparityProcessParamMap_;
 };
 
-}  // namespace g330
+
 }  // namespace libobsensor

@@ -6,7 +6,7 @@
 #include <memory>
 #include <functional>
 namespace libobsensor {
-namespace g330 {
+
 
 G330Firmware::G330Firmware(const uint8_t *data, size_t dataSize) {
     if(dataSize < sizeof(uint32_t)) {
@@ -82,5 +82,5 @@ void G330Firmware::checkFirmwareData(const g330_firmware_data &firmwareData) {
     }
 }
 
-}  // namespace g330
+
 }  // namespace libobsensor

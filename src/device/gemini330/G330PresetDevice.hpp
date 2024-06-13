@@ -5,7 +5,7 @@
 #include <json/json.h>
 
 namespace libobsensor {
-namespace g330 {
+
 
 struct G330Preset {
     // device/global
@@ -78,5 +78,5 @@ private:
     std::string                      storedAvailablePreset_;
     std::shared_ptr<EventBus>        eventBus_;
 };
-}  // namespace g330
+
 }  // namespace libobsensor

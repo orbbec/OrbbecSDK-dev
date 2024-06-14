@@ -49,6 +49,19 @@ protected:
     OBFormat               format_;
 };
 
+struct StreamProfileWeakPtrCompare {
+    bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
+        auto sharedA = a.lock();
+        auto sharedB = b.lock();
+
+        if(sharedA && sharedB) {
+            return sharedA < sharedB;
+        }
+
+        return sharedA != nullptr;
+    }
+};
+
 class VideoStreamProfile : public StreamProfile {
 public:
     VideoStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);

@@ -10,19 +10,6 @@
 
 namespace libobsensor {
 
-struct StreamProfileWeakPtrCompare {
-    bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
-        auto sharedA = a.lock();
-        auto sharedB = b.lock();
-
-        if(sharedA && sharedB) {
-            return sharedA < sharedB;
-        }
-
-        return sharedA != nullptr;
-    }
-};
-
 class StreamIntrinsicsManager {
 private:
     StreamIntrinsicsManager();

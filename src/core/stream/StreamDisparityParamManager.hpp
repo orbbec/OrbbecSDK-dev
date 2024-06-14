@@ -7,18 +7,18 @@
 #include <mutex>
 
 namespace libobsensor {
-struct StreamProfilePtrCompare {
-    bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
-        auto sharedA = a.lock();
-        auto sharedB = b.lock();
+// struct StreamProfilePtrCompare {
+//     bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
+//         auto sharedA = a.lock();
+//         auto sharedB = b.lock();
 
-        if(sharedA && sharedB) {
-            return sharedA < sharedB;
-        }
+//         if(sharedA && sharedB) {
+//             return sharedA < sharedB;
+//         }
 
-        return sharedA != nullptr;
-    }
-};
+//         return sharedA != nullptr;
+//     }
+// };
 
 class StreamDisparityParamManager {
 private:
@@ -35,7 +35,7 @@ public:
 
 private:
     std::mutex                                                                                         mutex_;
-    std::map<std::weak_ptr<const StreamProfile>, OBDisparityProcessParam, StreamProfilePtrCompare> disparityProcessParamMap_;
+    std::map<std::weak_ptr<const StreamProfile>, OBDisparityProcessParam, StreamProfileWeakPtrCompare> disparityProcessParamMap_;
 };
 
 }  // namespace libobsensor

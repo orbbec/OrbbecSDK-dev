@@ -36,8 +36,8 @@ UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal
     if(!deviceInfoList_.empty()) {
         LOG_DEBUG("Found {} device(s):", deviceInfoList_.size());
         for(auto &deviceInfo: deviceInfoList_) {
-            LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, connection: {}", deviceInfo->name_, deviceInfo->pid_, deviceInfo->deviceSn_,
-                      deviceInfo->connectionType_);
+            LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, connection: {}", deviceInfo->getName(), deviceInfo->getPid(), deviceInfo->getDeviceSn(),
+                      deviceInfo->getConnectionType());
         }
     }
     else {
@@ -72,13 +72,13 @@ void UsbDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std
             if(!removedDevList.empty()) {
                 LOG_DEBUG("Removed device list:");
                 for(auto &deviceInfo: removedDevList) {
-                    LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}", deviceInfo->name_, deviceInfo->pid_, deviceInfo->deviceSn_);
+                    LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}", deviceInfo->getName(), deviceInfo->getPid(), deviceInfo->getDeviceSn());
                 }
             }
             if(!deviceInfoList_.empty()) {
                 LOG_DEBUG("Remained device list:");
                 for(auto &deviceInfo: deviceInfoList_) {
-                    LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}", deviceInfo->name_, deviceInfo->pid_, deviceInfo->deviceSn_);
+                    LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}", deviceInfo->getName(), deviceInfo->getPid(), deviceInfo->getDeviceSn());
                 }
             }
             std::unique_lock<std::mutex> lock(callbackMutex_);
@@ -178,7 +178,7 @@ void UsbDeviceEnumerator::deviceArrivalHandleThreadFunc() {
             if(!deviceInfoList_.empty()) {
                 LOG_DEBUG("Current device list: ");
                 for(auto &deviceInfo: deviceInfoList_) {
-                    LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}", deviceInfo->name_, deviceInfo->pid_, deviceInfo->deviceSn_);
+                    LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}", deviceInfo->getName(), deviceInfo->getPid(), deviceInfo->getDeviceSn());
                 }
             }
             std::unique_lock<std::mutex> lock(callbackMutex_);
@@ -224,22 +224,5 @@ void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callbac
     };
 }
 
-std::shared_ptr<IDevice> UsbDeviceEnumerator::createDevice(const std::shared_ptr<const DeviceEnumInfo> &info) {
-    LOG_DEBUG("UsbDeviceEnumerator createDevice...");
-    std::shared_ptr<IDevice> device;
-
-    std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    auto                                   info_found = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(),
-                                                                     [&](const std::shared_ptr<const DeviceEnumInfo> &item) { return item->uid_ == info->uid_; });
-    if(info_found == deviceInfoList_.end()) {
-        return nullptr;
-    }
-
-    // todo: create device by pid
-
-    LOG_DEBUG("Device created successfully! Name: {0}, PID: 0x{1:04x}, SN/ID: {2}", info->name_, info->pid_, info->deviceSn_);
-
-    return device;
-}
 
 }  // namespace libobsensor

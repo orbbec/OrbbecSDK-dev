@@ -652,9 +652,10 @@ typedef enum {
  * @brief Enumeration for device types
  */
 typedef enum {
-    OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA = 0, /**< Monocular structured light camera */
-    OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA = 1, /**< Binocular structured light camera */
-    OB_TOF_CAMERA                        = 2, /**< Time-of-flight camera */
+    OB_DEVICE_TYPE_UNKNOWN               = -1, /**< Unknown device type */
+    OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA = 0,  /**< Monocular structured light camera */
+    OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA = 1,  /**< Binocular structured light camera */
+    OB_TOF_CAMERA                        = 2,  /**< Time-of-flight camera */
 } OBDeviceType,
     ob_device_type, OB_DEVICE_TYPE;
 
@@ -1035,56 +1036,6 @@ typedef enum {
     OB_CMD_VERSION_INVALID   = (uint16_t)0xffff,  ///< Invalid version
 } OB_CMD_VERSION,
     OBCmdVersion, ob_cmd_version;
-
-/**
- * @brief Internal API for future publication
- *
- * @note This data type matches OBCmdVersion of one propertyId. PropertyId has multiple OBCmdVersion, and different OBCmdVersion of this propertyId has
- * different data types. PropertyId and OBCmdVersion match only one data type. itemCount is the number of data types contained in data bytes. C language and C++
- * have differences.
- *
- * C language:
- * data's type is a uint8_t pointer, and the user parses data to the destination type.
- * itemTypeSize == 1, dataSize == itemCount;
- *
- * C++:
- * data's type is the propertyId and OBCmdVersion's data type.
- * itemTypeSize = sizeof(T), itemCount = dataSize / itemTypeSize;
- */
-typedef struct OBDataBundle {
-    /**
-     * @brief OBCmdVersion of propertyId
-     */
-    OBCmdVersion cmdVersion;
-
-    /**
-     * @brief Data containing itemCount of elements
-     *
-     * @note void *data = new T[itemCount];
-     */
-    void *data;
-
-    /**
-     * @brief Data size in bytes
-     *
-     * @note dataSize == itemTypeSize * itemCount
-     */
-    uint32_t dataSize;
-
-    /**
-     * @brief Size of data item
-     *
-     * @note C language: itemTypeSize = 1, C++: itemTypeSize = sizeof(T)
-     */
-    uint32_t itemTypeSize;
-
-    /**
-     * @brief Count of data item
-     *
-     * @note itemCount = dataSize / itemTypeSize; 0 == dataSize % itemTypeSize;
-     */
-    uint32_t itemCount;
-} OBDataBundle, ob_data_bundle;
 
 /**
  * @brief IP address configuration for network devices (IPv4)
@@ -1651,7 +1602,7 @@ typedef void (*ob_file_send_callback)(ob_file_tran_state state, const char *mess
  * @param percent Upgrade progress percentage
  * @param user_data User-defined data
  */
-typedef void (*ob_device_upgrade_callback)(ob_upgrade_state state, const char *message, uint8_t percent, void *user_data);
+typedef void (*ob_device_fw_update_callback)(ob_fw_update_state state, const char *message, uint8_t percent, void *user_data);
 
 /**
  * @brief Callback for device status
@@ -1706,7 +1657,7 @@ typedef void (*ob_device_changed_callback)(ob_device_list *removed, ob_device_li
  * @param frame Frame object
  * @param user_data User-defined data
  */
-typedef void (*ob_frame_callback)(ob_frame *frame, void *user_data);
+typedef void (*ob_frame_callback)(const ob_frame *frame, void *user_data);
 #define ob_filter_callback ob_frame_callback
 #define ob_playback_callback ob_frame_callback
 
@@ -1716,7 +1667,7 @@ typedef void (*ob_frame_callback)(ob_frame *frame, void *user_data);
  * @param frameset Frameset object
  * @param user_data User-defined data
  */
-typedef void (*ob_frameset_callback)(ob_frame *frameset, void *user_data);
+typedef void (*ob_frameset_callback)(const ob_frame *frameset, void *user_data);
 
 /**
  * @brief Customize the delete callback

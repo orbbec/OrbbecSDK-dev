@@ -52,8 +52,8 @@ class HandleLibusb {
 public:
     HandleLibusb(std::shared_ptr<UsbContext> context, libusb_device_handle *handle, std::shared_ptr<UsbInterfaceLibusb> interface)
         : context_(std::move(context)), firstInterface_(std::move(interface)), handle_(handle) {
-        claimInterface(interface->getNumber());
-        for(auto &&i: interface->getAssociatedInterfaces())
+        claimInterface(firstInterface_->getNumber());
+        for(auto &&i: firstInterface_->getAssociatedInterfaces())
             claimInterface(i->getNumber());
         context_->startEventHandler();
     }

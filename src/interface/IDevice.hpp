@@ -61,12 +61,12 @@ public:
 public:
     virtual ~IDevice() = default;
 
-    virtual const std::shared_ptr<const DeviceInfo> &getInfo() const                              = 0;
-    virtual const std::string                       &getExtensionInfo(const std::string &infoKey) = 0;
+    virtual std::shared_ptr<const DeviceInfo> getInfo() const                              = 0;
+    virtual const std::string                &getExtensionInfo(const std::string &infoKey) = 0;
 
     virtual ResourcePtr<IPropertyAccessor> getPropertyAccessor() = 0;
 
-    virtual std::vector<OBSensorType>             getSupportedSensorTypeList() const                        = 0;
+    virtual std::vector<OBSensorType>             getSensorTypeList() const                        = 0;
     virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) = 0;
     virtual ResourcePtr<ISensor>                  getSensor(OBSensorType type)                              = 0;
 
@@ -93,6 +93,11 @@ extern "C" {
 struct ob_device_t {
     std::shared_ptr<libobsensor::IDevice> device;
 };
+
+struct ob_device_info_t {
+    std::shared_ptr<const libobsensor::DeviceInfo> info;
+};
+
 #ifdef __cplusplus
 }
 #endif

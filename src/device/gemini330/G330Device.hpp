@@ -2,20 +2,21 @@
 #include "IDevice.hpp"
 #include "IDeviceEnumerator.hpp"
 #include <map>
+#include <memory>
 
 namespace libobsensor {
 
-class G330Device : public IDevice {
+class G330Device : public IDevice, public std::enable_shared_from_this<IDevice> {
 public:
     G330Device(const std::shared_ptr<const DeviceEnumInfo> &info);
     virtual ~G330Device() noexcept;
 
-    const std::shared_ptr<const DeviceInfo>  &getInfo() const override;
+     std::shared_ptr<const DeviceInfo>  getInfo() const override;
     const std::string &getExtensionInfo(const std::string &infoKey) override;
 
     ResourcePtr<IPropertyAccessor> getPropertyAccessor() override;
 
-    std::vector<OBSensorType>             getSupportedSensorTypeList() const override;
+    std::vector<OBSensorType>             getSensorTypeList() const override;
     std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) override;
     ResourcePtr<ISensor>                  getSensor(OBSensorType type) override;
 

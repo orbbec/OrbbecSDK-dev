@@ -11,7 +11,6 @@ public:
     UsbDeviceEnumerator(DeviceChangedCallback callback);
     ~UsbDeviceEnumerator() noexcept override;
     DeviceEnumInfoList       getDeviceInfoList() override;
-    std::shared_ptr<IDevice> createDevice(const std::shared_ptr<const DeviceEnumInfo> &info) override;
     void                     setDeviceChangedCallback(DeviceChangedCallback callback) override;
 
 private:

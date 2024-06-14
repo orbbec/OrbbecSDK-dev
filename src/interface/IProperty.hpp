@@ -73,7 +73,8 @@ public:
     }
 
     template <typename T>
-    typename std::enable_if<std::is_same<T, float>::value, T>::type setPropertyValueT(uint32_t           propertyId,
+    typename std::enable_if<std::is_same<T, float>::value, void>::type setPropertyValueT(uint32_t           propertyId,
+                                                                                      const T &          value,
                                                                                       PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
         OBPropertyValue obValue;
         obValue.floatValue = static_cast<float>(value);
@@ -135,7 +136,7 @@ public:
     }
 
     template <typename T> T getFirmwareDataT(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
-        std::vector<uint8_t> vec = getFirmwareData(propertyId, accessTypes);
+        std::vector<uint8_t> vec = getFirmwareData(propertyId, accessType);
         T                    data;
         if(vec.size() != sizeof(T)) {
             LOG_WARN("Firmware data size is not match with property type");

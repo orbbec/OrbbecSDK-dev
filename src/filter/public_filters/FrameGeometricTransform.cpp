@@ -72,7 +72,6 @@ void mirrorYUYVImage(uint8_t *src, uint8_t *dst, int width, int height) {
 }
 
 template <typename T> void imageFlip(const T *src, T *dst, uint32_t width, uint32_t height) {
-    const auto tSize   = sizeof(T);
     const T   *flipSrc = src + (width * height);
     for(uint32_t h = 0; h < height; h++) {
         flipSrc -= width;
@@ -83,8 +82,7 @@ template <typename T> void imageFlip(const T *src, T *dst, uint32_t width, uint3
 
 void flipRGBImage(int pixelSize, const uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height) {
     // const uint32_t pixelSize = 3;  // RGB888格式每个像素占用3个字节
-    const uint32_t rowSize   = width * pixelSize;
-    const uint32_t totalSize = width * height * pixelSize;
+    const uint32_t rowSize = width * pixelSize;
 
     for(uint32_t h = 0; h < height; h++) {
         const uint8_t *flipSrc = src + (height - h - 1) * rowSize;

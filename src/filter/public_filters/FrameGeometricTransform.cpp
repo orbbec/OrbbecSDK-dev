@@ -72,7 +72,7 @@ void mirrorYUYVImage(uint8_t *src, uint8_t *dst, int width, int height) {
 }
 
 template <typename T> void imageFlip(const T *src, T *dst, uint32_t width, uint32_t height) {
-    const T *flipSrc = src + (width * height);
+    const T   *flipSrc = src + (width * height);
     for(uint32_t h = 0; h < height; h++) {
         flipSrc -= width;
         memcpy(dst, flipSrc, width * sizeof(T));

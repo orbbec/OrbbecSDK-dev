@@ -197,7 +197,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
 uint8_t *ob_frame_get_data_unsafe(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
-    return const_cast<uint8_t *>(frame->frame->getDataUnsafe());
+    return frame->frame->getDataUnsafe();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 

@@ -60,6 +60,11 @@ struct ob_sensor_t {
     OBSensorType                          type;
 };
 
+struct ob_sensor_list_t {
+    std::shared_ptr<libobsensor::IDevice> device;
+    std::vector<OBSensorType> sensorTypes;
+};
+
 #ifdef __cplusplus
 }
 #endif

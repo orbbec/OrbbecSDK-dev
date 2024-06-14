@@ -202,4 +202,11 @@ public:
         throw std::logic_error(msg);                                      \
     }
 
+#define VALIDATE_INDEX(ARG, COUNT)                                         \
+    if((ARG) < 0 || (ARG) >= (COUNT)) {                                    \
+        std::string msg = "Invalid index value for argument \"" #ARG "\""; \
+        LOG_WARN(msg);                                                     \
+        throw std::logic_error(msg);                                       \
+    }
+
 }  // namespace libobsensor

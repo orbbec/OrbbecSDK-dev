@@ -627,6 +627,42 @@ ob_stream_type ob_align_get_to_stream_type(ob_filter *filter, ob_error **error);
  */
 ob_filter *ob_create_disparity_transform(ob_error **error, bool depth_to_disparity);
 
+/**
+ * @brief Get the number of recommended filter list
+ *
+ * @param filter_list Recommended filter list
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return uint32_t The number of list
+ */
+uint32_t ob_filter_list_get_count(ob_filter_list *filter_list, ob_error **error);
+
+/**
+ * @brief Get the number of recommended filter list
+ *
+ * @param filter_list Recommended filter list
+ * @param index Recommended filter index
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return ob_filter The index of ob_filter
+ */
+ob_filter *ob_filter_list_get_filter(ob_filter_list *filter_list, uint32_t index, ob_error **error);
+
+/**
+ * @brief Get the name of ob_filter
+ *
+ * @param filter ob_filter object
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return char The filter of name
+ */
+const char *ob_get_filter_name(ob_filter *filter, ob_error **error);
+
+/**
+ * @brief Delete a list of ob_filter objects.
+ *
+ * @param[in] filter_list The list of ob_filter objects to delete.
+ * @param[out] error Logs error messages.
+ */
+void ob_delete_filter_list(ob_filter_list *filter_list, ob_error **error);
+
 #ifdef __cplusplus
 }
 #endif

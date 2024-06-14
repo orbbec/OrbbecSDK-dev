@@ -11,7 +11,6 @@ void PropertyAccessor::registerProperty(uint32_t propertyId, OBPermissionType us
 }
 void PropertyAccessor::registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr,
                                         std::shared_ptr<IPropertyPort> port) {
-    OBPermissionType permission      = OB_PERMISSION_DENY;
     auto             strToPermission = [](const std::string &str) {
         if(str == "r") {
             return OB_PERMISSION_READ;
@@ -23,7 +22,7 @@ void PropertyAccessor::registerProperty(uint32_t propertyId, const std::string &
             return OB_PERMISSION_READ_WRITE;
         }
         else {
-            throw invalid_value_exception("Invalid permission string");
+            return OB_PERMISSION_DENY;
         }
     };
     auto userPerms = strToPermission(userPermsStr);

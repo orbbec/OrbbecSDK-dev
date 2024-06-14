@@ -178,14 +178,14 @@ const std::shared_ptr<UsbInterface> UsbDeviceLibusb::getInterface(uint8_t interf
 }
 
 std::shared_ptr<HandleLibusb> UsbDeviceLibusb::get_handle(uint8_t interface_number) {
-    BEGIN_TRY_EXECUTE({
+    // BEGIN_TRY_EXECUTE({
         auto i = getInterface(interface_number);
         if(!i)
             return nullptr;
         auto intf = std::dynamic_pointer_cast<UsbInterfaceLibusb>(i);
         return std::make_shared<HandleLibusb>(context_, handle_, intf);
-    })
-    CATCH_EXCEPTION_AND_EXECUTE(return nullptr)
+    // })
+    // CATCH_EXCEPTION_AND_EXECUTE(return nullptr)
 }
 
 const std::shared_ptr<UsbMessenger> UsbDeviceLibusb::open(uint8_t interface_number) {

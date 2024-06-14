@@ -148,33 +148,6 @@ void NetDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std
     }
 }
 
-std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<DeviceEnumInfo> info) {
-    LOG_DEBUG("NetDeviceEnumerator createDevice...");
-    std::shared_ptr<IDevice> device;
-
-    std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    auto info_found = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [&](std::shared_ptr<DeviceEnumInfo> item) { return item->uid_ == info->uid_; });
-    if(info_found == deviceInfoList_.end()) {
-        return nullptr;
-    }
-
-    auto netPortInfo   = std::dynamic_pointer_cast<NetSourcePortInfo>(info->sourcePortInfoList_.front());
-    auto rstDeviceInfo = associatedSourcePortCompletion(obPal_, info);
-    if(isMatchDeviceByPid(rstDeviceInfo->pid_, gFemtoMegaPids)) {
-        device = std::make_shared<FemtoMegaNetDevice>(obPal_, rstDeviceInfo);
-        LOG_DEBUG("Create Net Device success! address={0}, port={1}, pid=0x{2:4x}", netPortInfo->address, netPortInfo->port, netPortInfo->pid);
-    }
-    else if(isMatchDeviceByPid(rstDeviceInfo->pid_, gGemini2XLPids)) {
-        device = std::make_shared<Gemini2XLDevice>(obPal_, rstDeviceInfo);
-        LOG_DEBUG("Create Net Device success! address={0}, port={1}, pid=0x{2:4x}", netPortInfo->address, netPortInfo->port, netPortInfo->pid);
-    }
-    else {
-        LOG_ERROR("Create Net Device failed, unsupported device! address={0}, port={1}, pid=0x{2:04x}", netPortInfo->address, netPortInfo->port,
-                  netPortInfo->pid);
-    }
-    return device;
-}
-
 std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<ObPal> obPal, std::string address, uint16_t port) {
     auto vendorPort = obPal->queryNetVendorPort(address, port);
     if(!vendorPort) {

@@ -11,17 +11,17 @@
 
 namespace libobsensor {
 
-void printDeviceList(std::string title, const DeviceEnumInfoList& deviceList) {
+void printDeviceList(std::string title, const DeviceEnumInfoList &deviceList) {
     LOG_INFO(title + ": ({})", deviceList.size());
     for(auto &deviceInfo: deviceList) {
-        if(deviceInfo->connectionType_ == "Ethernet") {
-            auto netPortInfo = std::dynamic_pointer_cast<const NetSourcePortInfo>(deviceInfo->sourcePortInfoList_.front());
-            LOG_INFO("\t- Name: {0}, PID: 0x{1:04x}, SN/ID: {2}, Connection: {3}, MAC:{4}, ip:{5}", deviceInfo->name_, deviceInfo->pid_, deviceInfo->deviceSn_,
-                     deviceInfo->connectionType_, netPortInfo->mac, netPortInfo->address);
+        if(deviceInfo->getConnectionType() == "Ethernet") {
+            auto netPortInfo = std::dynamic_pointer_cast<const NetSourcePortInfo>(deviceInfo->getSourcePortInfoList().front());
+            LOG_INFO("\t- Name: {0}, PID: 0x{1:04x}, SN/ID: {2}, Connection: {3}, MAC:{4}, ip:{5}", deviceInfo->getName(), deviceInfo->getPid(),
+                     deviceInfo->getDeviceSn(), deviceInfo->getConnectionType(), netPortInfo->mac, netPortInfo->address);
         }
         else {
-            LOG_INFO("\t- Name: {0}, PID: 0x{1:04x}, SN/ID: {2}, Connection: {3}", deviceInfo->name_, deviceInfo->pid_, deviceInfo->deviceSn_,
-                     deviceInfo->connectionType_);
+            LOG_INFO("\t- Name: {0}, PID: 0x{1:04x}, SN/ID: {2}, Connection: {3}", deviceInfo->getName(), deviceInfo->getPid(), deviceInfo->getDeviceSn(),
+                     deviceInfo->getConnectionType());
         }
     }
 }
@@ -43,7 +43,8 @@ DeviceManager::DeviceManager() : destroy_(false), multiDeviceSyncIntervalMs_(0) 
 
 #if defined(BUILD_USB_PORT)
     LOG_DEBUG("Enable USB Device Enumerator ...");
-    auto usbDeviceEnumerator = std::make_shared<UsbDeviceEnumerator>([&](const DeviceEnumInfoList&  removed, const DeviceEnumInfoList&  added) { onDeviceChanged(removed, added); });
+    auto usbDeviceEnumerator =
+        std::make_shared<UsbDeviceEnumerator>([&](const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added) { onDeviceChanged(removed, added); });
 
     deviceEnumerators_.emplace_back(usbDeviceEnumerator);
 #endif
@@ -118,51 +119,36 @@ std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uin
 
 std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<DeviceEnumInfo> info) {
     LOG_DEBUG("DeviceManager  createDevice...");
-    std::shared_ptr<IDevice> device;
 
     // check if the device has been created
     {
         std::unique_lock<std::mutex> lock(createdDevicesMutex_);
         auto                         iter = createdDevices_.begin();
         for(; iter != createdDevices_.end(); ++iter) {
-            if(iter->first == info->uid_) {
-                auto dev = iter->second.lock();
-                if(dev) {
-                    device = dev;
-                    return device;
-                }
-                else {
+            if(iter->first == info->getUid()) {
+                if(iter->second.expired()) {
                     createdDevices_.erase(iter);
                     break;
                 }
+                return iter->second.lock();
             }
         }
     }
 
     // create device
-    for(auto &enumerator_: deviceEnumerators_) {
-        device = enumerator_->createDevice(info);
-        if(device) {
-            break;
-        }
-    }
-
-    if(!device) {
-        throw invalid_value_exception(utils::to_string() << "Trying to create a device that doesn't exist or removed!, name=" << info->name_
-                                                         << ", pid=" << info->pid_ << ", SN/ID=" << info->deviceSn_);
-    }
+    auto device = info->createDevice();
 
     // add to createdDevices_
     {
         std::unique_lock<std::mutex> lock(createdDevicesMutex_);
-        createdDevices_.insert({ info->uid_, device });
+        createdDevices_.insert({ info->getUid(), device });
     }
 
-    LOG_INFO("Device created successfully! Name: {0}, PID: 0x{1:04x}, SN/ID: {2}", info->name_, info->pid_, info->deviceSn_);
+    LOG_INFO("Device created successfully! Name: {0}, PID: 0x{1:04x}, SN/ID: {2}", info->getName(), info->getPid(), info->getDeviceSn());
     return device;
 }
 
-DeviceEnumInfoList DeviceManager::getDeviceInfoList() const{
+DeviceEnumInfoList DeviceManager::getDeviceInfoList() const {
     DeviceEnumInfoList deviceInfoList;
     for(auto &enumerator_: deviceEnumerators_) {
         auto infos = enumerator_->getDeviceInfoList();
@@ -176,13 +162,13 @@ void DeviceManager::setDeviceChangedCallback(DeviceChangedCallback callback) {
     devChangedCallback_ = callback;
 }
 
-void DeviceManager::onDeviceChanged(const DeviceEnumInfoList& removed, const DeviceEnumInfoList&  added) {
+void DeviceManager::onDeviceChanged(const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added) {
     std::unique_lock<std::mutex> lock(callbackMutex_);
 
     LOG_INFO("Device changed! removed: {0}, added: {1}", removed.size(), added.size());
     if(!removed.empty()) {
         for(const auto &info: removed) {
-            auto iter = createdDevices_.find(info->uid_);
+            auto iter = createdDevices_.find(info->getUid());
             if(iter != createdDevices_.end()) {
                 auto dev = iter->second.lock();
                 if(dev) {
@@ -309,8 +295,9 @@ void DeviceManager::enableNetDeviceEnumeration(bool enable) {
         auto netDeviceEnumerator =
             std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed,
                                                               std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
-=======
-        auto netDeviceEnumerator = std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+        == == == = auto netDeviceEnumerator =
+            std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed,
+                                                              std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
 >>>>>>> 2b5680b (Implementing Context and Device Manager.)
         deviceEnumerators_.emplace_back(netDeviceEnumerator);
         auto deviceInfoList = getDeviceInfoList();

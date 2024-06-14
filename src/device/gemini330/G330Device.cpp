@@ -1,9 +1,18 @@
 #include "G330Device.hpp"
+#include "ObPal.hpp"
+#include "InternalTypes.hpp"
 #include "property/VendorPropertyPort.hpp"
 #include "property/UvcPropertyPort.hpp"
 #include "property/PropertyAccessor.hpp"
-#include "InternalTypes.hpp"
-#include "ObPal.hpp"
+#include "sensor/video/VideoSensor.hpp"
+#include "sensor/motion/MotionStreamer.hpp"
+#include "sensor/motion/AccelSensor.hpp"
+#include "sensor/motion/GyroSensor.hpp"
+#include "usb/uvc/UvcDevicePort.hpp"
+
+#include "utils/Utils.hpp"
+
+#include <algorithm>
 
 namespace libobsensor {
 
@@ -16,47 +25,50 @@ G330Device::G330Device(const std::shared_ptr<const DeviceEnumInfo> &info) : enum
 
     auto propAccessor                 = getPropertyAccessor();
     auto version                      = propAccessor->getFirmwareDataT<OBVersionInfo>(OB_STRUCT_VERSION);
+    deviceInfo_                       = std::make_shared<DeviceInfo>();
     deviceInfo_->name_                = version.deviceName;
     deviceInfo_->fwVersion_           = version.firmwareVersion;
     deviceInfo_->deviceSn_            = version.serialNumber;
     deviceInfo_->asicName_            = version.depthChip;
     deviceInfo_->hwVersion_           = version.hardwareVersion;
-    deviceInfo_->type_                = version.deviceType;
+    deviceInfo_->type_                = static_cast<uint16_t>(version.deviceType);
     deviceInfo_->supportedSdkVersion_ = version.sdkVersion;
-    deviceInfo_->pid_                 = enumInfo_->pid_;
-    deviceInfo_->vid_                 = enumInfo_->vid_;
-    deviceInfo_->uid_                 = enumInfo_->uid_;
-    deviceInfo_->connectionType_      = enumInfo_->connectionType_;
+    deviceInfo_->pid_                 = enumInfo_->getPid();
+    deviceInfo_->vid_                 = enumInfo_->getVid();
+    deviceInfo_->uid_                 = enumInfo_->getUid();
+    deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
 }
 
 G330Device::~G330Device() noexcept {}
 
 void G330Device::initSensors() {
-    auto pal = ObPal::getInstance();
-    std::for_each(enumInfo_->sourcePortInfoList_.begin(), enumInfo_->sourcePortInfoList_.end(),
-                  [this, &pal](const std::shared_ptr<const SourcePortInfo> &portInfo) {
-                      if(portInfo->portType == SOURCE_PORT_USB_UVC) {
-                          auto port        = pal->createSourcePort(portInfo);
-                          auto uvcPortInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo);
-                          if(uvcPortInfo->infIndex == INTERFACE_COLOR) {
-                              sensors_.insert({ OB_SENSOR_COLOR, { nullptr, port } });
-                          }
-                          else if(uvcPortInfo->infIndex == INTERFACE_DEPTH) {
-                              sensors_.insert({ OB_SENSOR_DEPTH, { nullptr, port } });
-                              sensors_.insert({ OB_SENSOR_IR_LEFT, { nullptr, port } });
-                              sensors_.insert({ OB_SENSOR_IR_RIGHT, { nullptr, port } });
-                          }
-                      }
-                      else if(portInfo->portType == SOURCE_PORT_USB_HID) {
-                          auto port = pal->createSourcePort(portInfo);
-                          sensors_.insert({ OB_SENSOR_ACCEL, { nullptr, port } });
-                          sensors_.insert({ OB_SENSOR_GYRO, { nullptr, port } });
-                      }
-                  });
+    auto        pal                = ObPal::getInstance();
+    const auto &sourcePortInfoList = enumInfo_->getSourcePortInfoList();
+    std::for_each(sourcePortInfoList.cbegin(), sourcePortInfoList.cend(), [this, &pal](const std::shared_ptr<const SourcePortInfo> &portInfo) {
+        if(portInfo->portType == SOURCE_PORT_USB_UVC) {
+            auto port        = pal->createSourcePort(portInfo);
+            auto uvcPortInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo);
+            if(uvcPortInfo->infIndex == INTERFACE_COLOR) {
+                sensors_.insert({ OB_SENSOR_COLOR, { nullptr, port } });
+            }
+            else if(uvcPortInfo->infIndex == INTERFACE_DEPTH) {
+                auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
+                uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);
+                sensors_.insert({ OB_SENSOR_DEPTH, { nullptr, port } });
+                sensors_.insert({ OB_SENSOR_IR_LEFT, { nullptr, port } });
+                sensors_.insert({ OB_SENSOR_IR_RIGHT, { nullptr, port } });
+            }
+        }
+        else if(portInfo->portType == SOURCE_PORT_USB_HID) {
+            auto port = pal->createSourcePort(portInfo);
+            sensors_.insert({ OB_SENSOR_ACCEL, { nullptr, port } });
+            sensors_.insert({ OB_SENSOR_GYRO, { nullptr, port } });
+        }
+    });
 }
 
 void G330Device::initProperties() {
-    propertyAccessor_ = std::make_shared<PropertyAccessor>(enumInfo_);
+    propertyAccessor_ = std::make_shared<PropertyAccessor>();
     for(auto &sensor: sensors_) {
         auto &sourcePort = sensor.second.backend;
         // todo: lazy create source port
@@ -152,15 +164,23 @@ IDevice::ResourceLock G330Device::tryLockResource() {
     return std::move(resLock);
 }
 
-const std::shared_ptr<const DeviceInfo> &G330Device::getInfo() const {}
-const std::string                       &G330Device::getExtensionInfo(const std::string &infoKey) {}
-
-IDevice::ResourcePtr<IPropertyAccessor> G330Device::getPropertyAccessor() {
-    auto                                    resLock = tryLockResource();
-    IDevice::ResourcePtr<IPropertyAccessor> accessor(propertyAccessor_, std::move(resLock));
+std::shared_ptr<const DeviceInfo> G330Device::getInfo() const {
+    return deviceInfo_;
 }
 
-std::vector<OBSensorType> G330Device::getSupportedSensorTypeList() const {
+const std::string &G330Device::getExtensionInfo(const std::string &infoKey) {
+    // todo: implement this
+    utils::unusedVar(infoKey);
+    static std::string emptyStr;
+    return emptyStr;
+}
+
+IDevice::ResourcePtr<IPropertyAccessor> G330Device::getPropertyAccessor() {
+    auto resLock = tryLockResource();
+    return ResourcePtr<IPropertyAccessor>(propertyAccessor_, std::move(resLock));
+}
+
+std::vector<OBSensorType> G330Device::getSensorTypeList() const {
     std::vector<OBSensorType> sensorTypes;
     for(auto &sensor: sensors_) {
         sensorTypes.push_back(sensor.first);
@@ -168,25 +188,91 @@ std::vector<OBSensorType> G330Device::getSupportedSensorTypeList() const {
     return sensorTypes;
 }
 
-std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessingFilters(OBSensorType type) {}
-IDevice::ResourcePtr<ISensor>         G330Device::getSensor(OBSensorType type) {
+std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessingFilters(OBSensorType type) {
+    utils::unusedVar(type);
+    return {};
+}
+
+IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     auto resLock = tryLockResource();
     auto iter    = sensors_.find(type);
     if(iter == sensors_.end()) {
         throw invalid_value_exception("Sensor not supported!");
     }
+
+    if(iter->second.sensor) {
+        return ResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
+    }
+    // create
+    if(type == OB_SENSOR_COLOR || type == OB_SENSOR_DEPTH || type == OB_SENSOR_IR_LEFT || type == OB_SENSOR_IR_RIGHT) {
+        auto videoSensor    = std::make_shared<VideoSensor>(shared_from_this(), type, iter->second.backend);
+        iter->second.sensor = videoSensor;
+    }
+    else {
+        // type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO
+        auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
+        auto motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, nullptr);  // todo: add data phaser
+
+        auto accelIter           = sensors_.find(OB_SENSOR_ACCEL);
+        auto accelSensor         = std::make_shared<AccelSensor>(shared_from_this(), accelIter->second.backend, motionStreamer);
+        accelIter->second.sensor = accelSensor;
+
+        auto gyroIter           = sensors_.find(OB_SENSOR_GYRO);
+        auto gyroSensor         = std::make_shared<GyroSensor>(shared_from_this(), gyroIter->second.backend, motionStreamer);
+        gyroIter->second.sensor = gyroSensor;
+    }
+
+    auto profiles = iter->second.sensor->getStreamProfileList();
+    // todo: bind params to stream profile
+
+    // todo: printf streamProfile
+    for(auto &profile: profiles) {
+        utils::unusedVar(profile);
+    }
+    return ResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
 }
 
-void G330Device::enableHeadBeat(bool enable) {}
+void G330Device::enableHeadBeat(bool enable) {
+    // todo:implement this
+    utils::unusedVar(enable);
+}
 
-OBDeviceState G330Device::getDeviceState() {}
-int           G330Device::registerDeviceStateChangeCallback(DeviceStateChangedCallback callback) {}
-void          G330Device::unregisterDeviceStateChangeCallback(int index) {}
+OBDeviceState G330Device::getDeviceState() {
+    // todo: implement this
+    return 0;
+}
+int G330Device::registerDeviceStateChangeCallback(DeviceStateChangedCallback callback) {
+    // todo: implement this
+    utils::unusedVar(callback);
+    return 0;
+}
+void G330Device::unregisterDeviceStateChangeCallback(int index) {
+    // todo: implement this
+    utils::unusedVar(index);
+}
 
-void G330Device::reboot() {}
-void G330Device::deactivate() {}
+void G330Device::reboot() {
+    auto propAccessor = getPropertyAccessor();
+    propAccessor->setPropertyValueT(OB_PROP_DEVICE_RESET_BOOL, true);
+    deactivate();
+}
 
-void G330Device::updateFirmware(const char *fileData, uint32_t fileSize, DeviceFwUpdateCallback upgradeCallback, bool async) {}
+void G330Device::deactivate() {
+    // todo: implement this
+}
 
-const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uint8_t> &data) {}
+void G330Device::updateFirmware(const char *fileData, uint32_t fileSize, DeviceFwUpdateCallback upgradeCallback, bool async) {
+    // todo: implement this
+    utils::unusedVar(fileData);
+    utils::unusedVar(fileSize);
+    utils::unusedVar(upgradeCallback);
+    utils::unusedVar(async);
+}
+
+const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uint8_t> &data) {
+    // todo: implement this
+    utils::unusedVar(data);
+    static std::vector<uint8_t> emptyData;
+    return emptyData;
+}
 }  // namespace libobsensor

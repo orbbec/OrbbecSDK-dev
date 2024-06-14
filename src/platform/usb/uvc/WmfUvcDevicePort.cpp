@@ -501,7 +501,7 @@ void WmfUvcDevicePort::queryXuNodeId(const CComPtr<IKsTopologyInfo> &topologyInf
         //         else {
         //             hr = topologyInfo->get_NodeName( i, nodeName, cbName, &cbName );
 
-        //             LOG( INFO ) << "IKsTopologyInfo->node@" << i << " = " << wcharToString( nodeName );
+        //              LOG_INFO("IKsTopologyInfo->node@{}, name={}", i, wcharToString(nodeName));
         //             delete[] nodeName;
         //         }
         //     }
@@ -578,25 +578,6 @@ bool WmfUvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {
     removeTimeoutBarrier();
     return LOG_HR(hr);
 }
-
-// bool WmfUvcDevicePort::execObVendorXuRequest(const ObVendorXuCtrlId reqXuCtrl, uint8_t *reqBuf, uint32_t reqDataSize,
-//                                          const ObVendorXuCtrlId respXuCtrl, uint8_t *respBuf, uint32_t *respDataSize) {
-//     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-//     if(powerState_ != kD0) {
-//         setPowerStateD0();
-//     }
-//     if(xuKsControl_ == nullptr) {
-//         initXu(xu);
-//         if(xuKsControl_ == nullptr) {
-//             throw std::runtime_error("Extension control can not be initialized before use!");
-//         }
-//     }
-//     bool rst = setXu(xu, reqXuCtrl, reqBuf, reqDataSize);
-//     if(rst) {
-//         rst = getXu(xu, respXuCtrl, respBuf, respDataSize);
-//     }
-//     return rst;
-// }
 
 void WmfUvcDevicePort::foreachUvcDevice(const USBDeviceInfoEnumCallback &action) {
     for(const auto &attributes_params_set: attributes_params) {

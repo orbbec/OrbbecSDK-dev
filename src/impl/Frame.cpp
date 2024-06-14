@@ -2,7 +2,6 @@
 #include "openobsdk/h/Frame.h"
 #include "exception/ObException.hpp"
 #include "frame/FrameFactory.hpp"
-#include "context/Context.hpp"
 #include "ISensor.hpp"
 
 #ifdef __cplusplus

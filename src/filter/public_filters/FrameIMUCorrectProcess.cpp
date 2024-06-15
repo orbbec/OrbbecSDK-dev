@@ -1,113 +1,78 @@
-#include "FramePixelValueProcess.hpp"
+#include "FrameIMUCorrectProcess.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
 
 namespace libobsensor {
 
-template <typename T> void imagePixelValueScale(const T *src, T *dst, uint32_t width, uint32_t height, float scale_) {
-    const T *srcPixel = src;
-    T       *dstPixel = dst;
-    for(uint32_t h = 0; h < height; h++) {
-        for(uint32_t w = 0; w < width; w++) {
-            *dstPixel = (T)(*srcPixel * scale_);
-            srcPixel++;
-            dstPixel++;
-        }
-    }
+IMUCorrecter::IMUCorrecter() : processFuncEnable_(false), uintTransformOnly_(false), correctionMode_(NORMAL_CORRECTION_MODE) {
+    maxFilterFrameQueueSize_ = 100;
+    srcFrameQueue_           = make_unique<single_consumer_frame_queue<std::shared_ptr<Frame>>>(maxFilterFrameQueueSize_);
 }
 
-template <typename T> void imagePixelValueOffset(T *src, T *dst, uint32_t width, uint32_t height, int8_t offset) {
-    T *dstPixel = dst;
-    T *srcPixel = src;
-    if(offset > 0) {
-        uint8_t shiftCount = offset;
-        for(uint32_t h = 0; h < height; h++) {
-            for(uint32_t w = 0; w < width; w++) {
-                *dstPixel = *srcPixel >> shiftCount;
-                srcPixel++;
-                dstPixel++;
+std::shared_ptr<Frame> IMUCorrecter::processFunc(std::shared_ptr<const Frame> frame) {
+
+    static constexpr float gravity = 9.80665f;
+    static constexpr float deg2rad = 0.017453293f;
+    if(frame->getType() == OB_FRAME_ACCEL) {
+        OBAccelFrameData *frameData = (OBAccelFrameData *)frame->getData();
+        if(uintTransformOnly_) {
+            frameData->accelData[0] *= gravity;
+            frameData->accelData[1] *= gravity;
+            frameData->accelData[2] *= gravity;
+        }
+        else {
+            float accelData[3] = { calculateAccelGravi(frameData->accelData[0], accelScaleRange_),
+                                   calculateAccelGravi(frameData->accelData[1], accelScaleRange_),
+                                   calculateAccelGravi(frameData->accelData[2], accelScaleRange_) };
+            if(processFuncEnable_) {
+                Eigen::Vector3d accelEigenVec(accelData[0], accelData[1], accelData[2]);
+                accelEigenVec = correctAccel(accelEigenVec, &param_);
+    
+                accelData[0] = accelEigenVec.x();
+                accelData[1] = accelEigenVec.y();
+                accelData[2] = accelEigenVec.z();
             }
+
+            memcpy(frameData->accelData, accelData, sizeof(float) * 3);
+            frameData->temp = calculateRegisterTemperature(frameData->temp);
         }
+        return frame;
     }
-    else if(offset < 0) {
-        uint8_t shiftCount = -offset;
-        for(uint32_t h = 0; h < height; h++) {
-            for(uint32_t w = 0; w < width; w++) {
-                *dstPixel = *srcPixel << shiftCount;
-                srcPixel++;
-                dstPixel++;
-            }
+    else if(frame->getType() == OB_FRAME_GYRO) {
+        // 适配IMU旧打包方案数据解析情况
+        if(uintTransformOnly_) {
+            OBGyroFrameData *gyroFrameData = (OBGyroFrameData *)frame->getData();
+            gyroFrameData->gyroData[0] *= deg2rad;
+            gyroFrameData->gyroData[1] *= deg2rad;
+            gyroFrameData->gyroData[2] *= deg2rad;
         }
+        return frame;
     }
-}
+    else if(frame->is<FrameSet>()) {
+        auto             frameSet      = frame->as<FrameSet>();
+        OBGyroFrameData *gyroFrameData = (OBGyroFrameData *)frameSet->getGyroFrame()->getData();
+        float            gyroData[3]   = { calculateGyroDPS(gyroFrameData->gyroData[0], gyroScaleRange_),
+                                           calculateGyroDPS(gyroFrameData->gyroData[1], gyroScaleRange_),
+                                           calculateGyroDPS(gyroFrameData->gyroData[2], gyroScaleRange_) };
 
-template <typename T> void imagePixelValueCutOff(T *src, T *dst, uint32_t width, uint32_t height, uint32_t min, uint32_t max) {
-    T *dstPixel = dst;
-    T *srcPixel = src;
-    if(min >= max) {
-        for(uint32_t h = 0; h < height; h++) {
-            for(uint32_t w = 0; w < width; w++) {
-                *dstPixel = 0;
-                srcPixel++;
-                dstPixel++;
-            }
+        OBAccelFrameData *accelFrameData = (OBAccelFrameData *)frameSet->getAccelFrame()->getData();
+        float             accelData[3]   = { calculateAccelGravi(accelFrameData->accelData[0], accelScaleRange_),
+                                             calculateAccelGravi(accelFrameData->accelData[1], accelScaleRange_),
+                                             calculateAccelGravi(accelFrameData->accelData[2], accelScaleRange_) };
+
+        if(processFuncEnable_) {
+            Eigen::Vector3d gyroEigenVec(gyroData[0], gyroData[1], gyroData[2]);
+            gyroEigenVec = correctGyro(gyroEigenVec, &param_);
+            gyroData[0] = gyroEigenVec.x();
+            gyroData[1] = gyroEigenVec.y();
+            gyroData[2] = gyroEigenVec.z();
         }
-    }
-    else {
-        for(uint32_t h = 0; h < height; h++) {
-            for(uint32_t w = 0; w < width; w++) {
-                *dstPixel = (*srcPixel < min) ? 0 : ((*srcPixel > max) ? 0 : *srcPixel);
-                srcPixel++;
-                dstPixel++;
-            }
-        }
-    }
-}
-
-PixelValueScaler::PixelValueScaler(const std::string &name) : FilterBase(name) {}
-PixelValueScaler::~PixelValueScaler() noexcept {}
-
-void PixelValueScaler::updateConfig(std::vector<std::string> &params) {
-    if(params.size() != 1) {
-        throw invalid_value_exception("PixelValueScaler config error: params size not match");
-    }
-    try {
-        scale_ = std::stof(params[0]);
-    }
-    catch(const std::exception &e) {
-        throw invalid_value_exception("PixelValueScaler config error: " + std::string(e.what()));
-    }
-}
-
-const std::string &PixelValueScaler::getConfigSchema() const {
-    // csv format: name，type， min，max，step，default，description
-    static const std::string schema = "scale, float, 0.01, 100.0, 0.01, 1.0, value scale factor";
-    return schema;
-}
-
-std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame> frame) {
-    if(frame->getType() != OB_FRAME_DEPTH) {
-        LOG_WARN_INTVL("PixelValueScaler unsupported to process this frame type: {}", frame->getType());
-        return FrameFactory::cloneFrame(frame);
+        memcpy(gyroFrameData->gyroData, gyroData, sizeof(float) * 3);
+        gyroFrameData->temp = calculateRegisterTemperature(frameData->temp);
+        return frameSet->getGyroFrame();
     }
 
-    auto depthFrame = frame->as<DepthFrame>();
-
-    auto outFrame = FrameFactory::cloneFrame(frame);
-
-    switch(frame->getFormat()) {
-    case OB_FORMAT_Y16:
-        imagePixelValueScale<uint16_t>((uint16_t *)frame->getData(), (uint16_t *)outFrame->getData(), depthFrame->getWidth(), depthFrame->getHeight(), scale_);
-        break;
-    default:
-        break;
-    }
-
-    auto outDepthFrame = outFrame->as<DepthFrame>();
-    auto valueScale    = outDepthFrame->getValueScale();
-    outDepthFrame->setValueScale(valueScale * scale_);
-
-    return outFrame;
+    return frame;
 }
 }  // namespace libobsensor

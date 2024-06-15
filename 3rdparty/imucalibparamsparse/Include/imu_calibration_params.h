@@ -7,7 +7,7 @@
 
 // Orbbec Accelerometer model
 typedef struct {
-    double noiseDensity;          ///< Noise density (stability of bias)
+    double noiseDensity;          ///< Noise density
     double randomWalk;            ///< Random walk
     double referenceTemp;         ///< Reference temperature
     double bias[3];               ///< Bias
@@ -18,7 +18,7 @@ typedef struct {
 
 // Orbbec Gyroscope model
 typedef struct {
-    double noiseDensity;          ///< Noise density (stability of bias)
+    double noiseDensity;          ///< Noise density
     double randomWalk;            ///< Random walk
     double referenceTemp;         ///< Reference temperature
     double bias[3];               ///< Bias

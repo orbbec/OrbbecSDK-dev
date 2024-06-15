@@ -23,12 +23,16 @@ Align::~Align() noexcept {
 }
 
 void Align::updateConfig(std::vector<std::string> &params) {
-    //depth_scale, add_target_distortion, gap_fill_copy
+    //AlignType, TargetDistortion, GapFillCopy
+    std::lock_guard<std::recursive_mutex> lock(alignMutex_);
     if(params.size() != 3) {
         throw invalid_value_exception("Align config error: params size not match");
     }
     try {
-        depth_unit_mm_         = std::stof(params[0]);
+        int align_to_stream = std::stoi(params[0]);
+        if(align_to_stream >= OB_STREAM_IR && align_to_stream <= OB_STREAM_IR_RIGHT) {
+            align_to_stream_ = (OBStreamType)align_to_stream;
+        }
         add_target_distortion_ = bool(std::stoi(params[1]));
         gap_fill_copy_         = bool(std::stoi(params[2]));
     }
@@ -39,35 +43,24 @@ void Align::updateConfig(std::vector<std::string> &params) {
 
 const std::string &Align::getConfigSchema() const {
     // csv format: name£¬type£¬ min£¬max£¬step£¬default£¬description
-    static const std::string schema = "depth_unit_mm_, float, 0.01, 100.0, 0.01, 1.0, depth unit in millimeter\n \
-    add_target_distortion_, bool, 0, 1, 1, 1, add distortion of the target stream\n \
-    gap_fill_copy_, bool, 0, 1, 1, 1, enable gap fill";
+    static const std::string schema = "AlignType, int, 1, 7, 1, 2, aligned to the type of data stream\n"
+                                      "TargetDistortion, bool, 0, 1, 1, 1, add distortion of the target stream\n"
+                                      "GapFillCopy, bool, 0, 1, 1, 1, enable gap fill";
     return schema;
 }
 
 void Align::reset() {
-    /// TODO(timon): how to stop the parent thread
-    // if(isProcessThreadStarted()) {
-    //    stopProcessThread();
-    //}
-
-    // for(const auto &pair: bufferManagerMap_) {
-    //    std::shared_ptr<IFrameBufferManager> bufferManager = pair.second;
-    //    bufferManager.reset();
-    //}
-
     pImpl->reset();
 }
 
 std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
-    auto frames = FrameFactory::cloneFrame(frame)->as<FrameSet>();
-
     std::lock_guard<std::recursive_mutex> lock(alignMutex_);
     if(!frame || !frame->is<FrameSet>()) {
         LOG_WARN("Invalid frame!");
-        return frames;
+        return FrameFactory::cloneFrame(frame);
     }
 
+    auto frames = FrameFactory::cloneFrame(frame)->as<FrameSet>();
     // get type of align_to_stream_
     std::shared_ptr<Frame> existFrame = frames->getFrame(getFrameType());
     if(!existFrame) {
@@ -135,8 +128,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
             auto to_profile       = depth->getStreamProfile()->as<VideoStreamProfile>();
             auto alignProfile     = createAlignedProfile(original_profile, to_profile);
 
-            aligned_frame =
-                libobsensor::FrameFactory::createVideoFrame(from->getType(), from->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
+            aligned_frame = FrameFactory::createVideoFrame(from->getType(), from->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
             if(aligned_frame) {
                 aligned_frame->copyInfo(from);
                 aligned_frame->setStreamProfile(alignProfile);
@@ -145,15 +137,14 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
             }
         }
     }
-    else {                               // depth to other
-        auto to = other_frames.front();  // the first frame
+    else {
+        auto to = other_frames.front();  // depth to other
 
         auto original_profile = depth->getStreamProfile()->as<VideoStreamProfile>();
         auto to_profile       = to->getStreamProfile()->as<VideoStreamProfile>();
         auto alignProfile     = createAlignedProfile(original_profile, to_profile);
 
-        aligned_frame =
-            libobsensor::FrameFactory::createVideoFrame(depth->getType(), depth->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
+        aligned_frame = FrameFactory::createVideoFrame(depth->getType(), depth->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
         if(aligned_frame) {
             aligned_frame->copyInfo(depth);
             aligned_frame->setStreamProfile(alignProfile);

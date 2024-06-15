@@ -17,12 +17,17 @@ public:
     size_t capacity() const {
         return capacity_;
     }
+
     size_t size() const {
         return queue_.size();
     }
 
     bool empty() const {
         return queue_.empty();
+    }
+
+    bool full() const {
+        return queue_.size() >= capacity_;
     }
 
     bool enqueue(std::shared_ptr<T> frame) {  // returns false if queue is full

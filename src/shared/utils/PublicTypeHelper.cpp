@@ -81,7 +81,7 @@ uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t hei
     case OB_FORMAT_RVL:
         maxFrameDataSize = height * width * 2;
         break;
-    default: // assume planar format
+    default:  // assume planar format
         maxFrameDataSize = height * calcDefaultStrideBytes(format, width);
         break;
     }
@@ -169,6 +169,30 @@ OBStreamType mapSensorTypeToStreamType(OBSensorType type) {
     return OB_STREAM_UNKNOWN;
 }
 
+OBSensorType mapStreamTypeToSensorType(OBStreamType type) {
+    switch(type) {
+    case OB_STREAM_IR:
+        return OB_SENSOR_IR;
+    case OB_STREAM_COLOR:
+        return OB_SENSOR_COLOR;
+    case OB_STREAM_DEPTH:
+        return OB_SENSOR_DEPTH;
+    case OB_STREAM_ACCEL:
+        return OB_SENSOR_ACCEL;
+    case OB_STREAM_GYRO:
+        return OB_SENSOR_GYRO;
+    case OB_STREAM_IR_LEFT:
+        return OB_SENSOR_IR_LEFT;
+    case OB_STREAM_IR_RIGHT:
+        return OB_SENSOR_IR_RIGHT;
+    case OB_STREAM_RAW_PHASE:
+        return OB_SENSOR_RAW_PHASE;
+    default:
+        break;
+    }
+    return OB_SENSOR_UNKNOWN;
+}
+
 const std::map<uint32_t, OBFormat> fourccToOBFormat = {
     { fourCc2Int('U', 'Y', 'V', 'Y'), OB_FORMAT_UYVY }, { fourCc2Int('Y', 'U', 'Y', '2'), OB_FORMAT_YUYV }, { fourCc2Int('Y', 'U', 'Y', 'V'), OB_FORMAT_YUYV },
     { fourCc2Int('N', 'V', '1', '2'), OB_FORMAT_NV12 }, { fourCc2Int('N', 'V', '2', '1'), OB_FORMAT_NV21 }, { fourCc2Int('M', 'J', 'P', 'G'), OB_FORMAT_MJPG },
@@ -194,6 +218,43 @@ uint32_t obFormatToUvcFourcc(OBFormat format) {
         return it->first;
     }
     return 0;
+}
+
+float mapIMUSampleRateToValue(OBIMUSampleRate rate) {
+    switch(rate) {
+    case OB_SAMPLE_RATE_1_5625_HZ:
+        return 1.5625f;
+    case OB_SAMPLE_RATE_3_125_HZ:
+        return 3.125f;
+    case OB_SAMPLE_RATE_6_25_HZ:
+        return 6.25f;
+    case OB_SAMPLE_RATE_12_5_HZ:
+        return 12.5f;
+    case OB_SAMPLE_RATE_25_HZ:
+        return 25.f;
+    case OB_SAMPLE_RATE_50_HZ:
+        return 50.f;
+    case OB_SAMPLE_RATE_100_HZ:
+        return 100.f;
+    case OB_SAMPLE_RATE_200_HZ:
+        return 200.f;
+    case OB_SAMPLE_RATE_500_HZ:
+        return 500.f;
+    case OB_SAMPLE_RATE_1_KHZ:
+        return 1000.f;
+    case OB_SAMPLE_RATE_2_KHZ:
+        return 2000.f;
+    case OB_SAMPLE_RATE_4_KHZ:
+        return 4000.f;
+    case OB_SAMPLE_RATE_8_KHZ:
+        return 8000.f;
+    case OB_SAMPLE_RATE_16_KHZ:
+        return 16000.f;
+    case OB_SAMPLE_RATE_32_KHZ:
+        return 32000.f;
+    default:
+        return 0.f;
+    }
 }
 
 }  // namespace utils
@@ -410,6 +471,114 @@ std::ostream &operator<<(std::ostream &os, const OBSensorType &type) {
         break;
     default:
         os << "Unknown sensor type";
+        break;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const OBIMUSampleRate &rate) {
+    switch(rate) {
+    case OB_SAMPLE_RATE_1_5625_HZ:
+        os << "1.5625Hz";
+        break;
+    case OB_SAMPLE_RATE_3_125_HZ:
+        os << "3.125Hz";
+        break;
+    case OB_SAMPLE_RATE_6_25_HZ:
+        os << "6.25Hz";
+        break;
+    case OB_SAMPLE_RATE_12_5_HZ:
+        os << "12.5Hz";
+        break;
+    case OB_SAMPLE_RATE_25_HZ:
+        os << "25Hz";
+        break;
+    case OB_SAMPLE_RATE_50_HZ:
+        os << "50Hz";
+        break;
+    case OB_SAMPLE_RATE_100_HZ:
+        os << "100Hz";
+        break;
+    case OB_SAMPLE_RATE_200_HZ:
+        os << "200Hz";
+        break;
+    case OB_SAMPLE_RATE_500_HZ:
+        os << "500Hz";
+        break;
+    case OB_SAMPLE_RATE_1_KHZ:
+        os << "1KHz";
+        break;
+    case OB_SAMPLE_RATE_2_KHZ:
+        os << "2KHz";
+        break;
+    case OB_SAMPLE_RATE_4_KHZ:
+        os << "4KHz";
+        break;
+    case OB_SAMPLE_RATE_8_KHZ:
+        os << "8KHz";
+        break;
+    case OB_SAMPLE_RATE_16_KHZ:
+        os << "16KHz";
+        break;
+    case OB_SAMPLE_RATE_32_KHZ:
+        os << "32KHz";
+        break;
+    default:
+        os << "Unknown IMU sample rate";
+        break;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const OBGyroFullScaleRange &range) {
+    switch(range) {
+    case OB_GYRO_FS_16dps:
+        os << "16dps";
+        break;
+    case OB_GYRO_FS_31dps:
+        os << "31dps";
+        break;
+    case OB_GYRO_FS_62dps:
+        os << "62dps";
+        break;
+    case OB_GYRO_FS_125dps:
+        os << "125dps";
+        break;
+    case OB_GYRO_FS_250dps:
+        os << "250dps";
+        break;
+    case OB_GYRO_FS_500dps:
+        os << "500dps";
+        break;
+    case OB_GYRO_FS_1000dps:
+        os << "1000dps";
+        break;
+    case OB_GYRO_FS_2000dps:
+        os << "2000dps";
+        break;
+    default:
+        os << "Unknown gyro full scale range";
+        break;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &params) {
+    switch(params) {
+    case OB_ACCEL_FS_2g:
+        os << "2g";
+        break;
+    case OB_ACCEL_FS_4g:
+        os << "4g";
+        break;
+    case OB_ACCEL_FS_8g:
+        os << "8g";
+        break;
+    case OB_ACCEL_FS_16g:
+        os << "16g";
+        break;
+    default:
+        os << "Unknown accel full scale range";
         break;
     }
     return os;

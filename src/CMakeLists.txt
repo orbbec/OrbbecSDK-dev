@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 3.1.15)
 
 set(OB_INTERFACE_DIR "${CMAKE_CURRENT_LIST_DIR}/interface")
 
+# modules
 add_subdirectory(shared) # utils, logger, etc.
 add_subdirectory(core) # core library
+add_subdirectory(filter)
 add_subdirectory(platform)
 add_subdirectory(device)
 add_subdirectory(pipeline)
-add_subdirectory(filter)
 
 # config version info
 if(MSVC)
@@ -20,11 +21,12 @@ add_library(openobsdk SHARED "" ${ORBBEC_VERSIONINFO_RC})
 include(GenerateExportHeader)
 generate_export_header(openobsdk BASE_NAME OB EXPORT_FILE_NAME ${OB_PUBLIC_HEADERS_DIR}/openobsdk/h/Export.h)
 
-file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp ${CMAKE_CURRENT_LIST_DIR}/context/*.cpp)
-file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp)
+file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp)
+file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp)
 
-target_sources(openobsdk PRIVATE ${SOURCE_FILES} ${HEADER_FILES} ${GLOB_RECURSE})
-target_link_libraries(openobsdk PRIVATE ob::shared ob::core ob::filter ob::platform ob::device)
+target_sources(openobsdk PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
+target_link_libraries(openobsdk PRIVATE ob::shared ob::core ob::filter ob::platform ob::device ob::pipeline)
+
 target_include_directories(openobsdk PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_include_directories(
     openobsdk PUBLIC "$<BUILD_INTERFACE:${OB_PUBLIC_HEADERS_DIR}>" "$<INSTALL_INTERFACE:include>"

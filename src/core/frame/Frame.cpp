@@ -440,10 +440,10 @@ std::shared_ptr<Frame> FrameSet::getFrame(int index) {
 // pushFrame(std::move(frame));
 // }
 
-void FrameSet::pushFrame(std::shared_ptr<Frame> &&frame) {
+void FrameSet::pushFrame(std::shared_ptr<const Frame> &&frame) {
     OBFrameType type = frame->getType();
     foreachFrame([&](void *item) {
-        auto pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<const Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == type) {
             (*pFrame).reset();
             *pFrame = nullptr;

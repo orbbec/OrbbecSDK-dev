@@ -12,6 +12,7 @@ uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t hei
 OBFrameType  mapStreamTypeToFrameType(OBStreamType type);
 OBStreamType mapFrameTypeToStreamType(OBFrameType type);
 OBStreamType mapSensorTypeToStreamType(OBSensorType type);
+OBSensorType mapStreamTypeToSensorType(OBStreamType type);
 
 template <typename T> uint32_t fourCc2Int(const T a, const T b, const T c, const T d) {
     static_assert((std::is_integral<T>::value), "fourcc supports integral built-in types only");
@@ -19,6 +20,9 @@ template <typename T> uint32_t fourCc2Int(const T a, const T b, const T c, const
 }
 OBFormat uvcFourccToOBFormat(uint32_t fourcc);
 uint32_t obFormatToUvcFourcc(OBFormat format);
+
+float mapIMUSampleRateToValue(OBIMUSampleRate rate);
+
 }  // namespace utils
 }  // namespace libobsensor
 
@@ -26,3 +30,6 @@ std::ostream &operator<<(std::ostream &os, const OBFormat &format);
 std::ostream &operator<<(std::ostream &os, const OBFrameType &type);
 std::ostream &operator<<(std::ostream &os, const OBStreamType &type);
 std::ostream &operator<<(std::ostream &os, const OBSensorType &type);
+std::ostream &operator<<(std::ostream &os, const OBIMUSampleRate &rate);  // also for accel
+std::ostream &operator<<(std::ostream &os, const OBGyroFullScaleRange &range);
+std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &params);

@@ -25,7 +25,7 @@ G330Device::G330Device(const std::shared_ptr<const DeviceEnumInfo> &info) : enum
     initProperties();
 
     auto propAccessor                 = getPropertyAccessor();
-    auto version                      = propAccessor->getFirmwareDataT<OBVersionInfo>(OB_STRUCT_VERSION);
+    auto version                      = propAccessor->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
     deviceInfo_                       = std::make_shared<DeviceInfo>();
     deviceInfo_->name_                = version.deviceName;
     deviceInfo_->fwVersion_           = version.firmwareVersion;
@@ -222,57 +222,34 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
         iter->second.sensor = videoSensor;
 
         if(type == OB_SENSOR_DEPTH) {
-            //  filter out: OB_FORMAT_Y8, OB_FORMAT_NV12, OB_FORMAT_BA81, OB_FORMAT_YV12, OB_FORMAT_UYVY
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_BA81, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr } });
-            // rename Z16 to Y16
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REPLACE, OB_FORMAT_Z16, OB_FORMAT_Y16, nullptr } });
+            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_BA81, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_Z16, OB_FORMAT_Y16, nullptr } });
         }
         else if(type == OB_SENSOR_IR_LEFT) {
-            // sensorEntry.param.streamFormatReplaceMap         = { { OB_FORMAT_NV12, OB_FORMAT_Y12 } };
-            // sensorEntry.param.virtualStreamFormatList        = { { OB_FORMAT_Y12, OB_FORMAT_Y16 } };
-
-            // filter out: OB_FORMAT_Z16, OB_FORMAT_BA81, OB_FORMAT_YV12
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_BA81, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr } });
-
-            // rename NV12 ro Y12
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y12, nullptr } });
-
+            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_BA81, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y12, nullptr } });
             // add Y16 which unpack from NV12
             // todo: implement this
         }
         else if(type == OB_SENSOR_IR_RIGHT) {
-            // filter out: OB_FORMAT_Z16, OB_FORMAT_Y8, OB_FORMAT_NV12, OB_FORMAT_UYVY
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr } });
-
-            // rename YV12 to Y12, BA81 to Y8
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y12, nullptr } });
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REPLACE, OB_FORMAT_BA81, OB_FORMAT_Y8, nullptr } });
-
+            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y12, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_BA81, OB_FORMAT_Y8, nullptr } });
             // add Y16 which unpack from YV12
             // todo: implement this
         }
         else if(type == OB_SENSOR_COLOR) {
-            //      sensorEntry.param.originalStreamFormatFilterList = { OB_FORMAT_NV12 };
-            // sensorEntry.param.streamFormatReplaceMap = { { OB_FORMAT_BYR2, OB_FORMAT_RW16 } };
-            // sensorEntry.param.virtualStreamFormatList        = {
-            //     { OB_FORMAT_YUYV, OB_FORMAT_RGB },  { OB_FORMAT_YUYV, OB_FORMAT_RGBA }, { OB_FORMAT_YUYV, OB_FORMAT_BGR },
-            //     { OB_FORMAT_YUYV, OB_FORMAT_BGRA }, { OB_FORMAT_YUYV, OB_FORMAT_Y16 },  { OB_FORMAT_YUYV, OB_FORMAT_Y8 },
-            // };
-
-            // filter out: OB_FORMAT_Z16, OB_FORMAT_Y8, OB_FORMAT_NV12, OB_FORMAT_UYVY
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr } });
-
-            // rename BYR2 to RW16
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr } });
+            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr } });
 
             // add RGB, RGBA, BGR, BGRA, Y16, Y8 which convert from YUYV
             // todo: implement this

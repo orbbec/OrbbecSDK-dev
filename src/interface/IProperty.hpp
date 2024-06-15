@@ -37,8 +37,8 @@ public:
 class IPropertyExtensionPort : public IPropertyPort {
 public:
     virtual ~IPropertyExtensionPort() noexcept                                                                 = default;
-    virtual void                        setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
-    virtual const std::vector<uint8_t> &getFirmwareData(uint32_t propertyId)                                   = 0;
+    virtual void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
+    virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId)                                   = 0;
 };
 
 enum PropertyAccessType {
@@ -61,8 +61,8 @@ public:
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
     virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
 
-    virtual void setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
-    virtual const std::vector<uint8_t> &getFirmwareData(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL)            = 0;
+    virtual void setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
+    virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL)            = 0;
 
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type
@@ -129,14 +129,14 @@ public:
         return rangeT;
     }
 
-    template <typename T> void setFirmwareDataT(uint32_t propertyId, const T &data, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+    template <typename T> void setStructureDataT(uint32_t propertyId, const T &data, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
         std::vector<uint8_t> vec(sizeof(T));
         std::memcpy(vec.data(), &data, sizeof(T));
-        setFirmwareData(propertyId, vec, accessType);
+        setStructureData(propertyId, vec, accessType);
     }
 
-    template <typename T> T getFirmwareDataT(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
-        std::vector<uint8_t> vec = getFirmwareData(propertyId, accessType);
+    template <typename T> T getStructureDataT(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+        std::vector<uint8_t> vec = getStructureData(propertyId, accessType);
         T                    data;
         if(vec.size() != sizeof(T)) {
             LOG_WARN("Firmware data size is not match with property type");

@@ -126,6 +126,10 @@ void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig>
         filteredStreamProfileList_.push_back(newSp);  // add new format
         streamProfileFilterConfigMap_[newSp] = { backendSp, iter };
     }
+    LOG_DEBUG(" filtered stream profile list size={} @{}", filteredStreamProfileList_.size(), sensorType_);
+    for(auto &sp: filteredStreamProfileList_) {
+        LOG_DEBUG(" - {}", sp);
+    }
 }
 
 }  // namespace libobsensor

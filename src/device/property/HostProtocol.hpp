@@ -21,14 +21,14 @@ namespace protocol {
 enum HpOpCodes {
     OPCODE_GET_PROPERTY        = 1,
     OPCODE_SET_PROPERTY        = 2,
-    OPCODE_GET_FIRMWARE_DATA   = 3,
-    OPCODE_SET_FIRMWARE_DATA   = 4,
+    OPCODE_GET_STRUCTURE_DATA  = 3,
+    OPCODE_SET_STRUCTURE_DATA  = 4,
     OPCODE_HEARTBEAT_AND_STATE = 5,
 
     // v1.1 protocol introduction
     OPCODE_GET_COMMAND_VERSION           = 26,    // v1.1 control command version number, determines how the control command parses data content
-    OPCODE_GET_STRUCT_DATA               = 27,    // v1.1 structure type data reading
-    OPCODE_SET_STRUCT_DATA               = 28,    // v.1.1 Structure type data setting
+    OPCODE_GET_STRUCTURE_DATA_V1_1       = 27,    // v1.1 structure type data reading
+    OPCODE_SET_STRUCTURE_DATA_V1_1       = 28,    // v.1.1 Structure type data setting
     OPCODE_INIT_READ_STRUCT_DATA_LIST    = 29,    // v1.1 Initialize structure type list data reading
     OPCODE_READ_STRUCT_DATA_LIST         = 30,    // v1.1 Structure type list data reading
     OPCODE_FINISH_READ_STRUCT_DATA_LIST  = 31,    // v1.1 ends structure type list data reading
@@ -136,35 +136,35 @@ typedef struct {
 typedef struct {
     ReqHeader header;
     uint32_t  propertyId;
-} GetFirmwareDataReq;
+} GetStructureDataReq;
 
 typedef struct {
     RespHeader header;
     uint8_t    data[0];
-} GetFirmwareDataResp;
+} GetStructureDataResp;
 
 typedef struct {
     ReqHeader header;
     uint32_t  propertyId;
     uint8_t   data[0];
-} SetFirmwareDataReq;
+} SetStructureDataReq;
 
 typedef struct {
     RespHeader header;
-} SetFirmwareDataResp;
+} SetStructureDataResp;
 
 #pragma pack(pop)
 
 GetPropertyReq     *initGetPropertyReq(uint8_t *dataBuf, uint32_t propertyId);
 SetPropertyReq     *initSetPropertyReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t value);
-GetFirmwareDataReq *initGetFirmwareDataReq(uint8_t *dataBuf, uint32_t propertyId);
-SetFirmwareDataReq *initSetFirmwareDataReq(uint8_t *dataBuf, uint32_t propertyId, const uint8_t *data, uint16_t dataSize);
+GetStructureDataReq *initGetStructureDataReq(uint8_t *dataBuf, uint32_t propertyId);
+SetStructureDataReq *initSetStructureDataReq(uint8_t *dataBuf, uint32_t propertyId, const uint8_t *data, uint16_t dataSize);
 
 GetPropertyResp     *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
 SetPropertyResp     *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
-GetFirmwareDataResp *parseGetFirmwareDataResp(uint8_t *dataBuf, uint16_t dataSize);
-uint16_t            getFirmwareDataSize(const GetFirmwareDataResp* resp);
-SetFirmwareDataResp *parseSetFirmwareDataResp(uint8_t *dataBuf, uint16_t dataSize);
+GetStructureDataResp *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
+uint16_t              getStructureDataSize(const GetStructureDataResp *resp);
+SetStructureDataResp *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
 
 HpStatus execute(const std::shared_ptr<IVendorDataPort> &dataPort, uint8_t *reqData, uint16_t reqDataSize, uint8_t *respData, uint16_t *respDataSize);
 bool     checkStatus(HpStatus stat, bool throwException = true);

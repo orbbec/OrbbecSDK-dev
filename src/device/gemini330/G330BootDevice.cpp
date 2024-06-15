@@ -58,7 +58,7 @@ std::shared_ptr<DeviceInfo> G330BootDevice::getDeviceInfo() {
 
         BEGIN_TRY_EXECUTE({
             auto accessor = getPropertyAccessorForce(OB_STRUCT_VERSION);
-            accessor->getFirmwareData(&version, &size);
+            accessor->getStructureData(&version, &size);
             deviceInfo_->name_                = "Recovery Mode";
             deviceInfo_->fwVersion_           = version.firmwareVersion;
             deviceInfo_->deviceSn_            = version.serialNumber;

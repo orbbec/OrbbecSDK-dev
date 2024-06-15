@@ -29,8 +29,8 @@ public:
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) override;
     void getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType) override;
 
-    void                        setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) override;
-    const std::vector<uint8_t> &getFirmwareData(uint32_t propertyId, PropertyAccessType accessType) override;
+    void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) override;
+    const std::vector<uint8_t> &getStructureData(uint32_t propertyId, PropertyAccessType accessType) override;
 
 private:
     std::mutex                       mutex_;

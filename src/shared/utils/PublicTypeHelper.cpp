@@ -194,3 +194,219 @@ uint32_t obFormatToUvcFourcc(OBFormat format) {
 
 }  // namespace utils
 }  // namespace libobsensor
+
+std::ostream &operator<<(std::ostream &os, const OBFormat &format) {
+    switch(format) {
+    case OB_FORMAT_YUYV:
+        os << "YUYV";
+        break;
+    case OB_FORMAT_YUY2:
+        os << "YUY2";
+        break;
+    case OB_FORMAT_UYVY:
+        os << "UYVY";
+        break;
+    case OB_FORMAT_NV12:
+        os << "NV12";
+        break;
+    case OB_FORMAT_NV21:
+        os << "NV21";
+        break;
+    case OB_FORMAT_MJPG:
+        os << "MJPG";
+        break;
+    case OB_FORMAT_H264:
+        os << "H264";
+        break;
+    case OB_FORMAT_H265:
+        os << "H265";
+        break;
+    case OB_FORMAT_Y16:
+        os << "Y16";
+        break;
+    case OB_FORMAT_Y8:
+        os << "Y8";
+        break;
+    case OB_FORMAT_Y10:
+        os << "Y10";
+        break;
+    case OB_FORMAT_Y11:
+        os << "Y11";
+        break;
+    case OB_FORMAT_Y12:
+        os << "Y12";
+        break;
+    case OB_FORMAT_GRAY:
+        os << "GRAY";
+        break;
+    case OB_FORMAT_HEVC:
+        os << "HEVC";
+        break;
+    case OB_FORMAT_I420:
+        os << "I420";
+        break;
+    case OB_FORMAT_ACCEL:
+        os << "ACCEL";
+        break;
+    case OB_FORMAT_GYRO:
+        os << "GYRO";
+        break;
+    case OB_FORMAT_POINT:
+        os << "POINT";
+        break;
+    case OB_FORMAT_RGB_POINT:
+        os << "RGB_POINT";
+        break;
+    case OB_FORMAT_RLE:
+        os << "RLE";
+        break;
+    case OB_FORMAT_RGB:
+        os << "RGB";
+        break;
+    case OB_FORMAT_BGR:
+        os << "BGR";
+        break;
+    case OB_FORMAT_Y14:
+        os << "Y14";
+        break;
+    case OB_FORMAT_BGRA:
+        os << "BGRA";
+        break;
+    case OB_FORMAT_COMPRESSED:
+        os << "COMPRESSED";
+        break;
+    case OB_FORMAT_RVL:
+        os << "RVL";
+        break;
+    case OB_FORMAT_Z16:
+        os << "Z16";
+        break;
+    case OB_FORMAT_YV12:
+        os << "YV12";
+        break;
+    case OB_FORMAT_BA81:
+        os << "BA81";
+        break;
+    case OB_FORMAT_RGBA:
+        os << "RGBA";
+        break;
+    case OB_FORMAT_BYR2:
+        os << "BYR2";
+        break;
+    case OB_FORMAT_RW16:
+        os << "RW16";
+        break;
+    case OB_FORMAT_DISP16:
+        os << "DISP16";
+        break;
+    default:
+        os << "Unknown format";
+        break;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const OBFrameType &type) {
+    switch(type) {
+    case OB_FRAME_VIDEO:
+        os << "FRAME_VIDEO";
+        break;
+    case OB_FRAME_IR:
+        os << "FRAME_IR";
+        break;
+    case OB_FRAME_COLOR:
+        os << "FRAME_COLOR";
+        break;
+    case OB_FRAME_DEPTH:
+        os << "FRAME_DEPTH";
+        break;
+    case OB_FRAME_ACCEL:
+        os << "FRAME_ACCEL";
+        break;
+    case OB_FRAME_GYRO:
+        os << "FRAME_GYRO";
+        break;
+    case OB_FRAME_IR_LEFT:
+        os << "FRAME_IR_LEFT";
+        break;
+    case OB_FRAME_IR_RIGHT:
+        os << "FRAME_IR_RIGHT";
+        break;
+    case OB_FRAME_RAW_PHASE:
+        os << "FRAME_RAW_PHASE";
+        break;
+    default:
+        os << "Unknown frame type";
+        break;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const OBStreamType &type) {
+    switch(type) {
+    case OB_STREAM_VIDEO:
+        os << "STREAM_VIDEO";
+        break;
+    case OB_STREAM_IR:
+        os << "STREAM_IR";
+        break;
+    case OB_STREAM_COLOR:
+        os << "STREAM_COLOR";
+        break;
+    case OB_STREAM_DEPTH:
+        os << "STREAM_DEPTH";
+        break;
+    case OB_STREAM_ACCEL:
+        os << "STREAM_ACCEL";
+        break;
+    case OB_STREAM_GYRO:
+        os << "STREAM_GYRO";
+        break;
+    case OB_STREAM_IR_LEFT:
+        os << "STREAM_IR_LEFT";
+        break;
+    case OB_STREAM_IR_RIGHT:
+        os << "STREAM_IR_RIGHT";
+        break;
+    case OB_STREAM_RAW_PHASE:
+        os << "STREAM_RAW_PHASE";
+        break;
+    default:
+        os << "Unknown stream type";
+        break;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const OBSensorType &type) {
+    switch(type) {
+    case OB_SENSOR_IR:
+        os << "SENSOR_IR";
+        break;
+    case OB_SENSOR_COLOR:
+        os << "SENSOR_COLOR";
+        break;
+    case OB_SENSOR_DEPTH:
+        os << "SENSOR_DEPTH";
+        break;
+    case OB_SENSOR_ACCEL:
+        os << "SENSOR_ACCEL";
+        break;
+    case OB_SENSOR_GYRO:
+        os << "SENSOR_GYRO";
+        break;
+    case OB_SENSOR_IR_LEFT:
+        os << "SENSOR_IR_LEFT";
+        break;
+    case OB_SENSOR_IR_RIGHT:
+        os << "SENSOR_IR_RIGHT";
+        break;
+    case OB_SENSOR_RAW_PHASE:
+        os << "SENSOR_RAW_PHASE";
+        break;
+    default:
+        os << "Unknown sensor type";
+        break;
+    }
+    return os;
+}

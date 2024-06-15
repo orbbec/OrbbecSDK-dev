@@ -55,10 +55,10 @@ void VendorPropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *
     range->def.intValue  = resp->data.def;
 }
 
-void VendorPropertyPort::setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data) {
+void VendorPropertyPort::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
-    auto req = protocol::initSetFirmwareDataReq(sendData_.data(), propertyId, data.data(), static_cast<uint16_t>(data.size()));
+    auto req = protocol::initSetStructureDataReq(sendData_.data(), propertyId, data.data(), static_cast<uint16_t>(data.size()));
 
     uint16_t respDataSize = 0;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
@@ -66,20 +66,20 @@ void VendorPropertyPort::setFirmwareData(uint32_t propertyId, const std::vector<
     protocol::checkStatus(res);
 }
 
-const std::vector<uint8_t> &VendorPropertyPort::getFirmwareData(uint32_t propertyId) {
+const std::vector<uint8_t> &VendorPropertyPort::getStructureData(uint32_t propertyId) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
-    auto req = protocol::initGetFirmwareDataReq(sendData_.data(), propertyId);
+    auto req = protocol::initGetStructureDataReq(sendData_.data(), propertyId);
 
     uint16_t respDataSize = 0;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
     auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 
-    auto resp = protocol::parseGetFirmwareDataResp(recvData_.data(), respDataSize);
-    auto firmwareDataSize = protocol::getFirmwareDataSize(resp);
-    outputData_.resize(firmwareDataSize);
-    memcpy(outputData_.data(), resp->data, firmwareDataSize);
+    auto resp              = protocol::parseGetStructureDataResp(recvData_.data(), respDataSize);
+    auto structureDataSize = protocol::getStructureDataSize(resp);
+    outputData_.resize(structureDataSize);
+    memcpy(outputData_.data(), resp->data, structureDataSize);
     return outputData_;
 }
 

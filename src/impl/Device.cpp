@@ -219,14 +219,14 @@ void ob_device_set_structured_data(ob_device *device, ob_property_id property_id
     VALIDATE_NOT_NULL(device);
     auto accessor = device->device->getPropertyAccessor();
     std::vector<uint8_t> dataVec(data, data + data_size);
-    accessor->setFirmwareData(property_id, dataVec, libobsensor::PROP_ACCESS_USER);
+    accessor->setStructureData(property_id, dataVec, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
 
 void ob_device_get_structured_data(ob_device *device, ob_property_id property_id, const uint8_t *data, uint32_t *data_size, ob_error **error) BEGIN_API_CALL{
     VALIDATE_NOT_NULL(device);
     auto  accessor     = device->device->getPropertyAccessor();
-    auto &firmwareData = accessor->getFirmwareData(property_id, libobsensor::PROP_ACCESS_USER);
+    auto &firmwareData = accessor->getStructureData(property_id, libobsensor::PROP_ACCESS_USER);
     data               = firmwareData.data();
     *data_size         = static_cast<uint32_t>(firmwareData.size());
 }

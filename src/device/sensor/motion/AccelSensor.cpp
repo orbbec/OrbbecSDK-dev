@@ -21,8 +21,8 @@ AccelSensor::AccelSensor(const std::shared_ptr<IDevice> &owner, const std::share
     : SensorBase(owner, OB_SENSOR_ACCEL, backend), streamer_(streamer) {
     auto propAccessor = owner->getPropertyAccessor();
 
-    auto accelSampleRateList     = propAccessor->getFirmwareDataT<AccelSampleRateList>(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST);
-    auto accelFullScaleRangeList = propAccessor->getFirmwareDataT<AccelFullScaleRangeList>(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST);
+    auto accelSampleRateList     = propAccessor->getStructureDataT<AccelSampleRateList>(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST);
+    auto accelFullScaleRangeList = propAccessor->getStructureDataT<AccelFullScaleRangeList>(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST);
 
     auto lazySensor = std::make_shared<LazySensor>(owner, OB_SENSOR_ACCEL);
     for(uint32_t i = 0; i < accelSampleRateList.num; i++) {

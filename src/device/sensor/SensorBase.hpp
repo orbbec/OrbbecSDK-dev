@@ -46,8 +46,8 @@ protected:
     const OBSensorType           sensorType_;
     std::weak_ptr<IDevice>       owner_;
     std::shared_ptr<ISourcePort> backend_;
-
     StreamProfileListUnsafe streamProfileList_;
+
     std::shared_ptr<const StreamProfile> activatedStreamProfile_;
     FrameCallback frameCallback_;
 

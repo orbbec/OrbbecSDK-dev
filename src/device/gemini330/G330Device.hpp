@@ -29,7 +29,7 @@ public:
     void reboot() override;
     void deactivate() override;
 
-    void updateFirmware(const char *fileData, uint32_t fileSize, DeviceFwUpdateCallback upgradeCallback, bool async) override;
+    void updateFirmware(const char *data, uint32_t dataSize, DeviceFwUpdateCallback updateCallback, bool async) override;
 
     const std::vector<uint8_t> &sendAndReceiveData(const std::vector<uint8_t> &data) override;
 

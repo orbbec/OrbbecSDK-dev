@@ -157,9 +157,8 @@ ob_disparity_process_param ob_disparity_stream_get_process_param(const ob_stream
     if(!profile->profile->is<libobsensor::DisparityStreamProfile>()) {
         throw libobsensor::unsupported_operation_exception("It's not a disparity stream profile!");
     }
-    auto noneConstProfile = std::const_pointer_cast<libobsensor::StreamProfile>(profile->profile);
-    auto videoProfile     = noneConstProfile->as<libobsensor::DisparityStreamProfile>();
-    videoProfile->getDisparityProcessParam();
+    auto disparityProfile = profile->profile->as<libobsensor::DisparityStreamProfile>();
+    return disparityProfile->getDisparityProcessParam();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_disparity_process_param(), profile)
 

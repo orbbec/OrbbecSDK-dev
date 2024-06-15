@@ -30,25 +30,6 @@ constexpr bool metadata_node = false;
 #endif  // V4L2_META_FMT_UVC
 
 namespace libobsensor {
-namespace pal {
-const std::map<uint32_t, ob_format> FOURCC_FORMAT_MAP = {
-    { fourCc2Int('Y', 'U', 'Y', 'V'), OB_FORMAT_YUYV }, { fourCc2Int('U', 'Y', 'V', 'Y'), OB_FORMAT_UYVY }, { fourCc2Int('Y', 'U', 'Y', '2'), OB_FORMAT_YUYV },
-    { fourCc2Int('N', 'V', '1', '2'), OB_FORMAT_NV12 }, { fourCc2Int('N', 'V', '2', '1'), OB_FORMAT_NV21 }, { fourCc2Int('M', 'J', 'P', 'G'), OB_FORMAT_MJPG },
-    { fourCc2Int('H', '2', '6', '4'), OB_FORMAT_H264 }, { fourCc2Int('H', '2', '6', '5'), OB_FORMAT_H265 }, { fourCc2Int('Y', '1', '2', ' '), OB_FORMAT_Y12 },
-    { fourCc2Int('Y', '1', '6', ' '), OB_FORMAT_Y16 },  { fourCc2Int('G', 'R', 'A', 'Y'), OB_FORMAT_GRAY }, { fourCc2Int('Y', '1', '1', ' '), OB_FORMAT_Y11 },
-    { fourCc2Int('Y', '8', ' ', ' '), OB_FORMAT_Y8 },   { fourCc2Int('Y', '1', '0', ' '), OB_FORMAT_Y10 },  { fourCc2Int('H', 'E', 'V', 'C'), OB_FORMAT_HEVC },
-    { fourCc2Int('Y', '1', '4', ' '), OB_FORMAT_Y14 },  { fourCc2Int('I', '4', '2', '0'), OB_FORMAT_I420 }, { fourCc2Int('Y', 'V', '1', '2'), OB_FORMAT_YV12 },
-    { fourCc2Int('Z', '1', '6', ' '), OB_FORMAT_Z16 },  { fourCc2Int('B', 'A', '8', '1'), OB_FORMAT_BA81 },
-};
-
-uint32_t mapFormatToFourcc(OBFormat format) {
-    for(auto &item: FOURCC_FORMAT_MAP) {
-        if(item.second == format) {
-            return item.first;
-        }
-    }
-    return 0;
-}
 
 static const uint32_t MAX_META_DATA_SIZE       = 255;
 static const uint32_t MAX_BUFFER_COUNT         = 4;
@@ -112,9 +93,9 @@ public:
     bool sendData(const uint8_t *data, uint32_t dataLen);
     bool recvData(uint8_t *data, uint32_t *dataLen);
 
-    bool         getPu(OBPropertyID propertyId, int32_t &value) override;
-    bool         setPu(OBPropertyID propertyId, int32_t value) override;
-    ControlRange getPuRange(OBPropertyID propertyId) override;
+    bool         getPu(uint32_t propertyId, int32_t &value) override;
+    bool         setPu(uint32_t propertyId, int32_t value) override;
+    UvcControlRange getPuRange(uint32_t propertyId) override;
 
     virtual std::shared_ptr<const SourcePortInfo>      getSourcePortInfo() const override;
 
@@ -126,7 +107,7 @@ private:
     static void  captureLoop(std::shared_ptr<V4lDeviceHandle> deviceHandle);
     bool         getXu(uint8_t ctrl, uint8_t *data, uint32_t *len);
     bool         setXu(uint8_t ctrl, const uint8_t *data, uint32_t len);
-    ControlRange getXuRange(uint8_t control, int len) const;
+    UvcControlRange getXuRange(uint8_t control, int len) const;
     bool         pendForCtrlStatusEvent() const;
     void         subscribeToCtrlEvent(uint32_t ctrl_id) const;
     void         unsubscribeFromCtrlEvent(uint32_t ctrl_id) const;
@@ -135,5 +116,5 @@ private:
     std::shared_ptr<const USBSourcePortInfo>      portInfo_     = nullptr;
     std::vector<std::shared_ptr<V4lDeviceHandle>> deviceHandles_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

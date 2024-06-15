@@ -42,7 +42,7 @@
 #define ORBBEC_USB_VID 0x2BC5
 
 namespace libobsensor {
-namespace pal {
+
 typedef enum _usbStatus {
     OB_USB_STATUS_SUCCESS       = 0,
     OB_USB_STATUS_IO            = -1,
@@ -228,5 +228,5 @@ typedef struct OBUsbConnection {
 
 typedef std::function<bool(unsigned char *pBuffer, uint32_t nBufferSize, void *pCallbackData)> OpenNIDataReadCallbackFunc;
 
-}  // namespace pal
+
 }  // namespace libobsensor

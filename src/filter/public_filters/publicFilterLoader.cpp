@@ -26,21 +26,13 @@ namespace PublicFilterCreatorLoader {
 
 std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
     static std::map<std::string, std::shared_ptr<IFilterCreator>> filterCreators = {
-        ADD_FILTER_CREATOR(PixelValueScaler),
-        ADD_FILTER_CREATOR(PixelValueCutOff),
-        ADD_FILTER_CREATOR(PixelValueOffset),
-        ADD_FILTER_CREATOR(HdrMerge),
-        ADD_FILTER_CREATOR(SequenceIdFilter),
-        ADD_FILTER_CREATOR(DecimationFilter),
-        ADD_FILTER_CREATOR(IMUFrameReversion),
-        ADD_FILTER_CREATOR(FormatConverter),
-        ADD_FILTER_CREATOR(FrameMirror),
-        ADD_FILTER_CREATOR(FrameFlip),
-        ADD_FILTER_CREATOR(FrameRotate),
-        ADD_FILTER_CREATOR(PointCloudFilter),
+        ADD_FILTER_CREATOR(PixelValueScaler),     ADD_FILTER_CREATOR(PixelValueCutOff),
+        ADD_FILTER_CREATOR(PixelValueOffset),     ADD_FILTER_CREATOR(HdrMerge),
+        ADD_FILTER_CREATOR(SequenceIdFilter),     ADD_FILTER_CREATOR(DecimationFilter),
+        ADD_FILTER_CREATOR(IMUFrameReversion),    ADD_FILTER_CREATOR(FormatConverter),
+        ADD_FILTER_CREATOR(FrameMirror),          ADD_FILTER_CREATOR(FrameFlip),
+        ADD_FILTER_CREATOR(FrameRotate),          ADD_FILTER_CREATOR(PointCloudFilter),
         ADD_FILTER_CREATOR(DU08mmTo1mmConverter),
-
-
     };
 
     return filterCreators;

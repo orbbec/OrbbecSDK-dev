@@ -7,20 +7,8 @@
 #include <vector>
 #include <mutex>
 
+
 namespace libobsensor {
-
-struct StreamProfileWeakPtrCompare {
-    bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
-        auto sharedA = a.lock();
-        auto sharedB = b.lock();
-
-        if(sharedA && sharedB) {
-            return sharedA < sharedB;
-        }
-
-        return sharedA != nullptr;
-    }
-};
 
 class StreamIntrinsicsManager {
 private:
@@ -34,14 +22,14 @@ public:
 
     ~StreamIntrinsicsManager() noexcept;
 
-    void               registerVideoStreamIntrinsics(std::shared_ptr<const StreamProfile> profile, const OBCameraIntrinsic &intrinsics);
-    OBCameraIntrinsic  getVideoStreamIntrinsics(std::shared_ptr<const StreamProfile> profile);
-    void               registerVideoStreamDistortion(std::shared_ptr<const StreamProfile> profile, const OBCameraDistortion &distortion);
-    OBCameraDistortion getVideoStreamDistortion(std::shared_ptr<const StreamProfile> profile);
-    void               registerGyroStreamIntrinsics(std::shared_ptr<const StreamProfile> profile, const OBGyroIntrinsic &intrinsics);
-    OBGyroIntrinsic    getGyroStreamIntrinsics(std::shared_ptr<const StreamProfile> profile);
-    void               registerAccelStreamIntrinsics(std::shared_ptr<const StreamProfile> profile, const OBAccelIntrinsic &intrinsics);
-    OBAccelIntrinsic   getAccelStreamIntrinsics(std::shared_ptr<const StreamProfile> profile);
+    void               registerVideoStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile, const OBCameraIntrinsic &intrinsics);
+    OBCameraIntrinsic  getVideoStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile);
+    void               registerVideoStreamDistortion(const std::shared_ptr<const StreamProfile>& profile, const OBCameraDistortion &distortion);
+    OBCameraDistortion getVideoStreamDistortion(const std::shared_ptr<const StreamProfile>& profile);
+    void               registerGyroStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile, const OBGyroIntrinsic &intrinsics);
+    OBGyroIntrinsic    getGyroStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile);
+    void               registerAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile, const OBAccelIntrinsic &intrinsics);
+    OBAccelIntrinsic   getAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile);
 
 private:
     std::mutex mutex_;

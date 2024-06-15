@@ -3,7 +3,7 @@
 #include "logger/Logger.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 ObUsageEnvironment::ObUsageEnvironment(TaskScheduler &taskScheduler) : BasicUsageEnvironment(taskScheduler), destroy_(false), newLog_(false) {
     outputLogThread_ = std::thread(&ObUsageEnvironment::outputLog, this);
 }
@@ -80,5 +80,5 @@ UsageEnvironment &ObUsageEnvironment::operator<<(void *p) {
     return *this;
 }
 
-}  // namespace pal
+
 }  // namespace libobsensor

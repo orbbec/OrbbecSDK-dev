@@ -1,6 +1,6 @@
 #include "UsbTypes.hpp"
 namespace libobsensor {
-namespace pal {
+
 SourcePortType cvtUsbClassToPortType(UsbClass cls) {
     switch(cls) {
     case OB_USB_CLASS_HID:
@@ -14,5 +14,5 @@ SourcePortType cvtUsbClassToPortType(UsbClass cls) {
     }
     return SOURCE_PORT_UNKNOWN;
 }
-}  // namespace pal
+
 }  // namespace libobsensor

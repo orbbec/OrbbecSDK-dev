@@ -4,15 +4,12 @@
 #pragma once
 #include "IDeviceEnumerator.hpp"
 
-#include <iostream>
-#include <mutex>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <math.h>
+#include <map>
+#include <mutex>
 #include <thread>
 #include <condition_variable>
-#include <list>
 
 namespace libobsensor {
 
@@ -30,7 +27,7 @@ public:
     static std::shared_ptr<IDevice> createNetDevice(std::string address, uint16_t port);
     std::shared_ptr<IDevice> createDevice(std::shared_ptr<DeviceEnumInfo> info);
 
-    std::vector<std::shared_ptr<DeviceEnumInfo>> getDeviceInfoList();
+    DeviceEnumInfoList getDeviceInfoList() const;
 
     void setDeviceChangedCallback(DeviceChangedCallback callback);
 
@@ -41,7 +38,7 @@ public:
 
 private:
     void multiDeviceSyncFunc(uint8_t retry = 0, std::vector<std::string> uids = {});
-    void onDeviceChanged(std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added);
+    void onDeviceChanged(const DeviceEnumInfoList&  removed, const DeviceEnumInfoList&  added);
 
 private:
     bool                        destroy_;
@@ -59,3 +56,4 @@ private:
     std::vector<std::shared_ptr<IDeviceEnumerator>> deviceEnumerators_;
 };
 }  // namespace libobsensor
+

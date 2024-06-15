@@ -3,42 +3,42 @@
 #include "DeviceWatcher.hpp"
 #include "ObPal.hpp"
 
+#include <memory>
+
 namespace libobsensor {
-class UsbDeviceEnumerator : public IDeviceEnumerator {
+class UsbDeviceEnumerator : public IDeviceEnumerator, public std::enable_shared_from_this<IDeviceEnumerator> {
 public:
     UsbDeviceEnumerator(DeviceChangedCallback callback);
     ~UsbDeviceEnumerator() noexcept override;
-    virtual std::vector<std::shared_ptr<DeviceEnumInfo>> getDeviceInfoList() override;
-    virtual std::shared_ptr<IDevice>                 createDevice(std::shared_ptr<DeviceEnumInfo> info) override;
-    virtual void                                     setDeviceChangedCallback(DeviceChangedCallback callback) override;
+    DeviceEnumInfoList       getDeviceInfoList() override;
+    void                     setDeviceChangedCallback(DeviceChangedCallback callback) override;
 
 private:
-    void                                     onPalDeviceChanged(pal::OBDeviceChangedType changeType, std::string devUid);
-    std::vector<std::shared_ptr<DeviceEnumInfo>> queryRemovedDevice(std::string rmDevUid);
-    std::vector<std::shared_ptr<DeviceEnumInfo>> queryArrivalDevice();
+    void               onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid);
+    DeviceEnumInfoList queryRemovedDevice(std::string rmDevUid);
+    DeviceEnumInfoList queryArrivalDevice();
 
     void deviceArrivalHandleThreadFunc();
 
-    static std::vector<std::shared_ptr<DeviceEnumInfo>> usbDeviceInfoMatch(const SourcePortInfoList infoList);
+    static DeviceEnumInfoList usbDeviceInfoMatch(const SourcePortInfoList infoList);
 
 private:
-    std::shared_ptr<pal::ObPal> obPal_;
-    bool destroy_ = false;
+    std::shared_ptr<ObPal> obPal_;
+    bool                   destroy_ = false;
 
-    std::shared_ptr<pal::DeviceWatcher> deviceWatcher_;
+    std::shared_ptr<DeviceWatcher> deviceWatcher_;
 
     DeviceChangedCallback devChangedCallback_ = nullptr;
     std::thread           devChangedCallbackThread_;
 
-    SourcePortInfoList currentUsbPortInfoList_;
+    SourcePortInfoList      currentUsbPortInfoList_;
     bool                    newUsbPortArrival_ = false;
     std::condition_variable newUsbPortArrivalCV_;
     std::thread             deviceArrivalHandleThread_;
 
-    std::vector<std::shared_ptr<DeviceEnumInfo>> deviceInfoList_;
-    std::recursive_mutex                     deviceInfoListMutex_;
+    DeviceEnumInfoList   deviceInfoList_;
+    std::recursive_mutex deviceInfoListMutex_;
 
     std::mutex callbackMutex_;
-
 };
 }  // namespace libobsensor

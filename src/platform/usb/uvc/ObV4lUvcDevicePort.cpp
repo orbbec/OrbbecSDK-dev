@@ -15,7 +15,6 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-namespace pal {
 
 #define USE_MEMORY_MMAP true
 
@@ -232,27 +231,27 @@ void foreachProfile(std::vector<std::shared_ptr<V4lDeviceHandle>>               
                 frame_interval.height           = frame_size.discrete.height;
                 while(!quit && xioctl(devHandle->fd, VIDIOC_ENUM_FRAMEINTERVALS, &frame_interval) == 0) {
                     if(frame_interval.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
-                        if(frame_interval.discrete.numerator != 0) {
-                            auto formatIter = FOURCC_FORMAT_MAP.find(fourcc);
-                            if(formatIter != FOURCC_FORMAT_MAP.end()) {
-                                auto width   = frame_size.discrete.width;
-                                auto height  = frame_size.discrete.height;
-                                auto fps     = static_cast<float>(frame_interval.discrete.denominator) / static_cast<float>(frame_interval.discrete.numerator);
-                                auto format  = formatIter->second;
-                                auto profile = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, format, width, height, fps);
-                                if(fourcc != 0) {
-                                    quit = func(devHandle, profile);
-                                }
-                            }
+                        if(frame_interval.discrete.numerator == 0 || utils::uvcFourccToOBFormat(fourcc) == OB_FORMAT_UNKNOWN) {
+                            continue;
+                        }
+
+                        auto width   = frame_size.discrete.width;
+                        auto height  = frame_size.discrete.height;
+                        auto fps     = static_cast<float>(frame_interval.discrete.denominator) / static_cast<float>(frame_interval.discrete.numerator);
+                        auto format  = formatIter->second;
+                        auto profile = std::make_shared<VideoStreamProfile>(OB_STREAM_VIDEO, format, width, height, fps);
+                        if(fourcc != 0) {
+                            quit = func(devHandle, profile);
                         }
                     }
-                    ++frame_interval.index;
                 }
-                ++frame_size.index;
+                ++frame_interval.index;
             }
-            ++pixel_format.index;
+            ++frame_size.index;
         }
+        ++pixel_format.index;
     }
+}
 }
 
 uint32_t CIDFromOBPropertyID(OBPropertyID id) {
@@ -507,16 +506,13 @@ uint32_t phaseProfileFormatToFourcc(std::shared_ptr<const VideoStreamProfile> pr
     auto     foundFormatIter = std::find_if(v4lFourccMap.begin(), v4lFourccMap.end(),
                                             [&](const std::pair<uint32_t, uint32_t> &item) { return item.second == mapFormatToFourcc(format); });
     if(foundFormatIter != v4lFourccMap.end()) {
-        formatFourcc = foundFormatIter->first;
+        (const utils::big_endian<int> &)(foundFormatIter->first);
     }
-    else {
-        auto it = std::find_if(FOURCC_FORMAT_MAP.begin(), FOURCC_FORMAT_MAP.end(),
-                               [format](const std::pair<uint32_t, OBFormat> &pair) { return format == pair.second; });
-        if(it == FOURCC_FORMAT_MAP.end()) {
-            LOG_ERROR("unsupported format {}", profile->getFormat());
-            return 0;
-        }
-        formatFourcc = it->first;
+
+    auto formatFourcc = utils::obFormatToUvcFourcc(format);
+    if(formatFourcc == 0) {
+        LOG_ERROR("unsupported format {}", profile->format);
+        return 0;
     }
 
     return (const utils::big_endian<int> &)(formatFourcc);
@@ -737,18 +733,18 @@ void ObV4lUvcDevicePort::stopAllStream() {
 }
 
 bool ObV4lUvcDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
-    uint8_t ctrl         = pal::OB_VENDOR_XU_CTRL_ID_64;
+    uint8_t ctrl         = OB_VENDOR_XU_CTRL_ID_64;
     auto    alignDataLen = dataLen;
     if(alignDataLen <= 64) {
-        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_64;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_64;
         alignDataLen = 64;
     }
     else if(alignDataLen > 512) {
-        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_1024;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_1024;
         alignDataLen = 1024;
     }
     else {
-        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_512;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_512;
         alignDataLen = 512;
     }
 
@@ -756,20 +752,20 @@ bool ObV4lUvcDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
 }
 
 bool ObV4lUvcDevicePort::recvData(uint8_t *data, uint32_t *dataLen) {
-    uint8_t ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
+    uint8_t ctrl = OB_VENDOR_XU_CTRL_ID_512;
     if(*dataLen <= 64) {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_64;
+        ctrl = OB_VENDOR_XU_CTRL_ID_64;
     }
     else if(*dataLen > 512) {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_1024;
+        ctrl = OB_VENDOR_XU_CTRL_ID_1024;
     }
     else {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
+        ctrl = OB_VENDOR_XU_CTRL_ID_512;
     }
     return getXu(ctrl, data, dataLen);
 }
 
-bool ObV4lUvcDevicePort::getPu(OBPropertyID propertyId, int32_t &value) {
+bool ObV4lUvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {
     auto                fd      = deviceHandles_.front()->fd;
     auto                cid     = CIDFromOBPropertyID(propertyId);
     struct v4l2_control control = { cid, 0 };
@@ -786,7 +782,7 @@ bool ObV4lUvcDevicePort::getPu(OBPropertyID propertyId, int32_t &value) {
     return true;
 }
 
-bool ObV4lUvcDevicePort::setPu(OBPropertyID propertyId, int32_t value) {
+bool ObV4lUvcDevicePort::setPu(uint32_t propertyId, int32_t value) {
     auto                fd      = deviceHandles_.front()->fd;
     auto                cid     = CIDFromOBPropertyID(propertyId);
     struct v4l2_control control = { cid, value };
@@ -818,9 +814,9 @@ bool ObV4lUvcDevicePort::setPu(OBPropertyID propertyId, int32_t value) {
     return true;
 }
 
-ControlRange ObV4lUvcDevicePort::getXuRange(uint8_t control, int len) const {
+UvcControlRange ObV4lUvcDevicePort::getXuRange(uint8_t control, int len) const {
     auto                        fd = deviceHandles_.front()->fd;
-    ControlRange                range;
+    UvcControlRange             range;
     struct uvc_xu_control_query xquery {};
     memset(&xquery, 0, sizeof(xquery));
     __u16 size   = 0;
@@ -887,15 +883,15 @@ ControlRange ObV4lUvcDevicePort::getXuRange(uint8_t control, int len) const {
     return range;
 }
 
-ControlRange ObV4lUvcDevicePort::getPuRange(OBPropertyID propertyId) {
+UvcControlRange ObV4lUvcDevicePort::getPuRange(uint32_t propertyId) {
     auto fd = deviceHandles_.front()->fd;
     if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT || propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL
        || propertyId == OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL) {
-        int          min        = 0;
-        int          max        = 1;
-        int          step       = 1;
-        int          defaultVal = 0;
-        ControlRange range(min, max, step, defaultVal);
+        int             min        = 0;
+        int             max        = 1;
+        int             step       = 1;
+        int             defaultVal = 0;
+        UvcControlRange range(min, max, step, defaultVal);
         return range;
     }
     struct v4l2_queryctrl query = {};
@@ -903,7 +899,7 @@ ControlRange ObV4lUvcDevicePort::getPuRange(OBPropertyID propertyId) {
     if(xioctl(fd, VIDIOC_QUERYCTRL, &query) < 0) {
         query.minimum = query.maximum = 0;
     }
-    ControlRange range(query.minimum, query.maximum, query.step, query.default_value);
+    UvcControlRange range(query.minimum, query.maximum, query.step, query.default_value);
     return range;
 }
 
@@ -980,5 +976,5 @@ bool ObV4lUvcDevicePort::pendForCtrlStatusEvent() const {
     }
     return event.type == V4L2_EVENT_CTRL;
 }
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -13,7 +13,7 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 
 VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
     : portInfo_(portInfo), usbDev_(usbDevice) {
@@ -30,30 +30,31 @@ VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDe
 
 VendorUsbDevicePort::~VendorUsbDevicePort() noexcept = default;
 
-std::vector<uint8_t> VendorUsbDevicePort::sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedLength) {
+uint32_t VendorUsbDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) {
+    std::unique_lock<std::mutex> lock(mutex_);
     uint32_t transferred = 0;
-    auto     sendBuf     = const_cast<uint8_t *>(sendData.data());
-    auto     ret         = usbMessenger_->controlTransfer(0x40, 0, 0, 0, sendBuf, static_cast<uint32_t>(sendData.size()), transferred, 5000);
+    auto     sendBuf     = const_cast<uint8_t *>(sendData);
+    auto     ret         = usbMessenger_->controlTransfer(0x40, 0, 0, 0, sendBuf, sendLen, transferred, 5000);
     if(ret != OB_USB_STATUS_SUCCESS) {
-        LOG_WARN("control transfer send datafailed: {}", ret);
-        return {};
+        LOG_WARN("control transfer send data failed: {}", ret);
+        return 0;
     }
-    std::vector<uint8_t> recvData(exceptedLength);
-    ret = usbMessenger_->controlTransfer(0xc0, 0, 0, 0, recvData.data(), exceptedLength, transferred, 5000);
+    ret = usbMessenger_->controlTransfer(0xc0, 0, 0, 0, recvData, exceptedRecvLen, transferred, 5000);
     if(ret != OB_USB_STATUS_SUCCESS) {
         LOG_WARN("control transfer recv data failed: {}", ret);
-        return {};
+        return 0;
     }
-    recvData.resize(transferred);
-    return recvData;
+    return transferred;
 }
 
 bool VendorUsbDevicePort::readFromBulkEndPoint(std::vector<uint8_t> &data) {
     utils::unusedVar(data);
+    std::unique_lock<std::mutex> lock(mutex_);
     return false;
 }
 
 bool VendorUsbDevicePort::writeToBulkEndPoint(std::vector<uint8_t> &data) {
+    std::unique_lock<std::mutex> lock(mutex_);
     uint32_t transferred = 0;
     auto     ret         = usbMessenger_->bulkTransfer(bulkWriteEndpoint_, data.data(), (uint32_t)data.size(), transferred, 5000);
     return ret == OB_USB_STATUS_SUCCESS;
@@ -72,5 +73,5 @@ std::string VendorUsbDevicePort::getUsbConnectType() {
 }
 #endif
 
-}  // namespace pal
+
 }  // namespace libobsensor

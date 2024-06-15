@@ -3,7 +3,6 @@
 #include "exception/ObException.hpp"
 
 namespace libobsensor {
-namespace pal {
 
 NetDataStreamPort::NetDataStreamPort(std::shared_ptr<const NetDataStreamPortInfo> portInfo) : isStreaming_(false), portInfo_(portInfo) {}
 
@@ -111,5 +110,4 @@ void NetDataStreamPort::readData() {
     }
 }
 
-}  // namespace pal
 }  // namespace libobsensor

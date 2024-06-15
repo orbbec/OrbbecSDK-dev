@@ -64,7 +64,7 @@ constexpr format_arg_store<wformat_context, Args...> make_wformat_args(const Arg
 
 inline namespace literals {
 #if FMT_USE_USER_DEFINED_LITERALS && !FMT_USE_NONTYPE_TEMPLATE_ARGS
-constexpr detail::udl_arg<wchar_t> operator"" _a(const wchar_t *s, size_t)
+constexpr detail::udl_arg<wchar_t> operator"" _a(const wchar_t * s, size_t)
 {
     return {s};
 }

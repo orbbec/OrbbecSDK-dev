@@ -18,7 +18,7 @@ extern "C" {
  * @param[out] error Pointer to an error object that will be populated if an error occurs during context creation
  * @return Pointer to the created context object
  */
-ob_context *ob_create_context(ob_error **error);
+OB_EXPORT ob_context *ob_create_context(ob_error **error);
 
 /**
  * @brief Create a context object with a specified configuration file
@@ -27,7 +27,7 @@ ob_context *ob_create_context(ob_error **error);
  * @param[out] error Pointer to an error object that will be populated if an error occurs during context creation
  * @return Pointer to the created context object
  */
-ob_context *ob_create_context_with_config(const char *config_path, ob_error **error);
+OB_EXPORT ob_context *ob_create_context_with_config(const char *config_path, ob_error **error);
 
 /**
  * @brief Delete a context object
@@ -35,7 +35,7 @@ ob_context *ob_create_context_with_config(const char *config_path, ob_error **er
  * @param[in] context Pointer to the context object to be deleted
  * @param[out] error Pointer to an error object that will be populated if an error occurs during context deletion
  */
-void ob_delete_context(ob_context *context, ob_error **error);
+OB_EXPORT void ob_delete_context(ob_context *context, ob_error **error);
 
 /**
  * @brief Get a list of enumerated devices
@@ -44,7 +44,7 @@ void ob_delete_context(ob_context *context, ob_error **error);
  * @param[out] error Pointer to an error object that will be populated if an error occurs during device enumeration
  * @return Pointer to the device list object
  */
-ob_device_list *ob_query_device_list(ob_context *context, ob_error **error);
+OB_EXPORT ob_device_list *ob_query_device_list(ob_context *context, ob_error **error);
 
 /**
  * @brief Enable or disable network device enumeration
@@ -58,7 +58,7 @@ ob_device_list *ob_query_device_list(ob_context *context, ob_error **error);
  * @param[in] enable true to enable, false to disable
  * @param[out] error Pointer to an error object that will be populated if an error occurs.
  */
-void ob_enable_net_device_enumeration(ob_context *context, bool enable, ob_error **error);
+OB_EXPORT void ob_enable_net_device_enumeration(ob_context *context, bool enable, ob_error **error);
 
 /**
  * @brief Create a network device object
@@ -69,7 +69,7 @@ void ob_enable_net_device_enumeration(ob_context *context, bool enable, ob_error
  * @param[out] error Pointer to an error object that will be populated if an error occurs during device creation
  * @return Pointer to the created device object
  */
-ob_device *ob_create_net_device(ob_context *context, const char *address, uint16_t port, ob_error **error);
+OB_EXPORT ob_device *ob_create_net_device(ob_context *context, const char *address, uint16_t port, ob_error **error);
 
 /**
  * @brief Set a device plug-in callback function
@@ -80,7 +80,7 @@ ob_device *ob_create_net_device(ob_context *context, const char *address, uint16
  * @param[in] user_data Pointer to user data that can be passed to and retrieved from the callback function
  * @param[out] error Pointer to an error object that will be populated if an error occurs during callback function setting
  */
-void ob_set_device_changed_callback(ob_context *context, ob_device_changed_callback callback, void *user_data, ob_error **error);
+OB_EXPORT void ob_set_device_changed_callback(ob_context *context, ob_device_changed_callback callback, void *user_data, ob_error **error);
 
 /**
  * @brief Activates device clock synchronization to synchronize the clock of the host and all created devices (if supported).
@@ -89,7 +89,7 @@ void ob_set_device_changed_callback(ob_context *context, ob_device_changed_callb
  * @param[in] repeatInterval The interval for auto-repeated synchronization, in milliseconds. If the value is 0, synchronization is performed only once.
  * @param[out] error Pointer to an error object that will be populated if an error occurs during execution
  */
-void ob_enable_device_clock_sync(ob_context *context, uint64_t repeatInterval, ob_error **error);
+OB_EXPORT void ob_enable_device_clock_sync(ob_context *context, uint64_t repeatInterval, ob_error **error);
 #define ob_enable_multi_device_sync ob_enable_device_clock_sync
 
 /**
@@ -98,7 +98,7 @@ void ob_enable_device_clock_sync(ob_context *context, uint64_t repeatInterval, o
  * @param[in] context Pointer to the context object
  * @param[out] error Pointer to an error object that will be populated if an error occurs during memory freeing
  */
-void ob_free_idle_memory(ob_context *context, ob_error **error);
+OB_EXPORT void ob_free_idle_memory(ob_context *context, ob_error **error);
 
 /**
  * @brief Set the global log level
@@ -108,7 +108,7 @@ void ob_free_idle_memory(ob_context *context, ob_error **error);
  * @param[in] severity Log level to set
  * @param[out] error Pointer to an error object that will be populated if an error occurs during log level setting
  */
-void ob_set_logger_severity(ob_log_severity severity, ob_error **error);
+OB_EXPORT void ob_set_logger_severity(ob_log_severity severity, ob_error **error);
 
 /**
  * @brief Set the log output to a file
@@ -118,7 +118,7 @@ void ob_set_logger_severity(ob_log_severity severity, ob_error **error);
  * configuration is also empty, the log will not be output to the file)
  * @param[out] error Pointer to an error object that will be populated if an error occurs during log output setting
  */
-void ob_set_logger_to_file(ob_log_severity severity, const char *directory, ob_error **error);
+OB_EXPORT void ob_set_logger_to_file(ob_log_severity severity, const char *directory, ob_error **error);
 
 /**
  * @brief Set the log callback function
@@ -128,7 +128,7 @@ void ob_set_logger_to_file(ob_log_severity severity, const char *directory, ob_e
  * @param[in] user_data Pointer to user data that can be passed to and retrieved from the callback function
  * @param[out] error Pointer to an error object that will be populated if an error occurs during log callback function setting
  */
-void ob_set_logger_callback(ob_log_severity severity, ob_log_callback callback, void *user_data, ob_error **error);
+OB_EXPORT void ob_set_logger_callback(ob_log_severity severity, ob_log_callback callback, void *user_data, ob_error **error);
 
 /**
  * @brief Set the log output to the console
@@ -136,7 +136,7 @@ void ob_set_logger_callback(ob_log_severity severity, ob_log_callback callback, 
  * @param[in] severity Log level to output to the console
  * @param[out] error Pointer to an error object that will be populated if an error occurs during log output setting
  */
-void ob_set_logger_to_console(ob_log_severity severity, ob_error **error);
+OB_EXPORT void ob_set_logger_to_console(ob_log_severity severity, ob_error **error);
 #ifdef __cplusplus
 }
 #endif

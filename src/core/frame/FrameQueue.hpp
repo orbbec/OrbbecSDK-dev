@@ -76,7 +76,7 @@ public:
                 if(flushing_ && queue_.empty()) {
                     break;
                 }
-                std::shared_ptr<const Frame> frame = queue_.front();
+                std::shared_ptr<T> frame = queue_.front();
                 queue_.pop();
                 if(frame) {
                     callback_(frame);

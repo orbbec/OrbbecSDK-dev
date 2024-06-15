@@ -5,6 +5,7 @@
 #include "UvcTypes.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
+#include "utils/PublicTypeHelper.hpp"
 
 #include "usb/backend/DeviceLibusb.hpp"
 #include <utlist.h>
@@ -22,8 +23,20 @@
 #endif
 
 namespace libobsensor {
-namespace pal {
-uvc_frame_format fourCC2UvcFormat(uint32_t fourccCode) {
+
+const std::map<uint32_t, uvc_frame_format> fourccToUvcFormatMap = {
+    { fourCc2Int('U', 'Y', 'V', 'Y'), UVC_FRAME_FORMAT_UYVY }, { fourCc2Int('Y', 'U', 'Y', '2'), UVC_FRAME_FORMAT_YUYV },
+    { fourCc2Int('N', 'V', '1', '2'), UVC_FRAME_FORMAT_NV12 }, { fourCc2Int('I', '4', '2', '0'), UVC_FRAME_FORMAT_I420 },
+    { fourCc2Int('N', 'V', '2', '1'), UVC_FRAME_FORMAT_NV21 }, { fourCc2Int('M', 'J', 'P', 'G'), UVC_FRAME_FORMAT_MJPEG },
+    { fourCc2Int('H', '2', '6', '4'), UVC_FRAME_FORMAT_H264 }, { fourCc2Int('H', 'E', 'V', 'C'), UVC_FRAME_FORMAT_HEVC },
+    { fourCc2Int('Y', '8', ' ', ' '), UVC_FRAME_FORMAT_Y8 },   { fourCc2Int('Y', '1', '0', ' '), UVC_FRAME_FORMAT_Y10 },
+    { fourCc2Int('Y', '1', '1', ' '), UVC_FRAME_FORMAT_Y11 },  { fourCc2Int('Y', '1', '2', ' '), UVC_FRAME_FORMAT_Y12 },
+    { fourCc2Int('Y', '1', '4', ' '), UVC_FRAME_FORMAT_Y14 },  { fourCc2Int('Y', '1', '6', ' '), UVC_FRAME_FORMAT_Y16 },
+    { fourCc2Int('R', 'V', 'L', ' '), UVC_FRAME_FORMAT_RVL },  { fourCc2Int('Z', '1', '6', ' '), UVC_FRAME_FORMAT_Z16 },
+    { fourCc2Int('Y', 'V', '1', '2'), UVC_FRAME_FORMAT_YV12 }, { fourCc2Int('B', 'A', '8', '1'), UVC_FRAME_FORMAT_BA81 },
+};
+
+uvc_frame_format fourCC2UvcFormat(int32_t fourccCode) {
     uvc_frame_format uvcFormat = UVC_FRAME_FORMAT_UNKNOWN;
     std::find_if(fourccToUvcFormatMap.begin(), fourccToUvcFormatMap.end(), [&](const std::pair<uint32_t, uvc_frame_format> sf) {
         if(fourccCode == sf.first) {
@@ -77,14 +90,13 @@ void ObLibuvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
     uvcProfile selectedUvcProfile = { 0 };
     auto       uvcProfiles        = queryAvailableUvcProfile();
     for(auto &&pf: uvcProfiles) {
-        auto formatIter = fourccToOBFormat.find(pf.fourcc);
-        if(formatIter != fourccToOBFormat.end()) {
-            if((profile->getFormat() == formatIter->second) && (profile->getFps() == pf.fps) && (profile->getHeight() == pf.height)
-               && (profile->getWidth() == pf.width)) {
-                foundProfile       = true;
-                selectedUvcProfile = pf;
-                break;
-            }
+        if(utils::uvcFourccToOBFormat(pf.fourcc) == OB_FORMAT_UNKNOWN) {
+            continue;
+        }
+        if((profile->format == formatIter->second) && (profile->fps == pf.fps) && (profile->height == pf.height) && (profile->width == pf.width)) {
+            foundProfile       = true;
+            selectedUvcProfile = pf;
+            break;
         }
     }
     LOG_DEBUG("playProfile: infIndex={0}, selected_format.width={1}, height={2}, format={3}", (uint32_t)portInfo_->infIndex, profile->getWidth(),
@@ -194,7 +206,7 @@ void ObLibuvcDevicePort::stopAllStream() {
     LOG_DEBUG("ObLibuvcDevicePort::stopAllStream() done");
 }
 
-bool ObLibuvcDevicePort::getPu(OBPropertyID propertyId, int32_t &value) {
+bool ObLibuvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {
     std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
     int                                   unit;
     int                                   control = obPropToUvcCS(propertyId, unit);
@@ -204,7 +216,7 @@ bool ObLibuvcDevicePort::getPu(OBPropertyID propertyId, int32_t &value) {
     return true;
 }
 
-bool ObLibuvcDevicePort::setPu(OBPropertyID propertyId, int32_t value) {
+bool ObLibuvcDevicePort::setPu(uint32_t propertyId, int32_t value) {
     std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
     int                                   unit;
     int                                   control = obPropToUvcCS(propertyId, unit);
@@ -214,7 +226,7 @@ bool ObLibuvcDevicePort::setPu(OBPropertyID propertyId, int32_t value) {
     return true;
 }
 
-ControlRange ObLibuvcDevicePort::getPuRange(OBPropertyID propertyId) {
+UvcControlRange ObLibuvcDevicePort::getPuRange(uint32_t propertyId) {
     std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
     int                                   unit = 0;
     int                                   min, max, step, def;
@@ -249,7 +261,7 @@ ControlRange ObLibuvcDevicePort::getPuRange(OBPropertyID propertyId) {
     if(step == min) {
         step = 1;
     }
-    ControlRange result(min, max, step, def);
+    UvcControlRange result(min, max, step, def);
 
     return result;
 }
@@ -290,18 +302,18 @@ bool ObLibuvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {
 }
 
 bool ObLibuvcDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
-    uint8_t ctrl         = pal::OB_VENDOR_XU_CTRL_ID_64;
+    uint8_t ctrl         = OB_VENDOR_XU_CTRL_ID_64;
     auto    alignDataLen = dataLen;
     if(alignDataLen <= 64) {
-        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_64;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_64;
         alignDataLen = 64;
     }
     else if(alignDataLen > 512) {
-        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_1024;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_1024;
         alignDataLen = 1024;
     }
     else {
-        ctrl         = pal::OB_VENDOR_XU_CTRL_ID_512;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_512;
         alignDataLen = 512;
     }
 
@@ -309,15 +321,15 @@ bool ObLibuvcDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
 }
 
 bool ObLibuvcDevicePort::recvData(uint8_t *data, uint32_t *dataLen) {
-    uint8_t ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
+    uint8_t ctrl = OB_VENDOR_XU_CTRL_ID_512;
     if(*dataLen <= 64) {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_64;
+        ctrl = OB_VENDOR_XU_CTRL_ID_64;
     }
     else if(*dataLen > 512) {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_1024;
+        ctrl = OB_VENDOR_XU_CTRL_ID_1024;
     }
     else {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
+        ctrl = OB_VENDOR_XU_CTRL_ID_512;
     }
     return getXu(ctrl, data, dataLen);
 }
@@ -327,11 +339,11 @@ std::vector<std::shared_ptr<const VideoStreamProfile>> ObLibuvcDevicePort::getSt
 
     auto uvcProfiles = queryAvailableUvcProfile();
     for(auto &&pf: uvcProfiles) {
-        auto formatIter = fourccToOBFormat.find(pf.fourcc);
-        if(formatIter != fourccToOBFormat.end()) {
-            auto sp = std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), OB_STREAM_VIDEO, formatIter->second, pf.width, pf.height, pf.fps);
-            results.push_back(sp);
+        if(utils::uvcFourccToOBFormat(pf.fourcc) == OB_FORMAT_UNKNOWN) {
+            continue;
         }
+        auto sp = std::make_shared<VideoStreamProfile>(OB_STREAM_VIDEO, formatIter->second, pf.width, pf.height, pf.fps);
+        results.push_back(sp);
     }
     return results;
 }
@@ -463,7 +475,7 @@ int32_t ObLibuvcDevicePort::getCtrl(uvc_req_code action, uint8_t control, uint8_
     return ret;
 }
 
-int ObLibuvcDevicePort::obPropToUvcCS(OBPropertyID propertyId, int &unit) const {
+int ObLibuvcDevicePort::obPropToUvcCS(uint32_t propertyId, int &unit) const {
 
     unit = uvc_get_processing_units(devHandle_)->bUnitID;
 
@@ -573,5 +585,4 @@ std::string ObLibuvcDevicePort::getUsbConnectType() {
 }
 #endif
 
-}  // namespace pal
 }  // namespace libobsensor

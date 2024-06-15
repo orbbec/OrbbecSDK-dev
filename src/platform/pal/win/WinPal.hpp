@@ -9,7 +9,7 @@
 #include "usb/backend/Enumerator.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 
 class WinPal : public std::enable_shared_from_this<WinPal>, virtual public ObPal {
 private:
@@ -64,5 +64,5 @@ private:
     } extraData_;
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -8,7 +8,7 @@
 #include "Request.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 class UsbRequestLibusb : public UsbRequestBase {
 public:
     UsbRequestLibusb(libusb_device_handle *devHandle, std::shared_ptr<UsbEndpoint> endpoint);
@@ -36,5 +36,5 @@ private:
     uint32_t                         endpointBytesPerPacket_ = 0;
     libusb_device_handle            *devHandle_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

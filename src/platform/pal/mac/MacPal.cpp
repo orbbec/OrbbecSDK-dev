@@ -23,7 +23,7 @@
 #include <chrono>
 
 namespace libobsensor {
-namespace pal {
+
 
 
 MacPal::MacPal() {
@@ -220,5 +220,5 @@ int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hot
 }
 
 #endif
-}  // namespace pal
+
 }  // namespace libobsensor

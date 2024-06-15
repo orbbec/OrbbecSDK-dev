@@ -72,8 +72,8 @@ void mirrorYUYVImage(uint8_t *src, uint8_t *dst, int width, int height) {
 }
 
 template <typename T> void imageFlip(const T *src, T *dst, uint32_t width, uint32_t height) {
-    const auto tSize   = sizeof(T);
-    const T   *flipSrc = src + (width * height);
+
+    const T *flipSrc = src + (width * height);
     for(uint32_t h = 0; h < height; h++) {
         flipSrc -= width;
         memcpy(dst, flipSrc, width * sizeof(T));
@@ -83,8 +83,7 @@ template <typename T> void imageFlip(const T *src, T *dst, uint32_t width, uint3
 
 void flipRGBImage(int pixelSize, const uint8_t *src, uint8_t *dst, uint32_t width, uint32_t height) {
     // const uint32_t pixelSize = 3;  // RGB888格式每个像素占用3个字节
-    const uint32_t rowSize   = width * pixelSize;
-    const uint32_t totalSize = width * height * pixelSize;
+    const uint32_t rowSize = width * pixelSize;
 
     for(uint32_t h = 0; h < height; h++) {
         const uint8_t *flipSrc = src + (height - h - 1) * rowSize;
@@ -179,7 +178,7 @@ template <typename T> void rgbImageRotate270(const uint8_t *src, uint8_t *dst, u
     }
 }
 
-template <typename T> void roateRGBImage(const T *src, T *dst, uint32_t width, uint32_t height, uint32_t rotateDegree, uint32_t pixelSize) {
+template <typename T> void rotateRGBImage(const T *src, T *dst, uint32_t width, uint32_t height, uint32_t rotateDegree, uint32_t pixelSize) {
     switch(rotateDegree) {
     case 90:
         rgbImageRotate90<T>(src, dst, width, height, pixelSize);
@@ -289,7 +288,7 @@ std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> fra
         return nullptr;
     }
 
-    auto videoFrame = frame->as<VideoFrame>();
+    auto videoFrame      = frame->as<VideoFrame>();
     bool isMirrorSupport = true;
     switch(frame->getFormat()) {
     case OB_FORMAT_Y8:
@@ -331,12 +330,22 @@ std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> fra
                 auto rstIntrinsic          = mirrorOBCameraIntrinsic(srcIntrinsic);
                 auto srcDistortion         = srcVideoStreamProfile->getDistortion();
                 auto rstDistortion         = mirrorOBCameraDistortion(srcDistortion);
-                auto srcExtrinsic          = srcVideoStreamProfile->getExtrinsicTo(streampProfile);
                 rstStreamProfile_          = srcVideoStreamProfile->clone()->as<VideoStreamProfile>();
                 rstStreamProfile_->bindIntrinsic(rstIntrinsic);
                 rstStreamProfile_->bindDistortion(rstDistortion);
 
-                OBExtrinsic rstExtrinsic = { -1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
+                OBExtrinsic rstExtrinsic = { {
+                                                 -1,
+                                                 0,
+                                                 0,
+                                                 0,
+                                                 1,
+                                                 0,
+                                                 0,
+                                                 0,
+                                                 1,
+                                             },
+                                             { 0, 0, 0 } };
                 rstStreamProfile_->bindExtrinsicTo(srcStreamProfile_, rstExtrinsic);
             }
             outFrame->setStreamProfile(rstStreamProfile_);
@@ -360,10 +369,6 @@ OBCameraDistortion FrameMirror::mirrorOBCameraDistortion(const OBCameraDistortio
     libobsensor::CameraParamProcessor::distortionParamMirror(&distortion);
     return distortion;
 }
-
-
-
-
 
 FrameFlip::FrameFlip(const std::string &name) : FilterBase(name) {}
 FrameFlip::~FrameFlip() noexcept {}
@@ -429,12 +434,11 @@ std::shared_ptr<Frame> FrameFlip::processFunc(std::shared_ptr<const Frame> frame
                 auto rstIntrinsic          = flipOBCameraIntrinsic(srcIntrinsic);
                 auto srcDistortion         = srcVideoStreamProfile->getDistortion();
                 auto rstDistortion         = flipOBCameraDistortion(srcDistortion);
-                auto srcExtrinsic          = srcVideoStreamProfile->getExtrinsicTo(streampProfile);
                 rstStreamProfile_          = srcVideoStreamProfile->clone()->as<VideoStreamProfile>();
                 rstStreamProfile_->bindIntrinsic(rstIntrinsic);
                 rstStreamProfile_->bindDistortion(rstDistortion);
 
-                OBExtrinsic rstExtrinsic = { 1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0 };
+                OBExtrinsic rstExtrinsic = { { 1, 0, 0, 0, -1, 0, 0, 0, 1 }, { 0, 0, 0 } };
                 rstStreamProfile_->bindExtrinsicTo(srcStreamProfile_, rstExtrinsic);
             }
             outFrame->setStreamProfile(rstStreamProfile_);
@@ -458,9 +462,6 @@ OBCameraDistortion FrameFlip::flipOBCameraDistortion(const OBCameraDistortion &s
     libobsensor::CameraParamProcessor::distortionParamFlip(&distortion);
     return distortion;
 }
-
-
-
 
 FrameRotate::FrameRotate(const std::string &name) : FilterBase(name) {}
 FrameRotate::~FrameRotate() noexcept {}
@@ -527,13 +528,13 @@ std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> fra
         break;
     case OB_FORMAT_RGB:
     case OB_FORMAT_BGR:
-        roateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), rotateDegree_,
-                               3);
+        rotateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(),
+                                rotateDegree_, 3);
         break;
     case OB_FORMAT_RGBA:
     case OB_FORMAT_BGRA:
-        roateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), rotateDegree_,
-                               4);
+        rotateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(),
+                                rotateDegree_, 4);
         break;
     default:
         isSupportRotate = false;
@@ -553,7 +554,6 @@ std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> fra
                 auto rstIntrinsic          = rotateOBCameraIntrinsic(srcIntrinsic, rotateDegree_);
                 auto srcDistortion         = srcVideoStreamProfile->getDistortion();
                 auto rstDistortion         = rotateOBCameraDistortion(srcDistortion, rotateDegree_);
-                auto srcExtrinsic          = srcVideoStreamProfile->getExtrinsicTo(streampProfile);
                 auto rstExtrinsic          = rotateOBExtrinsic(rotateDegree_);
                 rstStreamProfile_          = srcVideoStreamProfile->clone()->as<VideoStreamProfile>();
                 rstStreamProfile_->bindIntrinsic(rstIntrinsic);
@@ -608,15 +608,15 @@ OBCameraDistortion FrameRotate::rotateOBCameraDistortion(const OBCameraDistortio
 OBExtrinsic FrameRotate::rotateOBExtrinsic(uint32_t rotateDegree) {
     // rotate clockwise
     if(rotateDegree == 90) {
-        return { 0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0 };
+        return { { 0, 1, 0, -1, 0, 0, 0, 0, 1 }, { 0, 0, 0 } };
     }
     else if(rotateDegree == 180) {
-        return { -1, 0, 0, 0, -1, 0, 0, 0, 1, 0, 0, 0 };
+        return { { -1, 0, 0, 0, -1, 0, 0, 0, 1 }, { 0, 0, 0 } };
     }
     else if(rotateDegree == 270) {
-        return { 0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 };
+        return { { 0, -1, 0, 1, 0, 0, 0, 0, 1 }, { 0, 0, 0 } };
     }
-    return { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
+    return { { 1, 0, 0, 0, 1, 0, 0, 0, 1 }, { 0, 0, 0 } };
 }
 
 }  // namespace libobsensor

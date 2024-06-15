@@ -24,7 +24,7 @@
 #define WAIT_FOR_MUTEX_TIME_OUT (5000)
 
 namespace libobsensor {
-namespace pal {
+
 
 #define CHECK_HR(x) check(#x, x);
 #define LOG_HR(x) check(#x, x, false);
@@ -164,5 +164,5 @@ public:
     static std::string last_error_string(DWORD lastError);
     static std::string generate_message(const std::string &message);
 };
-}  // namespace pal
+
 }  // namespace libobsensor

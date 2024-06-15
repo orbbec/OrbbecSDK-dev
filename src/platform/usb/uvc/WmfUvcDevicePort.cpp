@@ -59,7 +59,7 @@ The library will be compiled without the metadata support!\n")
 #define type_guid MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID
 
 namespace libobsensor {
-namespace pal {
+
 // convert to standard fourcc codes
 const std::unordered_map<uint32_t, uint32_t> fourcc_map = {
     { 0x59382020, 0x47524559 }, /* 'GREY' from 'Y8  ' */
@@ -189,7 +189,7 @@ bool WmfUvcDevicePort::isConnected(std::shared_ptr<const USBSourcePortInfo> info
 }
 
 struct pu_control {
-    OBPropertyID propertyId;
+    uint32_t propertyId;
     long         ksProperty;
     bool         enable_auto;
 };
@@ -213,7 +213,7 @@ static const pu_control ct_controls[] = {
     { OB_PROP_COLOR_FOCUS_INT, KSPROPERTY_CAMERACONTROL_FOCUS },
 };
 
-bool WmfUvcDevicePort::getPu(OBPropertyID propertyId, int32_t &retValue) {
+bool WmfUvcDevicePort::getPu(uint32_t propertyId, int32_t &retValue) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -258,7 +258,7 @@ bool WmfUvcDevicePort::getPu(OBPropertyID propertyId, int32_t &retValue) {
     throw std::runtime_error(utils::to_string() << "Unsupported control - " << propertyId);
 }
 
-bool WmfUvcDevicePort::setPu(OBPropertyID propertyId, int32_t tarValue) {
+bool WmfUvcDevicePort::setPu(uint32_t propertyId, int32_t tarValue) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -369,7 +369,7 @@ bool WmfUvcDevicePort::setPu(OBPropertyID propertyId, int32_t tarValue) {
     throw std::runtime_error(utils::to_string() << "Unsupported control - " << propertyId);
 }
 
-ControlRange WmfUvcDevicePort::getPuRange(OBPropertyID propertyId) {
+UvcControlRange WmfUvcDevicePort::getPuRange(uint32_t propertyId) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -377,7 +377,7 @@ ControlRange WmfUvcDevicePort::getPuRange(OBPropertyID propertyId) {
 
     if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL || propertyId == OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL) {
         static const int32_t min = 0, max = 1, step = 1, def = 1;
-        ControlRange         result(min, max, step, def);
+        UvcControlRange      result(min, max, step, def);
         return result;
     }
 
@@ -388,13 +388,13 @@ ControlRange WmfUvcDevicePort::getPuRange(OBPropertyID propertyId) {
         long max = exposure_exponent_to_value(maxVal);
         long def = exposure_exponent_to_value(defVal);
 
-        ControlRange result(min, max, steppingDelta, def);
+        UvcControlRange result(min, max, steppingDelta, def);
         return result;
     }
     for(auto &pu: pu_controls) {
         if(propertyId == pu.propertyId) {
             CHECK_HR(getVideoProc()->GetRange(pu.ksProperty, &minVal, &maxVal, &steppingDelta, &defVal, &capsFlag));
-            ControlRange result(minVal, maxVal, steppingDelta, defVal);
+            UvcControlRange result(minVal, maxVal, steppingDelta, defVal);
             return result;
         }
     }
@@ -409,14 +409,14 @@ ControlRange WmfUvcDevicePort::getPuRange(OBPropertyID propertyId) {
             else {
                 CHECK_HR(getCameraControl()->GetRange(ct.ksProperty, &minVal, &maxVal, &steppingDelta, &defVal, &capsFlag));
             }
-            ControlRange result(minVal, maxVal, steppingDelta, defVal);
+            UvcControlRange result(minVal, maxVal, steppingDelta, defVal);
             return result;
         }
     }
     throw std::runtime_error("unsupported control");
 }
 
-std::vector<uint8_t> WmfUvcDevicePort::sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) {
+uint32_t WmfUvcDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -426,48 +426,46 @@ std::vector<uint8_t> WmfUvcDevicePort::sendAndReceive(const std::vector<uint8_t>
     }
 
     // sendData
-    auto    data         = sendData;
-    uint8_t ctrl         = pal::OB_VENDOR_XU_CTRL_ID_64;
-    auto    alignDataLen = data.size();
+    uint8_t ctrl         = OB_VENDOR_XU_CTRL_ID_64;
+    auto    alignDataLen = sendLen;
     if(alignDataLen <= 64) {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_64;
-        data.resize(64);
+        ctrl = OB_VENDOR_XU_CTRL_ID_64;
+        alignDataLen = 64;
     }
     else if(alignDataLen > 512) {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_1024;
-        data.resize(1024);
+        ctrl = OB_VENDOR_XU_CTRL_ID_1024;
+        alignDataLen = 1024;
     }
     else {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
-        data.resize(512);
+        ctrl = OB_VENDOR_XU_CTRL_ID_512;
+        alignDataLen = 512;
     }
 
-    if(!setXu(ctrl, data.data(), static_cast<uint32_t>(data.size()))) {
+    if(!setXu(ctrl, sendData, alignDataLen)) {
         LOG_ERROR("setXu failed!");
-        return {};
+        return 0;
     }
 
     // receiveData
-    ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
-    if(exceptedRevLen <= 64) {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_64;
-        data.resize(64);
+    ctrl = OB_VENDOR_XU_CTRL_ID_512;
+    uint32_t recvLen = exceptedRecvLen;
+    if(exceptedRecvLen <= 64) {
+        ctrl = OB_VENDOR_XU_CTRL_ID_64;
+        recvLen = 64;
     }
-    else if(exceptedRevLen > 512) {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_1024;
-        data.resize(1024);
+    else if(exceptedRecvLen > 512) {
+        ctrl = OB_VENDOR_XU_CTRL_ID_1024;
+        recvLen = 1024;
     }
     else {
-        ctrl = pal::OB_VENDOR_XU_CTRL_ID_512;
-        data.resize(512);
+        ctrl = OB_VENDOR_XU_CTRL_ID_512;
+        recvLen = 512;
     }
-    uint32_t dataLen = static_cast<uint32_t>(data.size());
-    if(!getXu(ctrl, data.data(), &dataLen)) {
+    if(!getXu(ctrl, recvData, &recvLen)) {
         LOG_ERROR("getXu failed!");
-        return {};
+        return 0;
     }
-    data.resize(dataLen);
-    return data;
+    return recvLen;
 }
 
 // std::string wcharToString(wchar_t *wchar) {
@@ -503,7 +501,7 @@ void WmfUvcDevicePort::queryXuNodeId(const CComPtr<IKsTopologyInfo> &topologyInf
         //         else {
         //             hr = topologyInfo->get_NodeName( i, nodeName, cbName, &cbName );
 
-        //             LOG( INFO ) << "IKsTopologyInfo->node@" << i << " = " << wcharToString( nodeName );
+        //              LOG_INFO("IKsTopologyInfo->node@{}, name={}", i, wcharToString(nodeName));
         //             delete[] nodeName;
         //         }
         //     }
@@ -581,25 +579,6 @@ bool WmfUvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {
     return LOG_HR(hr);
 }
 
-// bool WmfUvcDevicePort::execObVendorXuRequest(const ObVendorXuCtrlId reqXuCtrl, uint8_t *reqBuf, uint32_t reqDataSize,
-//                                          const ObVendorXuCtrlId respXuCtrl, uint8_t *respBuf, uint32_t *respDataSize) {
-//     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-//     if(powerState_ != kD0) {
-//         setPowerStateD0();
-//     }
-//     if(xuKsControl_ == nullptr) {
-//         initXu(xu);
-//         if(xuKsControl_ == nullptr) {
-//             throw std::runtime_error("Extension control can not be initialized before use!");
-//         }
-//     }
-//     bool rst = setXu(xu, reqXuCtrl, reqBuf, reqDataSize);
-//     if(rst) {
-//         rst = getXu(xu, respXuCtrl, respBuf, respDataSize);
-//     }
-//     return rst;
-// }
-
 void WmfUvcDevicePort::foreachUvcDevice(const USBDeviceInfoEnumCallback &action) {
     for(const auto &attributes_params_set: attributes_params) {
         CComPtr<IMFAttributes> pAttributes = nullptr;
@@ -637,8 +616,7 @@ void WmfUvcDevicePort::foreachUvcDevice(const USBDeviceInfoEnumCallback &action)
                 info.vid      = vid;
                 info.pid      = pid;
                 info.infIndex = (uint8_t)infIndex;
-                info.infUrl   = symbolicLink;
-                utils::toUpper(info.infUrl);
+                info.infUrl = utils::toUpper(symbolicLink);
                 info.infName = friendlyName;
                 TRY_EXECUTE({ action(info, ppDevices[i]); });
             }
@@ -817,7 +795,7 @@ void WmfUvcDevicePort::reloadSourceAndReader() {
     setPowerStateD0();
 }
 
-std::vector<std::shared_ptr<const VideoStreamProfile>> WmfUvcDevicePort::getStreamProfileList() {
+StreamProfileListUnsafe WmfUvcDevicePort::getStreamProfileList() {
     if(profileList_.empty()) {
         std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
         checkConnection();
@@ -874,14 +852,10 @@ void WmfUvcDevicePort::foreachProfile(std::function<void(const MFProfile &profil
 
             uint32_t device_fourcc = reinterpret_cast<const utils::big_endian<uint32_t> &>(subtype.Data1);
 
-            // 除了Y8，其他需要转换
-            if(device_fourcc != 0x59382020 && fourcc_map.count(device_fourcc)) {
-                device_fourcc = fourcc_map.at(device_fourcc);
-            }
-
-            auto formatIter = fourccToOBFormat.find(device_fourcc);
-            if(formatIter != fourccToOBFormat.end()) {
-                auto sp = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_VIDEO, formatIter->second, width, height, currFps);
+            auto format = utils::uvcFourccToOBFormat(device_fourcc);
+            if(format != OB_FORMAT_UNKNOWN) {
+                auto sp = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_VIDEO, format, width, height, currFps);
+                sp->setIndex(static_cast<uint8_t>(index));
 
                 MFProfile mfp;
                 mfp.index    = index;
@@ -889,7 +863,6 @@ void WmfUvcDevicePort::foreachProfile(std::function<void(const MFProfile &profil
                 mfp.max_rate = frameRateMax;
                 mfp.profile  = sp;
 
-                // action(mfp, spOutputMediaType, quit);
                 action(mfp, pMediaType, quit);
             }
 
@@ -997,22 +970,23 @@ IAMCameraControl *WmfUvcDevicePort::getCameraControl() const {
     return cameraControl_.p;
 }
 
-void WmfUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) {
+void WmfUvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     checkConnection();
     if(powerState_ != kD0) {
         setPowerStateD0();
     }
-    BEGIN_TRY_EXECUTE({ playProfile(profile, callback); })
+    auto vsp = profile->as<VideoStreamProfile>();
+    BEGIN_TRY_EXECUTE({ playProfile(vsp, callback); })
     CATCH_EXCEPTION_AND_EXECUTE({
         LOG_WARN("Retry to start stream!");
         TRY_EXECUTE(stopAllStream());
         reloadSourceAndReader();
-        playProfile(profile, callback);
+        playProfile(vsp, callback);
     })
 }
 
-void WmfUvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> profile) {
+void WmfUvcDevicePort::stopStream(std::shared_ptr<const StreamProfile> profile) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     checkConnection();
     bool isStarted = false;  // 会重新根据是否还有流在出流状态赋值
@@ -1175,5 +1149,4 @@ STDMETHODIMP WmfUvcDevicePort::OnFlush(DWORD streamIndex) {
     return S_OK;
 }
 
-}  // namespace pal
 }  // namespace libobsensor

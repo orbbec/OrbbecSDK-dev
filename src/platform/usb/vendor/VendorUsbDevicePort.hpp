@@ -3,13 +3,13 @@
 #include "usb/backend/Device.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 class VendorUsbDevicePort : public IVendorDataPort {
 public:
     VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~VendorUsbDevicePort() noexcept override;
 
-    std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedLength) override;
+    uint32_t sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) ;
 
     virtual bool readFromBulkEndPoint(std::vector<uint8_t> &data);  // bulk transfer
     virtual bool writeToBulkEndPoint(std::vector<uint8_t> &data);   // bulk transfer
@@ -21,6 +21,7 @@ public:
 #endif
 
 protected:
+    std::mutex mutex_;
     std::shared_ptr<const USBSourcePortInfo> portInfo_;
     std::shared_ptr<UsbDevice>               usbDev_;
 
@@ -28,5 +29,5 @@ protected:
     std::shared_ptr<UsbEndpoint>  bulkWriteEndpoint_;
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

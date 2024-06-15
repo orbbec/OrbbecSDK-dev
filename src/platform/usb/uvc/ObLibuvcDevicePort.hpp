@@ -20,8 +20,6 @@
 #include <libuvc/libuvc.h>
 
 namespace libobsensor {
-namespace pal {
-
 
 class ObLibuvcDevicePort : public UvcDevicePort {
 private:
@@ -57,9 +55,9 @@ public:
 
     std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) override;
 
-    bool         getPu(OBPropertyID propertyId, int32_t &value) override;
-    bool         setPu(OBPropertyID propertyId, int32_t value) override;
-    ControlRange getPuRange(OBPropertyID propertyId) override;
+    bool            getPu(uint32_t propertyId, int32_t &value) override;
+    bool            setPu(uint32_t propertyId, int32_t value) override;
+    UvcControlRange getPuRange(uint32_t propertyId) override;
 
     std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override;
 
@@ -92,5 +90,5 @@ private:
     std::mutex                                      streamMutex_;
     std::vector<std::shared_ptr<OBUvcStreamHandle>> streamHandles_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

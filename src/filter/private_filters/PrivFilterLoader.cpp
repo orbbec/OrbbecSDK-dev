@@ -10,7 +10,7 @@ PrivFilterCreator::PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> p
     ob_error *error = nullptr;
     code_           = pkgCtx_->get_vendor_specific_code(&error);
     if(error) {
-        std::string errorMsg = "Failed to get filter UID: " + std::string(error->message);
+        std::string errorMsg = "Failed to get filter vendor specific code: " + std::string(error->message);
         delete error;
         throw unsupported_operation_exception(errorMsg);
     }

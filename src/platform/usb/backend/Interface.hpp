@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace libobsensor {
-namespace pal {
+
 class UsbInterface {
 public:
     UsbInterface()                   = default;
@@ -28,5 +28,5 @@ public:
                                                            const EndpointType type = OB_USB_ENDPOINT_BULK) const                                      = 0;
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

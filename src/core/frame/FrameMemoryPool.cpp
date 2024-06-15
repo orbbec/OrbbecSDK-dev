@@ -26,7 +26,7 @@ void FrameMemoryPool::activateFrameBufferManagerReuse(bool enable) {
     reuseFrameBufferManager_ = enable;
 }
 
-FrameMemoryPool::FrameMemoryPool():logger_(Logger::getInstance()) {
+FrameMemoryPool::FrameMemoryPool() : logger_(Logger::getInstance()) {
     LOG_DEBUG("FrameMemoryPool created!");
 }
 
@@ -47,6 +47,10 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
 
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {
+    case OB_FRAME_DISPARITY:
+        frameBufMgr = std::shared_ptr<FrameBufferManager<DisparityFrame>>(new FrameBufferManager<DisparityFrame>(frameBufferSize));
+        LOG_DEBUG("DisparityFrame bufferManager created!");
+        break;
     case OB_FRAME_DEPTH:
         frameBufMgr = std::shared_ptr<FrameBufferManager<DepthFrame>>(new FrameBufferManager<DepthFrame>(frameBufferSize));
         LOG_DEBUG("DepthFrame bufferManager created!");

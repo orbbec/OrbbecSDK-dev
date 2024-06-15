@@ -383,6 +383,21 @@ uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error)
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frameset)
 
+const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frameset);
+    if(!frameset->frame->is<libobsensor::FrameSet>()) {
+        throw libobsensor::unsupported_operation_exception("It's not a frameset!");
+    }
+    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getDisparityFrame();
+    if(innerFrame == nullptr) {
+        return nullptr;
+    }
+    auto impl   = new ob_frame();
+    impl->frame = innerFrame;
+    return impl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
+
 const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {

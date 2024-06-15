@@ -30,7 +30,7 @@ elseif(WIN32)
     include(cmake/windows_config.cmake)
 elseif(APPLE)
     include(cmake/macos_config.cmake)
-else(UNIX)
+elseif(UNIX)
     include(cmake/linux_config.cmake)
 endif()
 

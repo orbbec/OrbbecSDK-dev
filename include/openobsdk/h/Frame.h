@@ -456,6 +456,17 @@ OB_EXPORT float ob_gyro_frame_get_temperature(const ob_frame *frame, ob_error **
 OB_EXPORT uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error);
 
 /**
+ * @brief Get the disparity frame from the frameset.
+ * 
+ * @attention The frame returned by this function should call @ref ob_delete_frame() to decrease the reference count when it is no longer needed.
+ * 
+ * @param[in] frameset Frameset object.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ * @return ob_frame* Returen the disparity frame.
+*/
+OB_EXPORT const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_error **error);
+
+/**
  * @brief Get the depth frame from the frameset.
  *
  * @attention The frame returned by this function should call @ref ob_delete_frame() to decrease the reference count when it is no longer needed.

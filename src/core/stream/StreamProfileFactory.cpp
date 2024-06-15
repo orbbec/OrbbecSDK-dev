@@ -1,7 +1,6 @@
 
 #include "StreamProfileFactory.hpp"
 #include "exception/ObException.hpp"
-#include "utils/PublicTypeHelper.hpp"
 
 namespace libobsensor {
 namespace StreamProfileFactory {
@@ -12,7 +11,7 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFo
     }
     switch(streamType) {
     case OB_STREAM_ACCEL:
-        return createAccelStreamProfile( OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
+        return createAccelStreamProfile(OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
     case OB_STREAM_GYRO:
         return createGyroStreamProfile(OB_GYRO_FS_16dps, OB_SAMPLE_RATE_1_5625_HZ);
     case OB_STREAM_VIDEO:
@@ -23,6 +22,9 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFo
     case OB_STREAM_IR_RIGHT:
     case OB_STREAM_RAW_PHASE:
         return createVideoStreamProfile(streamType, frameFormat, 0, 0, 0);
+    case OB_STREAM_DISPARITY:
+        return createDisparityStreamProfile(streamType, frameFormat, 0, 0, 0);
+
     default:
         throw invalid_value_exception("Invalid stream type");
     }
@@ -30,6 +32,10 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFo
 
 std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps) {
     return std::make_shared<VideoStreamProfile>(std::weak_ptr<ISensor>(), type, format, width, height, fps);
+}
+
+std::shared_ptr<DisparityStreamProfile> createDisparityStreamProfile(OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps) {
+    return std::make_shared<DisparityStreamProfile>(std::weak_ptr<ISensor>(), type, format, width, height, fps);
 }
 
 std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height,

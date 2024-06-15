@@ -117,6 +117,7 @@ public:
     virtual void removeWatcher(std::shared_ptr<DataStreamWatcher> watcher) = 0;
 };
 
+
 // for video data stream: depth, color, ir, etc.
 class IVideoStreamPort : virtual public ISourcePort {  // Virtual inheritance solves diamond inheritance problem
 public:

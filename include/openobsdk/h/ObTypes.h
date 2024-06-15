@@ -97,12 +97,12 @@ typedef enum {
  * For detailed error API interface functions and error logs, please refer to the information of ob_error
  */
 typedef enum {
-    OB_EXCEPTION_TYPE_UNKNOWN,                 /**< Unknown error, an error not clearly defined by the SDK */
-    OB_EXCEPTION_STD_EXCEPTION,                /** < Standard exception, an error caused by the standard library */
-    OB_EXCEPTION_TYPE_CAMERA_DISCONNECTED,     /**< Camera/Device has been disconnected, the camera/device is not available */
-    OB_EXCEPTION_TYPE_PLATFORM,                /**< An error in the SDK adaptation platform layer, which means an error in the implementation of a specific system
-                                                  platform */
-    OB_EXCEPTION_TYPE_INVALID_VALUE,           /**< Invalid parameter type exception, need to check input parameter */
+    OB_EXCEPTION_TYPE_UNKNOWN,             /**< Unknown error, an error not clearly defined by the SDK */
+    OB_EXCEPTION_STD_EXCEPTION,            /** < Standard exception, an error caused by the standard library */
+    OB_EXCEPTION_TYPE_CAMERA_DISCONNECTED, /**< Camera/Device has been disconnected, the camera/device is not available */
+    OB_EXCEPTION_TYPE_PLATFORM,            /**< An error in the SDK adaptation platform layer, which means an error in the implementation of a specific system
+                                              platform */
+    OB_EXCEPTION_TYPE_INVALID_VALUE,       /**< Invalid parameter type exception, need to check input parameter */
     OB_EXCEPTION_TYPE_WRONG_API_CALL_SEQUENCE, /**< Wrong API call sequence, the API is called in the wrong order or the wrong parameter is passed */
     OB_EXCEPTION_TYPE_NOT_IMPLEMENTED,         /**< SDK and firmware have not yet implemented this function or feature */
     OB_EXCEPTION_TYPE_IO,                      /**< SDK access IO exception error */
@@ -135,6 +135,7 @@ typedef enum {
     OB_SENSOR_IR_LEFT   = 6, /**< left IR */
     OB_SENSOR_IR_RIGHT  = 7, /**< Right IR */
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
+    OB_SENSOR_DISPARITY = 9, /**< Disparity */
     OB_SENSOR_COUNT,
 } OBSensorType,
     ob_sensor_type;
@@ -153,6 +154,8 @@ typedef enum {
     OB_STREAM_IR_LEFT   = 6,  /**< Left IR stream */
     OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream */
     OB_STREAM_RAW_PHASE = 8,  /**< RawPhase Stream */
+    OB_STREAM_DISPARITY = 9,  /**< Disparity Stream*/
+    OB_STREAM_COUNT,          /**< The total number of stream type,is not a valid stream type */
 } OBStreamType,
     ob_stream_type;
 
@@ -172,6 +175,7 @@ typedef enum {
     OB_FRAME_IR_LEFT   = 8,  /**< Left IR frame for stereo camera */
     OB_FRAME_IR_RIGHT  = 9,  /**< Right IR frame for stereo camera */
     OB_FRAME_RAW_PHASE = 10, /**< Raw Phase frame*/
+    OB_FRAME_DISPARITY = 11, /**< Disparity frame*/
     OB_FRAME_COUNT,          /**< The total number of frame types, is not a valid frame type */
 } OBFrameType,
     ob_frame_type;
@@ -693,6 +697,25 @@ typedef enum {
     ob_depth_precision_level, OB_DEPTH_PRECISION_LEVEL;
 
 /**
+ * @brief disparity to depth param
+ *
+ */
+typedef struct {
+    double  zpd;           // the distance to calib plane
+    double  zpps;          // zpps=z0/fx
+    float   baseline;      // baseline length, for monocular camera,it means the distance of laser to the center of IR-CMOS
+    double  fx;            // focus
+    uint8_t bitSize;       // disparity bit size（raw disp bit size，for example: MX6000 is 12, MX6600 is 14）
+    float   unit;          // reference units：unit=10 denote 1cm; unit=1 denote 1mm; unit=0.5 denote 0.5mm; and so on
+    float   minDisparity;  // dual disparity coefficient
+    uint8_t packMode;      // data pack mode
+    float   dispOffset;    // disparity offset，actual disp=chip disp + disp_offset
+    int32_t invalidDisp;   // invalid disparity，usually is 0，dual IR add a auxiliary value.
+    int32_t dispIntPlace;  // disp integer digits，default is 8，Gemini2 XL is 10
+    uint8_t isDualCamera;  // 0 monocular camera，1 dual camera
+
+} OBDisparityProcessParam,ob_disparity_process_param;
+/**
  * @brief Enumeration for TOF filter scene ranges
  */
 typedef enum {
@@ -967,7 +990,6 @@ typedef struct {
     uint16_t              disp_diff;
     OBDDONoiseRemovalType type;
 } OBNoiseRemovalFilterParams, ob_noise_removal_filter_params;
-
 
 /**
  * @brief Control command protocol version number

@@ -74,6 +74,7 @@ std::shared_ptr<Frame> FrameFactory::createFrameFromUserBuffer(OBFrameType frame
     case OB_FRAME_IR_RIGHT:
     case OB_FRAME_IR:
     case OB_FRAME_COLOR:
+    case OB_FRAME_DISPARITY:
         return createVideoFrameFromUserBuffer(frameType, format, 0, 0, 0, buffer, bufferSize, bufferReclaimFunc);
     case OB_FRAME_ACCEL:
         frame = std::make_shared<AccelFrame>(buffer, bufferSize, bufferReclaimFunc);
@@ -99,6 +100,9 @@ std::shared_ptr<Frame> FrameFactory::createVideoFrameFromUserBuffer(OBFrameType 
     switch(frameType) {
     case OB_FRAME_VIDEO:
         frame = std::make_shared<VideoFrame>(buffer, bufferSize, frameType, bufferReclaimFunc);
+        break;
+    case OB_FRAME_DISPARITY:
+        frame = std::make_shared<DisparityFrame>(buffer, bufferSize, bufferReclaimFunc);
         break;
     case OB_FRAME_DEPTH:
         frame = std::make_shared<DepthFrame>(buffer, bufferSize, bufferReclaimFunc);
@@ -153,7 +157,7 @@ std::shared_ptr<Frame> FrameFactory::createFrameSet() {
     auto memoryPool            = libobsensor::FrameMemoryPool::getInstance();
     auto frameSetBufferManager = memoryPool->createFrameBufferManager(OB_FRAME_SET, OB_FRAME_COUNT * sizeof(std::shared_ptr<Frame>));
 
-    auto frameSet              = frameSetBufferManager->acquireFrame();
+    auto frameSet = frameSetBufferManager->acquireFrame();
     if(frameSet == nullptr) {
         throw libobsensor::memory_exception("Failed to create frame, out of memory or other memory allocation error.");
     }

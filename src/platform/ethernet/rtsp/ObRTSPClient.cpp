@@ -2,6 +2,7 @@
 #include "exception/ObException.hpp"
 
 #include "logger/Logger.hpp"
+#include "shared/utils/Utils.hpp"
 
 #include <chrono>
 

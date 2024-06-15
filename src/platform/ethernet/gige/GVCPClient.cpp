@@ -19,6 +19,7 @@
 
 #include "logger/LoggerInterval.hpp"
 #include "logger/LoggerHelper.hpp"
+#include "utils/StringUtils.hpp"
 
 namespace libobsensor {
 namespace pal {

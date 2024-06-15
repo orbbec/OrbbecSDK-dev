@@ -22,6 +22,7 @@ struct dataStreamWatcherWeakPtrCompare {
     }
 };
 
+
 struct NetDataStreamPortInfo : public NetSourcePortInfo {
     NetDataStreamPortInfo(std::string address, uint16_t port, uint16_t vendorPort, std::string mac = "unknown", std::string serialNumber = "unknown",
                           uint32_t pid = 0)

@@ -2,6 +2,7 @@
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 #include "ISourcePort.hpp"
+#include "usb/uvc/UvcTypes.hpp"
 
 #include <queue>
 #include <atomic>

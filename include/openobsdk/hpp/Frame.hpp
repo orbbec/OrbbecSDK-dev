@@ -8,7 +8,7 @@
 #include "Types.hpp"
 #include "openobsdk/h/Frame.h"
 #include "openobsdk/hpp/Error.hpp"
-
+#include "openobsdk/hpp/StreamProfile.hpp"
 #include <memory>
 #include <iostream>
 #include <typeinfo>
@@ -33,7 +33,6 @@
 namespace ob {
 class Device;
 class Sensor;
-class StreamProfile;
 
 /**
  * @brief Define the frame class, which is the base class of all frame types.
@@ -46,21 +45,18 @@ protected:
      */
     const ob_frame *impl_;
 
+public:
     /**
      * @brief Construct a new Frame object with a given pointer to the internal frame object.
      *
      * @attention After calling this constructor, the frame object will own the internal frame object, and the internal frame object will be deleted when the
      * frame object is destroyed.
      * @attention The internal frame object should not be deleted by the caller.
-     * @attention Please use the FrameFactory to create a Frame object.
      *
      * @param impl The pointer to the internal frame object.
      */
-    explicit Frame(const const ob_frame *impl) : impl_(impl) {}
+    explicit Frame(const ob_frame *impl) : impl_(impl) {}
 
-    friend class FrameFactory;
-
-public:
     /**
      * @brief Get the internal (impl) frame object
      *
@@ -143,9 +139,9 @@ public:
      *
      * @return uint8_t* The frame data pointer.
      */
-    virtual uint8_t* getDataUnsafe() const {
+    virtual uint8_t *getDataUnsafe() const {
         ob_error *error = nullptr;
-        auto data = ob_frame_get_data_unsafe(impl_, &error);
+        auto      data  = ob_frame_get_data_unsafe(impl_, &error);
         Error::handle(&error);
 
         return data;
@@ -325,7 +321,7 @@ public:
         auto      impl  = ob_clone_frame(impl_, copyData, &error);
         Error::handle(&error);
 
-        return FrameFactory::createFrameFromImpl(impl);
+        return std::make_shared<Frame>(impl);
     }
 
     /**
@@ -347,7 +343,11 @@ public:
             throw std::runtime_error("unsupported operation, object's type is not require type");
         }
 
-        return std::make_shared<T>(shared_from_this());
+        ob_error *error = nullptr;
+        ob_frame_add_ref(impl_, &error);
+        Error::handle(&error);
+
+        return std::make_shared<T>(impl_);
     }
 };
 
@@ -355,21 +355,18 @@ public:
  * @brief Define the VideoFrame class, which inherits from the Frame class
  */
 class VideoFrame : public Frame {
-protected:
+public:
     /**
      * @brief Construct a new VideoFrame object with a given pointer to the internal frame object.
      *
      * @attention After calling this constructor, the frame object will own the internal frame object, and the internal frame object will be deleted when the
      * frame object is destroyed.
      * @attention The internal frame object should not be deleted by the caller.
-     * @attention Please use the FrameFactory to create a Frame object.
      *
      * @param impl The pointer to the internal frame object.
      */
-    explicit VideoFrame(const const ob_frame *impl) : Frame(impl){};
-    friend class FrameFactory;
+    explicit VideoFrame(const ob_frame *impl) : Frame(impl){};
 
-public:
     ~VideoFrame() noexcept override = default;
 
     /**
@@ -417,7 +414,7 @@ public:
  * @brief Define the ColorFrame class, which inherits from the VideoFrame classd
  */
 class ColorFrame : public VideoFrame {
-private:
+public:
     /**
      * @brief Construct a new ColorFrame object with a given pointer to the internal frame object.
      *
@@ -429,9 +426,7 @@ private:
      * @param impl The pointer to the internal frame object.
      */
     explicit ColorFrame(const ob_frame *impl) : VideoFrame(impl){};
-    friend class FrameFactory;
 
-public:
     ~ColorFrame() noexcept override = default;
 };
 
@@ -439,7 +434,8 @@ public:
  * @brief Define the DepthFrame class, which inherits from the VideoFrame class
  */
 class DepthFrame : public VideoFrame {
-private:
+
+public:
     /**
      * @brief Construct a new DepthFrame object with a given pointer to the internal frame object.
      *
@@ -451,9 +447,7 @@ private:
      * @param impl The pointer to the internal frame object.
      */
     explicit DepthFrame(const ob_frame *impl) : VideoFrame(impl){};
-    friend class FrameFactory;
 
-public:
     ~DepthFrame() noexcept override = default;
 
     /**
@@ -500,7 +494,8 @@ public:
  *
  */
 class IRFrame : public VideoFrame {
-private:
+
+public:
     /**
      * @brief Construct a new IRFrame object with a given pointer to the internal frame object.
      *
@@ -512,9 +507,7 @@ private:
      * @param impl The pointer to the internal frame object.
      */
     explicit IRFrame(const ob_frame *impl) : VideoFrame(impl){};
-    friend class FrameFactory;
 
-public:
     ~IRFrame() noexcept override = default;
 };
 
@@ -527,7 +520,8 @@ public:
  * - @ref OB_FORMAT_RGB_POINT: 32-bit float format with 3D point coordinates (x, y, z) and point colors (r, g, b) @ref, OBColorPoint
  */
 class PointsFrame : public Frame {
-private:
+
+public:
     /**
      * @brief Construct a new PointsFrame object with a given pointer to the internal frame object.
      *
@@ -539,9 +533,7 @@ private:
      * @param impl The pointer to the internal frame object.
      */
     explicit PointsFrame(const ob_frame *impl) : Frame(impl){};
-    friend class FrameFactory;
 
-public:
     ~PointsFrame() noexcept override = default;
 
     /**
@@ -565,11 +557,10 @@ public:
  *
  */
 class AccelFrame : public Frame {
-private:
-    explicit AccelFrame(const ob_frame *impl) : Frame(impl){};
-    friend class FrameFactory;
 
 public:
+    explicit AccelFrame(const ob_frame *impl) : Frame(impl){};
+
     ~AccelFrame() noexcept override = default;
 
     /**
@@ -603,11 +594,10 @@ public:
  * @brief Define the GyroFrame class, which inherits from the Frame class
  */
 class GyroFrame : public Frame {
-private:
-    explicit GyroFrame(const ob_frame *impl) : Frame(impl){};
-    friend class FrameFactory;
 
 public:
+    explicit GyroFrame(const ob_frame *impl) : Frame(impl){};
+
     ~GyroFrame() noexcept override = default;
 
     /**
@@ -642,11 +632,10 @@ public:
  * @brief A FrameSet is a container for multiple frames of different types.
  */
 class FrameSet : public Frame {
-private:
-    explicit FrameSet(const ob_frame *impl) : Frame(impl){};
-    friend class FrameFactory;
 
 public:
+    explicit FrameSet(const ob_frame *impl) : Frame(impl){};
+
     ~FrameSet() noexcept override;
 
     /**
@@ -673,7 +662,7 @@ public:
         auto      frame = ob_frameset_get_frame(impl_, frameType, &error);
         Error::handle(&error);
 
-        return FrameFactory::createFrameFromImpl(frame);
+        return std::make_shared<Frame>(frame);
     }
 
     /**
@@ -687,7 +676,7 @@ public:
         auto      frame = ob_frameset_get_frame_by_index(impl_, index, &error);
         Error::handle(&error);
 
-        return FrameFactory::createFrameFromImpl(frame);
+        return std::make_shared<Frame>(frame);
     }
 
     /**
@@ -725,39 +714,36 @@ public:
      *
      * @param impl The pointer to the internal frame object.
      */
-    static std::shared_ptr<Frame> createFrameFromImpl(const ob_frame *impl) {
-        if(impl == nullptr) {
-            return nullptr;
-        }
-        ob_error *error     = nullptr;
-        auto      frameType = ob_frame_get_type(impl, &error);
-        Error::handle(&error);
-
-        switch(frameType) {
-        case OB_FRAME_IR_LEFT:   // Follow
-        case OB_FRAME_IR_RIGHT:  // Follow
-        case OB_FRAME_IR:
-            return std::shared_ptr<Frame>(new IRFrame(impl));
-        case OB_FRAME_DISPARITY:
-            return std::shared_ptr<Frame>(new DisparityFrame(impl));
-        case OB_FRAME_DEPTH:
-            return std::shared_ptr<Frame>(new DepthFrame(impl));
-        case OB_FRAME_COLOR:
-            return std::shared_ptr<Frame>(new ColorFrame(impl));
-        case OB_FRAME_GYRO:
-            return std::shared_ptr<Frame>(new GyroFrame(impl));
-        case OB_FRAME_ACCEL:
-            return std::shared_ptr<Frame>(new AccelFrame(impl));
-        case OB_FRAME_POINTS:
-            return std::shared_ptr<Frame>(new PointsFrame(impl));
-        case OB_FRAME_SET:
-            return std::shared_ptr<Frame>(new FrameSet(impl));
-        default:
-            std::cout << "ob::FrameFactory:: createFrameFromImpl() did not catch frame type: " << frameType << std::endl;
-            break;
-        }
-        return nullptr;
-    }
+    // static std::shared_ptr<Frame> createFrameFromImpl(const ob_frame *impl) {
+    //     if(impl == nullptr) {
+    //         return nullptr;
+    //     }
+    //     ob_error *error     = nullptr;
+    //     auto      frameType = ob_frame_get_type(impl, &error);
+    //     Error::handle(&error);
+    //     switch(frameType) {
+    //     case OB_FRAME_IR_LEFT:   // Follow
+    //     case OB_FRAME_IR_RIGHT:  // Follow
+    //     case OB_FRAME_IR:
+    //         return std::shared_ptr<Frame>(new IRFrame(impl));
+    //     case OB_FRAME_DEPTH:
+    //         return std::shared_ptr<Frame>(new DepthFrame(impl));
+    //     case OB_FRAME_COLOR:
+    //         return std::shared_ptr<Frame>(new ColorFrame(impl));
+    //     case OB_FRAME_GYRO:
+    //         return std::shared_ptr<Frame>(new GyroFrame(impl));
+    //     case OB_FRAME_ACCEL:
+    //         return std::shared_ptr<Frame>(new AccelFrame(impl));
+    //     case OB_FRAME_POINTS:
+    //         return std::shared_ptr<Frame>(new PointsFrame(impl));
+    //     case OB_FRAME_SET:
+    //         return std::shared_ptr<Frame>(new FrameSet(impl));
+    //     default:
+    //         std::cout << "ob::FrameFactory:: createFrameFromImpl() did not catch frame type: " << frameType << std::endl;
+    //         break;
+    //     }
+    //     return nullptr;
+    // }
 
     /**
      * @brief Create a Frame object of a specific type with a given format and data size.
@@ -772,7 +758,7 @@ public:
         auto      impl  = ob_create_frame(frameType, format, dataSize, &error);
         Error::handle(&error);
 
-        return createFrameFromImpl(impl);
+        return std::make_shared<Frame>(impl);
     }
 
     /**
@@ -792,7 +778,7 @@ public:
         auto      impl  = ob_create_video_frame(frameType, format, width, height, stride, &error);
         Error::handle(&error);
 
-        auto frame = createFrameFromImpl(impl);
+        auto frame = std::make_shared<Frame>(impl);
         return frame->as<VideoFrame>();
     }
 
@@ -808,7 +794,7 @@ public:
         auto      impl  = ob_create_frame_from_stream_profile(profile->getImpl(), &error);
         Error::handle(&error);
 
-        return createFrameFromImpl(impl);
+        return std::make_shared<Frame>(impl);
     }
 
     /**
@@ -837,7 +823,7 @@ public:
         auto      impl  = ob_create_frame_from_buffer(frameType, format, buffer, bufferSize, &FrameFactory::BufferDestroy, ctx, &error);
         Error::handle(&error);
 
-        return createFrameFromImpl(impl);
+        return std::make_shared<Frame>(impl);
     }
 
     /**
@@ -866,7 +852,7 @@ public:
         auto impl = ob_create_video_frame_from_buffer(frameType, format, width, height, stride, buffer, bufferSize, &FrameFactory::BufferDestroy, ctx, &error);
         Error::handle(&error);
 
-        auto frame = createFrameFromImpl(impl);
+        auto frame = std::make_shared<Frame>(impl);
         return frame->as<VideoFrame>();
     }
 
@@ -884,7 +870,7 @@ private:
 
 // Define the is() template function for the Frame class
 template <typename T> bool Frame::is() {
-    switch(this->type()) {
+    switch(this->getType()) {
     case OB_FRAME_IR_LEFT:   // Follow
     case OB_FRAME_IR_RIGHT:  // Follow
     case OB_FRAME_IR:
@@ -903,9 +889,10 @@ template <typename T> bool Frame::is() {
         return (typeid(T) == typeid(PointsFrame));
     case OB_FRAME_SET:
         return (typeid(T) == typeid(FrameSet));
-        default : std::cout << "ob::Frame::is() did not catch frame type: " << (int)this->type() << std::endl;
+    default : std::cout << "ob::Frame::is() did not catch frame type: " << (int)this->type() << std::endl;
         break;
     }
     return false;
 }
+
 }  // namespace ob

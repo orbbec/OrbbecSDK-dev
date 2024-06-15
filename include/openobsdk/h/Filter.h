@@ -265,7 +265,7 @@ ob_filter *ob_create_holefilling_filter(ob_error **error);
  * @brief Set the HoleFillingFilter mode.
  *
  * @param[in] filter A holefilling_filter object.
- * @param[in] mode holefilling mode OB_HOLE_FILL_TOP,OB_HOLE_FILL_NEAREST or OB_HOLE_FILL_FAREST.
+ * @param[in] mode holefilling mode OB_HOLE_FILL_LEFT,OB_HOLE_FILL_NEAREST or OB_HOLE_FILL_FAREST.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_holefilling_filter_set_mode(ob_filter *filter, ob_hole_filling_mode mode, ob_error **error);

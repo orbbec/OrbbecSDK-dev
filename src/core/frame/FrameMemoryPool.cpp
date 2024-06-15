@@ -22,7 +22,6 @@ void FrameMemoryPool::setMaxFrameMemorySize(uint64_t sizeInMB) {
     FrameMemoryAllocator::getInstance()->setMaxFrameMemorySize(sizeInMB);
 }
 
-
 FrameMemoryPool::FrameMemoryPool() : logger_(Logger::getInstance()) {
     LOG_DEBUG("FrameMemoryPool created!");
 }
@@ -34,11 +33,12 @@ FrameMemoryPool::~FrameMemoryPool() {
 std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, size_t frameBufferSize) {
     std::unique_lock<std::mutex> lock(bufMgrMapMutex_);
     FrameBufferManagerInfo       info = { type, frameBufferSize };
+    
+    auto iter = bufMgrMap_.find(info);
+    if(iter != bufMgrMap_.end()) {
+        return iter->second;
+    }
 
-        auto iter = bufMgrMap_.find(info);
-        if(iter != bufMgrMap_.end()) {
-            return iter->second;
-        }
 
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {

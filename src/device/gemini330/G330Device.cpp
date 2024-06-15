@@ -9,6 +9,7 @@
 #include "sensor/motion/AccelSensor.hpp"
 #include "sensor/motion/GyroSensor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
+#include "filter/FilterFactory.hpp"
 
 #include "utils/Utils.hpp"
 
@@ -24,7 +25,7 @@ G330Device::G330Device(const std::shared_ptr<const DeviceEnumInfo> &info) : enum
     initProperties();
 
     auto propAccessor                 = getPropertyAccessor();
-    auto version                      = propAccessor->getFirmwareDataT<OBVersionInfo>(OB_STRUCT_VERSION);
+    auto version                      = propAccessor->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
     deviceInfo_                       = std::make_shared<DeviceInfo>();
     deviceInfo_->name_                = version.deviceName;
     deviceInfo_->fwVersion_           = version.firmwareVersion;
@@ -204,12 +205,7 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
         return ResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
     }
     // create
-    if(type == OB_SENSOR_COLOR || type == OB_SENSOR_DEPTH || type == OB_SENSOR_IR_LEFT || type == OB_SENSOR_IR_RIGHT) {
-        auto videoSensor    = std::make_shared<VideoSensor>(shared_from_this(), type, iter->second.backend);
-        iter->second.sensor = videoSensor;
-    }
-    else {
-        // type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO
+    if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
         auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
         auto motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, nullptr);  // todo: add data phaser
 
@@ -220,6 +216,44 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
         auto gyroIter           = sensors_.find(OB_SENSOR_GYRO);
         auto gyroSensor         = std::make_shared<GyroSensor>(shared_from_this(), gyroIter->second.backend, motionStreamer);
         gyroIter->second.sensor = gyroSensor;
+    }
+    else {  // type == OB_SENSOR_COLOR || type == OB_SENSOR_DEPTH || type == OB_SENSOR_IR_LEFT || type == OB_SENSOR_IR_RIGHT
+        auto videoSensor    = std::make_shared<VideoSensor>(shared_from_this(), type, iter->second.backend);
+        iter->second.sensor = videoSensor;
+
+        if(type == OB_SENSOR_DEPTH) {
+            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_BA81, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_Z16, OB_FORMAT_Y16, nullptr } });
+        }
+        else if(type == OB_SENSOR_IR_LEFT) {
+            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_BA81, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y12, nullptr } });
+            // add Y16 which unpack from NV12
+            // todo: implement this
+        }
+        else if(type == OB_SENSOR_IR_RIGHT) {
+            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y12, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_BA81, OB_FORMAT_Y8, nullptr } });
+            // add Y16 which unpack from YV12
+            // todo: implement this
+        }
+        else if(type == OB_SENSOR_COLOR) {
+            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr } });
+
+            // add RGB, RGBA, BGR, BGRA, Y16, Y8 which convert from YUYV
+            // todo: implement this
+        }
     }
 
     auto profiles = iter->second.sensor->getStreamProfileList();
@@ -261,11 +295,11 @@ void G330Device::deactivate() {
     // todo: implement this
 }
 
-void G330Device::updateFirmware(const char *fileData, uint32_t fileSize, DeviceFwUpdateCallback upgradeCallback, bool async) {
+void G330Device::updateFirmware(const char *data, uint32_t dataSize, DeviceFwUpdateCallback updateCallback, bool async) {
     // todo: implement this
-    utils::unusedVar(fileData);
-    utils::unusedVar(fileSize);
-    utils::unusedVar(upgradeCallback);
+    utils::unusedVar(data);
+    utils::unusedVar(dataSize);
+    utils::unusedVar(updateCallback);
     utils::unusedVar(async);
 }
 

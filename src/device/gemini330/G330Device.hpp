@@ -11,8 +11,8 @@ public:
     G330Device(const std::shared_ptr<const DeviceEnumInfo> &info);
     virtual ~G330Device() noexcept;
 
-     std::shared_ptr<const DeviceInfo>  getInfo() const override;
-    const std::string &getExtensionInfo(const std::string &infoKey) override;
+    std::shared_ptr<const DeviceInfo> getInfo() const override;
+    const std::string                &getExtensionInfo(const std::string &infoKey) override;
 
     ResourcePtr<IPropertyAccessor> getPropertyAccessor() override;
 
@@ -29,7 +29,7 @@ public:
     void reboot() override;
     void deactivate() override;
 
-    void updateFirmware(const char *fileData, uint32_t fileSize, DeviceFwUpdateCallback upgradeCallback, bool async) override;
+    void updateFirmware(const char *data, uint32_t dataSize, DeviceFwUpdateCallback updateCallback, bool async) override;
 
     const std::vector<uint8_t> &sendAndReceiveData(const std::vector<uint8_t> &data) override;
 

@@ -21,8 +21,8 @@ GyroSensor::GyroSensor(const std::shared_ptr<IDevice> &owner, const std::shared_
     : SensorBase(owner, OB_SENSOR_GYRO, backend), streamer_(streamer) {
     auto propAccessor = owner->getPropertyAccessor();
 
-    auto gyroSampleRateList = propAccessor->getFirmwareDataT<GyroSampleRateList>(OB_STRUCT_GET_GYRO_PRESETS_ODR_LIST);
-    auto gyroFullScaleRangeList = propAccessor->getFirmwareDataT<GyroFullScaleRangeList>(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST);
+    auto gyroSampleRateList     = propAccessor->getStructureDataT<GyroSampleRateList>(OB_STRUCT_GET_GYRO_PRESETS_ODR_LIST);
+    auto gyroFullScaleRangeList = propAccessor->getStructureDataT<GyroFullScaleRangeList>(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST);
 
     auto lazySensor = std::make_shared<LazySensor>(owner, OB_SENSOR_GYRO);
     for(uint32_t i = 0; i < gyroSampleRateList.num; i++) {

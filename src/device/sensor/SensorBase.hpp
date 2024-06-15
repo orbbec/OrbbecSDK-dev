@@ -12,10 +12,10 @@ namespace libobsensor {
 class SensorBase : public ISensor, public std::enable_shared_from_this<SensorBase> {
     static constexpr int DefaultNoStreamTimeoutMs        = 3000;
     static constexpr int DefaultStreamInterruptTimeoutMs = 3000;
-    static constexpr int DefaultMaxRecoveryCount       = 3;
+    static constexpr int DefaultMaxRecoveryCount         = 3;
 
 public:
-     SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
+    SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
     ~SensorBase() noexcept override;
 
     OBSensorType             getSensorType() const override;
@@ -48,8 +48,9 @@ protected:
     std::shared_ptr<ISourcePort> backend_;
 
     StreamProfileListUnsafe streamProfileList_;
+
     std::shared_ptr<const StreamProfile> activatedStreamProfile_;
-    FrameCallback frameCallback_;
+    FrameCallback                        frameCallback_;
 
     std::atomic<OBStreamState> streamState_;
     StreamStateChangedCallback streamStateChangedCallback_;

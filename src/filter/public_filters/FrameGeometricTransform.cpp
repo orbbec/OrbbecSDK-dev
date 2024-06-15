@@ -72,7 +72,8 @@ void mirrorYUYVImage(uint8_t *src, uint8_t *dst, int width, int height) {
 }
 
 template <typename T> void imageFlip(const T *src, T *dst, uint32_t width, uint32_t height) {
-    const T   *flipSrc = src + (width * height);
+
+    const T *flipSrc = src + (width * height);
     for(uint32_t h = 0; h < height; h++) {
         flipSrc -= width;
         memcpy(dst, flipSrc, width * sizeof(T));
@@ -177,7 +178,7 @@ template <typename T> void rgbImageRotate270(const uint8_t *src, uint8_t *dst, u
     }
 }
 
-template <typename T> void roateRGBImage(const T *src, T *dst, uint32_t width, uint32_t height, uint32_t rotateDegree, uint32_t pixelSize) {
+template <typename T> void rotateRGBImage(const T *src, T *dst, uint32_t width, uint32_t height, uint32_t rotateDegree, uint32_t pixelSize) {
     switch(rotateDegree) {
     case 90:
         rgbImageRotate90<T>(src, dst, width, height, pixelSize);
@@ -527,13 +528,13 @@ std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> fra
         break;
     case OB_FORMAT_RGB:
     case OB_FORMAT_BGR:
-        roateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), rotateDegree_,
-                               3);
+        rotateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(),
+                                rotateDegree_, 3);
         break;
     case OB_FORMAT_RGBA:
     case OB_FORMAT_BGRA:
-        roateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(), rotateDegree_,
-                               4);
+        rotateRGBImage<uint8_t>((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight(),
+                                rotateDegree_, 4);
         break;
     default:
         isSupportRotate = false;

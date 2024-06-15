@@ -132,8 +132,8 @@ typedef enum {
     OB_SENSOR_DEPTH     = 3, /**< Depth */
     OB_SENSOR_ACCEL     = 4, /**< Accel */
     OB_SENSOR_GYRO      = 5, /**< Gyro */
-    OB_SENSOR_IR_LEFT   = 6, /**< left IR */
-    OB_SENSOR_IR_RIGHT  = 7, /**< Right IR */
+    OB_SENSOR_IR_LEFT   = 6, /**< left IR for stereo camera*/
+    OB_SENSOR_IR_RIGHT  = 7, /**< Right IR for stereo camera*/
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
     OB_SENSOR_DISPARITY = 9, /**< Disparity */
     OB_SENSOR_COUNT,      /**The total number of sensor types, is not a valid sensor type */
@@ -153,8 +153,8 @@ typedef enum {
     OB_STREAM_DEPTH     = 3,  /**< depth stream */
     OB_STREAM_ACCEL     = 4,  /**< Accelerometer data stream */
     OB_STREAM_GYRO      = 5,  /**< Gyroscope data stream */
-    OB_STREAM_IR_LEFT   = 6,  /**< Left IR stream */
-    OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream */
+    OB_STREAM_IR_LEFT   = 6,  /**< Left IR stream for stereo camera */
+    OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream for stereo camera */
     OB_STREAM_RAW_PHASE = 8,  /**< RawPhase Stream */
     OB_STREAM_DISPARITY = 9,  /**< Disparity Stream*/
     OB_STREAM_COUNT,          /**< The total number of stream type,is not a valid stream type */

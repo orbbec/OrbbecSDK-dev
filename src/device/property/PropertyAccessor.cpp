@@ -11,7 +11,7 @@ void PropertyAccessor::registerProperty(uint32_t propertyId, OBPermissionType us
 }
 void PropertyAccessor::registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr,
                                         std::shared_ptr<IPropertyPort> port) {
-    auto             strToPermission = [](const std::string &str) {
+    auto strToPermission = [](const std::string &str) {
         if(str == "r") {
             return OB_PERMISSION_READ;
         }
@@ -106,7 +106,7 @@ void PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *ra
               range->def.intValue, range->min.floatValue, range->max.floatValue, range->step.floatValue, range->def.floatValue);
 }
 
-void PropertyAccessor::setFirmwareData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) {
+void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!checkProperty(propertyId, OB_PERMISSION_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
@@ -120,11 +120,11 @@ void PropertyAccessor::setFirmwareData(uint32_t propertyId, const std::vector<ui
     }
 
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
-    extensionPort->setFirmwareData(propId, data);
+    extensionPort->setStructureData(propId, data);
     LOG_DEBUG("Property {} set firmware data successfully", propId);
 }
 
-const std::vector<uint8_t> &PropertyAccessor::getFirmwareData(uint32_t propertyId, PropertyAccessType accessType) {
+const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
@@ -138,7 +138,7 @@ const std::vector<uint8_t> &PropertyAccessor::getFirmwareData(uint32_t propertyI
     }
 
     auto        extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
-    const auto &data          = extensionPort->getFirmwareData(propId);
+    const auto &data          = extensionPort->getStructureData(propId);
     LOG_DEBUG("Property {} get firmware data successfully, size {}", propId, data.size());
     return data;
 }

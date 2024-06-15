@@ -14,6 +14,11 @@ VideoSensor::VideoSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sen
         throw invalid_value_exception("Backend is not a valid IVideoStreamPort");
     }
     streamProfileList_ = vsPort->getStreamProfileList();
+
+    for(auto &sp: streamProfileList_) {
+        filteredStreamProfileList_.push_back(sp);
+    }
+
 }
 
 #define MIN_VIDEO_FRAME_DATA_SIZE 1024
@@ -22,18 +27,29 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     frameCallback_          = callback;
     updateStreamState(STREAM_STATE_STARTING);
 
-    auto vsp              = sp->as<VideoStreamProfile>();
+    currentBackendStreamProfile_ = sp;
+    currentFormatFilterConfig_   = formatFilterConfigs_.end();
+    auto iter                    = streamProfileFilterConfigMap_.find(sp);
+    if(iter != streamProfileFilterConfigMap_.end()) {
+        currentBackendStreamProfile_ = iter->second.first;
+        currentFormatFilterConfig_   = iter->second.second;
+        if(currentFormatFilterConfig_->converter) {
+            currentFormatFilterConfig_->converter->setConversion(currentFormatFilterConfig_->srcFormat, currentFormatFilterConfig_->dstFormat);
+        }
+    }
+
+    auto vsp              = currentBackendStreamProfile_->as<VideoStreamProfile>();
     auto maxFrameDataSize = vsp->getMaxFrameDataSize();
 
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
-    vsPort->startStream(sp, [this, maxFrameDataSize](std::shared_ptr<Frame> frame) {
+    vsPort->startStream(currentBackendStreamProfile_, [this, maxFrameDataSize](std::shared_ptr<Frame> frame) {
         auto dataSize = frame->getDataSize();
         auto format   = frame->getFormat();
 
 #ifdef OB_DEBUG
-        auto sp    = frame->getStreamProfile();
-        auto owner = sp->getOwner();
-        if(sp.get() != activatedStreamProfile_.get()) {
+        auto fsp   = frame->getStreamProfile();
+        auto owner = fsp->getOwner();
+        if(fsp.get() != currentBackendStreamProfile_.get()) {
             throw invalid_value_exception("Frame's stream profile is not the same as activated stream profile");
         }
         if(owner.get() != this) {
@@ -61,6 +77,13 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
         }
 
         updateStreamState(STREAM_STATE_STREAMING);
+
+        if(currentFormatFilterConfig_ != formatFilterConfigs_.end()) {
+            if(currentFormatFilterConfig_->converter) {
+                frame = currentFormatFilterConfig_->converter->process(frame);
+            }
+            frame->setStreamProfile(activatedStreamProfile_);
+        }
         frameCallback_(frame);
     });
 }
@@ -75,6 +98,40 @@ void VideoSensor::stop() {
     frameCallback_ = nullptr;
 
     updateStreamState(STREAM_STATE_STOPED);
+}
+
+StreamProfileList VideoSensor::getStreamProfileList() const {
+    return filteredStreamProfileList_;
+};
+
+void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) {
+    auto backendSpList = SensorBase::getStreamProfileList();
+    filteredStreamProfileList_.clear();
+    for(const auto &backendSp: backendSpList) {
+        auto format = backendSp->getFormat();
+        auto iter   = std::find_if(configs.begin(), configs.end(), [format](const FormatFilterConfig &config) { return config.srcFormat == format; });
+        if(iter == configs.end()) {
+            filteredStreamProfileList_.push_back(backendSp);
+            continue;
+        }
+
+        if(iter->policy == FormatFilterPolicy::REMOVE) {
+            continue;
+        }
+        else if(iter->policy == FormatFilterPolicy::ADD) {
+            filteredStreamProfileList_.push_back(backendSp);
+        }
+
+        // FormatFilterPolicy：ADD or REPLACE
+        auto newSp = backendSp->clone();
+        newSp->setFormat(iter->dstFormat);
+        filteredStreamProfileList_.push_back(newSp);  // add new format
+        streamProfileFilterConfigMap_[newSp] = { backendSp, iter };
+    }
+    LOG_DEBUG(" filtered stream profile list size={} @{}", filteredStreamProfileList_.size(), sensorType_);
+    for(auto &sp: filteredStreamProfileList_) {
+        LOG_DEBUG(" - {}", sp);
+    }
 }
 
 }  // namespace libobsensor

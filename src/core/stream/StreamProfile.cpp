@@ -4,7 +4,6 @@
 #include "StreamDisparityParamManager.hpp"
 #include "utils/PublicTypeHelper.hpp"
 
-
 #include "frame/Frame.hpp"
 
 namespace libobsensor {
@@ -58,9 +57,6 @@ OBExtrinsic StreamProfile::getExtrinsicTo(std::shared_ptr<const StreamProfile> t
 VideoStreamProfile::VideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps)
     : StreamProfile(owner, type, format), width_(width), height_(height), fps_(fps){};
 
-bool VideoStreamProfile::operator==(const VideoStreamProfile &other) const {
-    return (type_ == other.type_) && (format_ == other.format_) && (width_ == other.width_) && (height_ == other.height_) && (fps_ == other.fps_);
-}
 void VideoStreamProfile::setWidth(uint32_t width) {
     width_ = width;
 }
@@ -110,9 +106,6 @@ std::shared_ptr<StreamProfile> VideoStreamProfile::clone() const {
 }
 
 
-DisparityStreamProfile::DisparityStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps)
-    : VideoStreamProfile(owner, type, format, width, height, fps) {}
-
 OBDisparityProcessParam DisparityStreamProfile::getDisparityProcessParam() const {
     return StreamDisparityParamManager::getInstance()->getVideoStreamDisparityParam(shared_from_this());
 }
@@ -123,7 +116,14 @@ void DisparityStreamProfile::bindDisparityProcessParam(const OBDisparityProcessP
 
 AccelStreamProfile::AccelStreamProfile(std::shared_ptr<LazySensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate)
     : StreamProfile{ owner, OB_STREAM_ACCEL, OB_FORMAT_ACCEL }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate) {}
+bool VideoStreamProfile::operator==(const VideoStreamProfile &other) const {
+    return (type_ == other.type_) && (format_ == other.format_) && (width_ == other.width_) && (height_ == other.height_) && (fps_ == other.fps_);
+}
 
+std::ostream &VideoStreamProfile::operator<<(std::ostream &os) const {
+    os << "StreamProfile{" << "type: " << type_ << ", format: " << format_ << ", width: " << width_ << ", height: " << height_ << ", fps: " << fps_ << "}";
+    return os;
+}
 
 OBAccelFullScaleRange AccelStreamProfile::getFullScaleRange() const {
     return fullScaleRange_;
@@ -146,6 +146,11 @@ std::shared_ptr<StreamProfile> AccelStreamProfile::clone() const {
     sp->bindIntrinsic(getIntrinsic());
     sp->bindSameExtrinsicTo(shared_from_this());
     return sp;
+}
+
+std::ostream &AccelStreamProfile::operator<<(std::ostream &os) const {
+    os << "StreamProfile{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
+    return os;
 }
 
 GyroStreamProfile::GyroStreamProfile(std::shared_ptr<LazySensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate)
@@ -172,6 +177,15 @@ std::shared_ptr<StreamProfile> GyroStreamProfile::clone() const {
     sp->bindIntrinsic(getIntrinsic());
     sp->bindSameExtrinsicTo(shared_from_this());
     return sp;
+}
+
+std::ostream &GyroStreamProfile::operator<<(std::ostream &os) const {
+    os << "StreamProfile{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const std::shared_ptr<const StreamProfile> &streamProfile) {
+    return streamProfile->operator<<(os);
 }
 
 std::vector<std::shared_ptr<const VideoStreamProfile>> matchVideoStreamProfile(const StreamProfileList &profileList, uint32_t width, uint32_t height,

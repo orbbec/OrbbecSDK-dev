@@ -4,7 +4,7 @@ set(OB_TARGET_DEVICE device)
 add_library(${OB_TARGET_DEVICE} STATIC)
 set_target_properties(${OB_TARGET_DEVICE} PROPERTIES VERSION ${CMAKE_PROJECT_VERSION})
 
-target_link_libraries(${OB_TARGET_DEVICE} PUBLIC ob::shared ob::core ob::platform)
+target_link_libraries(${OB_TARGET_DEVICE} PUBLIC ob::shared ob::core ob::platform ob::filter)
 target_include_directories(${OB_TARGET_DEVICE} PUBLIC ${OB_PUBLIC_HEADERS_DIR}  ${OB_INTERFACE_DIR} ${CMAKE_CURRENT_LIST_DIR} )
 
 file(GLOB SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/*.cpp)

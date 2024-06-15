@@ -19,11 +19,9 @@ target_link_libraries(filter PUBLIC dylib::dylib)
 
 add_subdirectory(${OB_3RDPARTY_DIR}/libjpeg libjpeg)
 target_link_libraries(filter PUBLIC libjpeg::libjpeg)
-target_include_directories(filter PUBLIC ${OB_3RDPARTY_DIR}/libjpeg/src)
 
 add_subdirectory(${OB_3RDPARTY_DIR}/libyuv libyuv)
 target_link_libraries(filter PUBLIC libyuv::libyuv)
-target_include_directories(filter PUBLIC ${OB_3RDPARTY_DIR}/libyuv/src/include)
 
 add_library(ob::filter ALIAS filter)
 ob_source_group(ob::filter)

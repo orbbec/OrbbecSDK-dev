@@ -1,15 +1,15 @@
 #pragma once
 
 #include "openobsdk/h/ObTypes.h"
+#include <iostream>
 
-namespace libobsensor{
+namespace libobsensor {
 namespace utils {
-
-float getBytesPerPixel(OBFormat format);
+float    getBytesPerPixel(OBFormat format);
 uint32_t calcDefaultStrideBytes(OBFormat format, uint32_t width);
 uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t height);
 
-OBFrameType mapStreamTypeToFrameType(OBStreamType type);
+OBFrameType  mapStreamTypeToFrameType(OBStreamType type);
 OBStreamType mapFrameTypeToStreamType(OBFrameType type);
 OBStreamType mapSensorTypeToStreamType(OBSensorType type);
 
@@ -19,5 +19,10 @@ template <typename T> uint32_t fourCc2Int(const T a, const T b, const T c, const
 }
 OBFormat uvcFourccToOBFormat(uint32_t fourcc);
 uint32_t obFormatToUvcFourcc(OBFormat format);
-}
-}
+}  // namespace utils
+}  // namespace libobsensor
+
+std::ostream &operator<<(std::ostream &os, const OBFormat &format);
+std::ostream &operator<<(std::ostream &os, const OBFrameType &type);
+std::ostream &operator<<(std::ostream &os, const OBStreamType &type);
+std::ostream &operator<<(std::ostream &os, const OBSensorType &type);

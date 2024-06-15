@@ -51,7 +51,7 @@ bool checkStatus(HpStatus stat, bool throwException) {
 
 uint16_t getExpectedRespSize(HpOpCodes opcode) {
     uint16_t size = 64;
-    if(opcode == OPCODE_GET_FIRMWARE_DATA || opcode == OPCODE_GET_STRUCT_DATA || opcode == OPCODE_HEARTBEAT_AND_STATE) {
+    if(opcode == OPCODE_GET_STRUCTURE_DATA || opcode == OPCODE_GET_STRUCTURE_DATA_V1_1 || opcode == OPCODE_HEARTBEAT_AND_STATE) {
         size = 512;
     }
     return size;
@@ -187,21 +187,22 @@ SetPropertyReq *initSetPropertyReq(uint8_t *dataBuf, uint32_t propertyId, uint32
     return req;
 }
 
-GetFirmwareDataReq *initGetFirmwareDataReq(uint8_t *dataBuf, uint32_t propertyId) {
-    auto *req                   = reinterpret_cast<GetFirmwareDataReq *>(dataBuf);
+GetStructureDataReq *initGetStructureDataReq(uint8_t *dataBuf, uint32_t propertyId) {
+    auto *req                   = reinterpret_cast<GetStructureDataReq *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 2;
-    req->header.opcode          = OPCODE_GET_FIRMWARE_DATA;
+    req->header.opcode          = OPCODE_GET_STRUCTURE_DATA;
+
     req->header.requestId       = generateRequestId();
     req->propertyId             = propertyId;
     return req;
 }
 
-SetFirmwareDataReq *initSetFirmwareDataReq(uint8_t *dataBuf, uint32_t propertyId, const uint8_t *data, uint16_t dataSize) {
-    auto *req                   = reinterpret_cast<SetFirmwareDataReq *>(dataBuf);
+SetStructureDataReq *initSetStructureDataReq(uint8_t *dataBuf, uint32_t propertyId, const uint8_t *data, uint16_t dataSize) {
+    auto *req                   = reinterpret_cast<SetStructureDataReq *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 2 + (dataSize + 1) / 2;
-    req->header.opcode          = OPCODE_SET_FIRMWARE_DATA;
+    req->header.opcode          = OPCODE_SET_STRUCTURE_DATA;
     req->header.requestId       = generateRequestId();
     req->propertyId             = propertyId;
     memcpy(req->data, data, dataSize);
@@ -224,21 +225,21 @@ SetPropertyResp *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize) {
     return resp;
 }
 
-GetFirmwareDataResp *parseGetFirmwareDataResp(uint8_t *dataBuf, uint16_t dataSize) {
-    auto *resp = reinterpret_cast<GetFirmwareDataResp *>(dataBuf);
-    if(dataSize < sizeof(GetFirmwareDataResp)) {
+GetStructureDataResp *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<GetStructureDataResp *>(dataBuf);
+    if(dataSize < sizeof(GetStructureDataResp)) {
         throw io_exception("device response with wrong data size");
     }
     return resp;
 }
 
-uint16_t getFirmwareDataSize(const GetFirmwareDataResp *resp) {
+uint16_t getStructureDataSize(const GetStructureDataResp *resp) {
     return resp->header.sizeInHalfWords * 2 - sizeof(RespHeader::errorCode);
 }
 
-SetFirmwareDataResp *parseSetFirmwareDataResp(uint8_t *dataBuf, uint16_t dataSize) {
-    auto *resp = reinterpret_cast<SetFirmwareDataResp *>(dataBuf);
-    if(dataSize < sizeof(SetFirmwareDataResp)) {
+SetStructureDataResp *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<SetStructureDataResp *>(dataBuf);
+    if(dataSize < sizeof(SetStructureDataResp)) {
         throw io_exception("device response with wrong data size");
     }
     return resp;

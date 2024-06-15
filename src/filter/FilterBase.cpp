@@ -6,7 +6,7 @@ namespace libobsensor {
 
 FilterBase::FilterBase(const std::string &name) : name_(name), enabled_(true) {
     srcFrameQueue_ = std::make_shared<FrameQueue<const Frame>>(10);  // todo： read from config file to set the size of frame queue
-    LOG_DEBUG("Filter {} created with frame queue capacity {}", name_, srcFrameQueue_->size());
+    LOG_DEBUG("Filter {} created with frame queue capacity {}", name_, srcFrameQueue_->capacity());
 }
 
 FilterBase::~FilterBase() noexcept {

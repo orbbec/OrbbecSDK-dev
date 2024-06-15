@@ -3,6 +3,7 @@
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
 #include "pipeline/Pipeline.hpp"
+#include "config/Config.hpp"
 #include "context/Context.hpp"
 
 #ifdef __cplusplus
@@ -28,7 +29,7 @@ NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
 
 ob_pipeline *ob_create_pipeline_with_device(ob_device *dev, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(dev);
-    auto pipeline = std::make_shared<libobsensor::Pipeline>(dev);
+    auto pipeline = std::make_shared<libobsensor::Pipeline>(dev->device);
 
     auto impl      = new ob_pipeline();
     impl->pipeline = pipeline;
@@ -89,6 +90,7 @@ ob_frame *ob_pipeline_wait_for_frameset(ob_pipeline *pipeline, uint32_t timeout_
     }
     auto impl   = new ob_frame();
     impl->frame = std::const_pointer_cast<libobsensor::Frame>(frame);  // todo: it's not safe to cast const to non-const, fix it
+    return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, pipeline)
 
@@ -136,6 +138,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, pipeline)
 
 ob_config *ob_create_config(ob_error **error) BEGIN_API_CALL {
     auto config = new ob_config();
+    config->config = std::make_shared<libobsensor::Config>();
     return config;
 }
 NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)

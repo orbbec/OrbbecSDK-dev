@@ -8,7 +8,7 @@ namespace libobsensor {
 
 class Config {
 public:
-    Config();
+    Config()           = default;
     ~Config() noexcept = default;
 
     void enableStream(std::shared_ptr<const StreamProfile> prf);

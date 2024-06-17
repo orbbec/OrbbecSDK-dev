@@ -3,10 +3,9 @@
 
 #pragma once
 
-#include "IFrameMetadataParser.hpp"
+#include "IFrame.hpp"
 #include "IStreamProfile.hpp"
 #include "exception/ObException.hpp"
-#include "IFrame.hpp"
 
 #include <atomic>
 #include <memory>
@@ -52,6 +51,9 @@ public:
     void           updateMetadata(const uint8_t *metadata, size_t metadataSize);
     const uint8_t *getMetadata() const;
 
+    uint8_t *getMetadataUnsafe() const;  // use with caution, metadata may be changed while other threads are using it
+    void     setMetadataSize(size_t metadataSize);
+
     void    registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers);
     bool    hasMetadata(OBFrameMetadataType type) const;
     int64_t getMetadataValue(OBFrameMetadataType type) const;
@@ -88,7 +90,7 @@ protected:
     uint64_t                                       systemTimeStampUsec_;
     uint64_t                                       globalTimeStampUsec_;
     size_t                                         metadataSize_;
-    uint8_t                                        metadata_[256];
+    uint8_t                                        metadata_[12 + 255];  // standard uvc payload size is 12bytes, add some extra space for metadata
     std::shared_ptr<IFrameMetadataParserContainer> metadataPhasers_;
     std::shared_ptr<const StreamProfile>           streamProfile_;
 

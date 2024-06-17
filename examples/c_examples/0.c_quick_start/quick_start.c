@@ -1,12 +1,6 @@
 #include <stdlib.h>
 
-#include <openobsdk/h/Error.h>
-#include <openobsdk/h/Frame.h>
-#include <openobsdk/h/ObTypes.h>
-#include <openobsdk/h/Pipeline.h>
-#include <openobsdk/h/StreamProfile.h>
-#include <openobsdk/h/Device.h>
-#include <openobsdk/h/Sensor.h>
+#include <openobsdk/ObSensor.h>
 
 #include "utils.hpp"
 #define ESC 27
@@ -33,10 +27,12 @@ void check_ob_error(ob_error **err) {
 
 int main(void){
 
-    ob_error    *error    = NULL;
+    ob_error *error = NULL;
+    // ob_set_logger_severity(OB_LOG_SEVERITY_DEBUG, &error);
+    // check_ob_error(&error);
 
     // Create a pipeline to open the Color and Depth streams after connecting the device.
-    ob_pipeline * pipe = ob_create_pipeline(&error);
+    ob_pipeline *pipe = ob_create_pipeline(&error);
     check_ob_error(&error);
 
     // Start Pipeline.
@@ -45,11 +41,8 @@ int main(void){
 
     // Main loop
     while(true) {  // Wait in a loop, and exit after the window receives the "ESC_KEY" key
-        /*if(kbhit() && getch() == ESC) {
-            break;
-        }*/
-        // Wait for up to 100ms for a frameset in blocking mode.
-        ob_frame *frameset = ob_pipeline_wait_for_frameset(pipe, 100, &error);
+        // Wait for up to 1000ms for a frameset in blocking mode.
+        ob_frame *frameset = ob_pipeline_wait_for_frameset(pipe, 1000, &error);
         check_ob_error(&error);
 
         if(frameset != NULL) {
@@ -64,12 +57,14 @@ int main(void){
                 color_count++;
                 // Get timestamp from color frame.
                 color_timestamp_current = ob_frame_get_timestamp_us(color_frame, &error);
-                if(color_timestamp_current - color_timestamp_last > 3000){
+                uint64_t duration       = color_timestamp_current - color_timestamp_last;
+                if(duration > 3000000) {  // 3 seconds
                     // Print index and rate of color frame.
-                    printf("color frame index: %lld, rate: %f\n", ob_frame_get_index(color_frame, &error), color_count / 3);
-                    color_count = 0;
+                    printf("color frame index: %lld, rate: %f\n", ob_frame_get_index(color_frame, &error), color_count / (duration / 1000000.0));
+                    color_count          = 0;
                     color_timestamp_last = color_timestamp_current;
                 }
+
                 ob_delete_frame(color_frame, &error);
             }
 
@@ -77,10 +72,11 @@ int main(void){
                 depth_count++;
                 // Get timestamp from depth frame.
                 depth_timestamp_current = ob_frame_get_timestamp_us(depth_frame, &error);
-                if(depth_timestamp_current - depth_timestamp_last > 3000){
+                uint64_t duration       = depth_timestamp_current - depth_timestamp_last;
+                if(duration > 3000000) {  // 3 seconds
                     // Print index and rate of depth frame.
-                    printf("depth frame index: %lld, rate: %f\n",ob_frame_get_index(depth_frame, &error), depth_count/3);
-                    depth_count = 0;
+                    printf("depth frame index: %lld, rate: %f\n", ob_frame_get_index(depth_frame, &error), depth_count / (duration / 1000000.0));
+                    depth_count          = 0;
                     depth_timestamp_last = depth_timestamp_current;
                 }
                 ob_delete_frame(depth_frame, &error);

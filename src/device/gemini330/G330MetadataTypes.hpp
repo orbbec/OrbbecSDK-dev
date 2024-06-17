@@ -1,11 +1,13 @@
 #pragma once
 #include <stdint.h>
+#include "usb/uvc/UvcTypes.hpp"
 
 namespace libobsensor {
 
-#define G330_UVC_METADATA_SIZE 96
+#define G330_UVC_METADATA_SIZE 96 + sizeof(StandardUvcFramePayloadHeader)
 #pragma pack(push, 1)
 typedef struct {
+    StandardUvcFramePayloadHeader uvc_payload_header;
     uint32_t frame_counter;
     uint32_t timestamp_fsin_h32;
     uint32_t timestamp_fsin_l32;

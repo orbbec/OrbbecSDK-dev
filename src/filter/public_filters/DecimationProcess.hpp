@@ -1,6 +1,7 @@
 #pragma once
 #include "FilterBase.hpp"
 #include <mutex>
+#include <map>
 
 namespace libobsensor {
 

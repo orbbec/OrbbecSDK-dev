@@ -99,7 +99,7 @@ constexpr uint8_t ms_header_size = sizeof(ms_metadata_header);
 
 // uint32_t tempTime = 0;
 
-bool try_read_metadata(IMFSample *pSample, uint8_t &metadataSize, byte **metadata, uint8_t &scrDataSize, byte **scrDataBuf, uint64_t &deviceTime) {
+size_t try_read_metadata(IMFSample *pSample, UvcMetadata *metadata) {
     CComPtr<IUnknown>      spUnknown;
     CComPtr<IMFAttributes> spSample;
     HRESULT                hr = S_OK;
@@ -126,37 +126,27 @@ bool try_read_metadata(IMFSample *pSample, uint8_t &metadataSize, byte **metadat
         CHECK_HR(hr = spBuffer->Lock(reinterpret_cast<BYTE **>(&pMetadata), &dwMaxLength, &dwCurrentLength));
 
         if(nullptr == pMetadata)  // Bail, no data.
-            return false;
+            return 0;
 
         if(pMetadata->MetadataId != MetadataId_UsbVideoHeader)  // Wrong metadata type, bail.
-            return false;
+            return 0;
 
         // Microsoft converts the standard UVC (12-byte) header into MS proprietary 40-bytes struct(ms_metadata_header)
         // Therefore we revert it to the original structure for uniform handling
         static constexpr uint8_t md_length_max = 0xff;  // Metadata for Bulk endpoints is limited to 255 bytes by design
         auto                     md_raw        = reinterpret_cast<byte *>(pMetadata);
         auto                    *ms_md_hdr     = reinterpret_cast<ms_metadata_header *>(md_raw);
-        // byte                *md_payload    = md_raw + ms_header_size;
-        // uint16_t md_payload_size = ms_md_hdr->ms_header.Size - ms_header_size;
 
-        BEGIN_TRY_EXECUTE({
-            if(ms_md_hdr->ms_header.Size > 0) {
-                deviceTime = ms_md_hdr->ms_blobs[0].timestamp;
-
-                scrDataSize = 6;
-                *scrDataBuf = ms_md_hdr->ms_blobs[0].source_clock;
-
-                metadataSize = static_cast<uint8_t>(ms_md_hdr->ms_header.Size - ms_header_size);  // md_payload_size
-                if(metadataSize > md_length_max) {
-                    metadataSize = md_length_max;
-                }
-                *metadata = (byte *)md_raw + ms_header_size;
+        size_t extraDataSize = 0;
+        if(ms_md_hdr->ms_header.Size > 0) {
+            metadata->header.dwPresentationTime = ms_md_hdr->ms_blobs[0].timestamp;
+            memcpy(metadata->header.scrSourceClock, ms_md_hdr->ms_blobs[0].source_clock, sizeof(metadata->header.scrSourceClock));
+            extraDataSize = static_cast<uint8_t>(ms_md_hdr->ms_header.Size - ms_header_size);  // md_payload_size
+            if(extraDataSize > md_length_max) {
+                extraDataSize = md_length_max;
             }
-        })
-        CATCH_EXCEPTION_AND_EXECUTE({
-            LOG_ERROR("Try read metadata failed!");
-            return false;
-        });
+            memcpy(metadata->metadata, md_raw + ms_header_size, extraDataSize);
+        }
 
         // auto showUvcData = ( byte* )uvc_hdr;
         // for ( int i = 0; i < metadataSize + uvcHeaderSize; i++ ) {
@@ -171,10 +161,10 @@ bool try_read_metadata(IMFSample *pSample, uint8_t &metadataSize, byte **metadat
         tempTime = uvc_hdr->timesTamp;*/
         // std::cout << "uvc_hdr->timesTamp" << uvc_hdr->timesTamp << std::endl;
 
-        return true;
+        return extraDataSize;
     }
     else
-        return false;
+        return 0;
 }
 #endif  // METADATA_SUPPORT
 
@@ -190,8 +180,8 @@ bool WmfUvcDevicePort::isConnected(std::shared_ptr<const USBSourcePortInfo> info
 
 struct pu_control {
     uint32_t propertyId;
-    long         ksProperty;
-    bool         enable_auto;
+    long     ksProperty;
+    bool     enable_auto;
 };
 
 static const pu_control pu_controls[] = { { OB_PROP_COLOR_BRIGHTNESS_INT, KSPROPERTY_VIDEOPROCAMP_BRIGHTNESS },
@@ -416,7 +406,7 @@ UvcControlRange WmfUvcDevicePort::getPuRange(uint32_t propertyId) {
     throw std::runtime_error("unsupported control");
 }
 
-uint32_t WmfUvcDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) {
+uint32_t WmfUvcDevicePort::sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     if(powerState_ != kD0) {
         setPowerStateD0();
@@ -429,15 +419,15 @@ uint32_t WmfUvcDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t send
     uint8_t ctrl         = OB_VENDOR_XU_CTRL_ID_64;
     auto    alignDataLen = sendLen;
     if(alignDataLen <= 64) {
-        ctrl = OB_VENDOR_XU_CTRL_ID_64;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_64;
         alignDataLen = 64;
     }
     else if(alignDataLen > 512) {
-        ctrl = OB_VENDOR_XU_CTRL_ID_1024;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_1024;
         alignDataLen = 1024;
     }
     else {
-        ctrl = OB_VENDOR_XU_CTRL_ID_512;
+        ctrl         = OB_VENDOR_XU_CTRL_ID_512;
         alignDataLen = 512;
     }
 
@@ -447,18 +437,18 @@ uint32_t WmfUvcDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t send
     }
 
     // receiveData
-    ctrl = OB_VENDOR_XU_CTRL_ID_512;
+    ctrl             = OB_VENDOR_XU_CTRL_ID_512;
     uint32_t recvLen = exceptedRecvLen;
     if(exceptedRecvLen <= 64) {
-        ctrl = OB_VENDOR_XU_CTRL_ID_64;
+        ctrl    = OB_VENDOR_XU_CTRL_ID_64;
         recvLen = 64;
     }
     else if(exceptedRecvLen > 512) {
-        ctrl = OB_VENDOR_XU_CTRL_ID_1024;
+        ctrl    = OB_VENDOR_XU_CTRL_ID_1024;
         recvLen = 1024;
     }
     else {
-        ctrl = OB_VENDOR_XU_CTRL_ID_512;
+        ctrl    = OB_VENDOR_XU_CTRL_ID_512;
         recvLen = 512;
     }
     if(!getXu(ctrl, recvData, &recvLen)) {
@@ -616,8 +606,8 @@ void WmfUvcDevicePort::foreachUvcDevice(const USBDeviceInfoEnumCallback &action)
                 info.vid      = vid;
                 info.pid      = pid;
                 info.infIndex = (uint8_t)infIndex;
-                info.infUrl = utils::toUpper(symbolicLink);
-                info.infName = friendlyName;
+                info.infUrl   = utils::toUpper(symbolicLink);
+                info.infName  = friendlyName;
                 TRY_EXECUTE({ action(info, ppDevices[i]); });
             }
         }
@@ -1093,15 +1083,24 @@ STDMETHODIMP WmfUvcDevicePort::OnReadSample(HRESULT hrStatus, DWORD streamIndex,
                 byte *byte_buffer = nullptr;
                 DWORD max_length{}, current_length{};
                 if(SUCCEEDED(buffer->Lock(&byte_buffer, &max_length, &current_length))) {
-                    byte    *metadata        = nullptr;
-                    uint8_t  metadataSize    = 0;
-                    uint64_t deviceTimeStamp = 0;
+                    std::lock_guard<std::mutex> lock(streamsMutex_);
+                    auto                       &stream = streams_[streamIndex];
+                    auto                        frame  = FrameFactory::createFrameFromStreamProfile(stream.profile);
+                    auto                        vsp    = frame->as<VideoFrame>();
 
-                    byte   *scrDataBuf  = nullptr;
-                    uint8_t scrDataSize = 0;
+                    stream.frameCounter++;
+                    vsp->setNumber(stream.frameCounter);
+
+                    auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    vsp->setSystemTimeStampUsec(realtime);
+
+                    auto metadata                     = frame->getMetadataUnsafe();
+                    auto uvcMetadata                  = reinterpret_cast<UvcMetadata *>(metadata);
+                    uvcMetadata->header.bHeaderLength = 12;
+                    uvcMetadata->header.bmHeaderInfo  = 0;  // not used
 
 #ifdef METADATA_SUPPORT
-                    try_read_metadata(sample, metadataSize, &metadata, scrDataSize, &scrDataBuf, deviceTimeStamp);
+                    auto metadataExtraSize = try_read_metadata(sample, uvcMetadata);
                     /*LOG( INFO ) << "metadataSize=" << ( int )metadataSize;
                     for ( int i = 0; i < metadataSize; i++ ) {
                         printf( "0x%02x ", metadata[ i ] );
@@ -1110,23 +1109,11 @@ STDMETHODIMP WmfUvcDevicePort::OnReadSample(HRESULT hrStatus, DWORD streamIndex,
                         }
                     }
                     printf( "\n\n" );*/
+                    vsp->setTimeStampUsec(uvcMetadata->header.dwPresentationTime);
+                    vsp->setMetadataSize(uvcMetadata->header.bHeaderLength + metadataExtraSize);
 #endif
-                    std::lock_guard<std::mutex> lock(streamsMutex_);
-                    auto                       &stream = streams_[streamIndex];
-                    auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                    stream.frameCounter++;
-                    auto frame = FrameFactory::createFrameFromStreamProfile(stream.profile);
-                    auto vsp   = frame->as<VideoFrame>();
-                    vsp->setNumber(stream.frameCounter);
 
-                    vsp->setTimeStampUsec(deviceTimeStamp);
-                    vsp->setSystemTimeStampUsec(realtime);
                     vsp->updateData(byte_buffer, current_length);
-                    vsp->updateMetadata(metadata, metadataSize);
-
-                    // todo: move scr and other uvc header data to metadata
-                    // fo.scrDataBuf   = scrDataBuf;
-                    // fo.scrDataSize  = scrDataSize;
 
                     TRY_EXECUTE(stream.callback(frame));
                     buffer->Unlock();

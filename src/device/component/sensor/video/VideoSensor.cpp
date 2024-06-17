@@ -34,6 +34,7 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
         currentFormatFilterConfig_   = iter->second.second;
         if(currentFormatFilterConfig_->converter) {
             currentFormatFilterConfig_->converter->setConversion(currentFormatFilterConfig_->srcFormat, currentFormatFilterConfig_->dstFormat);
+            currentFormatFilterConfig_->converter->setCallback(callback);
         }
     }
 
@@ -77,12 +78,21 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
 
         updateStreamState(STREAM_STATE_STREAMING);
 
+        if(frameMetadataParserContainer_) {
+            frame->registerMetadataParsers(frameMetadataParserContainer_);
+        }
+
+        if(frameTimestampCalculator_) {
+            frameTimestampCalculator_->calculate(frame);
+        }
+
         if(currentFormatFilterConfig_ != formatFilterConfigs_.end()) {
             if(currentFormatFilterConfig_->converter) {
                 frame = currentFormatFilterConfig_->converter->process(frame);
             }
             frame->setStreamProfile(activatedStreamProfile_);
         }
+
         frameCallback_(frame);
     });
 }
@@ -133,6 +143,14 @@ void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig>
     for(auto &sp: filteredStreamProfileList_) {
         LOG_DEBUG(" - {}", sp);
     }
+}
+
+void VideoSensor::setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container) {
+    frameMetadataParserContainer_ = container;
+}
+
+void VideoSensor::setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator) {
+    frameTimestampCalculator_ = calculator;
 }
 
 }  // namespace libobsensor

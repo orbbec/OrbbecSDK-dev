@@ -9,6 +9,11 @@ namespace libobsensor {
 Align::Align(const std::string &name, OBStreamType align_to_stream) : align_to_stream_(align_to_stream), FilterBase(name) {
     if(!pImpl)
         pImpl = new AlignImpl();
+    memset(&from_intrin_, 0, sizeof(OBCameraIntrinsic));
+    memset(&from_disto_, 0, sizeof(OBCameraDistortion));
+    memset(&to_intrin_, 0, sizeof(OBCameraIntrinsic));
+    memset(&to_disto_, 0, sizeof(OBCameraDistortion));
+    memset(&from_to_extrin_, 0, sizeof(OBTransform));
     depth_unit_mm_         = 1.f;
     add_target_distortion_ = true;
     gap_fill_copy_         = true;
@@ -191,8 +196,6 @@ void Align::alignFrames(std::shared_ptr<Frame> aligned, const std::shared_ptr<Fr
 
     if(to->getType() == OB_FRAME_DEPTH) {
 		uint8_t *alignedData = reinterpret_cast<uint8_t *>(const_cast<void *>((void *)aligned->getData()));
-		// aligned->getHeight() * aligned->getWidth() * aligned->getBytesPerPixel())
-		/// TODO(timon): check data size
 		memset(alignedData, 0, aligned->getDataSize());
         // check if already initialized inside
         auto depth_other_extrin = toProfile->getExtrinsicTo(fromProfile);
@@ -204,8 +207,6 @@ void Align::alignFrames(std::shared_ptr<Frame> aligned, const std::shared_ptr<Fr
     }
     else {
 		uint16_t *alignedData = reinterpret_cast<uint16_t *>(const_cast<void *>((void *)aligned->getData()));
-		// aligned->getHeight() * aligned->getWidth() * aligned->getBytesPerPixel())
-		/// TODO(timon): check data size
 		memset(alignedData, 0, aligned->getDataSize());
 		pImpl->initialize(from_intrin_, from_disto_, to_intrin_, to_disto_, from_to_extrin_, depth_unit_mm_, add_target_distortion_, gap_fill_copy_);
         auto in = reinterpret_cast<const uint16_t *>(from->getData());

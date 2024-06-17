@@ -23,6 +23,9 @@ struct ResComp {
     }
 };
 
+/**
+ * @brief Implementation of Alignment
+*/
 class AlignImpl {
 public:
     AlignImpl();
@@ -31,15 +34,23 @@ public:
 
     /**
      * @brief Load parameters and set up LUT
+     * @param depth_intrin intrisics of depth frame
+     * @param depth_disto distortion parameters of depth frame
+     * @param rgb_intrin intrinsics of color frame
+     * @param rgb_disto distortion parameters of color frame
+     * @param depth_to_rgb rotation and translation from depth to color
+     * @param depth_unit_mm depth scale in millimeter
+     * @param add_target_distortion switch to add distortion of the target frame
+     * @param gap_fill_copy switch to fill gaps with copy or nearest-interpolation after alignment
      *
      */
     void initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
-                    OBExtrinsic from_to_extrin, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy);
+                    OBExtrinsic depth_to_rgb, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy);
 
     /**
-     * @brief Get Depth Unit in millimeter
+     * @brief Get depth unit in millimeter
      *
-     * @return float
+     * @return float depth scale in millimeter
      */
     float getDepthUnit() {
         return depth_unit_mm_;
@@ -63,6 +74,7 @@ public:
      * @param[out]  out_depth     aligned data buffer in row-major order
      * @param       color_width   width of color frame
      * @param       color_height  height of color frame
+     * @param       depth_xy    xy coordinate mapping for C2D
      * @retval  -1  failed
      * @retval  0   success
      */
@@ -72,8 +84,6 @@ public:
 
     int C2D(const uint16_t *depth_buffer, int depth_width, int depth_height, const void *rgb_buffer, void *out_rgb, int color_width, int color_height, OBFormat format);
 
-    /// TODO(timon): make private
-    template <typename T> void mapBytes(const int *map, const T *src_buffer, int src_width, int src_height, T *dst_buffer, int dst_width);
 
     /**
      *@brief         Initialize LUTs for color image undistortion
@@ -91,7 +101,7 @@ public:
      */
     bool undistortRGB(const uint8_t *src, int width, int height, uint8_t *dst);
 
-protected:
+private:
     bool prepareRGBDistort();
 
     void clearMatrixCache();
@@ -102,6 +112,9 @@ protected:
     virtual int BMDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
 
     int linearD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
+
+
+    template <typename T> void mapBytes(const int *map, const T *src_buffer, int src_width, int src_height, T *dst_buffer, int dst_width);
 
 private:
     bool initialized_;

@@ -42,7 +42,6 @@ protected:
     std::recursive_mutex alignMutex_;
 
 private:
-    /// TODO(timon): other to depth
     AlignImpl *pImpl;
     float              depth_unit_mm_;
     bool               add_target_distortion_;

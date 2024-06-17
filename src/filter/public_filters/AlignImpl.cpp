@@ -153,6 +153,7 @@ AlignImpl::~AlignImpl() {
 
 void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
                            OBExtrinsic extrin, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy) {
+    /// TODO(timon): 
     if(initialized_) {
         return;
     }

@@ -73,8 +73,6 @@ std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame>
     }
 
     tarFrame->copyInfo(frame);
-    //TODO:Missing API for setting data size
-    //tarFrame->setDataSize(dataSize);
     switch(convertType_) {
     case FORMAT_YUYV_TO_RGB:
         yuyvToRgb((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
@@ -122,12 +120,10 @@ std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame>
         break;
     case FORMAT_RGB_TO_BGR:
         exchangeRAndB((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        //tarFrame->setDataSize(frame->getDataSize());
         tarStreamProfile_->setFormat(OB_FORMAT_BGR);
         break;
     case FORMAT_BGR_TO_RGB:
         exchangeRAndB((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);
-        //tarFrame->setDataSize(frame->getDataSize());
         tarStreamProfile_->setFormat(OB_FORMAT_RGB);
         break;
     case FORMAT_MJPG_TO_NV21:

@@ -25,7 +25,7 @@ public:
     ~DeviceManager() noexcept;
 
     static std::shared_ptr<IDevice> createNetDevice(std::string address, uint16_t port);
-    std::shared_ptr<IDevice> createDevice(std::shared_ptr<DeviceEnumInfo> info);
+    std::shared_ptr<IDevice>        createDevice(const std::shared_ptr<const DeviceEnumInfo> &info);
 
     DeviceEnumInfoList getDeviceInfoList() const;
 

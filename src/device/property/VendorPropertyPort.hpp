@@ -16,7 +16,6 @@ public:
     void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) override;
     const std::vector<uint8_t> &getStructureData(uint32_t propertyId) override;
 
-
 private:
     void clearBuffers();
 

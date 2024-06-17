@@ -578,7 +578,7 @@ typedef enum {
     OB_SAMPLE_RATE_8_KHZ,         /**< 8KHz */
     OB_SAMPLE_RATE_16_KHZ,        /**< 16KHz */
     OB_SAMPLE_RATE_32_KHZ,        /**< 32Hz */
-} OBGyroSampleRate,
+} OBIMUSampleRate, OBGyroSampleRate,
     ob_gyro_sample_rate, OBAccelSampleRate, ob_accel_sample_rate, OB_SAMPLE_RATE;
 
 /**

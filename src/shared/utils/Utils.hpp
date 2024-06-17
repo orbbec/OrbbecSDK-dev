@@ -8,6 +8,7 @@
 // Include all the headers in the utils directory for convenience
 #include "StringUtils.hpp"
 #include "FileUtils.hpp"
+#include "publicTypeHelper.hpp"
 
 namespace libobsensor {
 namespace utils {
@@ -59,6 +60,8 @@ template <class T> std::vector<T> subtract_sets(const std::vector<T> &first, con
     });
     return results;
 }
+
+bool checkJpgImageData(const uint8_t *data, size_t dataLen);
 
 }  // namespace utils
 }  // namespace libobsensor

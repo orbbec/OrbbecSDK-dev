@@ -2,7 +2,7 @@
 #include "openobsdk/h/Frame.h"
 #include "exception/ObException.hpp"
 #include "frame/FrameFactory.hpp"
-#include "context/Context.hpp"
+#include "ISensor.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -195,6 +195,13 @@ const uint8_t *ob_frame_get_data(const ob_frame *frame, ob_error **error) BEGIN_
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
+uint8_t *ob_frame_get_data_unsafe(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    return frame->frame->getDataUnsafe();
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
+
+
 void ob_frame_update_data(ob_frame *frame, const uint8_t *data, uint32_t data_size, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     VALIDATE_NOT_NULL(data);
@@ -266,22 +273,17 @@ ob_sensor *ob_frame_get_sensor(const ob_frame *frame, ob_error **error) BEGIN_AP
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
-        return nullptr;
+        throw libobsensor::invalid_value_exception("Frame has no owner stream profile!");
     }
 
-    auto innerSensor = innerProfile->getOwner();
-    if(!innerSensor) {
-        return nullptr;
-    }
-
-    auto innerDevice = innerSensor->getOwner();
-    if(!innerDevice) {
-        return nullptr;
+    auto lazySensor = innerProfile->getOwner();
+    if(!lazySensor) {
+        throw libobsensor::invalid_value_exception("Frame has no owner sensor!");
     }
 
     auto sensorImpl    = new ob_sensor();
-    sensorImpl->device = innerDevice;
-    sensorImpl->type   = innerSensor->getSensorType();
+    sensorImpl->device = lazySensor->device.lock();
+    sensorImpl->type   = lazySensor->sensorType;
     return sensorImpl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
@@ -290,21 +292,21 @@ ob_device *ob_frame_get_device(const ob_frame *frame, ob_error **error) BEGIN_AP
     VALIDATE_NOT_NULL(frame);
     auto innerProfile = frame->frame->getStreamProfile();
     if(!innerProfile) {
-        return nullptr;
+        throw libobsensor::invalid_value_exception("Frame has no owner stream profile!");
     }
 
-    auto innerSensor = innerProfile->getOwner();
-    if(!innerSensor) {
-        return nullptr;
+    auto lazySensor = innerProfile->getOwner();
+    if(!lazySensor) {
+        throw libobsensor::invalid_value_exception("Frame has no owner sensor!");
     }
 
-    auto innerDevice = innerSensor->getOwner();
-    if(!innerDevice) {
-        return nullptr;
+    auto device = lazySensor->device.lock();
+    if(!device) {
+        throw libobsensor::invalid_value_exception("Frame has no owner device or device has been destroyed!");
     }
 
     auto deviceImpl    = new ob_device();
-    deviceImpl->device = innerDevice;
+    deviceImpl->device = device;
     return deviceImpl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
@@ -375,6 +377,21 @@ uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error)
     return frameset->frame->as<libobsensor::FrameSet>()->getFrameCount();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frameset)
+
+const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frameset);
+    if(!frameset->frame->is<libobsensor::FrameSet>()) {
+        throw libobsensor::unsupported_operation_exception("It's not a frameset!");
+    }
+    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getDisparityFrame();
+    if(innerFrame == nullptr) {
+        return nullptr;
+    }
+    auto impl   = new ob_frame();
+    impl->frame = innerFrame;
+    return impl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
 const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);

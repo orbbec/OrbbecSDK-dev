@@ -162,6 +162,24 @@ OB_EXPORT ob_camera_distortion ob_video_stream_get_distortion(const ob_stream_pr
 OB_EXPORT void ob_video_stream_set_distortion(ob_stream_profile *profile, ob_camera_distortion distortion, ob_error **error);
 
 /**
+ * @brief Get the process param of the disparity stream
+ *
+ * @param[in]  profile Stream profile object
+ * @param[out] error   Pointer to an error object that will be set if an error occurs.
+ * @return ob_disparity_process_param Return the disparity process param of the stream
+ */
+OB_EXPORT ob_disparity_process_param ob_disparity_stream_get_process_param(const ob_stream_profile *profile, ob_error **error);
+
+/**
+ * @brief Set the disparity process param of the disparity stream.
+ *
+ * @param[in] profile Stream profile object. If the profile is not for the disparity stream, an error will be returned.
+ * @param[in]  intrinsic The disparity process param of the disparity stream.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_disparity_stream_profile_set_process_param(ob_stream_profile *profile, ob_disparity_process_param param, ob_error **error);
+
+/**
  * @brief Get the full-scale range of the accelerometer stream.
  *
  * @param[in] profile Stream profile object. If the profile is not for the accelerometer stream, an error will be returned.

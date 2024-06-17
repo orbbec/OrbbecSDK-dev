@@ -6,11 +6,7 @@
  * @brief Control command property list maintenance
  */
 
-#ifdef OB_SENSOR_SDK_DEVELOPER
-#include "openobsdk/internal/InternalProperty.h"
-#else  // not define OB_SENSOR_SDK_DEVELOPER
-#ifndef _OB_PROPERTY_H_
-#define _OB_PROPERTY_H_
+#pragma once
 
 #include "ObTypes.h"
 
@@ -51,6 +47,12 @@ typedef enum {
      * @brief IR flood level
      */
     OB_PROP_FLOOD_LEVEL_INT = 7,
+
+    /**
+     * @brief Enable/disable temperature compensation
+     *
+     */
+    OB_PROP_TEMPERATURE_COMPENSATION_BOOL = 8,
 
     /**
      * @brief Depth mirror
@@ -212,6 +214,11 @@ typedef enum {
      * @brief D2C preprocessing switch (such as RGB cropping), 0: off, 1: on
      */
     OB_PROP_D2C_PREPROCESS_BOOL = 91,
+
+    /**
+     * @brief Enable/disable GPM function
+     */
+    OB_PROP_GPM_BOOL = 93,
 
     /**
      * @brief Custom RGB cropping switch, 0 is off, 1 is on custom cropping, and the ROI cropping area is issued
@@ -412,6 +419,21 @@ typedef enum {
      * @brief IR brightness
      */
     OB_PROP_IR_BRIGHTNESS_INT = 184,
+
+    /**
+     * @brief Slave/secondary device synchronization status (read-only)
+     */
+    OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL            = 188,
+
+    /**
+     * @brief Max exposure time of IR auto exposure
+     */
+    OB_PROP_IR_AE_MAX_EXPOSURE_INT                   = 190,
+
+    /**
+     * @brief Disparity search range mode, 1: 128, 2: 256
+     */
+    OB_PROP_DISP_SEARCH_RANGE_MODE_INT               = 191,
 
     /**
      * @brief Baseline calibration parameters
@@ -730,6 +752,3 @@ typedef struct OBPropertyItem {
 #ifdef __cplusplus
 }
 #endif
-
-#endif  // _OB_PROPERTY_H_
-#endif  // OB_SENSOR_SDK_DEVELOPER

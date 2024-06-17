@@ -10,7 +10,7 @@
 #endif
 
 namespace libobsensor {
-namespace pal {
+
 
 #ifndef __ANDROID__
 std::string getDevicePath(libusb_device *usbDevice);
@@ -64,5 +64,5 @@ private:
     const std::string                        devUrl_;
 #endif
 };
-}  // namespace pal
+
 }  // namespace libobsensor

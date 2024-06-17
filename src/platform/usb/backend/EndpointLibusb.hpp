@@ -10,7 +10,7 @@
 #include <libusb.h>
 
 namespace libobsensor {
-namespace pal {
+
 class UsbEndpointLibusb : public UsbEndpoint {
 public:
     UsbEndpointLibusb(libusb_endpoint_descriptor desc, uint8_t interfaceNumber) : desc_(desc), interfaceNumber_(interfaceNumber) {}
@@ -41,5 +41,5 @@ private:
     libusb_endpoint_descriptor desc_;
     uint8_t                    interfaceNumber_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

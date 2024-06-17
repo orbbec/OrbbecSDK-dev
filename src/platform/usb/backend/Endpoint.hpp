@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 namespace libobsensor {
-namespace pal {
+
 class UsbEndpoint {
 public:
     virtual ~UsbEndpoint() noexcept                      = default;
@@ -19,5 +19,5 @@ public:
     virtual uint8_t           getInterfaceNumber() const = 0;
     virtual uint32_t          getMaxPacketSize() const   = 0;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

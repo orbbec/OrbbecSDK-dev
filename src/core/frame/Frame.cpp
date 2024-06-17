@@ -1,6 +1,7 @@
 #include "Frame.hpp"
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
+#include "stream/StreamProfile.hpp"
 
 namespace libobsensor {
 
@@ -17,6 +18,7 @@ Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferRec
       frameData_(data),
       dataBufSize_(dataBufSize),
       bufferReclaimFunc_(bufferReclaimFunc) {}
+
 
 Frame::~Frame() noexcept {
     if(bufferReclaimFunc_) {
@@ -52,6 +54,10 @@ size_t Frame::getDataSize() const {
 
 const uint8_t *Frame::getData() const {
     return frameData_;
+}
+
+uint8_t *Frame::getDataUnsafe() const {
+    return const_cast<uint8_t *>(frameData_);
 }
 
 void Frame::updateData(const uint8_t *data, size_t dataSize) {
@@ -116,60 +122,13 @@ uint32_t VideoFrame::getHeight() const {
     return streamProfile_->as<VideoStreamProfile>()->getHeight();
 }
 
-uint32_t calculateStrideBytes(uint32_t width, OBFormat format) {
-    uint32_t stride = 0;
-    switch(format) {
-    case OB_FORMAT_Y8:
-    case OB_FORMAT_BA81:
-        stride = width;
-        break;
-    case OB_FORMAT_Y10:
-        stride = width * 8 / 10;
-        break;
-    case OB_FORMAT_Y11:
-        stride = width * 8 / 11;
-        break;
-    case OB_FORMAT_Y12:
-    case OB_FORMAT_NV12:
-    case OB_FORMAT_YV12:
-        stride = width * 8 / 12;
-        break;
-    case OB_FORMAT_Y14:
-        stride = width * 8 / 14;
-        break;
-    case OB_FORMAT_Y16:
-    case OB_FORMAT_Z16:
-    case OB_FORMAT_YUYV:
-    case OB_FORMAT_UYVY:
-    case OB_FORMAT_BYR2:
-    case OB_FORMAT_RW16:
-    case OB_FORMAT_DISP16:
-        stride = width * 2;
-        break;
-    case OB_FORMAT_RGB:
-    case OB_FORMAT_BGR:
-        stride = width * 3;
-        break;
-    case OB_FORMAT_POINT:
-        stride = width * 12;
-        break;
-    case OB_FORMAT_RGB_POINT:
-        stride = width * 24;
-        break;
-    default:
-        throw std::runtime_error("Get stride bytes failed! Unsupported operation for codec format and (semi-)planar packed format object");
-        break;
-    }
-    return stride;
-}
-
 uint32_t VideoFrame::getStride() const {
     if(stride_ > 0) {
         return stride_;
     }
     auto format = getFormat();
     auto width  = getWidth();
-    return calculateStrideBytes(width, format);
+    return utils::calcDefaultStrideBytes(format, width);
 }
 
 void VideoFrame::setStride(uint32_t stride) {
@@ -231,12 +190,12 @@ void Frame::copyInfo(const std::shared_ptr<const Frame> sourceFrame) {
     // type is determined during construction. It is an inherent property of the object and cannot be changed.
     // type_ = sourceFrame->type_;
 
+    // todo: check if it is necessary to copy those properties.
+
     number_              = sourceFrame->number_;
     timeStampUsec_       = sourceFrame->timeStampUsec_;
     systemTimeStampUsec_ = sourceFrame->systemTimeStampUsec_;
     globalTimeStampUsec_ = sourceFrame->globalTimeStampUsec_;
-    dataSize_            = sourceFrame->dataSize_;
-    streamProfile_       = sourceFrame->streamProfile_;
 
     metadataSize_ = sourceFrame->metadataSize_;
     memcpy(metadata_, sourceFrame->metadata_, metadataSize_);
@@ -292,6 +251,9 @@ void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
         valueScale_ = df->valueScale_;
     }
 }
+
+DisparityFrame::DisparityFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : VideoFrame(data, dataBufSize, OB_FRAME_DISPARITY, bufferReclaimFunc) {}
 
 IRFrame::IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc, OBFrameType frameType)
     : VideoFrame(data, dataBufSize, frameType, bufferReclaimFunc) {}
@@ -351,6 +313,19 @@ uint32_t FrameSet::getFrameCount() {
         return false;
     });
     return frameCnt;
+}
+
+std::shared_ptr<Frame> FrameSet::getDisparityFrame(){
+    std::shared_ptr<Frame> frame;
+    foreachFrame([&](void *item){
+        auto pFrame=(std::shared_ptr<Frame> *)item;
+        if(*pFrame && (*pFrame)->getType()==OB_FRAME_DISPARITY){
+            frame=*pFrame;
+            return true;
+        }
+        return false;
+    });
+    return frame;
 }
 
 std::shared_ptr<Frame> FrameSet::getDepthFrame() {
@@ -463,10 +438,10 @@ std::shared_ptr<Frame> FrameSet::getFrame(int index) {
 // pushFrame(std::move(frame));
 // }
 
-void FrameSet::pushFrame(std::shared_ptr<Frame> &&frame) {
+void FrameSet::pushFrame(std::shared_ptr<const Frame> &&frame) {
     OBFrameType type = frame->getType();
     foreachFrame([&](void *item) {
-        auto pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<const Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == type) {
             (*pFrame).reset();
             *pFrame = nullptr;

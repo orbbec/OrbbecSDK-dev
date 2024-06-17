@@ -4,7 +4,7 @@
 #include "ethernet/socket/VendorTCPClient.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 class VendorNetDataPort : public IVendorDataPort {
 public:
     VendorNetDataPort(std::shared_ptr<const NetSourcePortInfo> portInfo);
@@ -17,5 +17,5 @@ private:
     std::shared_ptr<VendorTCPClient>         tcpClient_;
     std::shared_ptr<const NetSourcePortInfo> portInfo_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -209,7 +209,7 @@ public:
      * @brief Set the HoleFillingFilter mode.
      *
      * @param[in] filter A holefilling_filter object.
-     * @param mode OBHoleFillingMode, OB_HOLE_FILL_TOP,OB_HOLE_FILL_NEAREST or OB_HOLE_FILL_FAREST.
+     * @param mode OBHoleFillingMode, OB_HOLE_FILL_LEFT,OB_HOLE_FILL_NEAREST or OB_HOLE_FILL_FAREST.
      */
     void setFilterMode(OBHoleFillingMode mode);
 

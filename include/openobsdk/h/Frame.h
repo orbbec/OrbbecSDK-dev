@@ -224,6 +224,17 @@ OB_EXPORT uint64_t ob_frame_get_global_timestamp_us(const ob_frame *frame, ob_er
 OB_EXPORT const uint8_t *ob_frame_get_data(const ob_frame *frame, ob_error **error);
 
 /**
+ * @brief Get frame data (unsafe)
+ *
+ * @warning This function is unsafe. Ensure the returned data is not modified when the frame is accessed by multiple threads.
+ *
+ * @param frame Frame object
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return uin8_t* return frame data pointer
+ */
+OB_EXPORT uint8_t *ob_frame_get_data_unsafe(const ob_frame *frame, ob_error **error);
+
+/**
  * @brief Update frame data
  *
  * @attention The data size should be the equal to or less than the data size of the frame, otherwise it may cause memory exception.
@@ -443,6 +454,17 @@ OB_EXPORT float ob_gyro_frame_get_temperature(const ob_frame *frame, ob_error **
  * @return uint32_t return the number of frames
  */
 OB_EXPORT uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error);
+
+/**
+ * @brief Get the disparity frame from the frameset.
+ * 
+ * @attention The frame returned by this function should call @ref ob_delete_frame() to decrease the reference count when it is no longer needed.
+ * 
+ * @param[in] frameset Frameset object.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ * @return ob_frame* Returen the disparity frame.
+*/
+OB_EXPORT const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the depth frame from the frameset.

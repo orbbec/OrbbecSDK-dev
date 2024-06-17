@@ -4,7 +4,6 @@
 #include <algorithm>
 
 namespace libobsensor {
-namespace pal {
 
 VendorNetDataPort::VendorNetDataPort(std::shared_ptr<const NetSourcePortInfo> portInfo) : portInfo_(portInfo) {
     auto noConstPortInfo = std::const_pointer_cast<NetSourcePortInfo>(portInfo);
@@ -30,5 +29,5 @@ bool VendorNetDataPort::recvData(uint8_t *data, uint32_t *dataLen) {
 std::shared_ptr<const SourcePortInfo> VendorNetDataPort::getSourcePortInfo() const {
     return portInfo_;
 }
-}  // namespace pal
+
 }  // namespace libobsensor

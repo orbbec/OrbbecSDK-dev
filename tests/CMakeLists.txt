@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.1.15)
 
-file(GLOB subdirectories RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*test*/")
+file(GLOB subdirectories RELATIVE ${CMAKE_CURRENT_LIST_DIR} "*")
 
 foreach(subdir ${subdirectories})
-    add_subdirectory(${subdir})
-    message(STATUS "Added subdirectory: ${subdir}")
+    if(IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${subdir})
+        add_subdirectory(${subdir})
+    endif()
 endforeach()

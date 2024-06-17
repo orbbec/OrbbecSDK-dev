@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace libobsensor {
-namespace pal {
+
 class UsbContext;  // forward declaration
 class UsbEnumerator {
 public:
@@ -27,7 +27,7 @@ private:
     std::shared_ptr<UsbContext> usbCtx_;
     std::recursive_mutex        usbCtxMutex_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor
 
 #endif  // __ANDROID__

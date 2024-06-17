@@ -19,9 +19,10 @@
 
 #include "logger/LoggerInterval.hpp"
 #include "logger/LoggerHelper.hpp"
+#include "utils/StringUtils.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 
 GVCPClient::GVCPClient() {
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
@@ -545,5 +546,5 @@ void GVCPClient::checkAndUpdateSockets() {
 #endif
 }
 
-}  // namespace pal
+
 }  // namespace libobsensor

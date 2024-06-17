@@ -10,7 +10,6 @@
 #include <vector>
 
 namespace libobsensor {
-namespace pal {
 
 typedef std::vector<std::shared_ptr<NetSourcePortInfo>> NetSourcePortList;
 
@@ -59,5 +58,4 @@ private:
     SourcePortInfoList         sourcePortInfoList_;
 };
 
-}  // namespace pal
 }  // namespace libobsensor

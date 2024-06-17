@@ -13,8 +13,6 @@
 #include <mutex>
 
 namespace libobsensor {
-namespace pal  // pal
-{
 class ObPal {
 public:
     static std::shared_ptr<ObPal> getInstance();
@@ -35,5 +33,5 @@ public:
 
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -25,7 +25,7 @@
 constexpr GUID     GUID_DEVINTERFACE_USB_DEVICE = { 0xA5DCBF10, 0x6530, 0x11D2, { 0x90, 0x1F, 0x00, 0xC0, 0x4F, 0xB9, 0x51, 0xED } };
 constexpr uint16_t PID_BOOTLOADER_UVC           = 0x0501;
 namespace libobsensor {
-namespace pal {
+
 
 std::vector<std::string> stringSplit(const std::string &string, char separator) {
     std::vector<std::string> tokens;
@@ -287,7 +287,7 @@ std::string wideCharToUTF8(const wchar_t *wStr) {
     if(size <= 0) {
         return "";
     }
-    std::string result(size, '\0');
+    std::string result(size-1, '\0');
     if(WideCharToMultiByte(CP_UTF8, 0, wStr, -1, &result[0], size, nullptr, nullptr) != size) {
         return "";
     }
@@ -321,7 +321,7 @@ LRESULT CALLBACK WinUsbDeviceWatcher::onWinEvent(HWND hWnd, UINT message, WPARAM
             std::string symbolicLink = wideCharToUTF8(devIntf->dbcc_name);
             if(parseSymbolicLink(symbolicLink, vid, pid, mi, uid, device_guid) && vid == 0x2bc5) {
                 auto watcherExtraData = reinterpret_cast<extra_data *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-                utils::toUpper(symbolicLink);
+                symbolicLink = utils::toUpper(symbolicLink);
                 if(wParam == DBT_DEVICEARRIVAL) {
                     LOG_DEBUG("Device arrival event occurred! symbolicLink={}", symbolicLink);
                     if(devIntf->dbcc_classguid != GUID_DEVINTERFACE_USB_DEVICE || PID_BOOTLOADER_UVC == pid) {
@@ -423,5 +423,5 @@ bool WinUsbDeviceWatcher::registerDeviceInterfaceToHwnd(HWND hWnd) {
 
     return true;
 }
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -3,7 +3,6 @@
 #include <string>
 
 namespace libobsensor {
-namespace pal {
 
 typedef enum {
     OB_DEVICE_REMOVED,
@@ -20,5 +19,4 @@ public:
     virtual void stop()                                = 0;
 };
 
-}  // namespace pal
 }  // namespace libobsensor

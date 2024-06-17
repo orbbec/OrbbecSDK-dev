@@ -2,6 +2,7 @@
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 #include "ISourcePort.hpp"
+#include "usb/uvc/UvcTypes.hpp"
 
 #include <queue>
 #include <atomic>
@@ -10,7 +11,7 @@
 #include <condition_variable>
 
 namespace libobsensor {
-namespace pal {
+
 
 struct ObRTPFrame {
     ObRTPFrame(uint32_t maxDataSize) : maxBuffSize(maxDataSize) {
@@ -79,5 +80,5 @@ private:
     std::thread outputFrameThread_;
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

@@ -4,8 +4,9 @@
 #pragma once
 
 #include "IFrameMetadataParser.hpp"
-#include "stream/StreamProfile.hpp"
+#include "IStreamProfile.hpp"
 #include "exception/ObException.hpp"
+#include "IFrame.hpp"
 
 #include <atomic>
 #include <memory>
@@ -19,6 +20,7 @@ class FrameSet;
 class PointsFrame;
 class VideoFrame;
 class ColorFrame;
+class DisparityFrame;
 class DepthFrame;
 class IRFrame;
 class AccelFrame;
@@ -37,6 +39,7 @@ public:
     void           setNumber(const uint64_t number);
     size_t         getDataSize() const;
     const uint8_t *getData() const;
+    uint8_t       *getDataUnsafe() const;  // use with caution, data may be changed while other threads are using it
     void           updateData(const uint8_t *data, size_t dataSize);
     uint64_t       getTimeStampUsec() const;
     void           setTimeStampUsec(uint64_t ts);
@@ -136,6 +139,11 @@ private:
     float valueScale_;
 };
 
+class DisparityFrame: public VideoFrame {
+public:
+    DisparityFrame(uint8_t * data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
+};
+
 class IRFrame : public VideoFrame {
 public:
     IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr, OBFrameType frameType = OB_FRAME_IR);
@@ -199,6 +207,7 @@ public:
 
     uint32_t getFrameCount();
 
+    std::shared_ptr<Frame> getDisparityFrame();
     std::shared_ptr<Frame> getDepthFrame();
     std::shared_ptr<Frame> getIRFrame();
     std::shared_ptr<Frame> getColorFrame();
@@ -210,7 +219,7 @@ public:
 
     // It is recommended to use the rvalue reference interface. If you really need it, you can uncomment the following
     // void pushFrame(std::shared_ptr<Frame> frame);
-    void pushFrame(std::shared_ptr<Frame> &&frame);
+    void pushFrame(std::shared_ptr<const Frame> &&frame);
     void clearAllFrame();
 
 public:
@@ -228,6 +237,8 @@ template <typename T> bool Frame::is() const {
         return (typeid(T) == typeid(IRLeftFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_IR_RIGHT:
         return (typeid(T) == typeid(IRRightFrame) || typeid(T) == typeid(VideoFrame));
+    case OB_FRAME_DISPARITY:
+        return (typeid(T) == typeid(DisparityFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_DEPTH:
         return (typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_COLOR:
@@ -246,18 +257,4 @@ template <typename T> bool Frame::is() const {
     return false;
 }
 
-typedef std::function<void(std::shared_ptr<const Frame>)> FrameCallback;
-typedef std::function<void(std::shared_ptr<Frame>)> FrameCallbackUnsafe;
-
 }  // namespace libobsensor
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-struct ob_frame_t {
-    std::shared_ptr<libobsensor::Frame> frame;
-    std::atomic<int>                    refCnt = {1};
-};
-#ifdef __cplusplus
-}
-#endif

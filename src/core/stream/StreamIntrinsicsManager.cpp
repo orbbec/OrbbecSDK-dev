@@ -20,7 +20,7 @@ StreamIntrinsicsManager::StreamIntrinsicsManager() : logger_(Logger::getInstance
 
 StreamIntrinsicsManager::~StreamIntrinsicsManager() noexcept = default;
 
-void StreamIntrinsicsManager::registerVideoStreamIntrinsics(std::shared_ptr<const StreamProfile> profile, const OBCameraIntrinsic &intrinsics) {
+void StreamIntrinsicsManager::registerVideoStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile, const OBCameraIntrinsic &intrinsics) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
@@ -40,7 +40,7 @@ void StreamIntrinsicsManager::registerVideoStreamIntrinsics(std::shared_ptr<cons
     videoStreamIntrinsics_.insert({ std::weak_ptr<const StreamProfile>(profile), intrinsics });
 }
 
-OBCameraIntrinsic StreamIntrinsicsManager::getVideoStreamIntrinsics(std::shared_ptr<const StreamProfile> profile) {
+OBCameraIntrinsic StreamIntrinsicsManager::getVideoStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
@@ -57,7 +57,7 @@ OBCameraIntrinsic StreamIntrinsicsManager::getVideoStreamIntrinsics(std::shared_
     throw invalid_value_exception("Intrinsics for the input stream profile is not found.");
 }
 
-void StreamIntrinsicsManager::registerVideoStreamDistortion(std::shared_ptr<const StreamProfile> profile, const OBCameraDistortion &distortion) {
+void StreamIntrinsicsManager::registerVideoStreamDistortion(const std::shared_ptr<const StreamProfile>& profile, const OBCameraDistortion &distortion) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
@@ -78,7 +78,7 @@ void StreamIntrinsicsManager::registerVideoStreamDistortion(std::shared_ptr<cons
     videoStreamDistortion_.insert({ std::weak_ptr<const StreamProfile>(profile), distortion });
 }
 
-OBCameraDistortion StreamIntrinsicsManager::getVideoStreamDistortion(std::shared_ptr<const StreamProfile> profile) {
+OBCameraDistortion StreamIntrinsicsManager::getVideoStreamDistortion(const std::shared_ptr<const StreamProfile>& profile) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
@@ -95,7 +95,7 @@ OBCameraDistortion StreamIntrinsicsManager::getVideoStreamDistortion(std::shared
     throw invalid_value_exception("Distortion for the input stream profile is not found.");
 }
 
-void StreamIntrinsicsManager::registerGyroStreamIntrinsics(std::shared_ptr<const StreamProfile> profile, const OBGyroIntrinsic &intrinsics) {
+void StreamIntrinsicsManager::registerGyroStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile, const OBGyroIntrinsic &intrinsics) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
@@ -116,7 +116,7 @@ void StreamIntrinsicsManager::registerGyroStreamIntrinsics(std::shared_ptr<const
     gyroStreamIntrinsics_.insert({ std::weak_ptr<const StreamProfile>(profile), intrinsics });
 }
 
-OBGyroIntrinsic StreamIntrinsicsManager::getGyroStreamIntrinsics(std::shared_ptr<const StreamProfile> profile) {
+OBGyroIntrinsic StreamIntrinsicsManager::getGyroStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
@@ -133,7 +133,7 @@ OBGyroIntrinsic StreamIntrinsicsManager::getGyroStreamIntrinsics(std::shared_ptr
     throw invalid_value_exception("Intrinsics for the input stream profile is not found.");
 }
 
-void StreamIntrinsicsManager::registerAccelStreamIntrinsics(std::shared_ptr<const StreamProfile> profile, const OBAccelIntrinsic &intrinsics) {
+void StreamIntrinsicsManager::registerAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile, const OBAccelIntrinsic &intrinsics) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
@@ -147,14 +147,14 @@ void StreamIntrinsicsManager::registerAccelStreamIntrinsics(std::shared_ptr<cons
             it = accelStreamIntrinsics_.erase(it);
         }
         else {
-            it++;
+            ++it;
         }
     }
 
     accelStreamIntrinsics_.insert({ std::weak_ptr<const StreamProfile>(profile), intrinsics });
 }
 
-OBAccelIntrinsic StreamIntrinsicsManager::getAccelStreamIntrinsics(std::shared_ptr<const StreamProfile> profile) {
+OBAccelIntrinsic StreamIntrinsicsManager::getAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile>& profile) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }

@@ -23,7 +23,7 @@
 #endif
 
 namespace libobsensor {
-namespace pal {
+
 
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
 #define GET_LAST_ERROR() WSAGetLastError()
@@ -31,5 +31,5 @@ namespace pal {
 #define GET_LAST_ERROR() errno
 #endif
 
-}  // namespace pal
+
 }  // namespace libobsensor

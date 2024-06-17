@@ -8,7 +8,7 @@
 #include <set>
 
 namespace libobsensor {
-namespace pal {
+
 
 #define GVCP_VERSION 0x42  // GVCP协议版本号
 #define GVCP_DISCOVERY_FLAGS 0x11
@@ -134,5 +134,5 @@ private:
 #endif
 };
 
-}  // namespace pal
+
 }  // namespace libobsensor

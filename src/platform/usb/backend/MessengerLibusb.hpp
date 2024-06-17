@@ -9,7 +9,7 @@
 #include "Messenger.hpp"
 
 namespace libobsensor {
-namespace pal {
+
 class UsbDeviceLibusb;
 
 class UsbMessengerLibusb : public UsbMessenger {
@@ -31,5 +31,5 @@ private:
     std::mutex                             mutex_;
     std::shared_ptr<HandleLibusb>          handle_;
 };
-}  // namespace pal
+
 }  // namespace libobsensor

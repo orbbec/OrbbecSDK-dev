@@ -5,28 +5,42 @@
 #pragma once
 
 #include "Types.hpp"
-
+#include "openobsdk/h/StreamProfile.h"
 #include <iostream>
 #include <memory>
 
-struct StreamProfileImpl;
-struct StreamProfileListImpl;
-
 namespace ob {
-
-class VideoStreamProfile;
-class GyroStreamProfile;
-class AccelStreamProfile;
-class Config;
 
 class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
 protected:
-    const ob_stream_profile *impl_;
+    const ob_stream_profile_t *impl_ = nullptr;
 
 public:
-    StreamProfile(std::unique_ptr<StreamProfileImpl> impl);
-    StreamProfile(StreamProfile &streamProfile);
-    virtual ~StreamProfile() noexcept;
+    explicit StreamProfile(const ob_stream_profile_t *impl) : impl_(impl) {}
+
+    StreamProfile(StreamProfile &streamProfile)            = delete;
+    StreamProfile &operator=(StreamProfile &streamProfile) = delete;
+    StreamProfile(StreamProfile &&streamProfile) noexcept : impl_(streamProfile.impl_) {
+        streamProfile.impl_ = nullptr;
+    }
+    StreamProfile &operator=(StreamProfile &&streamProfile) noexcept {
+        if(this != &streamProfile) {
+            ob_error *error = nullptr;
+            ob_delete_stream_profile(impl_, &error);
+            Error::handle(&error, false);
+            impl_               = streamProfile.impl_;
+            streamProfile.impl_ = nullptr;
+        }
+        return *this;
+    }
+
+    virtual ~StreamProfile() noexcept {
+        if(impl_) {
+            ob_error *error = nullptr;
+            ob_delete_stream_profile(impl_, &error);
+            Error::handle(&error, false);
+        }
+    }
 
     const ob_stream_profile *getImpl() const {
         return impl_;
@@ -37,21 +51,36 @@ public:
      *
      * @return OBFormat return the format of the stream
      */
-    OBFormat format() const;
+    OBFormat format() {
+        ob_error *error  = nullptr;
+        auto      format = ob_stream_profile_get_format(impl_, &error);
+        Error::handle(&error, false);
+        return format;
+    }
 
     /**
      * @brief Get the type of stream
      *
      * @return OBStreamType return the type of the stream
      */
-    OBStreamType type() const;
+    OBStreamType type() {
+        ob_error *error = nullptr;
+        auto      type  = ob_stream_profile_get_type(impl_, &error);
+        Error::handle(&error, false);
+        return type;
+    }
 
     /**
      * @brief Get the extrinsic parameters from current stream profile to the given target stream profile
      *
      * @return OBExtrinsic Return the extrinsic parameters.
      */
-    OBExtrinsic getExtrinsicTo(std::shared_ptr<StreamProfile> target);
+    OBExtrinsic getExtrinsicTo(std::shared_ptr<StreamProfile> target) {
+        ob_error *error     = nullptr;
+        auto      extrinsic = ob_stream_profile_get_extrinsic_to(impl_, const_cast<ob_stream_profile_t *>(target->getImpl()), &error);
+        Error::handle(&error, false);
+        return extrinsic;
+    }
 
     /**
      * @brief Check if frame object is compatible with the given type
@@ -74,10 +103,6 @@ public:
 
         return std::static_pointer_cast<T>(std::const_pointer_cast<StreamProfile>(shared_from_this()));
     }
-
-    friend class Sensor;
-    friend class Config;
-    friend class Pipeline;
 };
 
 /**
@@ -85,39 +110,57 @@ public:
  */
 class VideoStreamProfile : public StreamProfile {
 public:
-    explicit VideoStreamProfile(StreamProfile &profile);
+    explicit VideoStreamProfile(const ob_stream_profile_t *impl) : StreamProfile(impl) {}
 
-    explicit VideoStreamProfile(std::unique_ptr<StreamProfileImpl> impl);
-
-    ~VideoStreamProfile() noexcept override;
+    ~VideoStreamProfile() noexcept override = default;
 
     /**
      * @brief Return the frame rate of the stream.
      *
      * @return uint32_t Return the frame rate of the stream.
      */
-    uint32_t fps() const;
+    uint32_t fps() const {
+        ob_error *error = nullptr;
+        auto      fps   = ob_video_stream_profile_get_fps(impl_, &error);
+        Error::handle(&error, false);
+        return fps;
+    }
 
     /**
      * @brief Return the width of the stream.
      *
      * @return uint32_t Return the width of the stream.
      */
-    uint32_t width() const;
+    uint32_t width() const {
+        ob_error *error = nullptr;
+        auto      width = ob_video_stream_profile_get_width(impl_, &error);
+        Error::handle(&error, false);
+        return width;
+    }
 
     /**
      * @brief Return the height of the stream.
      *
      * @return uint32_t Return the height of the stream.
      */
-    uint32_t height() const;
+    uint32_t height() const {
+        ob_error *error  = nullptr;
+        auto      height = ob_video_stream_profile_get_height(impl_, &error);
+        Error::handle(&error, false);
+        return height;
+    }
 
     /**
      * @brief Get the intrinsic parameters of the stream.
      *
      * @return OBCameraIntrinsic Return the intrinsic parameters.
      */
-    OBCameraIntrinsic getIntrinsic();
+    OBCameraIntrinsic getIntrinsic() {
+        ob_error *error     = nullptr;
+        auto      intrinsic = ob_video_stream_get_intrinsic(impl_, &error);
+        Error::handle(&error, false);
+        return intrinsic;
+    }
 
     /**
      * @brief Get the distortion parameters of the stream.
@@ -125,7 +168,12 @@ public:
      *
      * @return OBCameraDistortion Return the distortion parameters.
      */
-    OBCameraDistortion getDistortion();
+    OBCameraDistortion getDistortion() {
+        ob_error *error      = nullptr;
+        auto      distortion = ob_video_stream_get_distortion(impl_, &error);
+        Error::handle(&error, false);
+        return distortion;
+    }
 };
 
 /**
@@ -133,32 +181,45 @@ public:
  */
 class AccelStreamProfile : public StreamProfile {
 public:
-    explicit AccelStreamProfile(StreamProfile &profile);
+    explicit AccelStreamProfile(const ob_stream_profile_t *impl) : StreamProfile(impl) {}
 
-    explicit AccelStreamProfile(std::unique_ptr<StreamProfileImpl> impl);
-
-    ~AccelStreamProfile() noexcept override;
+    ~AccelStreamProfile() noexcept override = default;
 
     /**
      * @brief Return the full scale range.
      *
      * @return OBAccelFullScaleRange Return the scale range value.
      */
-    OBAccelFullScaleRange fullScaleRange() const;
+    OBAccelFullScaleRange fullScaleRange() const {
+        ob_error *error          = nullptr;
+        auto      fullScaleRange = ob_accel_stream_profile_get_full_scale_range(impl_, &error);
+        Error::handle(&error, false);
+        return fullScaleRange;
+    }
 
     /**
      * @brief Return the sampling frequency.
      *
      * @return OBAccelFullScaleRange Return the sampling frequency.
      */
-    OBAccelSampleRate sampleRate() const;
+    OBAccelSampleRate sampleRate() const {
+        ob_error *error      = nullptr;
+        auto      sampleRate = ob_accel_stream_profile_get_sample_rate(impl_, &error);
+        Error::handle(&error, false);
+        return sampleRate;
+    }
 
     /**
      * @brief get the intrinsic parameters of the stream.
      *
      * @return OBAccelIntrinsic Return the intrinsic parameters.
      */
-    OBAccelIntrinsic getIntrinsic();
+    OBAccelIntrinsic getIntrinsic() {
+        ob_error *error     = nullptr;
+        auto      intrinsic = ob_accel_stream_profile_get_intrinsic(impl_, &error);
+        Error::handle(&error, false);
+        return intrinsic;
+    }
 };
 
 /**
@@ -166,31 +227,45 @@ public:
  */
 class GyroStreamProfile : public StreamProfile {
 public:
-    explicit GyroStreamProfile(StreamProfile &profile);
+    explicit GyroStreamProfile(const ob_stream_profile_t *impl) : StreamProfile(impl) {}
 
-    explicit GyroStreamProfile(std::unique_ptr<StreamProfileImpl> impl);
-    ~GyroStreamProfile() noexcept override;
+    ~GyroStreamProfile() noexcept override = default;
 
     /**
      * @brief Return the full scale range.
      *
      * @return OBAccelFullScaleRange Return the scale range value.
      */
-    OBGyroFullScaleRange fullScaleRange() const;
+    OBGyroFullScaleRange fullScaleRange() const {
+        ob_error *error          = nullptr;
+        auto      fullScaleRange = ob_gyro_stream_profile_get_full_scale_range(impl_, &error);
+        Error::handle(&error, false);
+        return fullScaleRange;
+    }
 
     /**
      * @brief Return the sampling frequency.
      *
      * @return OBAccelFullScaleRange Return the sampling frequency.
      */
-    OBGyroSampleRate sampleRate() const;
+    OBGyroSampleRate sampleRate() const {
+        ob_error *error      = nullptr;
+        auto      sampleRate = ob_gyro_stream_profile_get_sample_rate(impl_, &error);
+        Error::handle(&error, false);
+        return sampleRate;
+    }
 
     /**
      * @brief get the intrinsic parameters of the stream.
      *
      * @return OBGyroIntrinsic Return the intrinsic parameters.
      */
-    OBGyroIntrinsic getIntrinsic();
+    OBGyroIntrinsic getIntrinsic() {
+        ob_error *error     = nullptr;
+        auto      intrinsic = ob_gyro_stream_get_intrinsic(impl_, &error);
+        Error::handle(&error, false);
+        return intrinsic;
+    }
 };
 
 template <typename T> bool StreamProfile::is() {
@@ -219,14 +294,23 @@ protected:
 
 public:
     explicit StreamProfileList(ob_stream_profile_list_t *impl) : impl_(impl) {}
-    ~StreamProfileList() noexcept;
+    ~StreamProfileList() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_stream_profile_list(impl_, &error);
+        Error::handle(&error, false);
+    }
 
     /**
      * @brief Return the number of StreamProfile objects.
      *
      * @return uint32_t Return the number of StreamProfile objects.
      */
-    uint32_t count() const;
+    uint32_t count() const {
+        ob_error *error = nullptr;
+        auto      count = ob_stream_profile_list_count(impl_, &error);
+        Error::handle(&error, false);
+        return count;
+    }
 
     /**
      * @brief Return the StreamProfile object at the specified index.
@@ -234,7 +318,12 @@ public:
      * @param index The index of the StreamProfile object to be retrieved. Must be in the range [0, count-1]. Throws an exception if the index is out of range.
      * @return std::shared_ptr<StreamProfile> Return the StreamProfile object.
      */
-    const std::shared_ptr<StreamProfile> getProfile(uint32_t index);
+    std::shared_ptr<StreamProfile> getProfile(uint32_t index) {
+        ob_error *error   = nullptr;
+        auto      profile = ob_stream_profile_list_get_profile(impl_, index, &error);
+        Error::handle(&error, false);
+        return std::make_shared<StreamProfile>(profile);
+    }
 
     /**
      * @brief Match the corresponding video stream profile based on the passed-in parameters. If multiple Match are found, the first one in the list is
@@ -246,8 +335,13 @@ public:
      * @param fps The frame rate of the stream. Pass OB_FPS_ANY if no matching condition is required.
      * @return std::shared_ptr<VideoStreamProfile> Return the matching resolution.
      */
-    const std::shared_ptr<VideoStreamProfile> getVideoStreamProfile(int width = OB_WIDTH_ANY, int height = OB_HEIGHT_ANY, OBFormat format = OB_FORMAT_ANY,
-                                                                    int fps = OB_FPS_ANY);
+    std::shared_ptr<VideoStreamProfile> getVideoStreamProfile(int width = OB_WIDTH_ANY, int height = OB_HEIGHT_ANY, OBFormat format = OB_FORMAT_ANY,
+                                                              int fps = OB_FPS_ANY) {
+        ob_error *error   = nullptr;
+        auto      profile = ob_stream_profile_list_get_video_stream_profile(impl_, width, height, format, fps, &error);
+        Error::handle(&error, false);
+        return std::make_shared<VideoStreamProfile>(profile);
+    }
 
     /**
      * @brief Match the corresponding accelerometer stream profile based on the passed-in parameters. If multiple Match are found, the first one in the list
@@ -256,7 +350,12 @@ public:
      * @param fullScaleRange The full scale range. Pass 0 if no matching condition is required.
      * @param sampleRate The sampling frequency. Pass 0 if no matching condition is required.
      */
-    const std::shared_ptr<AccelStreamProfile> getAccelStreamProfile(OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
+    std::shared_ptr<AccelStreamProfile> getAccelStreamProfile(OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate) {
+        ob_error *error   = nullptr;
+        auto      profile = ob_stream_profile_list_get_accel_stream_profile(impl_, fullScaleRange, sampleRate, &error);
+        Error::handle(&error, false);
+        return std::make_shared<AccelStreamProfile>(profile);
+    }
 
     /**
      * @brief Match the corresponding gyroscope stream profile based on the passed-in parameters. If multiple Match are found, the first one in the list is
@@ -265,7 +364,12 @@ public:
      * @param fullScaleRange The full scale range. Pass 0 if no matching condition is required.
      * @param sampleRate The sampling frequency. Pass 0 if no matching condition is required.
      */
-    const std::shared_ptr<GyroStreamProfile> getGyroStreamProfile(OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
+    std::shared_ptr<GyroStreamProfile> getGyroStreamProfile(OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate) {
+        ob_error *error   = nullptr;
+        auto      profile = ob_stream_profile_list_get_gyro_stream_profile(impl_, fullScaleRange, sampleRate, &error);
+        Error::handle(&error, false);
+        return std::make_shared<GyroStreamProfile>(profile);
+    }
 };
 
 }  // namespace ob

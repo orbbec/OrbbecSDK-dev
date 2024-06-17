@@ -55,6 +55,10 @@ public:
         Error::handle(&error, false);
     }
 
+    ob_device_t *getImpl() const {
+        return impl_;
+    }
+
     /**
      * @brief Get device information
      *
@@ -290,7 +294,7 @@ public:
      * @param callback  Firmware upgrade progress and status callback
      * @param async    Whether to execute asynchronously
      */
-    void deviceUpgrade(const char *filePath, DeviceUpgradeCallback callback, bool async = true){
+    void deviceUpgrade(const char *filePath, DeviceUpgradeCallback callback, bool async = true) {
         ob_error *error = nullptr;
         ob_device_update_firmware(impl_, filePath, callback, async, &error);
         Error::handle(&error);
@@ -305,7 +309,7 @@ public:
      * @param callback  Firmware upgrade progress and status callback
      * @param async    Whether to execute asynchronously
      */
-    void deviceUpgradeFromData(const char *fileData, uint32_t fileSize, DeviceUpgradeCallback callback, bool async = true){
+    void deviceUpgradeFromData(const char *fileData, uint32_t fileSize, DeviceUpgradeCallback callback, bool async = true) {
         ob_error *error = nullptr;
         ob_device_update_firmware_from_data(impl_, fileData, fileSize, callback, async, &error);
         Error::handle(&error);

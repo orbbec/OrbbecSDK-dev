@@ -11,7 +11,6 @@
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
 #include "usb/uvc/ObV4lUvcDevicePort.hpp"
-#include "context/Context.hpp"
 #endif
 
 #if defined(BUILD_NET_PORT)

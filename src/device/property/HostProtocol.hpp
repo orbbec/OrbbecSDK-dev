@@ -182,14 +182,28 @@ typedef struct {
 
 typedef struct {
     ReqHeader header;
-    uint8_t   data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 } GetCmdVerDataResp;
 
 typedef struct {
     ReqHeader header;
     uint32_t  propertyId;
     uint16_t  cmdVer;
-    uint8_t   data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 } SetStructureDataV11Req;
 
 typedef struct {
@@ -250,7 +264,6 @@ uint16_t                 getStructureDataSize(const GetStructureDataResp *resp);
 SetStructureDataResp    *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
 GetCmdVerDataResp       *parseGetCmdVerDataResp(uint8_t *dataBuf, uint16_t dataSize);
 GetReadDataResp         *parseGetReadDataResp(uint8_t *dataBuf, uint16_t dataSize);
-
 
 HpStatus execute(const std::shared_ptr<IVendorDataPort> &dataPort, uint8_t *reqData, uint16_t reqDataSize, uint8_t *respData, uint16_t *respDataSize);
 bool     checkStatus(HpStatus stat, bool throwException = true);

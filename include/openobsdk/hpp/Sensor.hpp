@@ -102,7 +102,7 @@ public:
         Error::handle(&error);
     }
 
-    static void frameCallback(const ob_frame *frame, void *userData) {
+    static void frameCallback(ob_frame *frame, void *userData) {
         auto sensor = static_cast<Sensor *>(userData);
         sensor->callback_(std::make_shared<Frame>(frame));
     }
@@ -179,47 +179,6 @@ public:
         auto      sensor = ob_sensor_list_get_sensor_by_type(impl_, sensorType, &error);
         Error::handle(&error);
         return std::make_shared<Sensor>(sensor);
-    }
-};
-
-/**
- * @brief Class representing a list of FrameProcessingBlock
- */
-class OBFilterList {
-private:
-    ob_filter_list_t *impl_ = nullptr;
-
-public:
-    explicit OBFilterList(ob_filter_list_t *impl) : impl_(impl) {}
-    ~OBFilterList() noexcept {
-        ob_error *error = nullptr;
-        ob_delete_filter_list(impl_, &error);
-        Error::handle(&error, false);
-    }
-
-    /**
-     * @brief Get the number of OBDepthWorkMode FrameProcessingBlock in the list
-     *
-     * @return uint32_t the number of FrameProcessingBlock objects in the list
-     */
-    uint32_t count() {
-        ob_error *error = nullptr;
-        auto      count = ob_filter_list_get_count(impl_, &error);
-        Error::handle(&error);
-        return count;
-    }
-
-    /**
-     * @brief Get the Filter object at the specified index
-     *
-     * @param index the index of the target Filter object
-     * @return the Filter object at the specified index
-     */
-    std::shared_ptr<Filter> getFilter(uint32_t index) {
-        ob_error *error  = nullptr;
-        auto      filter = ob_filter_list_get_filter(impl_, index, &error);
-        Error::handle(&error);
-        return std::make_shared<Filter>(filter);
     }
 };
 

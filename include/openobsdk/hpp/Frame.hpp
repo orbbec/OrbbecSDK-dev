@@ -43,7 +43,7 @@ protected:
     /**
      * @brief The pointer to the internal (c api level) frame object.
      */
-    ob_frame *impl_ = nullptr;
+    const ob_frame *impl_ = nullptr;
 
 public:
     /**
@@ -55,14 +55,14 @@ public:
      *
      * @param impl The pointer to the internal frame object.
      */
-    explicit Frame(ob_frame *impl) : impl_(impl) {}
+    explicit Frame(const ob_frame *impl) : impl_(impl) {}
 
     /**
      * @brief Get the internal (impl) frame object
      *
      * @return const ob_frame* the pointer to the internal frame object.
      */
-    ob_frame *getImpl() const {
+    const ob_frame *getImpl() const {
         return impl_;
     }
 

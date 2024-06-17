@@ -19,16 +19,16 @@ class GyroStreamProfile;
 class AccelStreamProfile;
 class Config;
 
-class  StreamProfile : public std::enable_shared_from_this<StreamProfile> {
+class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
 protected:
-    const ob_stream_profile* impl_;
+    const ob_stream_profile *impl_;
 
 public:
     StreamProfile(std::unique_ptr<StreamProfileImpl> impl);
     StreamProfile(StreamProfile &streamProfile);
     virtual ~StreamProfile() noexcept;
 
-    const ob_stream_profile* getImpl() const{
+    const ob_stream_profile *getImpl() const {
         return impl_;
     }
 
@@ -83,7 +83,7 @@ public:
 /**
  * @brief Class representing a video stream profile.
  */
-class  VideoStreamProfile : public StreamProfile {
+class VideoStreamProfile : public StreamProfile {
 public:
     explicit VideoStreamProfile(StreamProfile &profile);
 
@@ -131,7 +131,7 @@ public:
 /**
  * @brief Class representing an accelerometer stream profile.
  */
-class  AccelStreamProfile : public StreamProfile {
+class AccelStreamProfile : public StreamProfile {
 public:
     explicit AccelStreamProfile(StreamProfile &profile);
 
@@ -164,7 +164,7 @@ public:
 /**
  * @brief Class representing a gyroscope stream profile.
  */
-class  GyroStreamProfile : public StreamProfile {
+class GyroStreamProfile : public StreamProfile {
 public:
     explicit GyroStreamProfile(StreamProfile &profile);
 
@@ -213,12 +213,12 @@ template <typename T> bool StreamProfile::is() {
     return false;
 }
 
-class  StreamProfileList {
+class StreamProfileList {
 protected:
-    std::unique_ptr<StreamProfileListImpl> impl_;
+    const ob_stream_profile_list_t *impl_;
 
 public:
-    explicit StreamProfileList(std::unique_ptr<StreamProfileListImpl> impl);
+    explicit StreamProfileList(ob_stream_profile_list_t *impl) : impl_(impl) {}
     ~StreamProfileList() noexcept;
 
     /**

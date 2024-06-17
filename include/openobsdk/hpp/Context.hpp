@@ -10,17 +10,17 @@
 
 #include <functional>
 #include <memory>
-
-struct ContextImpl;
+#include "openobsdk/h/Context.h"
+#include "Error.hpp"
 
 namespace ob {
 class Device;
 class DeviceInfo;
 class DeviceList;
 
-class  Context {
+class Context {
 private:
-    std::unique_ptr<ContextImpl> impl_;
+    ob_context *impl_ = nullptr;
 
 public:
     /**
@@ -28,15 +28,28 @@ public:
      * The context has the ability to manage multiple devices, enumerate devices, monitor device callbacks, and enable functions such as multi-device
      * synchronization.
      */
-    Context(const char *configPath = "");
-    virtual ~Context() noexcept;
+    explicit Context(const char *configPath = "") {
+        ob_error *error = nullptr;
+        impl_           = ob_create_context_with_config(configPath, &error);
+        Error::handle(&error);
+    }
+    ~Context() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_context(impl_, &error);
+        Error::handle(&error, false);
+    }
 
     /**
      * @brief Queries the enumerated device list.
      *
      * @return std::shared_ptr<DeviceList> A pointer to the device list class.
      */
-    std::shared_ptr<DeviceList> queryDeviceList();
+    std::shared_ptr<DeviceList> queryDeviceList() {
+        ob_error *error = nullptr;
+        auto      list  = ob_query_device_list(impl_, &error);
+        Error::handle(&error);
+        return std::make_shared<DeviceList>(list);
+    }
 
     /**
      * @brief enable or disable net device enumeration.
@@ -47,7 +60,11 @@ public:
      *
      * @param[out] enable true to enable, false to disable
      */
-    void enableNetDeviceEnumeration(bool enable);
+    void enableNetDeviceEnumeration(bool enable) {
+        ob_error *error = nullptr;
+        ob_enable_net_device_enumeration(impl_, enable, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Creates a network device object.
@@ -56,7 +73,12 @@ public:
      * @param port The port.
      * @return std::shared_ptr<Device> The created device object.
      */
-    std::shared_ptr<Device> createNetDevice(const char *address, uint16_t port);
+    std::shared_ptr<Device> createNetDevice(const char *address, uint16_t port) {
+        ob_error *error  = nullptr;
+        auto      device = ob_create_net_device(impl_, address, port, &error);
+        Error::handle(&error);
+        return std::make_shared<Device>(device);
+    }
 
     /**
      * @brief Changes the IP configuration of a network device.

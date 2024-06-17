@@ -7,51 +7,77 @@
 #include "Types.hpp"
 
 #include "openobsdk/h/Property.h"
+#include "openobsdk/h/Device.h"
 #include "openobsdk/hpp/Filter.hpp"
+#include "openobsdk/hpp/Sensor.hpp"
+#include "Error.hpp"
 #include <memory>
 #include <string>
 #include <vector>
 
-struct DeviceImpl;
-struct DeviceInfoImpl;
-struct DeviceListImpl;
-struct CameraParamListImpl;
-
 namespace ob {
-class SensorList;
-class Context;
+
 class DeviceInfo;
-class Sensor;
-class CameraParamList;
-class OBDepthWorkModeList;
+class SensorList;
 class DevicePresetList;
 
-class  Device {
+class Device {
 protected:
-    std::unique_ptr<DeviceImpl> impl_;
-
-    Device(Device &&device);
+    ob_device_t *impl_ = nullptr;
 
 public:
     /**
      * @brief Describe the entity of the RGBD camera, representing a specific model of RGBD camera
      */
-    Device(std::unique_ptr<DeviceImpl> impl);
-    virtual ~Device() noexcept;
+    explicit Device(ob_device_t *impl) : impl_(impl) {}
+
+    Device(Device &&other) noexcept : impl_(other.impl_) {
+        other.impl_ = nullptr;
+    }
+
+    Device &operator=(Device &&other) noexcept {
+        if(this != &other) {
+            ob_error *error = nullptr;
+            ob_delete_device(impl_, &error);
+            Error::handle(&error, false);
+            impl_       = other.impl_;
+            other.impl_ = nullptr;
+        }
+        return *this;
+    }
+
+    Device(const Device &)            = delete;
+    Device &operator=(const Device &) = delete;
+
+    virtual ~Device() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_device(impl_, &error);
+        Error::handle(&error, false);
+    }
 
     /**
      * @brief Get device information
      *
      * @return std::shared_ptr<DeviceInfo> return device information
      */
-    std::shared_ptr<DeviceInfo> getDeviceInfo();
+    std::shared_ptr<DeviceInfo> getDeviceInfo() {
+        ob_error *error = nullptr;
+        auto      info  = ob_device_get_device_info(impl_, &error);
+        Error::handle(&error);
+        return std::make_shared<DeviceInfo>(info);
+    }
 
     /**
      * @brief Get device sensor list
      *
      * @return std::shared_ptr<SensorList> return the sensor list
      */
-    std::shared_ptr<SensorList> getSensorList();
+    std::shared_ptr<SensorList> getSensorList() {
+        ob_error *error = nullptr;
+        auto      list  = ob_device_get_sensor_list(impl_, &error);
+        Error::handle(&error);
+        return std::make_shared<SensorList>(list);
+    }
 
     /**
      * @brief Get specific type of sensor
@@ -59,7 +85,12 @@ public:
      *
      * @return std::shared_ptr<Sensor> return the sensor example, if the device does not have the device,return nullptr
      */
-    std::shared_ptr<Sensor> getSensor(OBSensorType type);
+    std::shared_ptr<Sensor> getSensor(OBSensorType type) {
+        ob_error *error  = nullptr;
+        auto      sensor = ob_device_get_sensor(impl_, type, &error);
+        Error::handle(&error);
+        return std::make_shared<Sensor>(sensor);
+    }
 
     /**
      * @brief Set int type of device property
@@ -67,7 +98,11 @@ public:
      * @param propertyId Property id
      * @param property Property to be set
      */
-    void setIntProperty(OBPropertyID propertyId, int32_t property);
+    void setIntProperty(OBPropertyID propertyId, int32_t property) {
+        ob_error *error = nullptr;
+        ob_device_set_int_property(impl_, propertyId, property, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Set float type of device property
@@ -75,7 +110,11 @@ public:
      * @param propertyId Property id
      * @param property Property to be set
      */
-    void setFloatProperty(OBPropertyID propertyId, float property);
+    void setFloatProperty(OBPropertyID propertyId, float property) {
+        ob_error *error = nullptr;
+        ob_device_set_float_property(impl_, propertyId, property, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Set bool type of device property
@@ -83,7 +122,11 @@ public:
      * @param propertyId Property id
      * @param property Property to be set
      */
-    void setBoolProperty(OBPropertyID propertyId, bool property);
+    void setBoolProperty(OBPropertyID propertyId, bool property) {
+        ob_error *error = nullptr;
+        ob_device_set_bool_property(impl_, propertyId, property, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Get int type of device property
@@ -91,7 +134,12 @@ public:
      * @param propertyId Property id
      * @return int32_t Property to get
      */
-    int32_t getIntProperty(OBPropertyID propertyId);
+    int32_t getIntProperty(OBPropertyID propertyId) {
+        ob_error *error = nullptr;
+        auto      value = ob_device_get_int_property(impl_, propertyId, &error);
+        Error::handle(&error);
+        return value;
+    }
 
     /**
      * @brief Get float type of device property
@@ -99,7 +147,12 @@ public:
      * @param propertyId Property id
      * @return float Property to get
      */
-    float getFloatProperty(OBPropertyID propertyId);
+    float getFloatProperty(OBPropertyID propertyId) {
+        ob_error *error = nullptr;
+        auto      value = ob_device_get_float_property(impl_, propertyId, &error);
+        Error::handle(&error);
+        return value;
+    }
 
     /**
      * @brief Get bool type of device property
@@ -107,7 +160,12 @@ public:
      * @param propertyId Property id
      * @return bool Property to get
      */
-    bool getBoolProperty(OBPropertyID propertyId);
+    bool getBoolProperty(OBPropertyID propertyId) {
+        ob_error *error = nullptr;
+        auto      value = ob_device_get_bool_property(impl_, propertyId, &error);
+        Error::handle(&error);
+        return value;
+    }
 
     /**
      * @brief Get int type device property range (including current value and default value)
@@ -115,7 +173,12 @@ public:
      * @param propertyId Property id
      * @return OBIntPropertyRange Property range
      */
-    OBIntPropertyRange getIntPropertyRange(OBPropertyID propertyId);
+    OBIntPropertyRange getIntPropertyRange(OBPropertyID propertyId) {
+        ob_error *error = nullptr;
+        auto      range = ob_device_get_int_property_range(impl_, propertyId, &error);
+        Error::handle(&error);
+        return range;
+    }
 
     /**
      * @brief Get float type device property range((including current value and default value)
@@ -123,7 +186,12 @@ public:
      * @param propertyId Property id
      * @return OBFloatPropertyRange Property range
      */
-    OBFloatPropertyRange getFloatPropertyRange(OBPropertyID propertyId);
+    OBFloatPropertyRange getFloatPropertyRange(OBPropertyID propertyId) {
+        ob_error *error = nullptr;
+        auto      range = ob_device_get_float_property_range(impl_, propertyId, &error);
+        Error::handle(&error);
+        return range;
+    }
 
     /**
      * @brief Get bool type device property range (including current value and default value)
@@ -131,102 +199,12 @@ public:
      * @param propertyId The ID of the property
      * @return OBBoolPropertyRange The range of the property
      */
-    OBBoolPropertyRange getBoolPropertyRange(OBPropertyID propertyId);
-
-    /**
-     * @brief Write to an AHB register
-     *
-     * @param reg The register to write to
-     * @param mask The mask to apply
-     * @param value The value to write
-     */
-    void writeAHB(uint32_t reg, uint32_t mask, uint32_t value);
-
-    /**
-     * @brief Read from an AHB register
-     *
-     * @param reg The register to read from
-     * @param mask The mask to apply
-     * @param value The value to return
-     */
-    void readAHB(uint32_t reg, uint32_t mask, uint32_t *value);
-
-    /**
-     * @brief Write to an I2C register
-     *
-     * @param moduleId The ID of the I2C module to write to
-     * @param reg The register to write to
-     * @param mask The mask to apply
-     * @param value The value to write
-     */
-    void writeI2C(uint32_t moduleId, uint32_t reg, uint32_t mask, uint32_t value);
-
-    /**
-     * @brief Read from an I2C register
-     *
-     * @param moduleId The ID of the I2C module to read from
-     * @param reg The register to read from
-     * @param mask The mask to apply
-     * @param value The value to return
-     */
-    void readI2C(uint32_t moduleId, uint32_t reg, uint32_t mask, uint32_t *value);
-
-    /**
-     * @brief Set the properties for writing to Flash
-     *
-     * @param offset The offset address in Flash
-     * @param data The data to write
-     * @param dataSize The size of the data to write
-     * @param callback The callback for write progress
-     * @param async Whether to execute asynchronously
-     */
-    void writeFlash(uint32_t offset, const void *data, uint32_t dataSize, SetDataCallback callback, bool async = false);
-
-    /**
-     * @brief Read a property from Flash
-     *
-     * @param offset The offset address in Flash
-     * @param dataSize The size of the property to read
-     * @param callback The callback for read progress and data
-     * @param async Whether to execute asynchronously
-     */
-    void readFlash(uint32_t offset, uint32_t dataSize, GetDataCallback callback, bool async = false);
-
-    /**
-     * @brief Set the customer data type of a device property
-     *
-     * @param data The data to set
-     * @param dataSize The size of the data to set,the maximum length cannot exceed 65532 bytes.
-     */
-    void writeCustomerData(const void *data, uint32_t dataSize);
-
-    /**
-     * @brief Get the customer data type of a device property
-     *
-     * @param data The property data obtained
-     * @param dataSize The size of the data obtained
-     */
-    void readCustomerData(void *data, uint32_t *dataSize);
-
-    /**
-     * @brief Set the raw data type of a device property (with asynchronous callback)
-     *
-     * @param propertyId The ID of the property
-     * @param data The data to set
-     * @param dataSize The size of the data to set
-     * @param callback The callback for set progress
-     * @param async Whether to execute asynchronously
-     */
-    void setRawData(OBPropertyID propertyId, const void *data, uint32_t dataSize, SetDataCallback callback, bool async = false);
-
-    /**
-     * @brief Get the raw data type of a device property (with asynchronous callback)
-     *
-     * @param propertyId The ID of the property
-     * @param callback The callback for getting the data and progress
-     * @param async Whether to execute asynchronously
-     */
-    void getRawData(OBPropertyID propertyId, GetDataCallback callback, bool async = false);
+    OBBoolPropertyRange getBoolPropertyRange(OBPropertyID propertyId) {
+        ob_error *error = nullptr;
+        auto      range = ob_device_get_bool_property_range(impl_, propertyId, &error);
+        Error::handle(&error);
+        return range;
+    }
 
     /**
      * @brief Set the structured data type of a device property
@@ -235,7 +213,11 @@ public:
      * @param data The data to set
      * @param dataSize The size of the data to set
      */
-    void setStructuredData(OBPropertyID propertyId, const void *data, uint32_t dataSize);
+    void setStructuredData(OBPropertyID propertyId, const uint8_t *data, uint32_t dataSize) {
+        ob_error *error = nullptr;
+        ob_device_set_structured_data(impl_, propertyId, data, dataSize, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Get the structured data type of a device property
@@ -244,46 +226,23 @@ public:
      * @param data The property data obtained
      * @param dataSize The size of the data obtained
      */
-    void getStructuredData(OBPropertyID propertyId, void *data, uint32_t *dataSize);
-
-    /**
-     * @brief Set the structured data type of a device property (with extended data bundle)
-     *
-     * @param propertyId The ID of the property
-     * @param dataBundle The target data bundle
-     * @param callback The callback for setting
-     */
-    void setStructuredDataExt(OBPropertyID propertyId, std::shared_ptr<OBDataBundle> dataBundle, SetDataCallback callback);
-
-    /**
-     * @brief Get the structured data type of a device property (with extended data bundle)
-     *
-     * @param propertyId The ID of the property
-     * @return The data bundle
-     */
-    std::shared_ptr<OBDataBundle> getStructuredDataExt(OBPropertyID propertyId);
-
-    /**
-     * @brief Get the property protocol version
-     *
-     * @return The protocol version
-     */
-    OBProtocolVersion getProtocolVersion();
-
-    /**
-     * @brief Get the cmdVersion of a property
-     *
-     * @param propertyId The ID of the property
-     * @return The cmdVersion
-     */
-    OBCmdVersion getCmdVersion(OBPropertyID propertyId);
+    void getStructuredData(OBPropertyID propertyId, uint8_t *data, uint32_t *dataSize) {
+        ob_error *error = nullptr;
+        ob_device_get_structured_data(impl_, propertyId, data, dataSize, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Get the number of properties supported by the device
      *
      * @return The number of supported properties
      */
-    uint32_t getSupportedPropertyCount();
+    uint32_t getSupportedPropertyCount() {
+        ob_error *error = nullptr;
+        auto      count = ob_device_get_supported_property_count(impl_, &error);
+        Error::handle(&error);
+        return count;
+    }
 
     /**
      * @brief Get the supported properties of the device
@@ -291,7 +250,12 @@ public:
      * @param index The index of the property
      * @return The type of supported property
      */
-    OBPropertyItem getSupportedProperty(uint32_t index);
+    OBPropertyItem getSupportedProperty(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      item  = ob_device_get_supported_property_item(impl_, index, &error);
+        Error::handle(&error);
+        return item;
+    }
 
     /**
      * @brief Check if a property permission is supported
@@ -300,14 +264,24 @@ public:
      * @param permission The read and write permissions to check
      * @return Whether the property permission is supported
      */
-    bool isPropertySupported(OBPropertyID propertyId, OBPermissionType permission);
+    bool isPropertySupported(OBPropertyID propertyId, OBPermissionType permission) {
+        ob_error *error  = nullptr;
+        auto      result = ob_device_is_property_supported(impl_, propertyId, permission, &error);
+        Error::handle(&error);
+        return result;
+    }
 
     /**
      * @brief Check if the global timestamp is supported for the device
      *
      * @return Whether the global timestamp is supported
      */
-    bool isGlobalTimestampSupported();
+    bool isGlobalTimestampSupported() {
+        ob_error *error  = nullptr;
+        auto      result = ob_device_is_global_timestamp_supported(impl_, &error);
+        Error::handle(&error);
+        return result;
+    }
 
     /**
      * @brief Upgrade the device firmware
@@ -316,7 +290,11 @@ public:
      * @param callback  Firmware upgrade progress and status callback
      * @param async    Whether to execute asynchronously
      */
-    void deviceUpgrade(const char *filePath, DeviceUpgradeCallback callback, bool async = true);
+    void deviceUpgrade(const char *filePath, DeviceUpgradeCallback callback, bool async = true){
+        ob_error *error = nullptr;
+        ob_device_update_firmware(impl_, filePath, callback, async, &error);
+        Error::handle(&error);
+    }
 
     /**
      * \if English
@@ -327,7 +305,11 @@ public:
      * @param callback  Firmware upgrade progress and status callback
      * @param async    Whether to execute asynchronously
      */
-    void deviceUpgradeFromData(const char *fileData, uint32_t fileSize, DeviceUpgradeCallback callback, bool async = true);
+    void deviceUpgradeFromData(const char *fileData, uint32_t fileSize, DeviceUpgradeCallback callback, bool async = true){
+        ob_error *error = nullptr;
+        ob_device_update_firmware_from_data(impl_, fileData, fileSize, callback, async, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Send files to the specified path on the device side [Asynchronouscallback]
@@ -421,37 +403,6 @@ public:
      * @param[in] delayMs Time unit：ms。delayMs == 0：No delay；delayMs > 0, Delay millisecond connect to host device after reboot
      */
     void reboot(uint32_t delayMs);
-
-    /**
-     * @brief Synchronize the device time (synchronize local system time to device)
-     * @deprecated This interface is deprecated, please use @ref timerSyncWithHost instead.
-     * @return The command (round trip time, rtt)
-     */
-    DEPRECATED uint64_t syncDeviceTime();
-
-    /**
-     * @brief get the current device synchronization configuration
-     * @brief Device synchronization: including exposure synchronization function and multi-camera synchronization function of different sensors within a single
-     * machine
-     *
-     * @deprecated This interface is deprecated, please use @ref getMultiDeviceSyncConfig instead.
-     *
-     * @return OBDeviceSyncConfig return the device synchronization configuration
-     */
-    DEPRECATED OBDeviceSyncConfig getSyncConfig();
-
-    /**
-     * @brief Set the device synchronization configuration
-     * @brief Used to configure the exposure synchronization function and multi-camera synchronization function of different sensors in a single machine
-     *
-     * @deprecated This interface is deprecated, please use @ref setMultiDeviceSyncConfig instead.
-     *
-     * @attention Calling this function will directly write the configuration to the device Flash, and it will still take effect after the device restarts. To
-     * avoid affecting the Flash lifespan, do not update the configuration frequently.
-     *
-     * @param deviceSyncConfig Device synchronization configuration
-     */
-    DEPRECATED void setSyncConfig(const OBDeviceSyncConfig &deviceSyncConfig);
 
     /**
      * @brief Get the supported multi device sync mode bitmap of the device.
@@ -621,71 +572,94 @@ public:
      * @param[out] dataSize return the size of the preset json data.
      */
     void exportSettingsAsPresetJsonData(const char *presetName, const uint8_t **data, uint32_t *dataSize);
-
-    friend class Pipeline;
-    friend class Recorder;
-    friend class CoordinateTransformHelper;
 };
 
 /**
  * @brief A class describing device information, representing the name, id, serial number and other basic information of an RGBD camera.
  */
-class  DeviceInfo {
+class DeviceInfo {
 private:
-    std::unique_ptr<DeviceInfoImpl> impl_;
+    ob_device_info_t *impl_ = nullptr;
 
 public:
-    DeviceInfo(std::unique_ptr<DeviceInfoImpl> impl);
-    virtual ~DeviceInfo() noexcept;
+    explicit DeviceInfo(ob_device_info_t *impl) : impl_(impl) {}
+    ~DeviceInfo() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_device_info(impl_, &error);
+        Error::handle(&error, false);
+    }
 
     /**
      * @brief Get device name
      *
      * @return const char * return the device name
      */
-    const char *name();
+    const char *name() const {
+        ob_error   *error = nullptr;
+        const char *name  = ob_device_info_get_name(impl_, &error);
+        Error::handle(&error);
+        return name;
+    }
 
     /**
      * @brief Get the pid of the device
      *
      * @return int return the pid of the device
      */
-    int pid();
+    int pid() {
+        ob_error *error = nullptr;
+        int       pid   = ob_device_info_get_pid(impl_, &error);
+        Error::handle(&error);
+        return pid;
+    }
 
     /**
      * @brief Get the vid of the device
      *
      * @return int return the vid of the device
      */
-    int vid();
+    int vid() {
+        ob_error *error = nullptr;
+        int       vid   = ob_device_info_get_vid(impl_, &error);
+        Error::handle(&error);
+        return vid;
+    }
 
     /**
      * @brief Get system assigned uid for distinguishing between different devices
      *
      * @return const char * return the uid of the device
      */
-    const char *uid();
+    const char *uid() const {
+        ob_error   *error = nullptr;
+        const char *uid   = ob_device_info_get_uid(impl_, &error);
+        Error::handle(&error);
+        return uid;
+    }
 
     /**
      * @brief Get the serial number of the device
      *
      * @return const char * return the serial number of the device
      */
-    const char *serialNumber();
+    const char *serialNumber() const {
+        ob_error   *error = nullptr;
+        const char *sn    = ob_device_info_get_serial_number(impl_, &error);
+        Error::handle(&error);
+        return sn;
+    }
 
     /**
      * @brief Get the version number of the firmware
      *
      * @return const char* return the version number of the firmware
      */
-    const char *firmwareVersion();
-
-    /**
-     * @brief Get the USB connection type of the device (DEPRECATED)
-     *
-     * @return const char* the USB connection type of the device
-     */
-    DEPRECATED const char *usbType();
+    const char *firmwareVersion() const {
+        ob_error   *error   = nullptr;
+        const char *version = ob_device_info_get_firmware_version(impl_, &error);
+        Error::handle(&error);
+        return version;
+    }
 
     /**
      * @brief Get the connection type of the device
@@ -693,7 +667,12 @@ public:
      * @return const char* the connection type of the device，currently supports："USB", "USB1.0", "USB1.1", "USB2.0", "USB2.1", "USB3.0", "USB3.1", "USB3.2",
      * "Ethernet"
      */
-    const char *connectionType();
+    const char *connectionType() const {
+        ob_error   *error = nullptr;
+        const char *type  = ob_device_info_get_connection_type(impl_, &error);
+        Error::handle(&error);
+        return type;
+    }
 
     /**
      * @brief Get the IP address of the device
@@ -702,58 +681,84 @@ public:
      *
      * @return const char* the IP address of the device, such as "192.168.1.10"
      */
-    const char *ipAddress();
+    const char *ipAddress() const {
+        ob_error   *error = nullptr;
+        const char *ip    = ob_device_info_get_ip_address(impl_, &error);
+        Error::handle(&error);
+        return ip;
+    }
 
     /**
      * @brief Get the version number of the hardware
      *
      * @return const char* the version number of the hardware
      */
-    const char *hardwareVersion();
+    const char *hardwareVersion() const {
+        ob_error   *error   = nullptr;
+        const char *version = ob_device_info_get_hardware_version(impl_, &error);
+        Error::handle(&error);
+        return version;
+    }
 
     /**
      * @brief Get the minimum version number of the SDK supported by the device
      *
      * @return const char* the minimum SDK version number supported by the device
      */
-    const char *supportedMinSdkVersion();
+    const char *supportedMinSdkVersion() const {
+        ob_error   *error   = nullptr;
+        const char *version = ob_device_info_get_supported_min_sdk_version(impl_, &error);
+        Error::handle(&error);
+        return version;
+    }
 
     /**
      * @brief Get information about extensions obtained from SDK supported by the device
      *
      * @return const char* Returns extended information about the device
      */
-    const char *extensionInfo();
+    const char *extensionInfo(const char *info_key) const {
+        ob_error   *error = nullptr;
+        const char *info  = ob_device_info_get_extension_info(impl_, info_key, &error);
+        Error::handle(&error);
+        return info;
+    }
 
     /**
      * @brief Get chip type name
      *
      * @return const char* the chip type name
      */
-    const char *asicName();
+    const char *asicName() const {
+        ob_error   *error = nullptr;
+        const char *name  = ob_device_info_get_asicName(impl_, &error);
+        Error::handle(&error);
+        return name;
+    }
 
     /**
      * @brief Get the device type
      *
      * @return OBDeviceType the device type
      */
-    OBDeviceType deviceType();
-
-    friend class Context;
-    friend class DeviceList;
-    friend class Pipeline;
+    OBDeviceType deviceType() {
+        ob_error    *error = nullptr;
+        OBDeviceType type  = ob_device_info_get_device_type(impl_, &error);
+        Error::handle(&error);
+        return type;
+    }
 };
 
 /**
  * @brief Class representing a list of devices
  */
-class  DeviceList {
+class DeviceList {
 private:
-    std::unique_ptr<DeviceListImpl> impl_;
+    ob_device_list_t *impl_ = nullptr;
 
 public:
-    DeviceList(std::unique_ptr<DeviceListImpl> impl);
-    ~DeviceList() noexcept;
+    explicit DeviceList(ob_device_list_t *impl) : impl_(impl) {}
+    ~DeviceList() noexcept {}
 
     /**
      * @brief Get the number of devices in the list
@@ -761,14 +766,6 @@ public:
      * @return uint32_t the number of devices in the list
      */
     uint32_t deviceCount();
-
-    /**
-     * @brief Get the name of the device at the specified index (DEPRECATED)
-     *
-     * @param index the index of the device
-     * @return int the name of the device
-     */
-    DEPRECATED const char *name(uint32_t index);
 
     /**
      * @brief Get the PID of the device at the specified index
@@ -857,9 +854,9 @@ public:
 /**
  * @brief Class representing a list of camera parameters
  */
-class  CameraParamList {
+class CameraParamList {
 private:
-    std::unique_ptr<CameraParamListImpl> impl_;
+    ob_camera_param_list_t *impl_ = nullptr;
 
 public:
     CameraParamList(std::unique_ptr<CameraParamListImpl> impl);
@@ -884,9 +881,9 @@ public:
 /**
  * @brief Class representing a list of OBDepthWorkMode
  */
-class  OBDepthWorkModeList {
+class OBDepthWorkModeList {
 private:
-    std::unique_ptr<OBDepthWorkModeListImpl> impl_;
+    ob_depth_work_mode_list_t *impl_ = nullptr;
 
 public:
     OBDepthWorkModeList(std::unique_ptr<OBDepthWorkModeListImpl> impl_);
@@ -928,9 +925,9 @@ public:
  * @brief Class representing a list of device presets
  * @breif A device preset is a set of parameters or configurations that can be applied to the device to achieve a specific effect or function.
  */
-class  DevicePresetList {
+class DevicePresetList {
 private:
-    std::unique_ptr<DevicePresetListImpl> impl_;
+    ob_device_preset_list_t *impl_ = nullptr;
 
 public:
     DevicePresetList(std::unique_ptr<DevicePresetListImpl> impl);

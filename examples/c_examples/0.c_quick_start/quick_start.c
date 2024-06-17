@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <openobsdk/h/Error.h>
@@ -32,7 +31,7 @@ void check_ob_error(ob_error **err) {
     *err = NULL;
 }
 
-int main(){
+int main(void){
 
     ob_error    *error    = NULL;
 

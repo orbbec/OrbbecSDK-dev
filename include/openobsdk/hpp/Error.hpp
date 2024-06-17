@@ -9,7 +9,6 @@
 #include "openobsdk/h/Error.h"
 #include <memory>
 
-struct ErrorImpl;
 
 namespace ob {
 class Error : public std::exception {
@@ -50,7 +49,7 @@ public:
     /**
      * @brief Destroy the Error object
      */
-    ~Error() {
+    ~Error() override {
         if(impl_) {
             ob_delete_error(impl_);
             impl_ = nullptr;
@@ -72,7 +71,7 @@ public:
      *
      * @return OBExceptionType The exception type.
      */
-    OBExceptionType Error::getExceptionType() const noexcept {
+    OBExceptionType getExceptionType() const noexcept {
         return impl_->exception_type;
     }
 
@@ -81,7 +80,7 @@ public:
      *
      * @return const char* The function name.
      */
-    const char *Error::getFunctionName() const noexcept {
+    const char *getFunctionName() const noexcept {
         return impl_->function;
     }
 
@@ -90,7 +89,7 @@ public:
      *
      * @return const char*  The arguments.
      */
-    const char *Error::getArgs() const noexcept {
+    const char *getArgs() const noexcept {
         return impl_->args;
     }
 
@@ -102,7 +101,7 @@ public:
      *
      * @return const char* The function name.
      */
-    OB_DEPRECATED const char *Error::getName() const noexcept {
+    OB_DEPRECATED const char *getName() const noexcept {
         return impl_->function;
     }
 
@@ -112,7 +111,7 @@ public:
      *
      * @return const char* The error message.
      */
-    OB_DEPRECATED const char *Error::getMessage() const noexcept {
+    OB_DEPRECATED const char *getMessage() const noexcept {
         return impl_->message;
     }
 };

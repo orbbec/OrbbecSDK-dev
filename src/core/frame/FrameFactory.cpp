@@ -153,13 +153,18 @@ std::shared_ptr<Frame> FrameFactory::createFrameFromStreamProfile(std::shared_pt
     return frame;
 }
 
-std::shared_ptr<Frame> FrameFactory::createFrameSet() {
+std::shared_ptr<FrameSet> FrameFactory::createFrameSet() {
     auto memoryPool            = libobsensor::FrameMemoryPool::getInstance();
     auto frameSetBufferManager = memoryPool->createFrameBufferManager(OB_FRAME_SET, OB_FRAME_COUNT * sizeof(std::shared_ptr<Frame>));
 
-    auto frameSet = frameSetBufferManager->acquireFrame();
-    if(frameSet == nullptr) {
+    auto frame = frameSetBufferManager->acquireFrame();
+    if(frame == nullptr) {
         throw libobsensor::memory_exception("Failed to create frame, out of memory or other memory allocation error.");
+    }
+
+    auto frameSet = std::dynamic_pointer_cast<FrameSet>(frame);
+    if(frameSet == nullptr) {
+        throw libobsensor::invalid_value_exception("Failed to create frame set.");
     }
 
     return frameSet;

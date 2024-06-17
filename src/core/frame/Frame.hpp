@@ -219,7 +219,7 @@ public:
 
     // It is recommended to use the rvalue reference interface. If you really need it, you can uncomment the following
     // void pushFrame(std::shared_ptr<Frame> frame);
-    void pushFrame(std::shared_ptr<Frame> &&frame);
+    void pushFrame(std::shared_ptr<const Frame> &&frame);
     void clearAllFrame();
 
 public:

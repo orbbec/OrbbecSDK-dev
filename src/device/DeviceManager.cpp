@@ -117,7 +117,7 @@ std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uin
 #endif
 }
 
-std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<DeviceEnumInfo> info) {
+std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<const DeviceEnumInfo> &info) {
     LOG_DEBUG("DeviceManager  createDevice...");
 
     // check if the device has been created

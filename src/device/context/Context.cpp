@@ -28,6 +28,10 @@ Context::Context(const std::string &configFilePath) {
     logger_          = Logger::getInstance();
     deviceManager_   = DeviceManager::getInstance();
     frameMemoryPool_ = FrameMemoryPool::getInstance();
+    streamIntrinsicsManager_     = StreamIntrinsicsManager::getInstance();
+    streamExtrinsicsManager_     = StreamExtrinsicsManager::getInstance();
+    streamDisparityParamManager_ = StreamDisparityParamManager::getInstance();
+
     utils::unusedVar(configFilePath);  // todo: use to load config file
 }
 

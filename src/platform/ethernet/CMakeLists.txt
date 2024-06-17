@@ -1,4 +1,4 @@
-# minimum required cmake version: 3.1.15 support vs2019
+
 cmake_minimum_required(VERSION 3.1.15)
 
 file(GLOB_RECURSE _cpp_files "${CMAKE_CURRENT_LIST_DIR}/*.cpp")

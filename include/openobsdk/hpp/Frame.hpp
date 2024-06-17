@@ -487,7 +487,7 @@ private:
 
 public:
     ~DisparityFrame() noexcept override = default;
-}
+};
 
 /**
  * @brief Define the IRFrame class, which inherits from the VideoFrame class
@@ -889,7 +889,7 @@ template <typename T> bool Frame::is() {
         return (typeid(T) == typeid(PointsFrame));
     case OB_FRAME_SET:
         return (typeid(T) == typeid(FrameSet));
-    default : std::cout << "ob::Frame::is() did not catch frame type: " << (int)this->type() << std::endl;
+    default : std::cout << "ob::Frame::is() did not catch frame type: " << (int)this->getType() << std::endl;
         break;
     }
     return false;

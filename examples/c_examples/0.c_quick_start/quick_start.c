@@ -19,8 +19,8 @@ void check_ob_error(ob_error **err) {
     if(*err) {
         const char *error_message = ob_error_get_message(*err);
         fprintf(stderr, "Error: %s\n", error_message);
-        ob_delete_error(*err);
         exit(-1);
+        ob_delete_error(*err);
     }
     *err = NULL;
 }
@@ -41,8 +41,11 @@ int main(void){
 
     // Main loop
     while(true) {  // Wait in a loop, and exit after the window receives the "ESC_KEY" key
-        // Wait for up to 1000ms for a frameset in blocking mode.
-        ob_frame *frameset = ob_pipeline_wait_for_frameset(pipe, 1000, &error);
+        if(kbhit() && getch() == ESC) {
+            break;
+        }
+        // Wait for up to 100ms for a frameset in blocking mode.
+        ob_frame *frameset = ob_pipeline_wait_for_frameset(pipe, 100, &error);
         check_ob_error(&error);
 
         if(frameset != NULL) {

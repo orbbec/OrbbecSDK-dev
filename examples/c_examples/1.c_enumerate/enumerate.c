@@ -1,14 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <openobsdk/h/Error.h>
-#include <openobsdk/h/Frame.h>
-#include <openobsdk/h/ObTypes.h>
-#include <openobsdk/h/Pipeline.h>
-#include <openobsdk/h/StreamProfile.h>
-#include <openobsdk/h/Device.h>
-#include <openobsdk/h/Sensor.h>
-#include <openobsdk/h/Context.h>
+#include <openobsdk/ObSensor.h>
 
 const char* sensor_types[] =  {
     "OB_SENSOR_UNKNOWN",
@@ -53,8 +46,8 @@ const char *rate_types[] = {
 void check_ob_error(ob_error **err) {
     if(*err) {
         const char* error_message = ob_error_get_message(*err);
-        ob_delete_error(*err);
         fprintf(stderr, "Error: %s\n", error_message);
+        ob_delete_error(*err);
         exit(-1);
     }
     *err = NULL;
@@ -74,20 +67,20 @@ void enumerate_stream_info(ob_sensor *sensor, ob_error **error){
         ob_stream_profile *stream_profile = ob_stream_profile_list_get_profile(stream_profile_list, index, error);
         // Print video stream profile information.
         if(sensor_type == OB_SENSOR_IR || sensor_type == OB_SENSOR_COLOR || sensor_type == OB_SENSOR_DEPTH || sensor_type == OB_SENSOR_IR_LEFT || sensor_type == OB_SENSOR_IR_RIGHT){
-            ob_format stream_format    = ob_stream_profile_format(stream_profile, error);
-            uint32_t stream_width = ob_video_stream_profile_width(stream_profile, error);
-            uint32_t stream_height = ob_video_stream_profile_height(stream_profile, error);
-            uint32_t stream_fps = ob_video_stream_profile_fps(stream_profile, error);
+            ob_format stream_format    = ob_stream_profile_get_format(stream_profile, error);
+            uint32_t stream_width = ob_video_stream_profile_get_width(stream_profile, error);
+            uint32_t stream_height = ob_video_stream_profile_get_height(stream_profile, error);
+            uint32_t stream_fps = ob_video_stream_profile_get_fps(stream_profile, error);
             printf(" - type:%s, width:%d, height:%d, fps:%d\n", stream_types[stream_format], stream_width, stream_height, stream_fps);
         }else if(sensor_type == OB_SENSOR_ACCEL){
             // Print acc stream profile information.
-            ob_format stream_format    = ob_stream_profile_format(stream_profile, error);
-            ob_accel_sample_rate acc_fps = ob_accel_stream_profile_sample_rate(stream_profile, error);
+            ob_format stream_format    = ob_stream_profile_get_format(stream_profile, error);
+            ob_accel_sample_rate acc_fps = ob_accel_stream_profile_get_sample_rate(stream_profile, error);
             printf(" - type:%s, fps:%s\n", stream_types[stream_format], rate_types[acc_fps]);
         }else if(sensor_type == OB_SENSOR_GYRO){
             // Print gyro stream profile information.
-            ob_format stream_format    = ob_stream_profile_format(stream_profile, error);
-            ob_gyro_sample_rate gyro_fps = ob_gyro_stream_profile_sample_rate(stream_profile, error);
+            ob_format stream_format    = ob_stream_profile_get_format(stream_profile, error);
+            ob_gyro_sample_rate gyro_fps = ob_gyro_stream_profile_get_sample_rate(stream_profile, error);
             printf(" - type:%s, fps:%s\n", stream_types[stream_format], rate_types[gyro_fps]);
         }
     }
@@ -99,11 +92,11 @@ void enumerate_device_info(ob_device *device,int index, ob_error **error){
     // Get device information.
     ob_device_info * dev_inf = ob_device_get_device_info(device, error);
     // Get device name.
-    const char * dev_name = ob_device_info_name(dev_inf, error);
+    const char *dev_name = ob_device_info_get_name(dev_inf, error);
     // Get device pid.
-    int dev_pid = ob_device_info_pid(dev_inf, error);
+    int dev_pid = ob_device_info_get_pid(dev_inf, error);
     // Get device serial number.
-    const char * dev_sn = ob_device_info_serial_number(dev_inf, error);
+    const char * dev_sn = ob_device_info_get_serial_number(dev_inf, error);
     printf("%d - device name : %s, device pid : %d, device sn : %s\n",index, dev_name, dev_pid, dev_sn);
 }
 
@@ -147,7 +140,7 @@ int main(){
         ob_device_list *dev_list = ob_query_device_list(ctx, &error);
         check_ob_error(&error);
         // Get device count from device list.
-        int dev_count = ob_device_list_device_count(dev_list, &error);
+        int dev_count = ob_device_list_get_device_count(dev_list, &error);
         check_ob_error(&error);
         if(dev_count == 0) {
             printf("Device not found!\n");
@@ -179,7 +172,7 @@ int main(){
 
     // destroy context
     ob_delete_context(ctx, &error);
-    check_error(&error);
+    check_ob_error(&error);
 
     return 0;
 }

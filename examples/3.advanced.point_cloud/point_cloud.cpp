@@ -1,5 +1,5 @@
-#include "openobsdk/ObSensor.hpp"
-// #include "opencv2/opencv.hpp"
+#include <openobsdk/ObSensor.h>
+
 #include <fstream>
 #include <iostream>
 #include "utils.hpp"

@@ -196,8 +196,6 @@ void Frame::copyInfo(const std::shared_ptr<const Frame> sourceFrame) {
     timeStampUsec_       = sourceFrame->timeStampUsec_;
     systemTimeStampUsec_ = sourceFrame->systemTimeStampUsec_;
     globalTimeStampUsec_ = sourceFrame->globalTimeStampUsec_;
-    dataSize_            = sourceFrame->dataSize_;
-    streamProfile_       = sourceFrame->streamProfile_;
 
     metadataSize_ = sourceFrame->metadataSize_;
     memcpy(metadata_, sourceFrame->metadata_, metadataSize_);

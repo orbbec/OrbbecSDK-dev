@@ -105,7 +105,6 @@ std::shared_ptr<StreamProfile> VideoStreamProfile::clone() const {
     return sp;
 }
 
-
 OBDisparityProcessParam DisparityStreamProfile::getDisparityProcessParam() const {
     return StreamDisparityParamManager::getInstance()->getVideoStreamDisparityParam(shared_from_this());
 }

@@ -14,6 +14,7 @@
 
 namespace libobsensor {
 Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), streamState_(STREAM_STATE_STOPED) {
+    context_ = Context::getInstance();  // todo: 需要将context_传入device
     LOG_DEBUG("Pipeline init ...");
     auto sensorTypeList = device_->getSensorTypeList();
     if(sensorTypeList.empty()) {
@@ -191,7 +192,11 @@ void Pipeline::start(std::shared_ptr<const Config> cfg) {
     }
     else {
         LOG_DEBUG("start pipeline with default config");
-        loadDefaultConfig();
+        // loadDefaultConfig();  // todo: implement this function
+        auto defConfig = std::make_shared<Config>();
+        defConfig->enableVideoStream(OB_STREAM_COLOR, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_ANY);
+        defConfig->enableVideoStream(OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_ANY);
+        config_ = checkAndSetConfig(defConfig);
     }
 
     if(config_->isStreamEnabled(OB_STREAM_DEPTH) || config_->isStreamEnabled(OB_STREAM_COLOR)) {

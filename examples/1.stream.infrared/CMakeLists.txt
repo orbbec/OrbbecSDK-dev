@@ -7,9 +7,7 @@ add_executable(ob_infrared infrared.cpp)
 
 set_property(TARGET ob_infrared PROPERTY CXX_STANDARD 11)
 target_link_libraries(ob_infrared OrbbecSDK ${OpenCV_LIBS})
-IF(USE_PROJECT_FOLDERS)
 set_target_properties (ob_infrared PROPERTIES FOLDER "Examples")
-ENDIF()
 
 
 # ob_install_example_target(ob_infrared)

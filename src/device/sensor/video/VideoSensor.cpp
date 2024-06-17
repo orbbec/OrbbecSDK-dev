@@ -18,7 +18,6 @@ VideoSensor::VideoSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sen
     for(auto &sp: streamProfileList_) {
         filteredStreamProfileList_.push_back(sp);
     }
-
 }
 
 #define MIN_VIDEO_FRAME_DATA_SIZE 1024
@@ -105,12 +104,14 @@ StreamProfileList VideoSensor::getStreamProfileList() const {
 };
 
 void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) {
-    auto backendSpList = SensorBase::getStreamProfileList();
+    formatFilterConfigs_ = configs;
+    auto backendSpList   = SensorBase::getStreamProfileList();
     filteredStreamProfileList_.clear();
     for(const auto &backendSp: backendSpList) {
         auto format = backendSp->getFormat();
-        auto iter   = std::find_if(configs.begin(), configs.end(), [format](const FormatFilterConfig &config) { return config.srcFormat == format; });
-        if(iter == configs.end()) {
+        auto iter   = std::find_if(formatFilterConfigs_.begin(), formatFilterConfigs_.end(),
+                                   [format](const FormatFilterConfig &config) { return config.srcFormat == format; });
+        if(iter == formatFilterConfigs_.end()) {
             filteredStreamProfileList_.push_back(backendSp);
             continue;
         }

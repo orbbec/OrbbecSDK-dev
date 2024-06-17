@@ -24,15 +24,16 @@ static uint64_t depth_timestamp_current = 0;
 // helper function to check for errors and exit if there is one.
 void check_ob_error(ob_error **err) {
     if(*err) {
-        const char* error_message = ob_error_get_message(*err);
-        ob_delete_error(*err);
+        const char *error_message = ob_error_get_message(*err);
         fprintf(stderr, "Error: %s\n", error_message);
+        ob_delete_error(*err);
         exit(-1);
     }
     *err = NULL;
 }
 
 int main(){
+
     ob_error    *error    = NULL;
 
     // Create a pipeline to open the Color and Depth streams after connecting the device.
@@ -54,10 +55,10 @@ int main(){
 
         if(frameset != NULL) {
             // Get color frame from frameset.
-            ob_frame *color_frame = ob_frameset_get_frame(frameset, OB_FRAME_COLOR, & error);
+            const ob_frame *color_frame = ob_frameset_get_frame(frameset, OB_FRAME_COLOR, &error);
             check_ob_error(&error);
-            // Get deoth frame from frameset.
-            ob_frame *depth_frame = ob_frameset_get_frame(frameset, OB_FRAME_DEPTH, &error);
+            // Get depth frame from frameset.
+            const ob_frame *depth_frame = ob_frameset_get_frame(frameset, OB_FRAME_DEPTH, &error);
             check_ob_error(&error);
 
             if(color_frame != NULL) {

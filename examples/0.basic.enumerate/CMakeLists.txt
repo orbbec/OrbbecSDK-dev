@@ -7,9 +7,7 @@ add_executable(ob_enumerate enumerate.cpp)
 
 set_property(TARGET ob_enumerate PROPERTY CXX_STANDARD 11)
 target_link_libraries(ob_enumerate OrbbecSDK ${OpenCV_LIBS})
-IF(USE_PROJECT_FOLDERS)
-    set_target_properties (ob_enumerate PROPERTIES FOLDER "Examples")
-ENDIF()
+set_target_properties (ob_enumerate PROPERTIES FOLDER "Examples")
 
 # ob_install_example_target(ob_enumerate)
 # ob_install_example_current_source("/cpp/0.basic.enumerate")

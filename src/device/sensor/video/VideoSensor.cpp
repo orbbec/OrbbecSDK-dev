@@ -1,7 +1,7 @@
 #include "VideoSensor.hpp"
-#include "exception/OBException.hpp"
+#include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
-#include "utils/utils.hpp"
+#include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
 #include "frame/Frame.hpp"
 
@@ -51,7 +51,7 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
         if(fsp.get() != currentBackendStreamProfile_.get()) {
             throw invalid_value_exception("Frame's stream profile is not the same as activated stream profile");
         }
-        if(owner.get() != this) {
+        if(owner.get() != static_cast<void *>(this)) {
             throw invalid_value_exception("Frame's owner is not this VideoSensor");
         }
 #endif
@@ -101,7 +101,7 @@ void VideoSensor::stop() {
 
 StreamProfileList VideoSensor::getStreamProfileList() const {
     return filteredStreamProfileList_;
-};
+}
 
 void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) {
     formatFilterConfigs_ = configs;

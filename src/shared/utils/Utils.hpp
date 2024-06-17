@@ -8,7 +8,7 @@
 // Include all the headers in the utils directory for convenience
 #include "StringUtils.hpp"
 #include "FileUtils.hpp"
-#include "publicTypeHelper.hpp"
+#include "PublicTypeHelper.hpp"
 
 namespace libobsensor {
 namespace utils {

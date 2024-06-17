@@ -162,7 +162,7 @@ IDevice::ResourceLock G330Device::tryLockResource() {
     if(!resLock.try_lock_for(std::chrono::milliseconds(10000))) {
         throw libobsensor::wrong_api_call_sequence_exception("Resource busy! You can try again later!");
     }
-    return std::move(resLock);
+    return resLock;
 }
 
 std::shared_ptr<const DeviceInfo> G330Device::getInfo() const {

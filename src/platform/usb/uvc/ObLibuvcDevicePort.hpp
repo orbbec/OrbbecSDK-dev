@@ -18,6 +18,7 @@
 #include <string>
 #include <thread>
 #include <libuvc/libuvc.h>
+#include "stream/StreamProfile.hpp"
 
 namespace libobsensor {
 
@@ -43,17 +44,17 @@ private:
 
 public:
     ObLibuvcDevicePort(std::shared_ptr<UsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo);
-    virtual ~ObLibuvcDevicePort() noexcept;
+    ~ObLibuvcDevicePort() noexcept override;
 
-    std::vector<std::shared_ptr<const VideoStreamProfile>> getStreamProfileList() override;
-    void startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) override;
-    void stopStream(std::shared_ptr<const VideoStreamProfile> profile) override;
-    void stopAllStream() override;
+    StreamProfileListUnsafe getStreamProfileList() override;
+    void                    startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
+    void                    stopStream(std::shared_ptr<const StreamProfile> profile) override;
+    void                    stopAllStream() override;
 
     virtual bool sendData(const uint8_t *data, uint32_t dataLen);
     virtual bool recvData(uint8_t *data, uint32_t *dataLen);
 
-    std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) override;
+     uint32_t sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) override;
 
     bool            getPu(uint32_t propertyId, int32_t &value) override;
     bool            setPu(uint32_t propertyId, int32_t value) override;

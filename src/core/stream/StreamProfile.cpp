@@ -8,7 +8,7 @@
 
 namespace libobsensor {
 
-StreamProfile::StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format) : owner_(owner), type_(type), format_(format), index_(0){};
+StreamProfile::StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format) : owner_(owner), type_(type), format_(format), index_(0){}
 
 std::shared_ptr<LazySensor> StreamProfile::getOwner() const {
     return owner_.lock();
@@ -61,7 +61,7 @@ OBExtrinsic StreamProfile::getExtrinsicTo(std::shared_ptr<const StreamProfile> t
 }
 
 VideoStreamProfile::VideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps)
-    : StreamProfile(owner, type, format), width_(width), height_(height), fps_(fps){};
+    : StreamProfile(owner, type, format), width_(width), height_(height), fps_(fps){}
 
 void VideoStreamProfile::setWidth(uint32_t width) {
     width_ = width;
@@ -159,7 +159,7 @@ std::ostream &AccelStreamProfile::operator<<(std::ostream &os) const {
 }
 
 GyroStreamProfile::GyroStreamProfile(std::shared_ptr<LazySensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate)
-    : StreamProfile{ owner, OB_STREAM_GYRO, OB_FORMAT_GYRO }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate){};
+    : StreamProfile{ owner, OB_STREAM_GYRO, OB_FORMAT_GYRO }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate){}
 
 OBGyroFullScaleRange GyroStreamProfile::getFullScaleRange() const {
     return fullScaleRange_;

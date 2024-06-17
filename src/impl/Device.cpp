@@ -24,7 +24,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, list)
 
 const char *ob_device_list_get_device_name(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_INDEX(index, list->list.size());
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
     return info->getName().c_str();
 }
@@ -32,7 +32,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
 int ob_device_list_get_device_pid(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_INDEX(index, list->list.size());
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
     return info->getPid();
 }
@@ -40,7 +40,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, list, index)
 
 int ob_device_list_get_device_vid(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_INDEX(index, list->list.size());
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
     return info->getVid();
 }
@@ -48,7 +48,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, list, index)
 
 const char *ob_device_list_get_device_uid(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_INDEX(index, list->list.size());
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size() -1);
     auto &info = list->list[index];
     return info->getUid().c_str();
 }
@@ -56,7 +56,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
 const char *ob_device_list_get_device_serial_number(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_INDEX(index, list->list.size());
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
     return info->getDeviceSn().c_str();
 }
@@ -64,7 +64,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
 const char *ob_device_list_get_device_connection_type(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_INDEX(index, list->list.size());
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
     return info->getConnectionType().c_str();
 }
@@ -72,7 +72,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
 const char *ob_device_list_get_device_ip_address(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_INDEX(index, list->list.size());
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     // auto &info = list->list[index];
     throw libobsensor::not_implemented_exception("ob_device_list_get_device_ip_address not implemented yet!");
 }
@@ -80,7 +80,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
 ob_device *ob_device_list_get_device(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_INDEX(index, list->list.size());
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info   = list->list[index];
     auto  device = info->createDevice();
 

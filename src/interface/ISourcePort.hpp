@@ -59,7 +59,7 @@ struct ShmStreamPortInfo : public SourcePortInfo {  // shared memory stream port
 
 struct USBSourcePortInfo : public SourcePortInfo {
     ~USBSourcePortInfo() noexcept override = default;
-    USBSourcePortInfo(){}
+    USBSourcePortInfo() {}
     USBSourcePortInfo(SourcePortType type) {
         portType = type;
     }
@@ -98,7 +98,7 @@ class IVendorDataPort : virtual public ISourcePort {  // Virtual inheritance sol
 public:
     ~IVendorDataPort() noexcept override = default;
 
-    virtual uint32_t sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) = 0;
+    virtual uint32_t sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) = 0;
 };
 
 // for imu data stream
@@ -110,15 +110,14 @@ public:
     virtual void stopStream()                              = 0;
 };
 
-
 // for video data stream: depth, color, ir, etc.
 class IVideoStreamPort : virtual public ISourcePort {  // Virtual inheritance solves diamond inheritance problem
 public:
     ~IVideoStreamPort() noexcept override = default;
 
-    virtual StreamProfileListUnsafe getStreamProfileList()                     = 0;
-    virtual void startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) = 0;
-    virtual void stopStream(std::shared_ptr<const StreamProfile> profile)                               = 0;
-    virtual void stopAllStream()                                                                             = 0;
+    virtual StreamProfileListUnsafe getStreamProfileList()                                                                  = 0;
+    virtual void                    startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) = 0;
+    virtual void                    stopStream(std::shared_ptr<const StreamProfile> profile)                                = 0;
+    virtual void                    stopAllStream()                                                                         = 0;
 };
 }  // namespace libobsensor

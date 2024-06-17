@@ -26,9 +26,9 @@ enum HpOpCodes {
     OPCODE_HEARTBEAT_AND_STATE = 5,
 
     // v1.1 protocol introduction
-    OPCODE_GET_COMMAND_VERSION           = 26,    // v1.1 control command version number, determines how the control command parses data content
-    OPCODE_GET_STRUCTURE_DATA_V1_1       = 27,    // v1.1 structure type data reading
-    OPCODE_SET_STRUCTURE_DATA_V1_1       = 28,    // v.1.1 Structure type data setting
+    OPCODE_GET_COMMAND_VERSION     = 26,  // v1.1 control command version number, determines how the control command parses data content
+    OPCODE_GET_STRUCTURE_DATA_V1_1 = 27,  // v1.1 structure type data reading
+    OPCODE_SET_STRUCTURE_DATA_V1_1 = 28,  // v.1.1 Structure type data setting
 
     OPCODE_INIT_READ_STRUCT_DATA_LIST    = 29,    // v1.1 Initialize structure type list data reading
     OPCODE_READ_STRUCT_DATA_LIST         = 30,    // v1.1 Structure type list data reading
@@ -141,13 +141,30 @@ typedef struct {
 
 typedef struct {
     RespHeader header;
-    uint8_t    data[0];
+// if gnu compiler is used, ignore the zero-length array warning
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 } GetStructureDataResp;
 
 typedef struct {
     ReqHeader header;
     uint32_t  propertyId;
-    uint8_t   data[0];
+// if gnu compiler is used, ignore the zero-length array warning
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 } SetStructureDataReq;
 
 typedef struct {
@@ -156,13 +173,13 @@ typedef struct {
 
 #pragma pack(pop)
 
-GetPropertyReq     *initGetPropertyReq(uint8_t *dataBuf, uint32_t propertyId);
-SetPropertyReq     *initSetPropertyReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t value);
+GetPropertyReq      *initGetPropertyReq(uint8_t *dataBuf, uint32_t propertyId);
+SetPropertyReq      *initSetPropertyReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t value);
 GetStructureDataReq *initGetStructureDataReq(uint8_t *dataBuf, uint32_t propertyId);
 SetStructureDataReq *initSetStructureDataReq(uint8_t *dataBuf, uint32_t propertyId, const uint8_t *data, uint16_t dataSize);
 
-GetPropertyResp     *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
-SetPropertyResp     *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
+GetPropertyResp      *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
+SetPropertyResp      *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
 GetStructureDataResp *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
 uint16_t              getStructureDataSize(const GetStructureDataResp *resp);
 SetStructureDataResp *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);

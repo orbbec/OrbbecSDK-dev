@@ -8,6 +8,7 @@
 #include "usb/backend/Enumerator.hpp"
 #include "usb/backend/Messenger.hpp"
 #include "usb/backend/Device.hpp"
+#include "stream/StreamProfile.hpp"
 
 #include <linux/uvcvideo.h>
 #include <linux/videodev2.h>
@@ -84,36 +85,37 @@ public:
     explicit ObV4lUvcDevicePort(std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~ObV4lUvcDevicePort() noexcept override;
 
-    std::vector<std::shared_ptr<const VideoStreamProfile>> getStreamProfileList() override;
+    StreamProfileListUnsafe getStreamProfileList() override;
 
-    void startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) override;
-    void stopStream(std::shared_ptr<const VideoStreamProfile> profile) override;
+    void startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
+    void stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void stopAllStream() override;
 
     bool sendData(const uint8_t *data, uint32_t dataLen);
     bool recvData(uint8_t *data, uint32_t *dataLen);
 
-    bool         getPu(uint32_t propertyId, int32_t &value) override;
-    bool         setPu(uint32_t propertyId, int32_t value) override;
+    bool            getPu(uint32_t propertyId, int32_t &value) override;
+    bool            setPu(uint32_t propertyId, int32_t value) override;
     UvcControlRange getPuRange(uint32_t propertyId) override;
 
-    virtual std::shared_ptr<const SourcePortInfo>      getSourcePortInfo() const override;
+    virtual std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override;
 
-    std::vector<uint8_t> sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) override;
+    uint32_t sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) override;
+
     static std::vector<std::shared_ptr<V4lDeviceInfo>> queryRelatedDevices(std::shared_ptr<const USBSourcePortInfo> portInfo);
     static bool                                        isContainedMetadataDevice(std::shared_ptr<const USBSourcePortInfo> portInfo);
 
 private:
-    static void  captureLoop(std::shared_ptr<V4lDeviceHandle> deviceHandle);
-    bool         getXu(uint8_t ctrl, uint8_t *data, uint32_t *len);
-    bool         setXu(uint8_t ctrl, const uint8_t *data, uint32_t len);
+    static void     captureLoop(std::shared_ptr<V4lDeviceHandle> deviceHandle);
+    bool            getXu(uint8_t ctrl, uint8_t *data, uint32_t *len);
+    bool            setXu(uint8_t ctrl, const uint8_t *data, uint32_t len);
     UvcControlRange getXuRange(uint8_t control, int len) const;
-    bool         pendForCtrlStatusEvent() const;
-    void         subscribeToCtrlEvent(uint32_t ctrl_id) const;
-    void         unsubscribeFromCtrlEvent(uint32_t ctrl_id) const;
+    bool            pendForCtrlStatusEvent() const;
+    void            subscribeToCtrlEvent(uint32_t ctrl_id) const;
+    void            unsubscribeFromCtrlEvent(uint32_t ctrl_id) const;
 
 private:
-    std::shared_ptr<const USBSourcePortInfo>      portInfo_     = nullptr;
+    std::shared_ptr<const USBSourcePortInfo>      portInfo_ = nullptr;
     std::vector<std::shared_ptr<V4lDeviceHandle>> deviceHandles_;
 };
 

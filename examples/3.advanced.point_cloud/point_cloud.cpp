@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <iostream>
+
 #include "utils.hpp"
 
 #define KEY_ESC 27

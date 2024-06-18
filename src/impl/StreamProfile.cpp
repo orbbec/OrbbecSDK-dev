@@ -44,6 +44,17 @@ ob_stream_profile *ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_s
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, full_scale_range, sample_rate)
 
+ob_stream_profile* ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error)BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(profile);
+    auto sp = profile->profile->clone(new_format);
+    auto profileImpl     = new ob_stream_profile();
+    profileImpl->profile = sp;
+    return profileImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, profile, new_format)
+
+
+
 ob_format ob_stream_profile_get_format(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
     return profile->profile->getFormat();

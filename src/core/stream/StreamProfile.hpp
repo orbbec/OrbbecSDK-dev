@@ -29,6 +29,7 @@ public:
     void        bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile);
 
     virtual std::shared_ptr<StreamProfile> clone() const = 0;
+    virtual std::shared_ptr<StreamProfile> clone(OBFormat newFromat) const;
 
     template <typename T> bool               is() const;
     template <typename T> std::shared_ptr<T> as() {

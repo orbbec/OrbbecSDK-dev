@@ -50,6 +50,12 @@ void StreamProfile::bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> tar
     StreamExtrinsicsManager::getInstance()->registerSameExtrinsics(shared_from_this(), targetStreamProfile);
 }
 
+std::shared_ptr<StreamProfile> StreamProfile::clone(OBFormat newFromat) const {
+    auto newSp = clone();
+    newSp->setFormat(newFromat);
+    return newSp;
+}
+
 OBExtrinsic StreamProfile::getExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile) const {
     return StreamExtrinsicsManager::getInstance()->getExtrinsics(shared_from_this(), targetStreamProfile);
 }

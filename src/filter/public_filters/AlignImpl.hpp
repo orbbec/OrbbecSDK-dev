@@ -86,24 +86,15 @@ public:
 
 
     /**
-     *@brief         Initialize LUTs for color image undistortion
-     *@return        
+     * @brief Same as D2C only with SSE
      */
-    bool initRGBUndistortion();
+    int D2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
 
-    /**
-     * @brief        Undistort a RGB image 
-     * @param[in]    src     original rgb image in row-major order, like (r00,g00,b00,r01,g01,b01,...,r10,g10,b10,...)
-     * @param[in]    width   columns of the input image
-     * @param[in]    height  rows of the input image
-     * @param[out]   dst     undistorted output
-     * @return     result of operation 
-     */
-    bool undistortRGB(const uint8_t *src, int width, int height, uint8_t *dst);
+
+    int C2D(const uint16_t *depth_buffer, int depth_width, int depth_height, const void *rgb_buffer, void *out_rgb, int color_width, int color_height,
+            OBFormat format);
 
 private:
-    bool prepareRGBDistort();
-
     void clearMatrixCache();
 
     virtual int distortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height);
@@ -138,12 +129,6 @@ private:
 
     // possible inflection point of the calibrated K6 distortion curve
     float r2_max_loc_;
-
-    // LUT for RGB distortion
-    int    rgb_lut_width_  = 0;
-    int    rgb_lut_height_ = 0;
-    float *rgb_dx_lut_     = nullptr;
-    float *rgb_dy_lut_     = nullptr;
 };
 
 #endif  // D2C_DEPTH_TO_COLOR_IMPL_H

@@ -15,30 +15,6 @@
 
 namespace libobsensor {
 
-// channel: 0-r, 1-g, 2-b
-uint8_t BilinearInterpolationRGB(const uint8_t *img, int W, int H, float x, float y, uint8_t def_val, int channel) {
-    uint8_t ret = def_val;
-
-    if(x < 0 || y < 0 || x >= W || y >= H) {
-        return ret;
-    }
-
-    int ix = (int)x;
-    int iy = (int)y;
-
-    float dx = x - ix;
-    float dy = y - iy;
-
-    int a0 = img[3 * ix + channel + iy * 3 * W];
-    int a1 = img[3 * ix + channel + 1 * 3 + iy * 3 * W] - a0;
-    int a2 = img[3 * ix + channel + (iy + 1) * 3 * W] - a0;
-    int a3 = img[3 * ix + channel + 1 * 3 + (iy + 1) * 3 * W] - a0 - a1 - a2;
-
-    ret = (uint8_t)(a0 + a1 * dx + a2 * dy + a3 * dx * dy);
-
-    return ret;
-}
-
 static inline void addDistortion(const OBCameraDistortion &distort_param, const OBCameraDistortionModel model, const float pt_ud[2], float pt_d[2]) {
     float k1 = distort_param.k1, k2 = distort_param.k2, k3 = distort_param.k3;
     float k4 = distort_param.k4, k5 = distort_param.k5, k6 = distort_param.k5;
@@ -284,15 +260,6 @@ void AlignImpl::clearMatrixCache() {
     rot_coeff_ht_x.clear();
     rot_coeff_ht_y.clear();
     rot_coeff_ht_z.clear();
-
-    if(rgb_dx_lut_) {
-        free(rgb_dx_lut_);
-        rgb_dx_lut_ = nullptr;
-    }
-    if(rgb_dy_lut_) {
-        free(rgb_dy_lut_);
-        rgb_dy_lut_ = nullptr;
-    }
 }
 
 int AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height) {
@@ -1233,29 +1200,6 @@ int AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, int depth_width, i
     return 0;
 }
 
-bool AlignImpl::undistortRGB(const uint8_t *src, int width, int height, uint8_t *dst) {
-    if((!src) || (width < 0) || (height < 0) || (!dst) || (nullptr == rgb_dx_lut_) || (nullptr == rgb_dy_lut_) || (width != rgb_lut_width_)
-       || (height != rgb_lut_height_))
-        return false;
-    else {
-        float du = 0, dv = 0;
-        for(int v = 0; v < height; v++) {
-            uint8_t *tgt = dst + v * 3 * width;
-            for(int u = 0; u < width; u++) {
-                int lut_idx = v * width + u;
-                du          = rgb_dx_lut_[lut_idx];
-                dv          = rgb_dy_lut_[lut_idx];
-                if((du > -1) && (dv > -1)) {
-                    tgt[u * 3]     = BilinearInterpolationRGB(src, width, height, du, dv, 0, 0);
-                    tgt[u * 3 + 1] = BilinearInterpolationRGB(src, width, height, du, dv, 0, 1);
-                    tgt[u * 3 + 2] = BilinearInterpolationRGB(src, width, height, du, dv, 0, 2);
-                }
-            }
-        }
-        return true;
-    }
-}
-
 /// TODO(timon): error handling
 int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height, int *depth_xy) {
     if(!initialized_ || depth_width != depth_intric_.width || depth_height != depth_intric_.height || color_width != rgb_intric_.width
@@ -1411,63 +1355,6 @@ int AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, int depth_width, int dep
     }
 
     return ret;
-}
-
-bool AlignImpl::initRGBUndistortion() {
-    if(!initialized_) {
-        ("Make sure LoadParameters() success before InitRGBUndistortion!");
-        return false;
-    }
-
-    return prepareRGBDistort();
-}
-
-bool AlignImpl::prepareRGBDistort() {
-    unsigned int width = rgb_intric_.width, height = rgb_intric_.height;
-    rgb_lut_width_  = width;
-    rgb_lut_height_ = height;
-    size_t num = width * height, size = num * sizeof(double);
-    rgb_dx_lut_ = (float *)malloc(size);
-    rgb_dy_lut_ = (float *)malloc(size);
-    if(rgb_dx_lut_)
-        memset(rgb_dx_lut_, 0, size);
-    if(rgb_dy_lut_)
-        memset(rgb_dy_lut_, 0, size);
-
-    float  fx = rgb_intric_.fx, fy = rgb_intric_.fy, cx = rgb_intric_.cx, cy = rgb_intric_.cy;
-    float  x, y, dx, dy;
-    size_t idx = 0;
-    for(size_t v = 0; v < height; v++) {
-        y = (v - cy) / fy;
-        for(size_t u = 0; u < width; u++) {
-            x        = (u - cx) / fx;
-            float r2 = x * x + y * y;
-            if((r2_max_loc_ != 0) && (r2 > r2_max_loc_)) {
-                dx = -1;
-                dy = -1;
-            }
-            else {
-                float pt_ud[2] = { x, y };
-                float pt_d[2];
-                addDistortion(rgb_disto_, rgb_intric_.model, pt_ud, pt_d);
-
-                // if (true) // UNIT_IN_PIXEL
-                {
-                    dx = pt_d[0] * fx + cx;
-                    dy = pt_d[1] * fy + cy;
-                    if((dx < 0) || (dx > width - 1) || (dy < 0) || (dy > height - 1)) {
-                        dx = -1;
-                        dy = -1;
-                    }
-                }
-            }
-            idx              = v * width + u;
-            rgb_dx_lut_[idx] = dx;
-            rgb_dy_lut_[idx] = dy;
-        }
-    }
-
-    return true;
 }
 
 typedef struct {

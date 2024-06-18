@@ -13,7 +13,7 @@
 #include <algorithm>
 
 namespace libobsensor {
-Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), streamState_(STREAM_STATE_STOPED) {
+Pipeline::Pipeline(std::shared_ptr<IDevice> dev) :  streamState_(STREAM_STATE_STOPED),device_(dev) {
     context_ = Context::getInstance();  // todo: 需要将context_传入device
     LOG_DEBUG("Pipeline init ...");
     auto sensorTypeList = device_->getSensorTypeList();

@@ -60,7 +60,6 @@ private:
 
     std::shared_ptr<FrameAggregator> frameAggregator_;
 
-    bool hasDepthSensor_;
 
     int MAX_FRAME_QUEUE_SIZE = 10;
 

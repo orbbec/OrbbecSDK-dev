@@ -96,8 +96,8 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", uvcPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyPort);
-
-            auto vendorPropertyPort = std::make_shared<VendorPropertyPort>(sourcePort);
+            // FIXME
+            auto vendorPropertyPort = std::make_shared<VendorPropertyPort<0>>(sourcePort);
             propertyAccessor_->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_LASER_CONTROL_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_LASER_ALWAYS_ON_BOOL, "rw", "rw", vendorPropertyPort);

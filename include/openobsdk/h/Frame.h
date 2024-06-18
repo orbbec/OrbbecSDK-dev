@@ -111,6 +111,15 @@ OB_EXPORT ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, 
                                                       void *buffer_destroy_context, ob_error **error);
 
 /**
+ * @brief Copy the information of one frame from another frame.
+ *
+ * @param[in] srcframe Original frame object to increase the reference count.
+ * @param[in] dstframe Destination frame object to increase the reference count.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_frame_copy_info(const ob_frame *srcframe, ob_frame *dstframe, ob_error **error);
+
+/**
  * @brief Create an empty frameset object.
  * @brief A frameset object is a special type of frame object that can be used to store multiple frames.
  *

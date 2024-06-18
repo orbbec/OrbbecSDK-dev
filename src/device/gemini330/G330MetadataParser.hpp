@@ -26,7 +26,7 @@ public:
     }
 
     bool isSupported(const uint8_t *metadata, size_t dataSize) override {
-        (void *)metadata;
+        (void )metadata;
         return dataSize >= sizeof(T);
     }
 
@@ -55,7 +55,7 @@ public:
     }
 
     bool isSupported(const uint8_t *metadata, size_t dataSize) override {
-        (void *)metadata;
+        (void )metadata;
         return dataSize >= sizeof(T);
     }
 };
@@ -78,7 +78,7 @@ public:
     }
 
     bool isSupported(const uint8_t *metadata, size_t dataSize) override {
-        (void *)metadata;
+        (void )metadata;
         return dataSize >= sizeof(G330CommonUvcMetadata);
     }
 

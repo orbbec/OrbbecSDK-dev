@@ -1,16 +1,30 @@
 #pragma once
-#include "parameter/IMUParam.hpp"
+#include "FilterBase.hpp"
+#include "openobsdk/h/ObTypes.h"
+#include "imu_calibration_params.h"
+#include "imu_calibration_params_parser.h"
+#include <Eigen/Core>
+#include <Eigen/LU>
 
 namespace libobsensor {
 
 class IMUCorrecter : public FilterBase {
 public:
-    IMUCorrecter();
-    ~IMUCorrecter() noexcept {
-        reset();
-    };
+    static IMUCalibrateParams parserIMUCalibrationParamsRaw(uint8_t* filedata, uint32_t size);
 
-    virtual void reset() override;
+    static float calculateAccelGravity(int16_t accelValue, uint8_t accelFSR);
+
+    static float calculateGyroDPS(int16_t gyroValue, uint8_t gyroFSR);
+
+    static float calculateRegisterTemperature(int16_t tempValue);
+    
+public:
+    IMUCorrecter(const std::string &name);
+
+    // Config
+    virtual void               updateConfig(std::vector<std::string> &params) override;
+    
+    virtual const std::string &getConfigSchema() const override;
 
     void setAccelScaleRange(int scaleRange) {
         accelScaleRange_ = scaleRange;
@@ -24,21 +38,12 @@ public:
         param_ = param;
     }
 
-    void setProcessFuncEnable(bool enable) {
-        processFuncEnable_ = enable;
-    }
-
-    bool getProcessFuncEnable() {
-        return processFuncEnable_;
-    }
-
-    void setIMUDataUnitTransformOnly(bool transform) {
-        uintTransformOnly_ = transform;
-    }
-
-
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
+
+    Eigen::Vector3d correctAccel(const Eigen::Vector3d& accelVec, IMUCalibrateParams *params);
+    
+    Eigen::Vector3d correctGyro(const Eigen::Vector3d& gyroVec, IMUCalibrateParams *params);
 
 protected:
     IMUCalibrateParams param_;
@@ -47,9 +52,9 @@ protected:
 
     int gyroScaleRange_;
 
-    bool processFuncEnable_;
+    static constexpr float GYRO_MAX =  32800 / 0.017453293f;
 
-    bool uintTransformOnly_;
+    static constexpr float ACCEL_MAX = 32768 / 9.80f;
 };
 
 }  // namespace libobsensor

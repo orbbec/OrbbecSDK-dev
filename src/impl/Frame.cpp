@@ -383,7 +383,7 @@ const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_err
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
     }
-    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getDisparityFrame();
+    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getFrame(OB_FRAME_DISPARITY);
     if(innerFrame == nullptr) {
         return nullptr;
     }
@@ -398,7 +398,7 @@ const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error *
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
     }
-    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getDepthFrame();
+    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getFrame(OB_FRAME_DEPTH);
     if(innerFrame == nullptr) {
         return nullptr;
     }
@@ -413,7 +413,7 @@ const ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error *
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
     }
-    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getColorFrame();
+    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getFrame(OB_FRAME_COLOR);
     if(innerFrame == nullptr) {
         return nullptr;
     }
@@ -428,7 +428,7 @@ const ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **er
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
     }
-    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getIRFrame();
+    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getFrame(OB_FRAME_IR);
     if(innerFrame == nullptr) {
         return nullptr;
     }
@@ -443,7 +443,7 @@ const ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error 
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
     }
-    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getPointsFrame();
+    auto innerFrame = frameset->frame->as<libobsensor::FrameSet>()->getFrame(OB_FRAME_POINTS);
     if(innerFrame == nullptr) {
         return nullptr;
     }

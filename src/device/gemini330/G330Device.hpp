@@ -39,6 +39,8 @@ private:
 
     ResourceLock tryLockResource();
 
+    std::shared_ptr<IFilter> getSpecifyFilter(const std::string &name,bool createIfNotExist = true);
+
 private:
     const std::shared_ptr<const DeviceEnumInfo> enumInfo_;
     std::shared_ptr<DeviceInfo>                 deviceInfo_;
@@ -47,6 +49,8 @@ private:
     std::map<OBSensorType, SensorEntry>         sensors_;
 
     std::recursive_timed_mutex componentLock_;
+
+    std::vector<std::shared_ptr<IFilter>> filters_;
 };
 /* #endregion ------------G330Device declare end---------------- */
 

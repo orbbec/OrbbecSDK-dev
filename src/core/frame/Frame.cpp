@@ -303,10 +303,10 @@ FrameSet::~FrameSet() noexcept {
     clearAllFrame();
 }
 
-uint32_t FrameSet::getFrameCount() {
+uint32_t FrameSet::getFrameCount() const {
     uint32_t frameCnt = 0;
     foreachFrame([&](void *item) {
-        auto pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<const Frame> *)item;
         if(*pFrame) {
             frameCnt++;
         }
@@ -315,101 +315,11 @@ uint32_t FrameSet::getFrameCount() {
     return frameCnt;
 }
 
-std::shared_ptr<Frame> FrameSet::getDisparityFrame(){
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item){
-        auto pFrame=(std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType()==OB_FRAME_DISPARITY){
-            frame=*pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
 
-std::shared_ptr<Frame> FrameSet::getDepthFrame() {
-    std::shared_ptr<Frame> frame;
+std::shared_ptr<const Frame> FrameSet::getFrame(OBFrameType frameType) const{
+    std::shared_ptr<const Frame> frame;
     foreachFrame([&](void *item) {
-        auto pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_DEPTH) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getIRFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        auto pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_IR) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getColorFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        auto pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_COLOR) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getAccelFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        auto pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_ACCEL) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getGyroFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        auto *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_GYRO) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getPointsFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        auto *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_POINTS) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getFrame(OBFrameType frameType) {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        auto pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<const Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == frameType) {
             frame = *pFrame;
             return true;
@@ -419,9 +329,9 @@ std::shared_ptr<Frame> FrameSet::getFrame(OBFrameType frameType) {
     return frame;
 }
 
-std::shared_ptr<Frame> FrameSet::getFrame(int index) {
-    std::shared_ptr<Frame> frame;
-    uint32_t               itemSize = sizeof(std::shared_ptr<Frame>);
+std::shared_ptr<const Frame> FrameSet::getFrame(int index) const {
+    std::shared_ptr<const Frame> frame;
+    uint32_t               itemSize = sizeof(std::shared_ptr<const Frame>);
     auto                   itemCnt  = getDataBufSize() / itemSize;
     if(index >= (int)itemCnt) {
         throw invalid_value_exception("FrameSet::getFrame() index out of range");
@@ -466,7 +376,7 @@ void FrameSet::clearAllFrame() {
     });
 }
 
-void FrameSet::foreachFrame(ForeachBack foreachBack) {
+void FrameSet::foreachFrame(ForeachBack foreachBack) const{
     uint32_t itemSize = sizeof(std::shared_ptr<Frame>);
     auto     itemCnt  = getDataBufSize() / itemSize;
     auto     pItem    = const_cast<uint8_t *>(getData());

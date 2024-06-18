@@ -8,6 +8,7 @@
 #include "FrameGeometricTransform.hpp"
 #include "PointCloudProcess.hpp"
 #include "DU08mmTo1mmConverter.hpp"
+#include "FrameIMUCorrectProcess.hpp"
 
 namespace libobsensor {
 publicFilterCreator::publicFilterCreator(std::function<std::shared_ptr<IFilter>()> creatorFunc) : creatorFunc_(creatorFunc) {}
@@ -32,7 +33,7 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         ADD_FILTER_CREATOR(IMUFrameReversion),    ADD_FILTER_CREATOR(FormatConverter),
         ADD_FILTER_CREATOR(FrameMirror),          ADD_FILTER_CREATOR(FrameFlip),
         ADD_FILTER_CREATOR(FrameRotate),          ADD_FILTER_CREATOR(PointCloudFilter),
-        ADD_FILTER_CREATOR(DU08mmTo1mmConverter),
+        ADD_FILTER_CREATOR(DU08mmTo1mmConverter), ADD_FILTER_CREATOR(IMUCorrecter),
     };
 
     return filterCreators;

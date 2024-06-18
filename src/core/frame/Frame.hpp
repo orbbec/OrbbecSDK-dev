@@ -205,17 +205,10 @@ public:
     FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     ~FrameSet() noexcept;
 
-    uint32_t getFrameCount();
+    uint32_t getFrameCount() const;
 
-    std::shared_ptr<Frame> getDisparityFrame();
-    std::shared_ptr<Frame> getDepthFrame();
-    std::shared_ptr<Frame> getIRFrame();
-    std::shared_ptr<Frame> getColorFrame();
-    std::shared_ptr<Frame> getAccelFrame();
-    std::shared_ptr<Frame> getGyroFrame();
-    std::shared_ptr<Frame> getPointsFrame();
-    std::shared_ptr<Frame> getFrame(OBFrameType frameType);
-    std::shared_ptr<Frame> getFrame(int index);
+    std::shared_ptr<const Frame> getFrame(OBFrameType frameType) const;
+    std::shared_ptr<const Frame> getFrame(int index) const;
 
     // It is recommended to use the rvalue reference interface. If you really need it, you can uncomment the following
     // void pushFrame(std::shared_ptr<Frame> frame);
@@ -223,7 +216,7 @@ public:
     void clearAllFrame();
 
 public:
-    void foreachFrame(ForeachBack foreachBack);
+    void foreachFrame(ForeachBack foreachBack) const;
 };
 
 template <typename T> bool Frame::is() const {

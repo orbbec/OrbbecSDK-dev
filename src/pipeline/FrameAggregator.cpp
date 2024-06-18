@@ -195,9 +195,9 @@ void FrameAggregator::tryAggregator() {
             withOverflowQueue_ = false;
         }
         // test code:
-        // auto        depthFrame = frameSet->getDepthFrame();
-        // auto        colorFrame = frameSet->getColorFrame();
-        // auto        irFrame    = frameSet->getIRFrame();
+        // auto        depthFrame = frameSet->getFrame(OB_FRAME_DEPTH);
+        // auto        colorFrame = frameSet->getFrame(OB_FRAME_COLOR);
+        // auto        irFrame    = frameSet->getFrame(OB_FRAME_IR);
         // std::string msg;
         // if(depthFrame) {
         //     msg = msg + " | depthFrame tsp=" + std::to_string(depthFrame->getTimeStamp());

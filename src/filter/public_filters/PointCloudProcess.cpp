@@ -64,11 +64,11 @@ const std::string &PointCloudFilter::getConfigSchema() const {
     return schema;
 }
 
-std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<Frame> frame) {
-    std::shared_ptr<Frame> depthFrame = frame;
+std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<const Frame> frame) {
+    std::shared_ptr<const Frame> depthFrame = frame;
     if(frame->is<FrameSet>()) {
         auto frameSet = frame->as<FrameSet>();
-        depthFrame    = frameSet->getDepthFrame();
+        depthFrame    = frameSet->getFrame(OB_FRAME_DEPTH);
     }
 
     if(depthFrame == nullptr) {
@@ -124,10 +124,10 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<F
     return pointFrame;
 }
 
-std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<Frame> frame) {
-    std::shared_ptr<FrameSet> frameSet = nullptr;
+std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<const Frame> frame) {
+    std::shared_ptr<const FrameSet> frameSet = nullptr;
 
-    if(frame->is<FrameSet>()) {
+    if(frame->is<const FrameSet>()) {
         frameSet = frame->as<FrameSet>();
     }
     else {
@@ -135,13 +135,13 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<Fr
         return nullptr;
     }
 
-    auto depthFrame = frameSet->getDepthFrame();
+    auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH);
     if(depthFrame == nullptr) {
         LOG_ERROR_INTVL("No depth frame found in frameset!");
         return nullptr;
     }
 
-    auto colorFrame = frameSet->getColorFrame();
+    auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR);
     if(colorFrame == nullptr) {
         LOG_ERROR_INTVL("no color frame found in frameset!");
         return nullptr;
@@ -149,7 +149,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<Fr
     return createRGBDPointCloud(depthFrame, colorFrame);
 }
 
-std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<Frame> depthFrame, std::shared_ptr<Frame> colorFrame) {
+std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<const Frame> depthFrame, std::shared_ptr<const Frame> colorFrame) {
     auto     depthVideoFrame = depthFrame->as<VideoFrame>();
     uint32_t dstHeight       = depthVideoFrame->getHeight();
     uint32_t dstWidth        = depthVideoFrame->getWidth();
@@ -181,7 +181,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<Fr
         formatConverter_  = std::make_shared<FormatConverter>("FormatConverter");
     }
 
-    std::shared_ptr<Frame> tarFrame = nullptr;
+    std::shared_ptr<const Frame> tarFrame = nullptr;
     std::vector<std::string> params;
     switch(colorFrame->getFormat()) {
     case OB_FORMAT_YUYV:
@@ -230,7 +230,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<Fr
     }
     else {
         LOG_ERROR_INTVL("get rgb data failed!");
-        return tarFrame;
+        return FrameFactory::cloneFrame(tarFrame,true);
     }
 
     if(tablesData_ == nullptr) {

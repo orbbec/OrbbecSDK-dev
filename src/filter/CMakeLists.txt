@@ -23,6 +23,9 @@ target_link_libraries(filter PUBLIC libjpeg::libjpeg)
 add_subdirectory(${OB_3RDPARTY_DIR}/libyuv libyuv)
 target_link_libraries(filter PUBLIC libyuv::libyuv)
 
+add_subdirectory(${OB_3RDPARTY_DIR}/imucalibparamsparse imu_params_parser)
+target_link_libraries(filter PUBLIC imu::imu_params_parser)
+
 add_library(ob::filter ALIAS filter)
 ob_source_group(ob::filter)
 

@@ -169,4 +169,16 @@ std::shared_ptr<FrameSet> FrameFactory::createFrameSet() {
 
     return frameSet;
 }
+
+std::shared_ptr<FrameSet> FrameFactory::cloneFrameSet(std::shared_ptr<const FrameSet> frame, bool copyData) {
+    auto newFrameSet = createFrameSet();
+    auto frameCount  = frame->getFrameCount();
+    for(uint32_t i = 0; i < frameCount; i++) {
+        std::shared_ptr<const Frame> oldFrame = frame->getFrame(i);
+        auto newFrame = cloneFrame(oldFrame, copyData);
+        newFrameSet->pushFrame(std::move(newFrame));
+    }
+    return newFrameSet;
+}
+
 }  // namespace libobsensor

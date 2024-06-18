@@ -311,7 +311,7 @@ InitStructureDataListResp *parseInitStructureDataListResp(uint8_t *dataBuf, uint
     return resp;
 }
 
-uint16_t getProtoV11StructureDataSize(const GetStructureDataV11Resp &resp) {
+uint16_t getProtoV11StructureDataSize(const GetStructureDataV11Resp *resp) {
     return resp->header.sizeInHalfWords * 2 - sizeof(RespHeader) - 2;
 }
 

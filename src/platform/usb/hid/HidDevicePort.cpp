@@ -8,8 +8,6 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-__attribute__((unused)) constexpr static int INTERRUPT_BUFFER_SIZE = 256;
-
 HidDevicePort::HidDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
     : portInfo_(portInfo), usbDevice_(usbDevice), isStreaming_(false), frameQueue_(10) {
     LOG_DEBUG("obHid Device open info_.infIndex={}", static_cast<uint32_t>(portInfo_->infIndex));

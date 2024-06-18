@@ -218,7 +218,22 @@ typedef struct {
 typedef struct {
     RespHeader header;
     uint16_t   cmdVer;
+    // if gnu compiler is used, ignore the zero-length array warning
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 } GetStructureDataV11Resp;
+
+typedef struct {
+    RespHeader header;
+    uint16_t   cmdVer;
+    uint32_t   dataSize;
+} InitStructureDataListResp;
 
 typedef struct {
     ReqHeader header;
@@ -264,6 +279,7 @@ uint16_t                 getStructureDataSize(const GetStructureDataResp *resp);
 SetStructureDataResp    *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
 GetCmdVerDataResp       *parseGetCmdVerDataResp(uint8_t *dataBuf, uint16_t dataSize);
 GetReadDataResp         *parseGetReadDataResp(uint8_t *dataBuf, uint16_t dataSize);
+InitStructureDataListResp *parseInitStructureDataListResp(uint8_t* dataBuf, uint16_t dataSize);
 
 HpStatus execute(const std::shared_ptr<IVendorDataPort> &dataPort, uint8_t *reqData, uint16_t reqDataSize, uint8_t *respData, uint16_t *respDataSize);
 bool     checkStatus(HpStatus stat, bool throwException = true);

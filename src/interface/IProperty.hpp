@@ -34,20 +34,17 @@ public:
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value)  = 0;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) = 0;
     virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) = 0;
-
-    // virtual T getStructureDataProtoV11(uint32_t propertyId)                                                      = 0;
-    // virtual T getStructureDataListProtoV11(uint32_t propertyId, uint32_t tran_packet_size = 3 * FLASH_PAGE_SIZE) = 0;
 };
 
-class IPropertyExtensionPort : public IPropertyPort {
+template <typename T, uint16_t CMD_VER> class IPropertyExtensionPort : public IPropertyPort {
 public:
-    virtual ~IPropertyExtensionPort() noexcept                                                                                = default;
-    virtual void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data)               = 0;
-    virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId)                                                 = 0;
-    virtual void                        getCmdVersionProtoV11(uint32_t propertyId, uint16_t *version)                         = 0;
-    virtual void                        getRawData(uint32_t propertyId, get_data_callback callback, uint32_t transPacketSize) = 0;
-    // virtual template <typename U, uint16_t CMD_VER> T getStructureDataProtoV11(uint32_t propertyId)                                         = 0;
-    // virtual template <typename U, uint16_t CMD_VER> T getStructureDataListProtoV11(uint32_t propertyId, uint32_t tran_packet_size = 3 * FLASH_PAGE_SIZE) = 0;
+    virtual ~IPropertyExtensionPort() noexcept                                                                                             = default;
+    virtual void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data)                            = 0;
+    virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId)                                                              = 0;
+    virtual void                        getCmdVersionProtoV11(uint32_t propertyId, uint16_t *version)                                      = 0;
+    virtual void                        getRawData(uint32_t propertyId, get_data_callback callback, uint32_t transPacketSize)              = 0;
+    virtual T                           getStructureDataProtoV11(uint32_t propertyId)                                                      = 0;
+    virtual T                           getStructureDataListProtoV11(uint32_t propertyId, uint32_t tran_packet_size = 3 * FLASH_PAGE_SIZE) = 0;
 };
 
 enum PropertyAccessType {

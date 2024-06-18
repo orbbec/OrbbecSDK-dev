@@ -282,6 +282,15 @@ GetStructureDataV11Req *initGetStructureDataV11Req(uint8_t *dataBuf, uint32_t pr
     return req;
 }
 
+GetStructureDataV11Resp *parseGetStructureDataV11Resp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<GetStructureDataV11Resp *>(dataBuf);
+    if(dataSize < sizeof(GetStructureDataV11Resp)) {
+        throw io_exception("device response with wrong data size");
+    }
+
+    return resp;
+}
+
 GetStructureDataV11Req *initGetStructureDataListV11Req(uint8_t *dataBuf, uint32_t propertyId) {
     auto *req                   = reinterpret_cast<GetStructureDataV11Req *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
@@ -293,9 +302,9 @@ GetStructureDataV11Req *initGetStructureDataListV11Req(uint8_t *dataBuf, uint32_
     return req;
 }
 
-GetStructureDataV11Resp *parseGetStructureDataV11Resp(uint8_t *dataBuf, uint16_t dataSize) {
-    auto *resp = reinterpret_cast<GetStructureDataV11Resp *>(dataBuf);
-    if(dataSize < sizeof(GetStructureDataV11Resp)) {
+InitStructureDataListResp *parseInitStructureDataListResp(uint8_t* dataBuf,uint16_t dataSize){
+    auto *resp = reinterpret_cast<InitStructureDataListResp *>(dataBuf);
+    if(dataSize < sizeof(InitStructureDataListResp)) {
         throw io_exception("device response with wrong data size");
     }
 

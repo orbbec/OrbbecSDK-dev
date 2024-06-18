@@ -5,6 +5,7 @@
 #include "sensor/SensorBase.hpp"
 #include "IFrame.hpp"
 #include "IFilter.hpp"
+#include "filter/FilterBase.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
 
 #include <map>

@@ -18,6 +18,7 @@
 #include "filter/FilterFactory.hpp"
 #include "utils/Utils.hpp"
 #include "metadata/FrameMetadataParserContainer.hpp"
+#include "filter/public_filters/FormatConverterProcess.hpp"
 
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
@@ -365,9 +366,9 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     return {};
 }
 
-DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
+DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
     auto resLock = tryLockResource();
-    auto iter    = sensors_.find(type);
+    auto iter    = sensors_.find(sensorType);
     if(iter == sensors_.end()) {
         throw invalid_value_exception("Sensor not supported!");
     }
@@ -375,14 +376,11 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
         return DeviceResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
     }
 
-    auto envConfig       = EnvConfig::getInstance();
-    auto deviceConfigKey = std::string("Device.") + deviceInfo_->name_;
-
     // create
-    if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
+    if(sensorType == OB_SENSOR_ACCEL || sensorType == OB_SENSOR_GYRO) {
         auto                            dataStreamPort     = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
         std::shared_ptr<MotionStreamer> motionStreamer     = nullptr;
-        auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter", type);
+        auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter", sensorType);
         if(imuCorrecterFilter) {
             // TODO change set param way
             auto imuCorrectionParams = algParamManager_->getIMUCalibrationParam();
@@ -400,9 +398,8 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     }
     else {  // type == OB_SENSOR_COLOR || type == OB_SENSOR_DEPTH || type == OB_SENSOR_IR_LEFT || type == OB_SENSOR_IR_RIGHT
         std::shared_ptr<VideoSensor> videoSensor;
-
-        if(type == OB_SENSOR_DEPTH) {
-            videoSensor         = std::make_shared<DisparityBasedSensor>(shared_from_this(), type, iter->second.backend);
+        if(sensorType == OB_SENSOR_DEPTH) {
+            videoSensor         = std::make_shared<DisparityBasedSensor>(shared_from_this(), sensorType, iter->second.backend);
             iter->second.sensor = videoSensor;
 
             videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
@@ -415,45 +412,56 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
-        else if(type == OB_SENSOR_IR_LEFT) {
-            videoSensor         = std::make_shared<VideoSensor>(shared_from_this(), type, iter->second.backend);
-            iter->second.sensor = videoSensor;
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
-                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_BA81, OB_FORMAT_ANY, nullptr },
-                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
-                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y12, nullptr } });
-            // add Y16 which unpack from NV12
-            // todo: implement this
+        else if(sensorType == OB_SENSOR_IR_LEFT) {
+            videoSensor         = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
+            auto formatConverterFilter = getSpecifyFilter("FormatConverter", sensorType);
+            auto formatConverter = std::dynamic_pointer_cast<IFormatConverter>(formatConverterFilter);
+            videoSensor->updateFormatFilterConfig({
+                { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
+                { FormatFilterPolicy::REMOVE, OB_FORMAT_BA81, OB_FORMAT_ANY, nullptr },
+                { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
+                { FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y12, nullptr },
+                { FormatFilterPolicy::ADD, OB_FORMAT_NV12, OB_FORMAT_Y16, formatConverter },
+            });
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
-        else if(type == OB_SENSOR_IR_RIGHT) {
-            videoSensor         = std::make_shared<VideoSensor>(shared_from_this(), type, iter->second.backend);
-            iter->second.sensor = videoSensor;
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
-                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
-                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
-                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr },
-                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y12, nullptr },
-                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_BA81, OB_FORMAT_Y8, nullptr } });
-            // add Y16 which unpack from YV12
-            // todo: implement this
+        else if(sensorType == OB_SENSOR_IR_RIGHT) {
+            videoSensor         = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
+            auto formatConverterFilter = getSpecifyFilter("FormatConverter", sensorType);
+            auto formatConverter = std::dynamic_pointer_cast<IFormatConverter>(formatConverterFilter);
+            videoSensor->updateFormatFilterConfig({
+                { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
+                { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
+                { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr },
+                { FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y12, nullptr },
+                { FormatFilterPolicy::REPLACE, OB_FORMAT_BA81, OB_FORMAT_Y8, nullptr },
+                { FormatFilterPolicy::ADD, OB_FORMAT_YV12, OB_FORMAT_Y16, formatConverter },
+            });
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
-        else if(type == OB_SENSOR_COLOR) {
-            videoSensor         = std::make_shared<VideoSensor>(shared_from_this(), type, iter->second.backend);
-            iter->second.sensor = videoSensor;
-            videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
-                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr } });
+        else if(sensorType == OB_SENSOR_COLOR) {
+            videoSensor         = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
+            auto formatConverterFilter = getSpecifyFilter("FormatConverter", sensorType);
+            auto formatConverter = std::dynamic_pointer_cast<IFormatConverter>(formatConverterFilter);
+            videoSensor->updateFormatFilterConfig({
+                { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr },
+                { FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGB, formatConverter },
+                { FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGBA, formatConverter },
+                { FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGR, formatConverter },
+                { FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGRA, formatConverter },
+                { FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y16, formatConverter },
+                { FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y8, formatConverter },
+            });
 
-            // add RGB, RGBA, BGR, BGRA, Y16, Y8 which convert from YUYV
-            // todo: implement this
             videoSensor->setFrameMetadataParserContainer(colorMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
 
-        auto defaultStreamProfile = StreamProfileFactory::getDefaultStreamProfileFormEnvConfig(deviceInfo_->name_, type);
+        auto defaultStreamProfile = StreamProfileFactory::getDefaultStreamProfileFormEnvConfig(deviceInfo_->name_, sensorType);
         if(defaultStreamProfile) {
             videoSensor->updateDefaultStreamProfile(defaultStreamProfile);
         }
@@ -463,10 +471,12 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
         if(!frameProcessorFactory_) {
             frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this());
         }
-        frameProcessor = frameProcessorFactory_->createFrameProcessor(type);
+        frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
         if(frameProcessor) {
             videoSensor->setFrameProcessor(frameProcessor);
         }
+
+        iter->second.sensor = videoSensor; // store
     }
 
     // bind params: extrinsics, intrinsics, etc.

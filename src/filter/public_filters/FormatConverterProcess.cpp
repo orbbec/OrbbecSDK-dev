@@ -9,7 +9,7 @@
 
 namespace libobsensor {
 
-FormatConverter::FormatConverter(const std::string &name) : FilterBase(name), convertType_(FORMAT_I420_TO_RGB) {}
+FormatConverter::FormatConverter(const std::string &name) : IFormatConverter(name) {}
 FormatConverter::~FormatConverter() noexcept {}
 
 void FormatConverter::updateConfig(std::vector<std::string> &params) {
@@ -31,11 +31,36 @@ const std::string &FormatConverter::getConfigSchema() const {
     return schema;
 }
 
+void FormatConverter::setConversion(OBFormat srcFormat, OBFormat dstFormat) {
+    if(srcFormat == OB_FORMAT_YUYV) {
+        switch(dstFormat) {
+        case OB_FORMAT_RGB:
+            convertType_ = FORMAT_YUYV_TO_RGB;
+            break;
+        case OB_FORMAT_BGR:
+            convertType_ = FORMAT_YUYV_TO_BGR;
+            break;
+        case OB_FORMAT_BGRA:
+            convertType_ = FORMAT_YUYV_TO_BGRA;
+            break;
+        case OB_FORMAT_Y16:
+            convertType_ = FORMAT_YUYV_TO_Y16;
+            break;
+        case OB_FORMAT_Y8:
+            convertType_ = FORMAT_YUYV_TO_Y8;
+            break;
+        default:
+            convertType_ = FORMAT_YUYV_TO_RGB;
+            break;
+        }
+    }
+}
+
 std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame> frame) {
     if(!frame) {
         return nullptr;
     }
-    
+
     auto     videoFrame = frame->as<VideoFrame>();
     int      w          = videoFrame->getWidth();
     int      h          = videoFrame->getHeight();

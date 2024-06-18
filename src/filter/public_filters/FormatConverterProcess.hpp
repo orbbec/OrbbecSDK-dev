@@ -4,13 +4,15 @@
 
 namespace libobsensor {
 
-class FormatConverter : public FilterBase {
+class FormatConverter : public IFormatConverter {
 public:
     FormatConverter(const std::string &name);
     virtual ~FormatConverter() noexcept;
 
     void               updateConfig(std::vector<std::string> &params) override;
     const std::string &getConfigSchema() const override;
+
+    void setConversion(OBFormat srcFormat, OBFormat dstFormat) override;
 
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
@@ -37,9 +39,8 @@ protected:
     std::shared_ptr<const StreamProfile> currentStreamProfile_;
     std::shared_ptr<StreamProfile>       tarStreamProfile_;
     OBConvertFormat                      convertType_;
-    uint8_t *                            tempDataBuf_     = nullptr;
+    uint8_t                             *tempDataBuf_     = nullptr;
     uint32_t                             tempDataBufSize_ = 0;
-
 };
 
 }  // namespace libobsensor

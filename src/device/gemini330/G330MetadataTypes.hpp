@@ -4,9 +4,9 @@
 
 namespace libobsensor {
 
-#define G330_UVC_METADATA_SIZE 96 + sizeof(StandardUvcFramePayloadHeader)
+#define G330_UVC_METADATA_SIZE (96 + sizeof(StandardUvcFramePayloadHeader))
 #pragma pack(push, 1)
-typedef struct {
+struct G330CommonUvcMetadata {
     StandardUvcFramePayloadHeader uvc_payload_header;
     uint32_t frame_counter;
     uint32_t timestamp_fsin_h32;
@@ -32,7 +32,7 @@ typedef struct {
     };
     uint32_t bitmap_union_0;
     uint32_t timestamp_offset_usec;
-} G330CommonUvcMetadata;
+};
 
 struct G330ColorUvcMetadata : public G330CommonUvcMetadata {
     uint8_t  low_light_compensation;

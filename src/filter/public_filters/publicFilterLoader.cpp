@@ -18,7 +18,6 @@ std::shared_ptr<IFilter> publicFilterCreator::create() {
     return creatorFunc_();
 }
 
-
 namespace PublicFilterCreatorLoader {
 
 #define ADD_FILTER_CREATOR(name)                                                                     \
@@ -41,5 +40,5 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
     return filterCreators;
 }
 
-}  // namespace publicFilterLoader
+}  // namespace PublicFilterCreatorLoader
 }  // namespace libobsensor

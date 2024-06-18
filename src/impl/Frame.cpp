@@ -388,7 +388,7 @@ const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_err
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = innerFrame;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
@@ -403,7 +403,7 @@ const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error *
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = innerFrame;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
@@ -418,7 +418,7 @@ const ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error *
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = innerFrame;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
@@ -433,7 +433,7 @@ const ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **er
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = innerFrame;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
@@ -448,7 +448,7 @@ const ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error 
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = innerFrame;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
@@ -463,7 +463,7 @@ const ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type fr
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = innerFrame;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
@@ -478,7 +478,7 @@ const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, int ind
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = innerFrame;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)

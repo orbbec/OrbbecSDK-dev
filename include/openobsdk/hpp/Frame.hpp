@@ -877,7 +877,7 @@ template <typename T> bool Frame::is() {
         return (typeid(T) == typeid(IRFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_DISPARITY:
         return (typeid(T) == typeid(DisparityFrame) || typeid(T) == typeid(VideoFrame));
-    return case OB_FRAME_DEPTH:
+    case OB_FRAME_DEPTH:
         return (typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_COLOR:
         return (typeid(T) == typeid(ColorFrame) || typeid(T) == typeid(VideoFrame));

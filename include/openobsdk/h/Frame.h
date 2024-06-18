@@ -387,7 +387,7 @@ OB_EXPORT uint8_t ob_video_frame_get_pixel_available_bit_size(const ob_frame *fr
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  *
  */
-OB_EXPORT void ob_video_frame_set_pixel_available_bit_size(const ob_frame *frame, uint8_t bit_size, ob_error **error);
+OB_EXPORT void ob_video_frame_set_pixel_available_bit_size(ob_frame *frame, uint8_t bit_size, ob_error **error);
 
 /**
  * @brief Get the source sensor type of the ir frame (left or right for dual camera)
@@ -416,7 +416,7 @@ OB_EXPORT float ob_depth_frame_get_value_scale(const ob_frame *frame, ob_error *
  * @param[in] value_scale The value scale of the depth frame
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-OB_EXPORT void ob_depth_frame_set_value_scale(const ob_frame *frame, float value_scale, ob_error **error);
+OB_EXPORT void ob_depth_frame_set_value_scale(ob_frame *frame, float value_scale, ob_error **error);
 
 /**
  * @brief Get the point coordinate value scale of the points frame. The point position value of the points frame is multiplied by the scale to give a position

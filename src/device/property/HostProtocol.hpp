@@ -271,15 +271,16 @@ GetPropertyReq          *initFinishGetStructureDataList(uint8_t *dataBuf, uint32
 GetPropertyReq          *initGetRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t cmd);
 ReadRawData             *initReadRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t size);
 
-GetPropertyResp         *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
-SetPropertyResp         *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
-GetStructureDataResp    *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
-GetStructureDataV11Resp *parseGetStructureDataV11Resp(uint8_t *dataBuf, uint16_t dataSize);
-uint16_t                 getStructureDataSize(const GetStructureDataResp *resp);
-SetStructureDataResp    *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
-GetCmdVerDataResp       *parseGetCmdVerDataResp(uint8_t *dataBuf, uint16_t dataSize);
-GetReadDataResp         *parseGetReadDataResp(uint8_t *dataBuf, uint16_t dataSize);
-InitStructureDataListResp *parseInitStructureDataListResp(uint8_t* dataBuf, uint16_t dataSize);
+GetPropertyResp           *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
+SetPropertyResp           *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
+GetStructureDataResp      *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
+GetStructureDataV11Resp   *parseGetStructureDataV11Resp(uint8_t *dataBuf, uint16_t dataSize);
+uint16_t                   getStructureDataSize(const GetStructureDataResp *resp);
+SetStructureDataResp      *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
+GetCmdVerDataResp         *parseGetCmdVerDataResp(uint8_t *dataBuf, uint16_t dataSize);
+GetReadDataResp           *parseGetReadDataResp(uint8_t *dataBuf, uint16_t dataSize);
+InitStructureDataListResp *parseInitStructureDataListResp(uint8_t *dataBuf, uint16_t dataSize);
+uint16_t                   getProtoV11StructureDataSize(const GetStructureDataV11Resp &resp);
 
 HpStatus execute(const std::shared_ptr<IVendorDataPort> &dataPort, uint8_t *reqData, uint16_t reqDataSize, uint8_t *respData, uint16_t *respDataSize);
 bool     checkStatus(HpStatus stat, bool throwException = true);

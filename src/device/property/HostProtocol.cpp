@@ -302,13 +302,17 @@ GetStructureDataV11Req *initGetStructureDataListV11Req(uint8_t *dataBuf, uint32_
     return req;
 }
 
-InitStructureDataListResp *parseInitStructureDataListResp(uint8_t* dataBuf,uint16_t dataSize){
+InitStructureDataListResp *parseInitStructureDataListResp(uint8_t *dataBuf, uint16_t dataSize) {
     auto *resp = reinterpret_cast<InitStructureDataListResp *>(dataBuf);
     if(dataSize < sizeof(InitStructureDataListResp)) {
         throw io_exception("device response with wrong data size");
     }
 
     return resp;
+}
+
+uint16_t getProtoV11StructureDataSize(const GetStructureDataV11Resp &resp) {
+    return resp->header.sizeInHalfWords * 2 - sizeof(RespHeader) - 2;
 }
 
 GetPropertyReq *initStartGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId) {

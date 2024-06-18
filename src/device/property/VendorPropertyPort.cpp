@@ -166,9 +166,9 @@ template <uint16_t CMD_VER> std::vector<uint8_t> VendorPropertyPort<CMD_VER>::ge
         protocol::checkStatus(res);
     }
 
+    uint16_t             dataSize = protocol::getProtoV11StructureDataSize(resp);
     std::vector<uint8_t> structureData;
-    // FIXME: check if the size is correct
-    memcpy(structureData.data(), resp->data, sizeof(protocol::GetStructureDataV11Resp));
+    memcpy(structureData.data(), resp->data, dataSize);
     return structureData;
 }
 
@@ -208,9 +208,6 @@ std::vector<std::vector<uint8_t>> VendorPropertyPort<CMD_VER>::getStructureDataL
                 break;
             }
 
-            auto *header = (protocol::RespHeader *)recvData_.data();
-            // FIXME:
-            (void)header;
             dataVec.insert(dataVec.end(), recvData_.data() + sizeof(protocol::RespHeader), recvData_.data() + sizeof(protocol::RespHeader) + packetSize);
         }
         if(dataVec.size() == dataSize) {

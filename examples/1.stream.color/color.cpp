@@ -1,6 +1,7 @@
+#include <openobsdk/ObSensor.hpp>
+
 #include "window.hpp"
 
-#include <openobsdk/ObSensor.h>
 
 const char* metaDataTypes[] = {
     "OB_FRAME_METADATA_TYPE_TIMESTAMP",

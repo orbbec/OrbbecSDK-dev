@@ -1,8 +1,9 @@
+#include <openobsdk/ObSensor.hpp>
+
 #include "window.hpp"
 
 #include <iostream>
 
-#include <openobsdk/ObSensor.h>
 
 const char* sensorTypes[] =  {
     "OB_SENSOR_UNKNOWN",

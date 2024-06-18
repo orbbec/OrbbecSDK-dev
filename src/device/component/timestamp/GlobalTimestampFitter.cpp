@@ -3,7 +3,7 @@
 #include "logger/Logger.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "InternalTypes.hpp"
-#include "Property/InternalProperty.hpp"
+#include "property/InternalProperty.hpp"
 
 namespace libobsensor {
 GlobalTimestampFitter::GlobalTimestampFitter(IDevice::PropertyAccessorGetter propertyAccessorGetter)

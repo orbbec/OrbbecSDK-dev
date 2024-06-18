@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Device.hpp"
 
 #include "context/Context.hpp"

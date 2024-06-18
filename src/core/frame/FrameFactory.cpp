@@ -24,7 +24,7 @@ std::shared_ptr<Frame> FrameFactory::createFrame(OBFrameType frameType, OBFormat
 }
 
 std::shared_ptr<Frame> FrameFactory::cloneFrame(std::shared_ptr<const Frame> frame, bool copyData) {
-    auto newFrame = createFrame(frame->getType(), frame->getFormat(), frame->getDataSize());
+    auto newFrame = createFrameFromStreamProfile(frame->getStreamProfile());
     if(copyData) {
         newFrame->updateData(frame->getData(), frame->getDataSize());
         if(newFrame->is<VideoFrame>()) {

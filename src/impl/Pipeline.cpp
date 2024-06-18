@@ -149,7 +149,7 @@ void ob_delete_config(ob_config *config, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(config)
 
-void ob_config_enable_stream(ob_config *config, ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
+void ob_config_enable_stream_with_stream_profile(ob_config *config, ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(config);
     VALIDATE_NOT_NULL(profile);
     config->config->enableStream(profile->profile);

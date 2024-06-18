@@ -56,9 +56,62 @@ public:
      */
     void enableStream(std::shared_ptr<StreamProfile> streamProfile) {
         ob_error *error = nullptr;
-        ob_config_enable_stream(impl_, streamProfile->getImpl(), &error);
+        ob_config_enable_stream(impl_, streamProfile->type(), &error);
         Error::handle(&error, false);
     }
+
+    /**
+     * @brief Enable a video stream to be used in the pipeline.
+     *
+     * This function allows users to enable a video stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default resolution settings.
+     * Users who wish to set custom resolutions should refer to the product manual, as available resolutions vary by camera model.
+     *
+     * @param type The video stream type.
+     * @param width The video stream width (default is OB_WIDTH_ANY, which selects the default resolution).
+     * @param height The video stream height (default is OB_HEIGHT_ANY, which selects the default resolution).
+     * @param fps The video stream frame rate (default is OB_FPS_ANY, which selects the default frame rate).
+     * @param format The video stream format (default is OB_FORMAT_ANY, which selects the default format).
+     */
+    void enableVideoStream(ob_stream_type stream_type, int width = OB_WIDTH_ANY, int height = OB_HEIGHT_ANY, int fps = OB_FPS_ANY, OBFormat format = OB_FORMAT_ANY){
+        ob_error *error = nullptr;
+        ob_config_enable_video_stream(impl_, stream_type, width, height, fps, format, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
+     * @brief Enable an accelerometer stream to be used in the pipeline.
+     *
+     * This function allows users to enable an accelerometer stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default settings.
+     * Users who wish to set custom full-scale ranges or sample rates should refer to the product manual, as available settings vary by device model.
+     *
+     * @param fullScaleRange The full-scale range of the accelerometer (default is OB_ACCEL_FULL_SCALE_RANGE_ANY, which selects the default range).
+     * @param sampleRate The sample rate of the accelerometer (default is OB_ACCEL_SAMPLE_RATE_ANY, which selects the default rate).
+     */
+    void enableAccelStream(ob_accel_full_scale_range fullScaleRange = OB_ACCEL_FULL_SCALE_RANGE_ANY,
+                           ob_accel_sample_rate      sampleRate     = OB_ACCEL_SAMPLE_RATE_ANY){
+        ob_error *error = nullptr;
+        ob_config_enable_accel_stream(impl_, fullScaleRange, sampleRate, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
+     * @brief Enable a gyroscope stream to be used in the pipeline.
+     *
+     * This function allows users to enable a gyroscope stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default settings.
+     * Users who wish to set custom full-scale ranges or sample rates should refer to the product manual, as available settings vary by device model.
+     *
+     * @param fullScaleRange The full-scale range of the gyroscope (default is OB_GYRO_FULL_SCALE_RANGE_ANY, which selects the default range).
+     * @param sampleRate The sample rate of the gyroscope (default is OB_GYRO_SAMPLE_RATE_ANY, which selects the default rate).
+     */
+    void enableGyroStream(ob_gyro_full_scale_range fullScaleRange = OB_GYRO_FULL_SCALE_RANGE_ANY, ob_gyro_sample_rate sampleRate = OB_GYRO_SAMPLE_RATE_ANY){
+        ob_error *error = nullptr;
+        ob_config_enable_gyro_stream(impl_, fullScaleRange, sampleRate, &error);
+        Error::handle(&error, false);
+    }
+
 
     /**
      * @brief Disable a stream to be used in the pipeline

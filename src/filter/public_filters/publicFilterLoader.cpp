@@ -9,7 +9,7 @@
 #include "PointCloudProcess.hpp"
 #include "DU08mmTo1mmConverter.hpp"
 #include "FrameIMUCorrectProcess.hpp"
-#include "align.hpp"
+#include "Align.hpp"
 
 namespace libobsensor {
 publicFilterCreator::publicFilterCreator(std::function<std::shared_ptr<IFilter>()> creatorFunc) : creatorFunc_(creatorFunc) {}

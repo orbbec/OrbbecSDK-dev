@@ -16,7 +16,7 @@ std::shared_ptr<StreamIntrinsicsManager> StreamIntrinsicsManager::getInstance() 
     return instance;
 }
 
-StreamIntrinsicsManager::StreamIntrinsicsManager() : logger_(Logger::getInstance()) {}
+StreamIntrinsicsManager::StreamIntrinsicsManager() {}
 
 StreamIntrinsicsManager::~StreamIntrinsicsManager() noexcept = default;
 

@@ -12,3 +12,4 @@ The libraries included in this folder are:
 | libjpeg v2.0   | A C/C++ library designed for efficient manipulation of YUV image data         | BSD-3-Clause | <https://github.com/libjpeg-turbo/libjpeg-turbo>  |
 | libyuv         | An open source project that includes YUV scaling and conversion functionality | BSD-3-Clause | <https://chromium.googlesource.com/libyuv/libyuv> |
 | live555        | A library for streaming media over the network                                |              |                                                   |
+| tinyxml2       | A simple, small, efficient, C++ XML parser                                    |              |                                                   |

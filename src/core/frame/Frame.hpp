@@ -15,6 +15,20 @@
 
 namespace libobsensor {
 
+class logger;
+class FrameMemoryPool;
+class FrameMemoryAllocator;
+class FrameBackendLifeSpan {
+public:
+    FrameBackendLifeSpan();
+    ~FrameBackendLifeSpan();
+
+private:
+    std::shared_ptr<Logger>               logger_;
+    std::shared_ptr<FrameMemoryPool>      memoryPool_;
+    std::shared_ptr<FrameMemoryAllocator> memoryAllocator_;
+};
+
 class FrameSet;
 class PointsFrame;
 class VideoFrame;
@@ -27,7 +41,7 @@ class GyroFrame;
 
 using FrameBufferReclaimFunc = std::function<void(void)>;
 
-class Frame : public std::enable_shared_from_this<Frame> {
+class Frame : public std::enable_shared_from_this<Frame>, private FrameBackendLifeSpan {
 public:
     Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     virtual ~Frame() noexcept;

@@ -40,8 +40,8 @@ std::shared_ptr<IDevice> G330DeviceInfo::createDevice() const{
     return std::make_shared<G330Device>(shared_from_this());
 }
 
-std::vector<std::shared_ptr<DeviceEnumInfo>> G330DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
-    std::vector<std::shared_ptr<DeviceEnumInfo>> G330DeviceInfos;
+std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
+    std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfos;
     auto remainder = utils::FilterUSBPortInfoByPid(infoList, gG330Pids);
     auto groups    = utils::GroupUSBSourcePortInfo(remainder, utils::GroupUSBSourcePortByUrl);
     auto iter      = groups.begin();
@@ -55,6 +55,5 @@ std::vector<std::shared_ptr<DeviceEnumInfo>> G330DeviceInfo::createDeviceInfos(c
 
     return G330DeviceInfos;
 }
-
 
 }  // namespace libobsensor

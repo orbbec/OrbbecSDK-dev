@@ -18,14 +18,14 @@ private:
     DeviceManager();
 
     static std::weak_ptr<DeviceManager> instanceWeakPtr_;
-    static std::mutex instanceMutex_;
+    static std::mutex                   instanceMutex_;
 
 public:
     static std::shared_ptr<DeviceManager> getInstance();
     ~DeviceManager() noexcept;
 
     static std::shared_ptr<IDevice> createNetDevice(std::string address, uint16_t port);
-    std::shared_ptr<IDevice>        createDevice(const std::shared_ptr<const DeviceEnumInfo> &info);
+    std::shared_ptr<IDevice>        createDevice(const std::shared_ptr<const IDeviceEnumInfo> &info);
 
     DeviceEnumInfoList getDeviceInfoList() const;
 
@@ -38,10 +38,10 @@ public:
 
 private:
     void multiDeviceSyncFunc(uint8_t retry = 0, std::vector<std::string> uids = {});
-    void onDeviceChanged(const DeviceEnumInfoList&  removed, const DeviceEnumInfoList&  added);
+    void onDeviceChanged(const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added);
 
 private:
-    bool                        destroy_;
+    bool destroy_;
 
     std::mutex            callbackMutex_;
     DeviceChangedCallback devChangedCallback_ = nullptr;
@@ -56,4 +56,3 @@ private:
     std::vector<std::shared_ptr<IDeviceEnumerator>> deviceEnumerators_;
 };
 }  // namespace libobsensor
-

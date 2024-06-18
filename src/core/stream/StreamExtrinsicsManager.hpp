@@ -42,8 +42,6 @@ private:
     std::mutex                                                          mutex_;
     std::map<uint64_t, std::vector<std::weak_ptr<const StreamProfile>>> streamProfileMap_;  // vertices
     std::map<uint64_t, std::vector<std::pair<uint64_t, OBExtrinsic>>>   extrinsicsGraph_;   // graph adjacency list
-
-    std::shared_ptr<Logger> logger_;  // Manages the lifecycle of the logger object.
 };
 
 }  // namespace libobsensor

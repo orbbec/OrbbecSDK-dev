@@ -62,11 +62,18 @@ UsbDeviceEnumerator::~UsbDeviceEnumerator() noexcept {
 
 void UsbDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {
     if(changeType == OB_DEVICE_REMOVED) {
-        std::vector<std::shared_ptr<const DeviceEnumInfo>> removedDevList;
+        std::vector<std::shared_ptr<const IDeviceEnumInfo>> removedDevList;
         {
             std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-            removedDevList  = queryRemovedDevice(devUid);
-            deviceInfoList_ = utils::subtract_sets(deviceInfoList_, removedDevList);
+            removedDevList = queryRemovedDevice(devUid);
+            for(auto iter = deviceInfoList_.begin(); iter != deviceInfoList_.end();) {
+                if((*iter)->getUid() == devUid) {
+                    iter = deviceInfoList_.erase(iter);
+                }
+                else {
+                    iter++;
+                }
+            }
         }
         if(removedDevList.size()) {
             LOG_DEBUG("device list changed: removed={0}, current={1}", removedDevList.size(), deviceInfoList_.size());

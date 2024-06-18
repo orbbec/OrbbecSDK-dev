@@ -26,7 +26,7 @@ namespace libobsensor {
 constexpr uint8_t INTERFACE_COLOR = 4;
 constexpr uint8_t INTERFACE_DEPTH = 0;
 
-G330Device::G330Device(const std::shared_ptr<const DeviceEnumInfo> &info) : enumInfo_(info) {
+G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info) {
     initSensors();
     initProperties();
     initFrameMetadataParserContainer();

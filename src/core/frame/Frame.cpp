@@ -2,8 +2,19 @@
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
+#include "Frame/FrameMemoryPool.hpp"
+#include "Frame/FrameBufferManager.hpp"
 
 namespace libobsensor {
+
+FrameBackendLifeSpan::FrameBackendLifeSpan()
+    : logger_(Logger::getInstance()), memoryPool_(FrameMemoryPool::getInstance()), memoryAllocator_(FrameMemoryAllocator::getInstance()) {}
+
+FrameBackendLifeSpan::~FrameBackendLifeSpan() {
+    memoryAllocator_.reset();
+    memoryPool_.reset();
+    logger_.reset();
+}
 
 Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
     : dataSize_(dataBufSize),

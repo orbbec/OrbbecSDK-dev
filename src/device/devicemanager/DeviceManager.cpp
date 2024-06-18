@@ -2,11 +2,11 @@
 #include "utils/Utils.hpp"
 
 #if defined(BUILD_USB_PORT)
-#include "enumerator/UsbDeviceEnumerator.hpp"
+#include "UsbDeviceEnumerator.hpp"
 #endif
 
 #if defined(BUILD_NET_PORT)
-#include "enumerator/NetDeviceEnumerator.hpp"
+#include "NetDeviceEnumerator.hpp"
 #endif
 
 namespace libobsensor {
@@ -52,8 +52,9 @@ DeviceManager::DeviceManager() : destroy_(false), multiDeviceSyncIntervalMs_(0) 
 #if defined(BUILD_NET_PORT)
     if(false) {  // todo: qurey if net enum is enabled form global config
         LOG_DEBUG("Enable Net Device Enumerator ...");
-        auto netDeviceEnumerator = std::make_shared<NetDeviceEnumerator>(
-            [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed, std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+        auto netDeviceEnumerator =
+            std::make_shared<NetDeviceEnumerator>([&](std::vector<std::shared_ptr<IDeviceEnumInfo>> removed,
+                                                      std::vector<std::shared_ptr<IDeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
         deviceEnumerators_.emplace_back(netDeviceEnumerator);
     }
 #endif
@@ -117,7 +118,7 @@ std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uin
 #endif
 }
 
-std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<const DeviceEnumInfo> &info) {
+std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) {
     LOG_DEBUG("DeviceManager  createDevice...");
 
     // check if the device has been created
@@ -293,11 +294,11 @@ void DeviceManager::enableNetDeviceEnumeration(bool enable) {
     if(enable && iter == deviceEnumerators_.end()) {
 <<<<<<< HEAD
         auto netDeviceEnumerator =
-            std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed,
-                                                              std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+            std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<IDeviceEnumInfo>> removed,
+                                                              std::vector<std::shared_ptr<IDeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
         == == == = auto netDeviceEnumerator =
-            std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<DeviceEnumInfo>> removed,
-                                                              std::vector<std::shared_ptr<DeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+            std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<IDeviceEnumInfo>> removed,
+                                                              std::vector<std::shared_ptr<IDeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
 >>>>>>> 2b5680b (Implementing Context and Device Manager.)
         deviceEnumerators_.emplace_back(netDeviceEnumerator);
         auto deviceInfoList = getDeviceInfoList();

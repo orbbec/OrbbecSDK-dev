@@ -2,8 +2,19 @@
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
+#include "Frame/FrameMemoryPool.hpp"
+#include "Frame/FrameBufferManager.hpp"
 
 namespace libobsensor {
+
+FrameBackendLifeSpan::FrameBackendLifeSpan()
+    : logger_(Logger::getInstance()), memoryPool_(FrameMemoryPool::getInstance()), memoryAllocator_(FrameMemoryAllocator::getInstance()) {}
+
+FrameBackendLifeSpan::~FrameBackendLifeSpan() {
+    memoryAllocator_.reset();
+    memoryPool_.reset();
+    logger_.reset();
+}
 
 Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
     : dataSize_(dataBufSize),
@@ -18,7 +29,6 @@ Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferRec
       frameData_(data),
       dataBufSize_(dataBufSize),
       bufferReclaimFunc_(bufferReclaimFunc) {}
-
 
 Frame::~Frame() noexcept {
     if(bufferReclaimFunc_) {
@@ -139,6 +149,10 @@ size_t Frame::getMetadataSize() const {
     return metadataSize_;
 }
 
+void Frame::setMetadataSize(size_t metadataSize) {
+    metadataSize_ = metadataSize;
+}
+
 void Frame::updateMetadata(const uint8_t *metadata, size_t metadataSize) {
     if(metadataSize > 0 && metadata == nullptr) {
         // In the try_read_metadata() function, metadata may be empty.
@@ -153,6 +167,10 @@ void Frame::updateMetadata(const uint8_t *metadata, size_t metadataSize) {
 
 const uint8_t *Frame::getMetadata() const {
     return metadata_;
+}
+
+uint8_t *Frame::getMetadataUnsafe() const {
+    return const_cast<uint8_t *>(metadata_);
 }
 
 void Frame::registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers) {
@@ -315,12 +333,12 @@ uint32_t FrameSet::getFrameCount() {
     return frameCnt;
 }
 
-std::shared_ptr<Frame> FrameSet::getDisparityFrame(){
+std::shared_ptr<Frame> FrameSet::getDisparityFrame() {
     std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item){
-        auto pFrame=(std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType()==OB_FRAME_DISPARITY){
-            frame=*pFrame;
+    foreachFrame([&](void *item) {
+        auto pFrame = (std::shared_ptr<Frame> *)item;
+        if(*pFrame && (*pFrame)->getType() == OB_FRAME_DISPARITY) {
+            frame = *pFrame;
             return true;
         }
         return false;

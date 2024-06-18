@@ -4,7 +4,7 @@
 namespace libobsensor {
 
 typedef enum {
-    OB_PROP_DEVICE_RESET_BOOL               = 29, /**< Reset/reboot the device*/
+    OB_PROP_DEVICE_RESET_BOOL = 29, /**< Reset/reboot the device*/
 
     OB_PROP_GYRO_SWITCH_BOOL     = 2019, /**< Gyroscope switch*/
     OB_PROP_ACCEL_SWITCH_BOOL    = 2020, /**< Accelerometer switch*/
@@ -18,6 +18,7 @@ typedef enum {
     OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST        = 1032, /**< Get the list of sampling rates supported by the accelerometer*/
     OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST  = 1033, /**< Get the range list supported by the gyroscope*/
     OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST = 1034, /**< Get the range list supported by the accelerometer*/
+    OB_STRUCT_DEVICE_TIME                       = 1037, /**< Get/update the current device time*/
 
     OB_RAW_DATA_DEPTH_CALIB_PARAM            = 4026, /**< Depth calibration parameters*/
     OB_RAW_DATA_IMU_CALIB_PARAM              = 4036, /**< IMU calibration parameters*/

@@ -8,7 +8,20 @@
 
 namespace libobsensor {
 
-StreamProfile::StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format) : owner_(owner), type_(type), format_(format), index_(0){}
+StreamProfileBackendLifeSpan::StreamProfileBackendLifeSpan()
+    : logger_(Logger::getInstance()),
+      intrinsicsManager_(StreamIntrinsicsManager::getInstance()),
+      extrinsicsManager_(StreamExtrinsicsManager::getInstance()),
+      disparityParamManager_(StreamDisparityParamManager::getInstance()) {}
+
+StreamProfileBackendLifeSpan::~StreamProfileBackendLifeSpan() {
+    intrinsicsManager_.reset();
+    extrinsicsManager_.reset();
+    disparityParamManager_.reset();
+    logger_.reset();
+}
+
+StreamProfile::StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format) : owner_(owner), type_(type), format_(format), index_(0){};
 
 std::shared_ptr<LazySensor> StreamProfile::getOwner() const {
     return owner_.lock();

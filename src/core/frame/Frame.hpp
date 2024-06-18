@@ -3,10 +3,9 @@
 
 #pragma once
 
-#include "IFrameMetadataParser.hpp"
+#include "IFrame.hpp"
 #include "IStreamProfile.hpp"
 #include "exception/ObException.hpp"
-#include "IFrame.hpp"
 
 #include <atomic>
 #include <memory>
@@ -15,6 +14,20 @@
 #include <typeinfo>
 
 namespace libobsensor {
+
+class logger;
+class FrameMemoryPool;
+class FrameMemoryAllocator;
+class FrameBackendLifeSpan {
+public:
+    FrameBackendLifeSpan();
+    ~FrameBackendLifeSpan();
+
+private:
+    std::shared_ptr<Logger>               logger_;
+    std::shared_ptr<FrameMemoryPool>      memoryPool_;
+    std::shared_ptr<FrameMemoryAllocator> memoryAllocator_;
+};
 
 class FrameSet;
 class PointsFrame;
@@ -28,7 +41,7 @@ class GyroFrame;
 
 using FrameBufferReclaimFunc = std::function<void(void)>;
 
-class Frame : public std::enable_shared_from_this<Frame> {
+class Frame : public std::enable_shared_from_this<Frame>, private FrameBackendLifeSpan {
 public:
     Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     virtual ~Frame() noexcept;
@@ -51,6 +64,9 @@ public:
     size_t         getMetadataSize() const;
     void           updateMetadata(const uint8_t *metadata, size_t metadataSize);
     const uint8_t *getMetadata() const;
+
+    uint8_t *getMetadataUnsafe() const;  // use with caution, metadata may be changed while other threads are using it
+    void     setMetadataSize(size_t metadataSize);
 
     void    registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers);
     bool    hasMetadata(OBFrameMetadataType type) const;
@@ -88,7 +104,7 @@ protected:
     uint64_t                                       systemTimeStampUsec_;
     uint64_t                                       globalTimeStampUsec_;
     size_t                                         metadataSize_;
-    uint8_t                                        metadata_[256];
+    uint8_t                                        metadata_[12 + 255];  // standard uvc payload size is 12bytes, add some extra space for metadata
     std::shared_ptr<IFrameMetadataParserContainer> metadataPhasers_;
     std::shared_ptr<const StreamProfile>           streamProfile_;
 

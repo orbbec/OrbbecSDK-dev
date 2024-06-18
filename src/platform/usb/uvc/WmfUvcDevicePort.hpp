@@ -35,16 +35,6 @@ static const std::vector<std::vector<std::pair<GUID, GUID>>> attributes_params =
     { { MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID } },
 };
 
-#pragma pack(push, 1)
-struct UvcHeader {
-    uint8_t length;  // UVC Metadata total length is
-                     // limited by design to 255 bytes
-    uint8_t  info;
-    uint32_t timeStamp;
-    uint8_t  reserve[2];
-};
-#pragma pack(pop)
-constexpr uint8_t uvcHeaderSize = sizeof(UvcHeader);
 namespace libobsensor {
 
 class WinPal;

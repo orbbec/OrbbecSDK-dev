@@ -1,6 +1,8 @@
 #include "G330Device.hpp"
 #include "ObPal.hpp"
 #include "InternalTypes.hpp"
+#include "DevicePids.hpp"
+
 #include "property/VendorPropertyPort.hpp"
 #include "property/UvcPropertyPort.hpp"
 #include "property/PropertyAccessor.hpp"
@@ -10,8 +12,12 @@
 #include "sensor/motion/GyroSensor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
 #include "filter/FilterFactory.hpp"
-
 #include "utils/Utils.hpp"
+#include "metadata/FrameMetadataParserContainer.hpp"
+
+#include "G330MetadataParser.hpp"
+#include "G330MetadataTypes.hpp"
+#include "G330TimestampCalculator.hpp"
 
 #include <algorithm>
 
@@ -20,9 +26,10 @@ namespace libobsensor {
 constexpr uint8_t INTERFACE_COLOR = 4;
 constexpr uint8_t INTERFACE_DEPTH = 0;
 
-G330Device::G330Device(const std::shared_ptr<const DeviceEnumInfo> &info) : enumInfo_(info) {
+G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info) {
     initSensors();
     initProperties();
+    initFrameMetadataParserContainer();
 
     auto propAccessor                 = getPropertyAccessor();
     auto version                      = propAccessor->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
@@ -38,6 +45,19 @@ G330Device::G330Device(const std::shared_ptr<const DeviceEnumInfo> &info) : enum
     deviceInfo_->vid_                 = enumInfo_->getVid();
     deviceInfo_->uid_                 = enumInfo_->getUid();
     deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
+
+    globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>([this]() {
+        auto propAccessor = getPropertyAccessor();
+        return std::move(propAccessor);
+    });
+
+    auto iter = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo_->pid_);
+    if(iter != gG330LPids.end()) {
+        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter_);
+    }
+    else {
+        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter_);
+    }
 }
 
 G330Device::~G330Device() noexcept {}
@@ -116,6 +136,7 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_PROP_CAPTURE_IMAGE_FRAME_NUMBER_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_VERSION, "r", "r", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_STRUCT_DEVICE_TIME, "", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_DEVICE_SERIAL_NUMBER, "r", "r", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_ASIC_SERIAL_NUMBER, "r", "r", vendorPropertyPort);
@@ -155,6 +176,71 @@ void G330Device::initProperties() {
     propertyAccessor_->aliasProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
     propertyAccessor_->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
     propertyAccessor_->aliasProperty(OB_PROP_IR_GAIN_INT, OB_PROP_DEPTH_GAIN_INT);
+}
+
+void G330Device::initFrameMetadataParserContainer() {
+    // for depth and left/right ir sensor
+    depthMdParserContainer_ = std::make_shared<FrameMetadataParserContainer>();
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_TIMESTAMP, std::make_shared<G330MetadataTimestampParser<G330DepthUvcMetadata>>());
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, std::make_shared<G330MetadataSensorTimestampParser>());
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_FRAME_NUMBER, makeStructureMetadataParser(&G330DepthUvcMetadata::frame_counter));
+    // todo: calculate actual fps according exposure and frame rate
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, makeStructureMetadataParser(&G330DepthUvcMetadata::actual_fps));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_GAIN, makeStructureMetadataParser(&G330DepthUvcMetadata::gain_level));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE,
+                                            makeStructureMetadataParser(&G330CommonUvcMetadata::bitmap_union_0,
+                                                                        [](const uint64_t &param) {  //
+                                                                            return ((G330ColorUvcMetadata::bitmap_union_0_fields *)&param)->auto_exposure;
+                                                                        }));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE, makeStructureMetadataParser(&G330CommonUvcMetadata::exposure));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY, makeStructureMetadataParser(&G330DepthUvcMetadata::exposure_priority));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_LASER_POWER, makeStructureMetadataParser(&G330DepthUvcMetadata::laser_power));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL, makeStructureMetadataParser(&G330DepthUvcMetadata::laser_power_level));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_LASER_STATUS, makeStructureMetadataParser(&G330DepthUvcMetadata::laser_status));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, makeStructureMetadataParser(&G330DepthUvcMetadata::exposure_roi_left));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_TOP, makeStructureMetadataParser(&G330DepthUvcMetadata::exposure_roi_top));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, makeStructureMetadataParser(&G330DepthUvcMetadata::exposure_roi_right));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, makeStructureMetadataParser(&G330DepthUvcMetadata::exposure_roi_bottom));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA, makeStructureMetadataParser(&G330DepthUvcMetadata::gpio_input_data));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME, makeStructureMetadataParser(&G330DepthUvcMetadata::sequence_name));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE, makeStructureMetadataParser(&G330DepthUvcMetadata::sequence_size));
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX, makeStructureMetadataParser(&G330DepthUvcMetadata::sequence_id));
+
+    // for color sensor
+    colorMdParserContainer_ = std::make_shared<FrameMetadataParserContainer>();
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_TIMESTAMP, std::make_shared<G330MetadataTimestampParser<G330ColorUvcMetadata>>());
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP,
+                                            std::make_shared<G330ColorMetadataSensorTimestampParser>([](const int64_t &param) { return param * 100; }));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_FRAME_NUMBER, makeStructureMetadataParser(&G330CommonUvcMetadata::frame_counter));
+    // todo: calculate actual fps according exposure and frame rate
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, makeStructureMetadataParser(&G330ColorUvcMetadata::actual_fps));
+
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE,
+                                            makeStructureMetadataParser(&G330CommonUvcMetadata::bitmap_union_0,
+                                                                        [](const int64_t &param) {  //
+                                                                            return ((G330ColorUvcMetadata::bitmap_union_0_fields *)&param)->auto_exposure;
+                                                                        }));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE, makeStructureMetadataParser(&G330CommonUvcMetadata::exposure));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_GAIN, makeStructureMetadataParser(&G330ColorUvcMetadata::gain_level));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE, makeStructureMetadataParser(&G330ColorUvcMetadata::auto_white_balance));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_WHITE_BALANCE, makeStructureMetadataParser(&G330ColorUvcMetadata::white_balance));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE, makeStructureMetadataParser(&G330ColorUvcMetadata::white_balance));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_BRIGHTNESS, makeStructureMetadataParser(&G330ColorUvcMetadata::brightness));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_CONTRAST, makeStructureMetadataParser(&G330ColorUvcMetadata::contrast));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_SATURATION, makeStructureMetadataParser(&G330ColorUvcMetadata::saturation));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_SHARPNESS, makeStructureMetadataParser(&G330ColorUvcMetadata::sharpness));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION,
+                                            makeStructureMetadataParser(&G330ColorUvcMetadata::backlight_compensation));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_GAMMA, makeStructureMetadataParser(&G330ColorUvcMetadata::gamma));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_HUE, makeStructureMetadataParser(&G330ColorUvcMetadata::hue));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY,
+                                            makeStructureMetadataParser(&G330ColorUvcMetadata::power_line_frequency));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION,
+                                            makeStructureMetadataParser(&G330ColorUvcMetadata::low_light_compensation));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, makeStructureMetadataParser(&G330ColorUvcMetadata::exposure_roi_left));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_TOP, makeStructureMetadataParser(&G330ColorUvcMetadata::exposure_roi_top));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, makeStructureMetadataParser(&G330ColorUvcMetadata::exposure_roi_right));
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, makeStructureMetadataParser(&G330ColorUvcMetadata::exposure_roi_bottom));
 }
 
 IDevice::ResourceLock G330Device::tryLockResource() {
@@ -228,6 +314,9 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
                                                     { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
                                                     { FormatFilterPolicy::REMOVE, OB_FORMAT_UYVY, OB_FORMAT_ANY, nullptr },
                                                     { FormatFilterPolicy::REPLACE, OB_FORMAT_Z16, OB_FORMAT_Y16, nullptr } });
+
+            videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
+            videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
         else if(type == OB_SENSOR_IR_LEFT) {
             videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
@@ -236,6 +325,8 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
                                                     { FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y12, nullptr } });
             // add Y16 which unpack from NV12
             // todo: implement this
+            videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
+            videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
         else if(type == OB_SENSOR_IR_RIGHT) {
             videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
@@ -246,6 +337,8 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
                                                     { FormatFilterPolicy::REPLACE, OB_FORMAT_BA81, OB_FORMAT_Y8, nullptr } });
             // add Y16 which unpack from YV12
             // todo: implement this
+            videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
+            videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
         else if(type == OB_SENSOR_COLOR) {
             videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
@@ -253,6 +346,8 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
 
             // add RGB, RGBA, BGR, BGRA, Y16, Y8 which convert from YUYV
             // todo: implement this
+            videoSensor->setFrameMetadataParserContainer(colorMdParserContainer_);
+            videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
     }
 

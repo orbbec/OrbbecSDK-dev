@@ -26,7 +26,7 @@ public:
         return queue_.empty();
     }
 
-    bool full() const {
+    bool fulled() const {
         return queue_.size() >= capacity_;
     }
 

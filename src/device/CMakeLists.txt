@@ -12,9 +12,9 @@ file(GLOB HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 target_sources(${OB_TARGET_DEVICE} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 add_subdirectory(context)
-add_subdirectory(enumerator)
-add_subdirectory(property)
-add_subdirectory(sensor)
+add_subdirectory(devicemanager)
+add_subdirectory(deviceconfig)
+add_subdirectory(component)
 
 # devices support:
 add_subdirectory(gemini330) # Gemini 330 series

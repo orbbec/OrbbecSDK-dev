@@ -13,8 +13,7 @@
 #include <algorithm>
 
 namespace libobsensor {
-Pipeline::Pipeline(std::shared_ptr<IDevice> dev) :  streamState_(STREAM_STATE_STOPED),device_(dev) {
-    context_ = Context::getInstance();  // todo: 需要将context_传入device
+Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), streamState_(STREAM_STATE_STOPED) {
     LOG_DEBUG("Pipeline init ...");
     auto sensorTypeList = device_->getSensorTypeList();
     if(sensorTypeList.empty()) {
@@ -257,14 +256,13 @@ void Pipeline::onFrameCallback(std::shared_ptr<const Frame> frame) {
 }
 
 void Pipeline::outputFrame(std::shared_ptr<const Frame> frame) {
-    // LOG_FREQ_CALC(DEBUG, 5000, "Pipeline streaming... frameset output rate={freq}fps");
+    LOG_FREQ_CALC(ERROR, 5000, "Pipeline streaming... frameset output rate={freq}fps");
     if(streamState_ == STREAM_STATE_STREAMING) {
         if(pipelineCallback_ != nullptr) {
-            // LOG( INFO ) << "send frameSet to callback ";
             pipelineCallback_(frame);
         }
         else {
-            if(outputFrameQueue_->full()) {
+            if(outputFrameQueue_->fulled()) {
                 LOG_WARN_INTVL("Output frameset queue is full, drop oldest frameset!");
                 outputFrameQueue_->dequeue();
             }

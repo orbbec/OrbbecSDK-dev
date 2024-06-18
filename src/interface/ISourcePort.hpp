@@ -74,6 +74,7 @@ struct USBSourcePortInfo : public SourcePortInfo {
     uint8_t     infIndex = 0;  // interface index
     std::string infName;       // interface name
     std::string hubId;         // hub id
+
     bool        equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
         if(cmpInfo->portType != portType) {
             return false;

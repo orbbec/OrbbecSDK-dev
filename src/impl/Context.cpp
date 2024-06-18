@@ -57,8 +57,8 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, context, address, port)
 void ob_set_device_changed_callback(ob_context *context, ob_device_changed_callback callback, void *user_data, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(context);
     auto deviceMgr = context->context->getDeviceManager();
-    deviceMgr->setDeviceChangedCallback([callback, user_data](std::vector<std::shared_ptr<const libobsensor::DeviceEnumInfo>> removed,
-                                                              std::vector<std::shared_ptr<const libobsensor::DeviceEnumInfo>> added) {
+    deviceMgr->setDeviceChangedCallback([callback, user_data](std::vector<std::shared_ptr<const libobsensor::IDeviceEnumInfo>> removed,
+                                                              std::vector<std::shared_ptr<const libobsensor::IDeviceEnumInfo>> added) {
         auto removedImpl  = new ob_device_list();
         removedImpl->list = removed;
         auto addedImpl    = new ob_device_list();

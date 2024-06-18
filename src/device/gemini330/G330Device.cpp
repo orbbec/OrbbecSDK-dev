@@ -47,10 +47,12 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
     deviceInfo_->uid_                 = enumInfo_->getUid();
     deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
 
-    globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>([this]() {
+    DeviceResourceGetter<IPropertyAccessor> propertyAccessorGetter([this]() {
         auto propAccessor = getPropertyAccessor();
         return std::move(propAccessor);
     });
+    algParamManager_       = std::make_shared<G330AlgParamManager>(deviceInfo_, propertyAccessorGetter);
+    globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>(propertyAccessorGetter);
 
     auto iter = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo_->pid_);
     if(iter != gG330LPids.end()) {
@@ -118,7 +120,7 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", uvcPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyPort);
             // FIXME
-            auto vendorPropertyPort = std::make_shared<VendorPropertyPort<0>>(sourcePort);
+            auto vendorPropertyPort = std::make_shared<VendorPropertyPort>(sourcePort);
             propertyAccessor_->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_LASER_CONTROL_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_LASER_ALWAYS_ON_BOOL, "rw", "rw", vendorPropertyPort);
@@ -143,6 +145,8 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_STRUCT_ASIC_SERIAL_NUMBER, "r", "r", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_RAW_DATA_DEPTH_CALIB_PARAM, "", "r", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_RAW_DATA_ALIGN_CALIB_PARAM, "", "r", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_RAW_DATA_D2C_ALIGN_SUPPORT_PROFILE_LIST, "", "r", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_BASELINE_CALIBRATION_PARAM, "r", "r", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_DEPTH_HDR_CONFIG, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_STRUCT_COLOR_AE_ROI, "rw", "rw", vendorPropertyPort);
@@ -170,12 +174,14 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL, "r", "r", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyPort);
-        }else if(sensor.first == OB_SENSOR_ACCEL){
-            auto imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
+        }
+        else if(sensor.first == OB_SENSOR_ACCEL) {
+            auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter");
             auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
             propertyAccessor_->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
-        }else if(sensor.first == OB_SENSOR_GYRO){
-            auto imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
+        }
+        else if(sensor.first == OB_SENSOR_GYRO) {
+            auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter");
             auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
             propertyAccessor_->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
         }
@@ -250,8 +256,8 @@ void G330Device::initFrameMetadataParserContainer() {
     colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, makeStructureMetadataParser(&G330ColorUvcMetadata::exposure_roi_bottom));
 }
 
-IDevice::ResourceLock G330Device::tryLockResource() {
-    ResourceLock resLock(componentLock_, std::defer_lock);
+DeviceResourceLock G330Device::tryLockResource() {
+    DeviceResourceLock resLock(componentLock_, std::defer_lock);
     if(!resLock.try_lock_for(std::chrono::milliseconds(10000))) {
         throw libobsensor::wrong_api_call_sequence_exception("Resource busy! You can try again later!");
     }
@@ -269,9 +275,9 @@ const std::string &G330Device::getExtensionInfo(const std::string &infoKey) {
     return emptyStr;
 }
 
-IDevice::ResourcePtr<IPropertyAccessor> G330Device::getPropertyAccessor() {
+DeviceResourcePtr<IPropertyAccessor> G330Device::getPropertyAccessor() {
     auto resLock = tryLockResource();
-    return ResourcePtr<IPropertyAccessor>(propertyAccessor_, std::move(resLock));
+    return DeviceResourcePtr<IPropertyAccessor>(propertyAccessor_, std::move(resLock));
 }
 
 std::vector<OBSensorType> G330Device::getSensorTypeList() const {
@@ -287,7 +293,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     return {};
 }
 
-IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
+DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     auto resLock = tryLockResource();
     auto iter    = sensors_.find(type);
     if(iter == sensors_.end()) {
@@ -295,7 +301,7 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     }
 
     if(iter->second.sensor) {
-        return ResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
+        return DeviceResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
     }
     std::shared_ptr<FrameProcessor> frameProcessor = nullptr;
     if(!frameProcessorFactory_) {
@@ -305,10 +311,10 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
 
     // create
     if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
-        auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
-        std::shared_ptr<MotionStreamer> motionStreamer = nullptr;
-        auto imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
-        if(imuCorrecterFilter){
+        auto                            dataStreamPort     = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
+        std::shared_ptr<MotionStreamer> motionStreamer     = nullptr;
+        auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
+        if(imuCorrecterFilter) {
             motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, imuCorrecterFilter);  // todo: add data phaser
         }
 
@@ -366,19 +372,22 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
             videoSensor->setFrameMetadataParserContainer(colorMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
-        if(frameProcessor){
+        if(frameProcessor) {
             videoSensor->setFrameProcessor(frameProcessor);
         }
     }
 
     auto profiles = iter->second.sensor->getStreamProfileList();
-    // todo: bind params to stream profile
+
+    // bind params: extrinsics, intrinsics, etc.
+    algParamManager_->bindStreamProfileParams(profiles);
 
     // todo: printf streamProfile
     for(auto &profile: profiles) {
         utils::unusedVar(profile);
     }
-    return ResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
+
+    return DeviceResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
 }
 
 void G330Device::enableHeadBeat(bool enable) {
@@ -425,19 +434,18 @@ const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uin
     return emptyData;
 }
 
-std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name,bool createIfNotExist) {
-    auto filterIter = std::find_if(filters_.begin(),filters_.end(),[name](const std::shared_ptr<IFilter> &filter){
-        return filter->getName() == name;
-    });
+std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, bool createIfNotExist) {
+    auto filterIter = std::find_if(filters_.begin(), filters_.end(), [name](const std::shared_ptr<IFilter> &filter) { return filter->getName() == name; });
 
     if(filterIter != filters_.end()) {
         return *filterIter;
-    }else if(!createIfNotExist){
+    }
+    else if(!createIfNotExist) {
         return nullptr;
     }
 
     auto filterFactory = FilterFactory::getInstance();
-    auto filter = filterFactory->createFilter(name);
+    auto filter        = filterFactory->createFilter(name);
     filters_.push_back(filter);
     return filter;
 }

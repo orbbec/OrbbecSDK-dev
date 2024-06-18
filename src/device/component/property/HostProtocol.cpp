@@ -54,6 +54,9 @@ uint16_t getExpectedRespSize(HpOpCodes opcode) {
     if(opcode == OPCODE_GET_STRUCTURE_DATA || opcode == OPCODE_GET_STRUCTURE_DATA_V1_1 || opcode == OPCODE_HEARTBEAT_AND_STATE) {
         size = 512;
     }
+    else if(opcode == OPCODE_READ_RAW_DATA || opcode == OPCODE_READ_STRUCT_DATA_LIST_V1_1) {
+        size = 1024;
+    }
     return size;
 }
 
@@ -233,7 +236,7 @@ GetStructureDataResp *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataS
     return resp;
 }
 
-uint16_t getStructureDataSize(const GetStructureDataResp *resp) {
+int16_t getStructureDataSize(const GetStructureDataResp *resp) {
     return resp->header.sizeInHalfWords * 2 - sizeof(RespHeader::errorCode);
 }
 
@@ -249,7 +252,7 @@ GetPropertyReq *initGetCmdVersionReq(uint8_t *dataBuf, uint32_t propertyId) {
     auto *req                   = reinterpret_cast<GetPropertyReq *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 2;
-    req->header.opcode          = OPCODE_GET_COMMAND_VERSION;
+    req->header.opcode          = OPCODE_GET_COMMAND_VERSION_V1_1;
     req->header.requestId       = generateRequestId();
     req->propertyId             = propertyId;
     return req;
@@ -263,16 +266,16 @@ GetCmdVerDataResp *parseGetCmdVerDataResp(uint8_t *dataBuf, uint16_t dataSize) {
     return resp;
 }
 
-GetReadDataResp *parseGetReadDataResp(uint8_t *dataBuf, uint16_t dataSize) {
-    auto *resp = reinterpret_cast<GetReadDataResp *>(dataBuf);
-    if(dataSize < sizeof(GetReadDataResp)) {
+GetRawDataResp *parseGetRawDataResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<GetRawDataResp *>(dataBuf);
+    if(dataSize < sizeof(GetRawDataResp)) {
         throw io_exception("device response with wrong data size");
     }
     return resp;
 }
 
-GetStructureDataV11Req *initGetStructureDataV11Req(uint8_t *dataBuf, uint32_t propertyId) {
-    auto *req                   = reinterpret_cast<GetStructureDataV11Req *>(dataBuf);
+GetStructureDataReqV1_1 *initGetStructureDataReqV1_1(uint8_t *dataBuf, uint32_t propertyId) {
+    auto *req                   = reinterpret_cast<GetStructureDataReqV1_1 *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 2;
     req->header.opcode          = OPCODE_GET_STRUCTURE_DATA_V1_1;
@@ -282,44 +285,43 @@ GetStructureDataV11Req *initGetStructureDataV11Req(uint8_t *dataBuf, uint32_t pr
     return req;
 }
 
-GetStructureDataV11Resp *parseGetStructureDataV11Resp(uint8_t *dataBuf, uint16_t dataSize) {
-    auto *resp = reinterpret_cast<GetStructureDataV11Resp *>(dataBuf);
-    if(dataSize < sizeof(GetStructureDataV11Resp)) {
+GetStructureDataRespV1_1 *parseGetStructureDataRespV1_1(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<GetStructureDataRespV1_1 *>(dataBuf);
+    if(dataSize < sizeof(GetStructureDataRespV1_1)) {
         throw io_exception("device response with wrong data size");
     }
-
     return resp;
 }
 
-GetStructureDataV11Req *initGetStructureDataListV11Req(uint8_t *dataBuf, uint32_t propertyId) {
-    auto *req                   = reinterpret_cast<GetStructureDataV11Req *>(dataBuf);
+GetStructureDataReqV1_1 *initGetStructureDataListReqV1_1(uint8_t *dataBuf, uint32_t propertyId) {
+    auto *req                   = reinterpret_cast<GetStructureDataReqV1_1 *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 2;
-    req->header.opcode          = OPCODE_INIT_READ_STRUCT_DATA_LIST;
+    req->header.opcode          = OPCODE_INIT_READ_STRUCT_DATA_LIST_V1_1;
 
     req->header.requestId = generateRequestId();
     req->propertyId       = propertyId;
     return req;
 }
 
-InitStructureDataListResp *parseInitStructureDataListResp(uint8_t *dataBuf, uint16_t dataSize) {
-    auto *resp = reinterpret_cast<InitStructureDataListResp *>(dataBuf);
-    if(dataSize < sizeof(InitStructureDataListResp)) {
+StartGetStructureDataListResp *parseStartStructureDataListResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<StartGetStructureDataListResp *>(dataBuf);
+    if(dataSize < sizeof(StartGetStructureDataListResp)) {
         throw io_exception("device response with wrong data size");
     }
 
     return resp;
 }
 
-uint16_t getProtoV11StructureDataSize(const GetStructureDataV11Resp *resp) {
-    return resp->header.sizeInHalfWords * 2 - sizeof(RespHeader) - 2;
+int16_t getStructureDataSizeV1_1(const GetStructureDataRespV1_1 *resp) {
+    return resp->header.sizeInHalfWords * 2 - sizeof(RespHeader::errorCode) - 2;
 }
 
-GetPropertyReq *initStartGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId) {
-    auto *req                   = reinterpret_cast<GetPropertyReq *>(dataBuf);
+StartGetStructureDataListReq *initStartGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId) {
+    auto *req                   = reinterpret_cast<StartGetStructureDataListReq *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 2;
-    req->header.opcode          = OPCODE_INIT_READ_STRUCT_DATA_LIST;
+    req->header.opcode          = OPCODE_INIT_READ_STRUCT_DATA_LIST_V1_1;
 
     req->header.requestId = generateRequestId();
     req->propertyId       = propertyId;
@@ -330,7 +332,7 @@ GetStructureDataListReq *initReadStructureDataList(uint8_t *dataBuf, uint32_t pr
     auto *req                   = reinterpret_cast<GetStructureDataListReq *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 6;
-    req->header.opcode          = OPCODE_READ_STRUCT_DATA_LIST;
+    req->header.opcode          = OPCODE_READ_STRUCT_DATA_LIST_V1_1;
 
     req->header.requestId = generateRequestId();
     req->propertyId       = propertyId;
@@ -340,11 +342,11 @@ GetStructureDataListReq *initReadStructureDataList(uint8_t *dataBuf, uint32_t pr
     return req;
 }
 
-GetPropertyReq *initFinishGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId) {
-    auto *req                   = reinterpret_cast<GetPropertyReq *>(dataBuf);
+FinishGetStructureDataListReq *initFinishGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId) {
+    auto *req                   = reinterpret_cast<FinishGetStructureDataListReq *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 2;
-    req->header.opcode          = OPCODE_FINISH_READ_STRUCT_DATA_LIST;
+    req->header.opcode          = OPCODE_FINISH_READ_STRUCT_DATA_LIST_V1_1;
 
     req->header.requestId = generateRequestId();
     req->propertyId       = propertyId;

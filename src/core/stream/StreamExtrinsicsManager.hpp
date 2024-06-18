@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace libobsensor {
-
+constexpr OBExtrinsic IdentityExtrinsic = { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
 class StreamExtrinsicsManager {
 private:
     StreamExtrinsicsManager();

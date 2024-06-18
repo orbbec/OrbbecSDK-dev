@@ -25,52 +25,65 @@ struct DeviceInfo {
 typedef std::function<void(OBDeviceState state, const char *message)>                    DeviceStateChangedCallback;
 typedef std::function<void(OBFwUpdateState state, const char *message, uint8_t percent)> DeviceFwUpdateCallback;
 
-class IDevice {
+typedef std::unique_lock<std::recursive_timed_mutex> DeviceResourceLock;
+
+template <typename T> class DeviceResourcePtr {
 public:
-    typedef std::unique_lock<std::recursive_timed_mutex> ResourceLock;
+    DeviceResourcePtr(std::shared_ptr<T> ptr, DeviceResourceLock &&lock) : ptr_(ptr), lock_(std::move(lock)) {}
 
-    template <typename T> class ResourcePtr {
-    public:
-        ResourcePtr(std::shared_ptr<T> ptr, ResourceLock &&lock) : ptr_(ptr), lock_(std::move(lock)) {}
+    // copy constructor and assignment operator are deleted to avoid accidental copies of the lock
+    DeviceResourcePtr(const DeviceResourcePtr &other)            = delete;
+    DeviceResourcePtr &operator=(const DeviceResourcePtr &other) = delete;
 
-        // copy constructor and assignment operator are deleted to avoid accidental copies of the lock
-        ResourcePtr(const ResourcePtr &other)            = delete;
-        ResourcePtr &operator=(const ResourcePtr &other) = delete;
+    // move constructor and assignment operator are deleted to avoid accidental moves of the lock
+    DeviceResourcePtr(DeviceResourcePtr &&other)            = default;
+    DeviceResourcePtr &operator=(DeviceResourcePtr &&other) = default;
 
-        // move constructor and assignment operator are deleted to avoid accidental moves of the lock
-        ResourcePtr(ResourcePtr &&other)            = default;
-        ResourcePtr &operator=(ResourcePtr &&other) = default;
+    T *operator->() const {
+        return ptr_.get();
+    }
 
-        T *operator->() const {
-            return ptr_.get();
-        }
+    T &operator*() const {
+        return *ptr_;
+    }
 
-        T &operator*() const {
-            return *ptr_;
-        }
+    operator bool() const {
+        return ptr_ != nullptr;
+    }
 
-        operator bool() const {
-            return ptr_ != nullptr;
-        }
+private:
+    std::shared_ptr<T> ptr_;
+    DeviceResourceLock lock_;
+};
 
-    private:
-        std::shared_ptr<T> ptr_;
-        ResourceLock       lock_;
-    };
+template <typename T> class DeviceResourceGetter {
+public:
+    typedef std::function<DeviceResourcePtr<T>()> GetterFunc;
 
-    typedef std::function<ResourcePtr<IPropertyAccessor>()> PropertyAccessorGetter;
+public:
+    DeviceResourceGetter(GetterFunc getter) : getter_(getter) {}
+    virtual ~DeviceResourceGetter() = default;
 
+    DeviceResourcePtr<T> get() {
+        return std::move(getter_());
+    }
+
+private:
+    GetterFunc getter_;
+};
+
+class IDevice {
 public:
     virtual ~IDevice() = default;
 
     virtual std::shared_ptr<const DeviceInfo> getInfo() const                              = 0;
     virtual const std::string                &getExtensionInfo(const std::string &infoKey) = 0;
 
-    virtual ResourcePtr<IPropertyAccessor> getPropertyAccessor() = 0;
+    virtual DeviceResourcePtr<IPropertyAccessor> getPropertyAccessor() = 0;
 
-    virtual std::vector<OBSensorType>             getSensorTypeList() const                        = 0;
+    virtual std::vector<OBSensorType>             getSensorTypeList() const                                 = 0;
     virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) = 0;
-    virtual ResourcePtr<ISensor>                  getSensor(OBSensorType type)                              = 0;
+    virtual DeviceResourcePtr<ISensor>            getSensor(OBSensorType type)                              = 0;
 
     virtual void enableHeadBeat(bool enable) = 0;
 

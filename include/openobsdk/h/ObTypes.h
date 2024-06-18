@@ -731,8 +731,8 @@ typedef struct {
     int32_t invalidDisp;   // invalid disparity，usually is 0，dual IR add a auxiliary value.
     int32_t dispIntPlace;  // disp integer digits，default is 8，Gemini2 XL is 10
     uint8_t isDualCamera;  // 0 monocular camera，1 dual camera
-
 } OBDisparityProcessParam, ob_disparity_process_param;
+
 /**
  * @brief Enumeration for TOF filter scene ranges
  */

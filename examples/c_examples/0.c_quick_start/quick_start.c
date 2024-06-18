@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <openobsdk/ObSensor.h>
 
@@ -20,12 +21,13 @@ void check_ob_error(ob_error **err) {
         const char *error_message = ob_error_get_message(*err);
         fprintf(stderr, "Error: %s\n", error_message);
         ob_delete_error(*err);
+        *err = NULL;
         exit(-1);
     }
     *err = NULL;
 }
 
-int main(void){
+int main(void) {
 
     ob_error *error = NULL;
     // ob_set_logger_severity(OB_LOG_SEVERITY_DEBUG, &error);

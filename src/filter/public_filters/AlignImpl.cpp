@@ -409,7 +409,13 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                 if(0 == static_cast<uint16_t>(zptr[j]))
                     continue;
 
-                int      pos       = static_cast<int>(yptr[j]) * rgb_intric_.width + static_cast<int>(xptr[j]);
+                int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
+                if(map) {
+                    map[2 * i + k * 4 + j]     = u_rgb;
+                    map[2 * i + 1 + k * 4 + j] = v_rgb;
+                }
+
+                int      pos       = v_rgb * rgb_intric_.width + u_rgb;
                 uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
                 if(gap_fill_copy_) {
                     bool b_cur                             = out_depth[pos] < cur_depth;
@@ -601,7 +607,13 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                 if(0 == static_cast<uint16_t>(zptr[j]))
                     continue;
 
-                int      pos       = static_cast<int>(yptr[j]) * rgb_intric_.width + static_cast<int>(xptr[j]);
+				int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
+                if(map) {
+                    map[2 * i + k * 4 + j]     = u_rgb;
+                    map[2 * i + 1 + k * 4 + j] = v_rgb;
+                }
+
+                int pos = v_rgb * rgb_intric_.width + u_rgb;
                 uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
                 if(gap_fill_copy_) {
                     bool b_cur                             = out_depth[pos] < cur_depth;
@@ -785,7 +797,13 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
                 if(0 == static_cast<uint16_t>(zptr[j]))
                     continue;
 
-                int      pos       = static_cast<int>(yptr[j]) * rgb_intric_.width + static_cast<int>(xptr[j]);
+                int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
+                if(map) {
+                    map[2 * i + k * 4 + j]     = u_rgb;
+                    map[2 * i + 1 + k * 4 + j] = v_rgb;
+                }
+
+                int      pos       = v_rgb * rgb_intric_.width + u_rgb;
                 uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
                 if(gap_fill_copy_) {
                     bool b_cur                             = out_depth[pos] < cur_depth;
@@ -914,7 +932,14 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
                 if(0 == static_cast<uint16_t>(zptr[j]))
                     continue;
 
-                int      pos       = static_cast<int>(yptr[j]) * rgb_intric_.width + static_cast<int>(xptr[j]);
+                int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
+                if (map)
+                {
+                    map[2 * i + k * 4 + j]     = u_rgb;
+                    map[2 * i + 1 + k * 4 + j] = v_rgb;
+                }
+
+                int      pos       = v_rgb * rgb_intric_.width + u_rgb;
                 uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
                 if(gap_fill_copy_) {
                     bool b_cur                             = out_depth[pos] < cur_depth;
@@ -1088,7 +1113,7 @@ typedef struct {
 } uint24_t;
 
 int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_height, const void *rgb_buffer, void *out_rgb, int color_width, int color_height,
-                   OBFormat format) {
+                   OBFormat format, bool withSSE) {
 
     // rgb x-y coordinates for each depth pixel
     unsigned long long size     = static_cast<unsigned long long>(depth_width) * depth_height * 2;
@@ -1096,7 +1121,7 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
     memset(depth_xy, -1, size * sizeof(int));
 
     int ret = -1;
-    if(!D2C(depth_buffer, depth_width, depth_height, nullptr, color_width, color_height, depth_xy)) {
+    if(!D2C(depth_buffer, depth_width, depth_height, nullptr, color_width, color_height, depth_xy, withSSE)) {
 
         switch(format) {
         case OB_FORMAT_Y8:

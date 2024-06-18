@@ -96,14 +96,7 @@ public:
      * @retval 0 succeed
      */
     int C2D(const uint16_t *depth_buffer, int depth_width, int depth_height, const void *rgb_buffer, void *out_rgb, int color_width, int color_height,
-            OBFormat format);
-
-    /**
-     * @brief Same as C2D only with SSE
-     * @return
-     */
-    int C2DWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, const void *rgb_buffer, void *out_rgb, int color_width, int color_height,
-                   OBFormat format);
+            OBFormat format, bool withSSE = true);
 
 private:
     void clearMatrixCache();

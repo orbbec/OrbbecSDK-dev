@@ -1,5 +1,6 @@
 #pragma once
 #include "FilterBase.hpp"
+#include <mutex>
 
 namespace libobsensor {
 
@@ -15,6 +16,7 @@ private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
 protected:
+    std::mutex mtx_;
     float scale_ = 1.0f;
 };
 
@@ -30,6 +32,7 @@ private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
 protected:
+    std::mutex mtx_;
     uint32_t min_ = 0;
     uint32_t max_ = 16000;
 };
@@ -47,6 +50,7 @@ private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
 protected:
+    std::mutex mtx_;
     int8_t offset_ = 0;
 };
 

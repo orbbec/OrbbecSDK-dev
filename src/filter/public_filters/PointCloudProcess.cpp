@@ -114,12 +114,12 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
     CoordinateUtil::transformationDepthToPointCloud(&xyTables_, depthFrame->getData(), (void *)pointFrame->getData(), positionDataScale_,
                                                     coordinateSystemType_);
 
-    //float depthValueScale = depthFrame->as<DepthFrame>()->getValueScale();
+    float depthValueScale = depthFrame->as<DepthFrame>()->getValueScale();
     pointFrame->copyInfo(depthFrame);
     tarStreamProfile_->setFormat(OB_FORMAT_POINT);
     pointFrame->setStreamProfile(tarStreamProfile_);
-    //pointFrame->setDataSize(w * h * sizeof(OBPoint));
-    //pointFrame->as<PointsFrame>()->setPositionValueScale(depthValueScale / positionDataScale_);  // 实际坐标缩放 = 深度值缩放系数/设置的坐标缩放系数
+    // Actual coordinate scaling = Depth scaling factor / Set coordinate scaling factor.
+    pointFrame->as<PointsFrame>()->setCoordinateValueScale(depthValueScale / positionDataScale_);
 
     return pointFrame;
 }
@@ -273,14 +273,13 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     }
 
     // 完善帧信息
-    //float depthValueScale = depthFrame->as<DepthFrame>()->getValueScale();
+    float depthValueScale = depthFrame->as<DepthFrame>()->getValueScale();
     pointFrame->copyInfo(depthFrame);
     auto streamProfile = pointFrame->getStreamProfile()->clone();
     streamProfile->setFormat(OB_FORMAT_RGB_POINT);
     pointFrame->setStreamProfile(streamProfile);
-    //TODO:Need to add
-    //pointFrame->setDataSize(dstWidth * dstHeight * sizeof(OBColorPoint));
-    //pointFrame->as<PointsFrame>()->setPositionValueScale(depthValueScale / positionDataScale_);  // 实际坐标缩放 = 深度值缩放系数/设置的坐标缩放系数
+    //Actual coordinate scaling = Depth scaling factor / Set coordinate scaling factor.
+    pointFrame->as<PointsFrame>()->setCoordinateValueScale(depthValueScale / positionDataScale_);
     return pointFrame;
 }
 

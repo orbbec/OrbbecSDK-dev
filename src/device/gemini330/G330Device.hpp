@@ -1,14 +1,17 @@
 #pragma once
-#include "IDevice.hpp"
+#include "Device.hpp"
 #include "IDeviceEnumerator.hpp"
+
+#include "timestamp/GlobalTimestampFitter.hpp"
+
 #include <map>
 #include <memory>
 
 namespace libobsensor {
 
-class G330Device : public IDevice, public std::enable_shared_from_this<IDevice> {
+class G330Device : public Device, public std::enable_shared_from_this<IDevice> {
 public:
-    G330Device(const std::shared_ptr<const DeviceEnumInfo> &info);
+    G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info);
     virtual ~G330Device() noexcept;
 
     std::shared_ptr<const DeviceInfo> getInfo() const override;
@@ -36,17 +39,24 @@ public:
 private:
     void initSensors();
     void initProperties();
+    void initFrameMetadataParserContainer();
 
     ResourceLock tryLockResource();
 
     std::shared_ptr<IFilter> getSpecifyFilter(const std::string &name,bool createIfNotExist = true);
 
 private:
-    const std::shared_ptr<const DeviceEnumInfo> enumInfo_;
+    const std::shared_ptr<const IDeviceEnumInfo> enumInfo_;
     std::shared_ptr<DeviceInfo>                 deviceInfo_;
     std::map<std::string, std::string>          extensionInfo_;
     std::shared_ptr<IPropertyAccessor>          propertyAccessor_;
     std::map<OBSensorType, SensorEntry>         sensors_;
+
+    std::shared_ptr<GlobalTimestampFitter>         globalTimestampFitter_;
+    std::shared_ptr<IFrameMetadataParserContainer> colorMdParserContainer_;
+    std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
+    std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
+    // std::shared_ptr<IFrameTimestampCalculator>     imuFrameTimestampCalculator_;
 
     std::recursive_timed_mutex componentLock_;
 

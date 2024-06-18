@@ -8,7 +8,24 @@
 
 namespace libobsensor {
 
-class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
+class Logger;
+class StreamIntrinsicsManager;
+class StreamExtrinsicsManager;
+class StreamDisparityParamManager;
+
+class StreamProfileBackendLifeSpan {
+public:
+    StreamProfileBackendLifeSpan();
+    ~StreamProfileBackendLifeSpan();
+
+private:
+    std::shared_ptr<Logger>                      logger_;
+    std::shared_ptr<StreamIntrinsicsManager>     intrinsicsManager_;
+    std::shared_ptr<StreamExtrinsicsManager>     extrinsicsManager_;
+    std::shared_ptr<StreamDisparityParamManager> disparityParamManager_;
+};
+
+class StreamProfile : public std::enable_shared_from_this<StreamProfile>, private StreamProfileBackendLifeSpan {
 public:
     StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format);
 
@@ -29,6 +46,7 @@ public:
     void        bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile);
 
     virtual std::shared_ptr<StreamProfile> clone() const = 0;
+    virtual std::shared_ptr<StreamProfile> clone(OBFormat newFromat) const;
 
     template <typename T> bool               is() const;
     template <typename T> std::shared_ptr<T> as() {

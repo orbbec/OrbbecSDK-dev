@@ -4,7 +4,7 @@
 #include <mutex>
 #include <memory>
 
-#include "device/DeviceManager.hpp"
+#include "devicemanager/DeviceManager.hpp"
 #include "logger/Logger.hpp"
 #include "frame/FrameMemoryPool.hpp"
 #include "stream/StreamIntrinsicsManager.hpp"

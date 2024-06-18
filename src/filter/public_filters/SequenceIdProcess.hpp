@@ -1,6 +1,7 @@
 #pragma once
 #include "FilterBase.hpp"
 #include <mutex>
+#include <map>
 
 namespace libobsensor {
 
@@ -20,7 +21,7 @@ private:
 protected:
     std::recursive_mutex valueUpdateMutex_;
     uint32_t             select_sequence_id_ = 0;
-    
+
     std::map<std::pair<int, int>, std::shared_ptr<Frame>> last_frames_;
 };
 

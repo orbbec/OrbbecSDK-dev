@@ -1,5 +1,6 @@
 #include "ISourcePort.hpp"
 #include <functional>
+#include <algorithm>
 
 namespace libobsensor {
 namespace utils {

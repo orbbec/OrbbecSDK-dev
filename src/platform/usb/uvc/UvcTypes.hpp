@@ -12,47 +12,6 @@
 #endif
 namespace libobsensor {
 
-
-struct VideoFrameObject {
-    VideoFrameObject()
-        : index(0),
-          systemTime(0),
-          deviceTime(0),
-          format(OB_FORMAT_UNKNOWN),
-          frameSize(0),
-          frameData(nullptr),
-          metadataSize(0),
-          metadata(nullptr),
-          scrDataBuf(nullptr),
-          scrDataSize(0) {}
-
-    void copyInfo(const VideoFrameObject source) {
-        index        = source.index;
-        systemTime   = source.systemTime;
-        deviceTime   = source.deviceTime;
-        format       = source.format;
-        frameSize    = source.frameSize;
-        frameData    = source.frameData;
-        metadataSize = source.metadataSize;
-        metadata     = source.metadata;
-        scrDataBuf   = source.scrDataBuf;
-        scrDataSize  = source.scrDataSize;
-    }
-
-    uint64_t index;
-    uint64_t systemTime;
-    uint64_t deviceTime;
-    OBFormat format;
-    uint32_t frameSize;
-    void    *frameData;
-    uint8_t  metadataSize;
-    void    *metadata;
-    void    *scrDataBuf;  // source clock reference, 通常是6个字节
-    uint8_t  scrDataSize;
-};
-
-using VideoFrameCallback = std::function<void(const VideoFrameObject &)>;
-
 #define LIBUVC_NUM_TRANSFER_LOW_FRAME_BUFS 20
 #define LIBUVC_TRANSFER_LOW_FRAME_SIZE 10
 
@@ -66,6 +25,12 @@ struct StandardUvcFramePayloadHeader {
     uint32_t dwPresentationTime;
     uint8_t  scrSourceClock[6];
 };
+
+struct UvcMetadata {
+    StandardUvcFramePayloadHeader header;
+    uint8_t                       metadata[0];
+};
+
 #pragma pack(pop)
 #define UVC_PAYLOAD_HEADER_SRC_LENGTH (6)
 #define UVC_PAYLOAD_HEADER_SRC_OFFSET (6)

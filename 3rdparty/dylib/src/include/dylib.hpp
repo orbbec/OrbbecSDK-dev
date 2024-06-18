@@ -152,14 +152,14 @@ public:
         : dylib("", lib_name, decorations) {}
 
 #ifdef DYLIB_CPP17
-    explicit dynamic_library(const std::filesystem::path &lib_path)
-        : dynamic_library("", lib_path.string().c_str(), no_filename_decorations) {}
+    explicit dylib(const std::filesystem::path &lib_path)
+        : dylib("", lib_path.string().c_str(), no_filename_decorations) {}
 
-    dynamic_library(const std::filesystem::path &dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)
-        : dynamic_library(dir_path.string().c_str(), lib_name.c_str(), decorations) {}
+    dylib(const std::filesystem::path &dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)
+        : dylib(dir_path.string().c_str(), lib_name.c_str(), decorations) {}
 
-    dynamic_library(const std::filesystem::path &dir_path, const char *lib_name, bool decorations = add_filename_decorations)
-        : dynamic_library(dir_path.string().c_str(), lib_name, decorations) {}
+    dylib(const std::filesystem::path &dir_path, const char *lib_name, bool decorations = add_filename_decorations)
+        : dylib(dir_path.string().c_str(), lib_name, decorations) {}
 #endif
     ///@}
 

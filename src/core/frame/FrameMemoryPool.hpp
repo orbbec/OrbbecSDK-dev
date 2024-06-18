@@ -3,6 +3,8 @@
 #include <memory>
 #include <functional>
 #include <string>
+#include <map>
+
 #include "FrameBufferManager.hpp"
 #include "logger/Logger.hpp"
 

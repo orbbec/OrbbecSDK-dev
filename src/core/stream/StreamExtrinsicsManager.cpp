@@ -69,7 +69,7 @@ std::shared_ptr<StreamExtrinsicsManager> StreamExtrinsicsManager::getInstance() 
     return instance;
 }
 
-StreamExtrinsicsManager::StreamExtrinsicsManager() : nextId_(0), logger_(Logger::getInstance())  {}
+StreamExtrinsicsManager::StreamExtrinsicsManager() : nextId_(0) {}
 
 StreamExtrinsicsManager::~StreamExtrinsicsManager() noexcept = default;
 

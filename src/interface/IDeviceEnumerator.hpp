@@ -4,79 +4,28 @@
 
 namespace libobsensor {
 
-class DeviceEnumInfo {
+class IDeviceEnumInfo {
 public:
-    DeviceEnumInfo(int pid, int vid, const std::string &uid, const std::string &connectionType, const std::string &name, const std::string &deviceSn,
-                   const SourcePortInfoList &sourcePortInfoList)
-        : pid_(pid), vid_(vid), uid_(uid), connectionType_(connectionType), name_(name), deviceSn_(deviceSn), sourcePortInfoList_(sourcePortInfoList) {}
-    DeviceEnumInfo(): pid_(0), vid_(0) {}
-
-    virtual ~DeviceEnumInfo() = default;
-
-    int getPid() const {
-        return pid_;
-    }
-
-    int getVid() const {
-        return vid_;
-    }
-
-    const std::string &getUid() const {
-        return uid_;
-    }
-
-    const std::string &getConnectionType() const {
-        return connectionType_;
-    }
-
-    const std::string &getName() const {
-        return name_;
-    }
-
-    const std::string &getDeviceSn() const {
-        return deviceSn_;
-    }
-
-    const SourcePortInfoList &getSourcePortInfoList() const {
-        return sourcePortInfoList_;
-    }
-
-    bool operator==(const DeviceEnumInfo &other) const {
-        bool rst = (other.uid_ == uid_ && other.sourcePortInfoList_.size() == sourcePortInfoList_.size());
-        if(rst && connectionType_ == "Ethernet") {
-            auto netPort      = std::dynamic_pointer_cast<const NetSourcePortInfo>(sourcePortInfoList_.front());
-            auto otherNetPort = std::dynamic_pointer_cast<const NetSourcePortInfo>(other.sourcePortInfoList_.front());
-            rst &= (otherNetPort->address == netPort->address);
-        }
-        return rst;
-    }
-
+    virtual int                       getPid() const                = 0;
+    virtual int                       getVid() const                = 0;
+    virtual const std::string        &getUid() const                = 0;
+    virtual const std::string        &getConnectionType() const     = 0;
+    virtual const std::string        &getName() const               = 0;
+    virtual const std::string        &getDeviceSn() const           = 0;
+    virtual const SourcePortInfoList &getSourcePortInfoList() const = 0;
     virtual std::shared_ptr<IDevice> createDevice() const = 0;
 
-protected:
-    // device identification info
-    int         pid_;
-    int         vid_;
-    std::string uid_;  // Unique identifier of the port the device is connected to (pal specific)
-
-    std::string connectionType_;  // "Ethernet", "USB2.0", "USB3.0", etc.
-
-    // device info
-    std::string name_;
-    std::string deviceSn_;
-
-    // source port info list
-    SourcePortInfoList sourcePortInfoList_;
+    virtual bool operator==(const IDeviceEnumInfo &other) const = 0;
 };
 
-typedef std::vector<std::shared_ptr<const DeviceEnumInfo>>                                      DeviceEnumInfoList;
+typedef std::vector<std::shared_ptr<const IDeviceEnumInfo>>                                     DeviceEnumInfoList;
 typedef std::function<void(const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added)> DeviceChangedCallback;
 
 class IDeviceEnumerator {
 public:
-    virtual ~IDeviceEnumerator()                                                                     = default;
-    virtual DeviceEnumInfoList       getDeviceInfoList()                                             = 0;
-    virtual void                     setDeviceChangedCallback(DeviceChangedCallback callback)        = 0;
+    virtual ~IDeviceEnumerator()                                                        = default;
+    virtual DeviceEnumInfoList getDeviceInfoList()                                      = 0;
+    virtual void               setDeviceChangedCallback(DeviceChangedCallback callback) = 0;
 };
 }  // namespace libobsensor
 

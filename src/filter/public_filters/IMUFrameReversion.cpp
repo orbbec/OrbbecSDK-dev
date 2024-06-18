@@ -9,7 +9,7 @@ namespace libobsensor {
 
 IMUFrameReversion::IMUFrameReversion(const std::string &name) : FilterBase(name) {
     srcFrameQueue_ = std::make_shared<FrameQueue<const Frame>>(100);
-    LOG_DEBUG("IMUFrameReversion Filter {} created with frame queue capacity {}", name_, srcFrameQueue_->size());
+    LOG_DEBUG("IMUFrameReversion {} created with frame queue capacity {}", name_, srcFrameQueue_->capacity());
 }
 IMUFrameReversion::~IMUFrameReversion() noexcept {}
 

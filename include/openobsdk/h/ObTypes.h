@@ -136,8 +136,9 @@ typedef enum {
     OB_SENSOR_IR_RIGHT  = 7, /**< Right IR for stereo camera*/
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
     OB_SENSOR_DISPARITY = 9, /**< Disparity */
-    OB_SENSOR_COUNT,      /**The total number of sensor types, is not a valid sensor type */
-    OB_SENSOR_SYNTHETIC,     /**< Synthetic sensor, used inside the SDK to handle multi sensor streams on one class/object, not a valid sensor type for external use */
+    OB_SENSOR_COUNT,         /**The total number of sensor types, is not a valid sensor type */
+    OB_SENSOR_SYNTHETIC, /**< Synthetic sensor, used inside the SDK to handle multi sensor streams on one class/object, not a valid sensor type for external use
+                          */
 
 } OBSensorType,
     ob_sensor_type;
@@ -254,8 +255,8 @@ typedef enum {
     ERR_OTHER           = -6, /**< other errors */
     ERR_DDR             = -7, /**< DDR access error */
     ERR_TIMEOUT         = -8  /**< timeout error */
-} OBUpgradeState, OBFwUpdateState,
-    ob_upgrade_state, ob_fw_update_state;
+} OBUpgradeState,
+    OBFwUpdateState, ob_upgrade_state, ob_fw_update_state;
 
 /**
  * @brief Enumeration value describing the file transfer status
@@ -728,7 +729,7 @@ typedef struct {
     int32_t dispIntPlace;  // disp integer digits，default is 8，Gemini2 XL is 10
     uint8_t isDualCamera;  // 0 monocular camera，1 dual camera
 
-} OBDisparityProcessParam,ob_disparity_process_param;
+} OBDisparityProcessParam, ob_disparity_process_param;
 /**
  * @brief Enumeration for TOF filter scene ranges
  */
@@ -961,7 +962,7 @@ typedef struct {
  * @brief Hole fillig mode
  */
 typedef enum {
-    OB_HOLE_FILL_LEFT     = 0,
+    OB_HOLE_FILL_LEFT    = 0,
     OB_HOLE_FILL_NEAREST = 1,  // "max" means farest for depth, and nearest for disparity; FILL_NEAREST
     OB_HOLE_FILL_FAREST  = 2,  // FILL_FAREST
 } OBHoleFillingMode,
@@ -1659,7 +1660,7 @@ typedef void (*ob_device_changed_callback)(ob_device_list *removed, ob_device_li
  * @param frame Frame object
  * @param user_data User-defined data
  */
-typedef void (*ob_frame_callback)(const ob_frame *frame, void *user_data);
+typedef void (*ob_frame_callback)(ob_frame *frame, void *user_data);
 #define ob_filter_callback ob_frame_callback
 #define ob_playback_callback ob_frame_callback
 
@@ -1669,7 +1670,7 @@ typedef void (*ob_frame_callback)(const ob_frame *frame, void *user_data);
  * @param frameset Frameset object
  * @param user_data User-defined data
  */
-typedef void (*ob_frameset_callback)(const ob_frame *frameset, void *user_data);
+typedef void (*ob_frameset_callback)(ob_frame *frameset, void *user_data);
 
 /**
  * @brief Customize the delete callback

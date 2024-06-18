@@ -52,6 +52,9 @@ OB_EXPORT ob_stream_profile* ob_create_accel_stream_profile(ob_accel_full_scale_
  */
 OB_EXPORT ob_stream_profile* ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,ob_error **error);
 
+
+OB_EXPORT ob_stream_profile* ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error);
+
 /**
  * @brief Delete the stream configuration.
  *

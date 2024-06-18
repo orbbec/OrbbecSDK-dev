@@ -73,6 +73,7 @@ void PixelValueScaler::updateConfig(std::vector<std::string> &params) {
         throw invalid_value_exception("PixelValueScaler config error: params size not match");
     }
     try {
+        std::lock_guard<std::mutex> scaleLock(mtx_);
         scale_ = std::stof(params[0]);
     }
     catch(const std::exception &e) {
@@ -92,10 +93,9 @@ std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame
         return FrameFactory::cloneFrame(frame);
     }
 
+    std::lock_guard<std::mutex> scaleLock(mtx_);
     auto depthFrame = frame->as<DepthFrame>();
-
     auto outFrame = FrameFactory::cloneFrame(frame);
-
     switch(frame->getFormat()) {
     case OB_FORMAT_Y16:
         imagePixelValueScale<uint16_t>((uint16_t *)frame->getData(), (uint16_t *)outFrame->getData(), depthFrame->getWidth(), depthFrame->getHeight(), scale_);
@@ -120,6 +120,7 @@ void PixelValueCutOff::updateConfig(std::vector<std::string> &params) {
         throw invalid_value_exception("PixelValueCutOff config error: params size not match");
     }
     try {
+        std::lock_guard<std::mutex> cutOffLock(mtx_);
         int min = std::stoi(params[0]);
         if(min >= 0 && min <= 16000) {
             min_ = min;
@@ -147,6 +148,7 @@ std::shared_ptr<Frame> PixelValueCutOff::processFunc(std::shared_ptr<const Frame
         return nullptr;
     }
 
+    std::lock_guard<std::mutex> cutOffLock(mtx_);
     auto  videoFrame = frame->as<VideoFrame>();
     auto  outFrame   = FrameFactory::cloneFrame(frame);
     float scale      = 1.0f;
@@ -181,6 +183,7 @@ void PixelValueOffset::updateConfig(std::vector<std::string> &params) {
         throw invalid_value_exception("PixelValueOffset config error: params size not match");
     }
     try {
+        std::lock_guard<std::mutex> offsetLock(mtx_);
         offset_ = static_cast<int8_t>(std::stoi(params[0]));
     }
     catch(const std::exception &e) {
@@ -199,6 +202,7 @@ std::shared_ptr<Frame> PixelValueOffset::processFunc(std::shared_ptr<const Frame
         return nullptr;
     }
 
+    std::lock_guard<std::mutex> offsetLock(mtx_);
     auto videoFrame = frame->as<VideoFrame>();
     auto outFrame   = FrameFactory::cloneFrame(frame);
     if(offset_ != 0) {

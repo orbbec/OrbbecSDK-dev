@@ -58,6 +58,8 @@ public:
         ResourceLock       lock_;
     };
 
+    typedef std::function<ResourcePtr<IPropertyAccessor>()> PropertyAccessorGetter;
+
 public:
     virtual ~IDevice() = default;
 

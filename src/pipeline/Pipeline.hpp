@@ -8,7 +8,6 @@
 #include "frame/FrameQueue.hpp"
 #include "Config.hpp"
 #include "FrameAggregator.hpp"
-#include "context/Context.hpp"
 
 namespace libobsensor {
 class Config;
@@ -60,11 +59,8 @@ private:
 
     std::shared_ptr<FrameAggregator> frameAggregator_;
 
-    bool hasDepthSensor_;
 
     int MAX_FRAME_QUEUE_SIZE = 10;
-
-    std::shared_ptr<Context> context_;
 };
 
 }  // namespace libobsensor

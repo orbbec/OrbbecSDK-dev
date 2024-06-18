@@ -5,6 +5,7 @@
 #include "sensor/SensorBase.hpp"
 #include "IFrame.hpp"
 #include "IFilter.hpp"
+#include "frameprocessor/FrameProcessor.hpp"
 
 #include <map>
 
@@ -39,6 +40,8 @@ public:
     void setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container);
     void setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator);
 
+    void setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcessor);
+
 private:
     std::vector<FormatFilterConfig>                 formatFilterConfigs_;
     std::vector<FormatFilterConfig>::const_iterator currentFormatFilterConfig_;
@@ -50,6 +53,8 @@ private:
 
     std::shared_ptr<IFrameMetadataParserContainer> frameMetadataParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     frameTimestampCalculator_;
+
+    std::shared_ptr<FrameProcessor> frameProcessor_;
 };
 
 }  // namespace libobsensor

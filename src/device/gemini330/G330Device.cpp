@@ -297,6 +297,12 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     if(iter->second.sensor) {
         return ResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
     }
+    std::shared_ptr<FrameProcessor> frameProcessor = nullptr;
+    if(!frameProcessorFactory_) {
+        frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this());
+    }
+    frameProcessor = frameProcessorFactory_->createFrameProcessor(type);
+
     // create
     if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
         auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
@@ -359,6 +365,9 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
             // todo: implement this
             videoSensor->setFrameMetadataParserContainer(colorMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+        }
+        if(frameProcessor){
+            videoSensor->setFrameProcessor(frameProcessor);
         }
     }
 

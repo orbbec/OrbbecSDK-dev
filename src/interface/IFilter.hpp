@@ -4,8 +4,12 @@
 #include <string>
 #include <vector>
 
+#include "IFrame.hpp"
+#include "IStreamProfile.hpp"
+#include "openobsdk/h/ObTypes.h"
+
+
 namespace libobsensor {
-class Frame;
 
 typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
 class IFilter {
@@ -30,6 +34,13 @@ public:
     virtual void setCallback(FilterCallback cb)                = 0;
 };
 
+class IFormatConverter : virtual public IFilter {
+public:
+    virtual ~IFormatConverter() noexcept = default;
+
+    virtual void setConversion(OBFormat srcFormat, OBFormat dstFormat) = 0;
+};
+
 class IFilterCreator {
 public:
     virtual ~IFilterCreator() noexcept = default;
@@ -39,10 +50,10 @@ public:
 
 class IPrivFilterCreator : public IFilterCreator {
 public:
-    virtual ~IPrivFilterCreator() noexcept = default;
-
+    ~IPrivFilterCreator() noexcept override                                   = default;
+    std::shared_ptr<IFilter>         create() override                        = 0;
     virtual std::shared_ptr<IFilter> create(const std::string &activationKey) = 0;
-    virtual std::string              getVendorSpecificCode() const            = 0;
+    virtual const std::string       &getVendorSpecificCode() const            = 0;
 };
 
 }  // namespace libobsensor

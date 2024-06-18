@@ -29,12 +29,12 @@ int main() {
     check_ob_error(&err);
     std::cout << "Data size: " << data_size << std::endl;
 
-    auto filter = ob_create_filter("DDONoiseRemovalFilter", &err);
+    auto filter = ob_create_filter("NoiseRemovalFilter", &err);
     check_ob_error(&err);
 
     auto config_schema = ob_filter_get_config_schema(filter, &err);
     check_ob_error(&err);
-    std::cout << "DDONoiseRemovalFilter Config schema: \n" << config_schema << std::endl;
+    std::cout << "NoiseRemovalFilter Config schema: \n" << config_schema << std::endl;
 
     ob_delete_filter(filter, &err);
     check_ob_error(&err);

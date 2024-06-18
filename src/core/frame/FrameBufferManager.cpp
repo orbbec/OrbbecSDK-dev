@@ -109,7 +109,7 @@ uint8_t *FrameBufferManagerBase::acquireBuffer() {
 
 std::unique_lock<std::recursive_mutex> FrameBufferManagerBase::lockBuffers() {
     std::unique_lock<std::recursive_mutex> lock_(mutex_);
-    return std::move(lock_);
+    return lock_;
 }
 
 void FrameBufferManagerBase::reclaimBuffer(void *buffer) {

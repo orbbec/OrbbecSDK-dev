@@ -7,7 +7,7 @@
 [![ci](https://github.com/martin-olivier/dylib/actions/workflows/CI.yml/badge.svg)](https://github.com/martin-olivier/dylib/actions/workflows/CI.yml)
 [![coverage](https://codecov.io/gh/martin-olivier/dylib/branch/main/graph/badge.svg)](https://codecov.io/gh/martin-olivier/dylib)
 
-The goal of this C++ library is to load dynamic libraries (.so, .dll, .dylib) and access its functions and global variables at runtime.  
+The goal of this C++ library is to load dynamic libraries (.so, .dll, .dylib) and access its functions and global variables at runtime.
 
 `⭐ Don't forget to put a star if you like the project!`
 

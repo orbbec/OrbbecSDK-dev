@@ -20,8 +20,8 @@ public:
 
     ~StreamExtrinsicsManager() noexcept;
 
-    void registerExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to, const OBExtrinsic &extrinsics);
-    void registerSameExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to);
+    void registerExtrinsics(const std::shared_ptr<const StreamProfile>& from, const std::shared_ptr<const StreamProfile>& to, const OBExtrinsic &extrinsics);
+    void registerSameExtrinsics(const std::shared_ptr<const StreamProfile>& from, const std::shared_ptr<const StreamProfile>& to);
 
     bool        hasExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) const;
     OBExtrinsic getExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to);
@@ -39,11 +39,9 @@ private:
 private:
     uint64_t nextId_;
 
-    std::mutex                                                mutex_;
+    std::mutex                                                          mutex_;
     std::map<uint64_t, std::vector<std::weak_ptr<const StreamProfile>>> streamProfileMap_;  // vertices
     std::map<uint64_t, std::vector<std::pair<uint64_t, OBExtrinsic>>>   extrinsicsGraph_;   // graph adjacency list
-
-    std::shared_ptr<Logger> logger_;  // Manages the lifecycle of the logger object.
 };
 
 }  // namespace libobsensor

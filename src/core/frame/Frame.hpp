@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "IFrameMetadataParser.hpp"
-#include "stream/StreamProfile.hpp"
-#include "exception/OBException.hpp"
+#include "IFrame.hpp"
+#include "IStreamProfile.hpp"
+#include "exception/ObException.hpp"
 
 #include <atomic>
 #include <memory>
@@ -15,10 +15,25 @@
 
 namespace libobsensor {
 
+class logger;
+class FrameMemoryPool;
+class FrameMemoryAllocator;
+class FrameBackendLifeSpan {
+public:
+    FrameBackendLifeSpan();
+    ~FrameBackendLifeSpan();
+
+private:
+    std::shared_ptr<Logger>               logger_;
+    std::shared_ptr<FrameMemoryPool>      memoryPool_;
+    std::shared_ptr<FrameMemoryAllocator> memoryAllocator_;
+};
+
 class FrameSet;
 class PointsFrame;
 class VideoFrame;
 class ColorFrame;
+class DisparityFrame;
 class DepthFrame;
 class IRFrame;
 class AccelFrame;
@@ -26,7 +41,7 @@ class GyroFrame;
 
 using FrameBufferReclaimFunc = std::function<void(void)>;
 
-class Frame : public std::enable_shared_from_this<Frame> {
+class Frame : public std::enable_shared_from_this<Frame>, private FrameBackendLifeSpan {
 public:
     Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     virtual ~Frame() noexcept;
@@ -37,6 +52,7 @@ public:
     void           setNumber(const uint64_t number);
     size_t         getDataSize() const;
     const uint8_t *getData() const;
+    uint8_t       *getDataUnsafe() const;  // use with caution, data may be changed while other threads are using it
     void           updateData(const uint8_t *data, size_t dataSize);
     uint64_t       getTimeStampUsec() const;
     void           setTimeStampUsec(uint64_t ts);
@@ -48,6 +64,9 @@ public:
     size_t         getMetadataSize() const;
     void           updateMetadata(const uint8_t *metadata, size_t metadataSize);
     const uint8_t *getMetadata() const;
+
+    uint8_t *getMetadataUnsafe() const;  // use with caution, metadata may be changed while other threads are using it
+    void     setMetadataSize(size_t metadataSize);
 
     void    registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers);
     bool    hasMetadata(OBFrameMetadataType type) const;
@@ -85,7 +104,7 @@ protected:
     uint64_t                                       systemTimeStampUsec_;
     uint64_t                                       globalTimeStampUsec_;
     size_t                                         metadataSize_;
-    uint8_t                                        metadata_[256];
+    uint8_t                                        metadata_[12 + 255];  // standard uvc payload size is 12bytes, add some extra space for metadata
     std::shared_ptr<IFrameMetadataParserContainer> metadataPhasers_;
     std::shared_ptr<const StreamProfile>           streamProfile_;
 
@@ -136,6 +155,11 @@ private:
     float valueScale_;
 };
 
+class DisparityFrame : public VideoFrame {
+public:
+    DisparityFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
+};
+
 class IRFrame : public VideoFrame {
 public:
     IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr, OBFrameType frameType = OB_FRAME_IR);
@@ -165,7 +189,7 @@ private:
 class AccelFrame : public Frame {
 public:
     typedef struct {
-        float accelData[3];  // Acceleration values ​​in three directions (xyz), unit: g (9.80665 m/s^2)
+        float accelData[3];  // Acceleration values in three directions (xyz), unit: g (9.80665 m/s^2)
         float temp;          // Temperature in Celsius
     } OBAccelFrameData;
 
@@ -197,24 +221,18 @@ public:
     FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     ~FrameSet() noexcept;
 
-    uint32_t getFrameCount();
+    uint32_t getFrameCount() const;
 
-    std::shared_ptr<Frame> getDepthFrame();
-    std::shared_ptr<Frame> getIRFrame();
-    std::shared_ptr<Frame> getColorFrame();
-    std::shared_ptr<Frame> getAccelFrame();
-    std::shared_ptr<Frame> getGyroFrame();
-    std::shared_ptr<Frame> getPointsFrame();
-    std::shared_ptr<Frame> getFrame(OBFrameType frameType);
-    std::shared_ptr<Frame> getFrame(int index);
+    std::shared_ptr<const Frame> getFrame(OBFrameType frameType) const;
+    std::shared_ptr<const Frame> getFrame(int index) const;
 
     // It is recommended to use the rvalue reference interface. If you really need it, you can uncomment the following
     // void pushFrame(std::shared_ptr<Frame> frame);
-    void pushFrame(std::shared_ptr<Frame> &&frame);
+    void pushFrame(std::shared_ptr<const Frame> &&frame);
     void clearAllFrame();
 
 public:
-    void foreachFrame(ForeachBack foreachBack);
+    void foreachFrame(ForeachBack foreachBack) const;
 };
 
 template <typename T> bool Frame::is() const {
@@ -228,6 +246,8 @@ template <typename T> bool Frame::is() const {
         return (typeid(T) == typeid(IRLeftFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_IR_RIGHT:
         return (typeid(T) == typeid(IRRightFrame) || typeid(T) == typeid(VideoFrame));
+    case OB_FRAME_DISPARITY:
+        return (typeid(T) == typeid(DisparityFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_DEPTH:
         return (typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_COLOR:
@@ -247,14 +267,3 @@ template <typename T> bool Frame::is() const {
 }
 
 }  // namespace libobsensor
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-struct ob_frame_t {
-    std::shared_ptr<libobsensor::Frame> frame;
-    std::atomic<int>                    refCnt = 1;
-};
-#ifdef __cplusplus
-}
-#endif

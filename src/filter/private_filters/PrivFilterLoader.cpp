@@ -3,10 +3,18 @@
 #include "PrivFilterCppWrapper.hpp"
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
-#include "utils/FileUtils.hpp"
+#include "utils/Utils.hpp"
 namespace libobsensor {
 
-PrivFilterCreator::PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index) : pkgCtx_(pkgCtx), index_(index) {}
+PrivFilterCreator::PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index) : pkgCtx_(pkgCtx), index_(index) {
+    ob_error *error = nullptr;
+    code_           = pkgCtx_->get_vendor_specific_code(&error);
+    if(error) {
+        std::string errorMsg = "Failed to get filter vendor specific code: " + std::string(error->message);
+        delete error;
+        throw unsupported_operation_exception(errorMsg);
+    }
+}
 
 std::shared_ptr<IFilter> PrivFilterCreator::create() {
     ob_error *error = nullptr;
@@ -100,15 +108,8 @@ std::shared_ptr<IFilter> PrivFilterCreator::create(const std::string &activation
     return std::make_shared<PrivFilterCppWrapper>(filterName, privFilterCtxShared);
 }
 
-std::string PrivFilterCreator::getVendorSpecificCode() const {
-    ob_error *error = nullptr;
-    auto      code  = pkgCtx_->get_vendor_specific_code(&error);
-    if(error) {
-        std::string errorMsg = "Failed to get filter UID: " + std::string(error->message);
-        delete error;
-        throw unsupported_operation_exception(errorMsg);
-    }
-    return code;
+const std::string &PrivFilterCreator::getVendorSpecificCode() const {
+    return code_;
 }
 
 namespace PrivFilterCreatorLoader {
@@ -123,16 +124,16 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
     auto load = [&filterCreators](const std::string &dir, const std::string &packageName) {
         auto pkgCtx_         = std::make_shared<PrivFilterPackageContext>();
         pkgCtx_->dir         = dir;
-        pkgCtx_->packageName = packageName;
+        pkgCtx_->package_name = packageName;
         auto fileName        = utils::removeExtensionOfFileName(packageName);
         try {
-            pkgCtx_->dylib                    = std::make_shared<dylib>(dir, fileName);
-            pkgCtx_->get_filter_count         = pkgCtx_->dylib->get_function<size_t(ob_error **)>("ob_get_filter_count");
-            pkgCtx_->get_filter_name          = pkgCtx_->dylib->get_function<const char *(size_t, ob_error **)>("ob_get_filter_name");
-            pkgCtx_->create_filter            = pkgCtx_->dylib->get_function<ob_priv_filter_context *(size_t, ob_error **)>("ob_create_filter");
-            pkgCtx_->get_vendor_specific_code = pkgCtx_->dylib->get_function<const char *(ob_error **)>("ob_priv_filter_get_vendor_specific_code");
-            pkgCtx_->is_activated             = pkgCtx_->dylib->get_function<bool(ob_error **)>("ob_priv_filter_is_activated");
-            pkgCtx_->activate                 = pkgCtx_->dylib->get_function<bool(const char *, ob_error **)>("ob_priv_filter_activate");
+            pkgCtx_->dynamic_library          = std::make_shared<dylib>(dir, fileName);
+            pkgCtx_->get_filter_count         = pkgCtx_->dynamic_library->get_function<size_t(ob_error **)>("ob_get_filter_count");
+            pkgCtx_->get_filter_name          = pkgCtx_->dynamic_library->get_function<const char *(size_t, ob_error **)>("ob_get_filter_name");
+            pkgCtx_->create_filter            = pkgCtx_->dynamic_library->get_function<ob_priv_filter_context *(size_t, ob_error **)>("ob_create_filter");
+            pkgCtx_->get_vendor_specific_code = pkgCtx_->dynamic_library->get_function<const char *(ob_error **)>("ob_priv_filter_get_vendor_specific_code");
+            pkgCtx_->is_activated             = pkgCtx_->dynamic_library->get_function<bool(ob_error **)>("ob_priv_filter_is_activated");
+            pkgCtx_->activate                 = pkgCtx_->dynamic_library->get_function<bool(const char *, ob_error **)>("ob_priv_filter_activate");
         }
         catch(const std::exception &e) {
             LOG_DEBUG("Failed to load private filter library {}: {}", dir + packageName, e.what());

@@ -1,0 +1,11 @@
+#  minimum required cmake version: 3.1.15 support vs2019
+cmake_minimum_required(VERSION 3.1.15)
+
+file(GLOB PAL_SOURCES ${CMAKE_CURRENT_LIST_DIR}/WinPal.*)
+
+if (OB_BUILD_USB_PORT)
+    list(APPEND PAL_SOURCES ${CMAKE_CURRENT_LIST_DIR}/WinPal.cpp)
+    list(APPEND PAL_SOURCES ${CMAKE_CURRENT_LIST_DIR}/WinPal.hpp)
+endif ()
+
+target_sources(${OB_TARGET_PAL} PRIVATE ${PAL_SOURCES})

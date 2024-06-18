@@ -1,7 +1,7 @@
 message(STATUS "Setting Linux configurations")
 
 set(CMAKE_C_FLAGS
-    "${CMAKE_C_FLAGS}   -Wl,-Bsymbolic -fPIC -pedantic -D_DEFAULT_SOURCE -fpermissive -fvisibility=hidden"
+    "${CMAKE_C_FLAGS}   -Wl,-Bsymbolic -fPIC -pedantic -D_DEFAULT_SOURCE -fvisibility=hidden"
 )
 set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS}  -Wl,-Bsymbolic -fPIC -pedantic -Wno-missing-field-initializers -fpermissive -fvisibility=hidden"
@@ -84,8 +84,7 @@ if(OB_BUILD_LINUX_ARM64)
 endif()
 
 add_definitions(-DOS_LINUX)
-set(BUILD_LINUX ON)
-set(USE_PROJECT_FOLDERS OFF)
+set(OB_BUILD_LINUX ON)
 
 # target rpath settings
 set(CMAKE_SKIP_BUILD_RPATH FALSE)

@@ -1,0 +1,13 @@
+
+cmake_minimum_required(VERSION 3.1.15)
+
+file(GLOB_RECURSE _cpp_files "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
+file(GLOB_RECURSE _head_files "${CMAKE_CURRENT_LIST_DIR}/*.hpp")
+
+foreach(_file IN ITEMS ${_cpp_files})
+    target_sources(${OB_TARGET_PAL} PRIVATE "${_file}")
+endforeach()
+
+foreach(_file IN ITEMS ${_head_files})
+    target_sources(${OB_TARGET_PAL} PRIVATE "${_file}")
+endforeach()

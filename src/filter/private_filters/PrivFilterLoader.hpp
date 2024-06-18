@@ -17,8 +17,8 @@ namespace libobsensor {
 
 struct PrivFilterPackageContext {
     std::string                                   dir;
-    std::string                                   packageName;
-    std::shared_ptr<dylib>                        dylib;
+    std::string                                   package_name;
+    std::shared_ptr<dylib>                        dynamic_library;
     pfunc_ob_get_filter_count                     get_filter_count;
     pfunc_ob_get_filter_name                      get_filter_name;
     pfunc_ob_create_filter                        create_filter;
@@ -30,15 +30,16 @@ struct PrivFilterPackageContext {
 class PrivFilterCreator : public IPrivFilterCreator {
 public:
     PrivFilterCreator(std::shared_ptr<PrivFilterPackageContext> pkgCtx, size_t index);
-    virtual ~PrivFilterCreator() = default;
+    ~PrivFilterCreator() override = default;
 
     std::shared_ptr<IFilter> create() override;
     std::shared_ptr<IFilter> create(const std::string &activationKey) override;
-    std::string              getVendorSpecificCode() const override;
+    const std::string&              getVendorSpecificCode() const override;
 
 private:
     std::shared_ptr<PrivFilterPackageContext> pkgCtx_;
     size_t                               index_;
+    std::string  code_;
 };
 
 namespace PrivFilterCreatorLoader {

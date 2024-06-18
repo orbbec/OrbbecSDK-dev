@@ -1,15 +1,19 @@
-# minimum required cmake version: 3.1.15 support vs2019
+
 cmake_minimum_required(VERSION 3.1.15)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-project(
-    OpenOrbbecSDK
-    VERSION 0.0.1
-    LANGUAGES CXX C)
+project(OpenOrbbecSDK VERSION 0.0.1 LANGUAGES CXX C)
 
 # load project options
 include(cmake/options.cmake)
+if(OB_BUILD_USB_PORT)
+    add_definitions(-DBUILD_USB_PORT)
+endif()
+if(OB_BUILD_NET_PORT)
+    add_definitions(-DBUILD_NET_PORT)
+endif()
 
 # load macros
 include(cmake/macros.cmake)
@@ -24,12 +28,18 @@ elseif(WIN32)
     include(cmake/windows_config.cmake)
 elseif(APPLE)
     include(cmake/macos_config.cmake)
-else(UNIX)
+elseif(UNIX)
     include(cmake/linux_config.cmake)
 endif()
 
 # configure global settings: install rules, output directories, global variables, etc.
 include(cmake/global_config.cmake)
+
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy" QUIET)
+
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+endif()
 
 # configure global directories variables
 set(OB_PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include/)

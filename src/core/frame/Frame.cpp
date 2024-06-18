@@ -1,25 +1,34 @@
 #include "Frame.hpp"
 #include "logger/Logger.hpp"
-#include "utils/StringUtils.hpp"
+#include "utils/Utils.hpp"
+#include "stream/StreamProfile.hpp"
+#include "Frame/FrameMemoryPool.hpp"
+#include "Frame/FrameBufferManager.hpp"
 
 namespace libobsensor {
 
+FrameBackendLifeSpan::FrameBackendLifeSpan()
+    : logger_(Logger::getInstance()), memoryPool_(FrameMemoryPool::getInstance()), memoryAllocator_(FrameMemoryAllocator::getInstance()) {}
+
+FrameBackendLifeSpan::~FrameBackendLifeSpan() {
+    memoryAllocator_.reset();
+    memoryPool_.reset();
+    logger_.reset();
+}
+
 Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
-    : frameData_(data),
-      dataBufSize_(dataBufSize),
-      dataSize_(dataBufSize),
-      type_(type),
-      bufferReclaimFunc_(bufferReclaimFunc),
+    : dataSize_(dataBufSize),
       number_(0),
       timeStampUsec_(0),
       systemTimeStampUsec_(0),
       globalTimeStampUsec_(0),
       metadataSize_(0),
       metadataPhasers_(nullptr),
-      streamProfile_(nullptr)
-{
-
-}
+      streamProfile_(nullptr),
+      type_(type),
+      frameData_(data),
+      dataBufSize_(dataBufSize),
+      bufferReclaimFunc_(bufferReclaimFunc) {}
 
 Frame::~Frame() noexcept {
     if(bufferReclaimFunc_) {
@@ -55,6 +64,10 @@ size_t Frame::getDataSize() const {
 
 const uint8_t *Frame::getData() const {
     return frameData_;
+}
+
+uint8_t *Frame::getDataUnsafe() const {
+    return const_cast<uint8_t *>(frameData_);
 }
 
 void Frame::updateData(const uint8_t *data, size_t dataSize) {
@@ -119,60 +132,13 @@ uint32_t VideoFrame::getHeight() const {
     return streamProfile_->as<VideoStreamProfile>()->getHeight();
 }
 
-uint32_t calculateStrideBytes(uint32_t width, OBFormat format) {
-    uint32_t stride = 0;
-    switch(format) {
-    case OB_FORMAT_Y8:
-    case OB_FORMAT_BA81:
-        stride = width;
-        break;
-    case OB_FORMAT_Y10:
-        stride = width * 8 / 10;
-        break;
-    case OB_FORMAT_Y11:
-        stride = width * 8 / 11;
-        break;
-    case OB_FORMAT_Y12:
-    case OB_FORMAT_NV12:
-    case OB_FORMAT_YV12:
-        stride = width * 8 / 12;
-        break;
-    case OB_FORMAT_Y14:
-        stride = width * 8 / 14;
-        break;
-    case OB_FORMAT_Y16:
-    case OB_FORMAT_Z16:
-    case OB_FORMAT_YUYV:
-    case OB_FORMAT_UYVY:
-    case OB_FORMAT_BYR2:
-    case OB_FORMAT_RW16:
-    case OB_FORMAT_DISP16:
-        stride = width * 2;
-        break;
-    case OB_FORMAT_RGB:
-    case OB_FORMAT_BGR:
-        stride = width * 3;
-        break;
-    case OB_FORMAT_POINT:
-        stride = width * 12;
-        break;
-    case OB_FORMAT_RGB_POINT:
-        stride = width * 24;
-        break;
-    default:
-        throw std::runtime_error("Get stride bytes failed! Unsupported operation for codec format and (semi-)planar packed format object");
-        break;
-    }
-    return stride;
-}
-
 uint32_t VideoFrame::getStride() const {
     if(stride_ > 0) {
         return stride_;
     }
     auto format = getFormat();
     auto width  = getWidth();
-    return calculateStrideBytes(width, format);
+    return utils::calcDefaultStrideBytes(format, width);
 }
 
 void VideoFrame::setStride(uint32_t stride) {
@@ -181,6 +147,10 @@ void VideoFrame::setStride(uint32_t stride) {
 
 size_t Frame::getMetadataSize() const {
     return metadataSize_;
+}
+
+void Frame::setMetadataSize(size_t metadataSize) {
+    metadataSize_ = metadataSize;
 }
 
 void Frame::updateMetadata(const uint8_t *metadata, size_t metadataSize) {
@@ -197,6 +167,10 @@ void Frame::updateMetadata(const uint8_t *metadata, size_t metadataSize) {
 
 const uint8_t *Frame::getMetadata() const {
     return metadata_;
+}
+
+uint8_t *Frame::getMetadataUnsafe() const {
+    return const_cast<uint8_t *>(metadata_);
 }
 
 void Frame::registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers) {
@@ -234,12 +208,12 @@ void Frame::copyInfo(const std::shared_ptr<const Frame> sourceFrame) {
     // type is determined during construction. It is an inherent property of the object and cannot be changed.
     // type_ = sourceFrame->type_;
 
+    // todo: check if it is necessary to copy those properties.
+
     number_              = sourceFrame->number_;
     timeStampUsec_       = sourceFrame->timeStampUsec_;
     systemTimeStampUsec_ = sourceFrame->systemTimeStampUsec_;
     globalTimeStampUsec_ = sourceFrame->globalTimeStampUsec_;
-    dataSize_            = sourceFrame->dataSize_;
-    streamProfile_       = sourceFrame->streamProfile_;
 
     metadataSize_ = sourceFrame->metadataSize_;
     memcpy(metadata_, sourceFrame->metadata_, metadataSize_);
@@ -291,10 +265,13 @@ float DepthFrame::getValueScale() const {
 void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
     VideoFrame::copyInfo(sourceFrame);
     if(sourceFrame->is<DepthFrame>()) {
-        auto df = sourceFrame->as<DepthFrame>();
+        auto df     = sourceFrame->as<DepthFrame>();
         valueScale_ = df->valueScale_;
     }
 }
+
+DisparityFrame::DisparityFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : VideoFrame(data, dataBufSize, OB_FRAME_DISPARITY, bufferReclaimFunc) {}
 
 IRFrame::IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc, OBFrameType frameType)
     : VideoFrame(data, dataBufSize, frameType, bufferReclaimFunc) {}
@@ -340,14 +317,14 @@ float GyroFrame ::temperature() {
 
 FrameSet::FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc) : Frame(data, dataBufSize, OB_FRAME_SET, bufferReclaimFunc) {}
 
-FrameSet::~FrameSet() {
+FrameSet::~FrameSet() noexcept {
     clearAllFrame();
 }
 
-uint32_t FrameSet::getFrameCount() {
+uint32_t FrameSet::getFrameCount() const {
     uint32_t frameCnt = 0;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<const Frame> *)item;
         if(*pFrame) {
             frameCnt++;
         }
@@ -356,88 +333,11 @@ uint32_t FrameSet::getFrameCount() {
     return frameCnt;
 }
 
-std::shared_ptr<Frame> FrameSet::getDepthFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_DEPTH) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
 
-std::shared_ptr<Frame> FrameSet::getIRFrame() {
-    std::shared_ptr<Frame> frame;
+std::shared_ptr<const Frame> FrameSet::getFrame(OBFrameType frameType) const{
+    std::shared_ptr<const Frame> frame;
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_IR) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getColorFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_COLOR) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getAccelFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_ACCEL) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getGyroFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_GYRO) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getPointsFrame() {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
-        if(*pFrame && (*pFrame)->getType() == OB_FRAME_POINTS) {
-            frame = *pFrame;
-            return true;
-        }
-        return false;
-    });
-    return frame;
-}
-
-std::shared_ptr<Frame> FrameSet::getFrame(OBFrameType frameType) {
-    std::shared_ptr<Frame> frame;
-    foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<const Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == frameType) {
             frame = *pFrame;
             return true;
@@ -447,17 +347,17 @@ std::shared_ptr<Frame> FrameSet::getFrame(OBFrameType frameType) {
     return frame;
 }
 
-std::shared_ptr<Frame> FrameSet::getFrame(int index) {
-    std::shared_ptr<Frame> frame;
-    uint32_t               itemSize = sizeof(std::shared_ptr<Frame>);
+std::shared_ptr<const Frame> FrameSet::getFrame(int index) const {
+    std::shared_ptr<const Frame> frame;
+    uint32_t               itemSize = sizeof(std::shared_ptr<const Frame>);
     auto                   itemCnt  = getDataBufSize() / itemSize;
     if(index >= (int)itemCnt) {
         throw invalid_value_exception("FrameSet::getFrame() index out of range");
     }
     auto pItem = getData();
     pItem += itemSize * index;
-    std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)pItem;
-    frame                          = *pFrame;
+    auto pFrame = (std::shared_ptr<Frame> *)pItem;
+    frame       = *pFrame;
     return frame;
 }
 
@@ -466,10 +366,10 @@ std::shared_ptr<Frame> FrameSet::getFrame(int index) {
 // pushFrame(std::move(frame));
 // }
 
-void FrameSet::pushFrame(std::shared_ptr<Frame> &&frame) {
+void FrameSet::pushFrame(std::shared_ptr<const Frame> &&frame) {
     OBFrameType type = frame->getType();
     foreachFrame([&](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<const Frame> *)item;
         if(*pFrame && (*pFrame)->getType() == type) {
             (*pFrame).reset();
             *pFrame = nullptr;
@@ -485,7 +385,7 @@ void FrameSet::pushFrame(std::shared_ptr<Frame> &&frame) {
 
 void FrameSet::clearAllFrame() {
     foreachFrame([](void *item) {
-        std::shared_ptr<Frame> *pFrame = (std::shared_ptr<Frame> *)item;
+        auto pFrame = (std::shared_ptr<Frame> *)item;
         if(*pFrame) {
             (*pFrame).reset();
         }
@@ -494,7 +394,7 @@ void FrameSet::clearAllFrame() {
     });
 }
 
-void FrameSet::foreachFrame(ForeachBack foreachBack) {
+void FrameSet::foreachFrame(ForeachBack foreachBack) const{
     uint32_t itemSize = sizeof(std::shared_ptr<Frame>);
     auto     itemCnt  = getDataBufSize() / itemSize;
     auto     pItem    = const_cast<uint8_t *>(getData());

@@ -46,6 +46,5 @@ endif()
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
                 OUTPUT_VARIABLE MACHINE)
 
-set(BUILD_MACOS ON)
-set(USE_PROJECT_FOLDERS OFF)
+set(OB_BUILD_MACOS ON)
 set(CMAKE_INSTALL_NAME_DIR "@loader_path")

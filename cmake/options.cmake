@@ -11,7 +11,7 @@ option(OB_BUILD_LINUX_ARM32 "Build linux arm32, will use ARM32 toolchains on lin
 
 # component options
 option(OB_BUILD_USB_PORT "Enable this to support USB/UVC/HID communication" ON)
-option(OB_BUILD_NET_PORT "Enable this to support network/GVCP/RTSP communication" ON)
+option(OB_BUILD_NET_PORT "Enable this to support network/GVCP/RTSP communication" OFF)
 
 # install options
 option(OB_INSTALL_FILTER_DEV_HEADERS "Install HEADER files for filter development" OFF)

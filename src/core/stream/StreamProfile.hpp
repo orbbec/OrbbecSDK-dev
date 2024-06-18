@@ -1,5 +1,6 @@
 #pragma once
-
+#include "IStreamProfile.hpp"
+#include "ISensor.hpp"
 #include "openobsdk/h/ObTypes.h"
 #include "exception/ObException.hpp"
 #include <memory>
@@ -7,24 +8,45 @@
 
 namespace libobsensor {
 
-class ISensor;
+class Logger;
+class StreamIntrinsicsManager;
+class StreamExtrinsicsManager;
+class StreamDisparityParamManager;
 
-class StreamProfile : public std::enable_shared_from_this<StreamProfile> {
+class StreamProfileBackendLifeSpan {
 public:
-    StreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format);
+    StreamProfileBackendLifeSpan();
+    ~StreamProfileBackendLifeSpan();
 
-    std::shared_ptr<ISensor> getOwner() const;
-    void                     bindOwner(std::shared_ptr<ISensor> owner);
-    void                     setType(OBStreamType type);
-    OBStreamType             getType() const;
-    void                     setFormat(OBFormat format);
-    OBFormat                 getFormat() const;
+private:
+    std::shared_ptr<Logger>                      logger_;
+    std::shared_ptr<StreamIntrinsicsManager>     intrinsicsManager_;
+    std::shared_ptr<StreamExtrinsicsManager>     extrinsicsManager_;
+    std::shared_ptr<StreamDisparityParamManager> disparityParamManager_;
+};
+
+class StreamProfile : public std::enable_shared_from_this<StreamProfile>, private StreamProfileBackendLifeSpan {
+public:
+    StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format);
+
+    virtual ~StreamProfile() noexcept = default;
+
+    std::shared_ptr<LazySensor> getOwner() const;
+
+    void         bindOwner(std::shared_ptr<LazySensor> owner);
+    void         setType(OBStreamType type);
+    OBStreamType getType() const;
+    void         setFormat(OBFormat format);
+    OBFormat     getFormat() const;
+    void         setIndex(uint8_t index);
+    uint8_t      getIndex() const;
 
     OBExtrinsic getExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile) const;
     void        bindExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile, const OBExtrinsic &extrinsic);
     void        bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile);
 
     virtual std::shared_ptr<StreamProfile> clone() const = 0;
+    virtual std::shared_ptr<StreamProfile> clone(OBFormat newFromat) const;
 
     template <typename T> bool               is() const;
     template <typename T> std::shared_ptr<T> as() {
@@ -41,16 +63,34 @@ public:
         return std::dynamic_pointer_cast<const T>(shared_from_this());
     }
 
+    virtual std::ostream &operator<<(std::ostream &os) const = 0;
+
 protected:
-    std::weak_ptr<ISensor> owner_;
-    OBStreamType           type_;
-    OBFormat               format_;
+    std::weak_ptr<LazySensor> owner_;
+    OBStreamType              type_;
+    OBFormat                  format_;
+    uint8_t                   index_;  // for multi-stream sensor (multi pin uvc device)
+};
+
+struct StreamProfileWeakPtrCompare {
+    bool operator()(const std::weak_ptr<const StreamProfile> &a, const std::weak_ptr<const StreamProfile> &b) const {
+        auto sharedA = a.lock();
+        auto sharedB = b.lock();
+
+        if(sharedA && sharedB) {
+            return sharedA < sharedB;
+        }
+
+        return sharedA != nullptr;
+    }
 };
 
 class VideoStreamProfile : public StreamProfile {
 public:
-    VideoStreamProfile(std::weak_ptr<ISensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
+    VideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
     VideoStreamProfile(std::shared_ptr<const VideoStreamProfile> other) = delete;
+
+    ~VideoStreamProfile() noexcept override = default;
 
     void               setWidth(uint32_t width);
     uint32_t           getWidth() const;
@@ -61,8 +101,11 @@ public:
     void               bindIntrinsic(const OBCameraIntrinsic &intrinsic);
     OBCameraDistortion getDistortion() const;
     void               bindDistortion(const OBCameraDistortion &distortion);
+    uint32_t           getMaxFrameDataSize() const;
 
     std::shared_ptr<StreamProfile> clone() const override;
+    bool                           operator==(const VideoStreamProfile &other) const;
+    std::ostream                  &operator<<(std::ostream &os) const override;
 
 protected:
     uint32_t width_;
@@ -70,15 +113,26 @@ protected:
     uint32_t fps_;
 };
 
+class DisparityStreamProfile : public VideoStreamProfile {
+public:
+    DisparityStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
+    ~DisparityStreamProfile() noexcept override = default;
+
+    OBDisparityProcessParam getDisparityProcessParam() const;
+    void                    bindDisparityProcessParam(const OBDisparityProcessParam &param);
+};
+
 class AccelStreamProfile : public StreamProfile {
 public:
-    AccelStreamProfile(std::weak_ptr<ISensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
+    AccelStreamProfile(std::shared_ptr<LazySensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
+    ~AccelStreamProfile() noexcept override = default;
 
     OBAccelFullScaleRange          getFullScaleRange() const;
     OBAccelSampleRate              getSampleRate() const;
     void                           bindIntrinsic(const OBAccelIntrinsic &intrinsic);
     OBAccelIntrinsic               getIntrinsic() const;
     std::shared_ptr<StreamProfile> clone() const override;
+    std::ostream                  &operator<<(std::ostream &os) const override;
 
 protected:
     OBAccelFullScaleRange fullScaleRange_;
@@ -87,18 +141,22 @@ protected:
 
 class GyroStreamProfile : public StreamProfile {
 public:
-    GyroStreamProfile(std::weak_ptr<ISensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
+    GyroStreamProfile(std::shared_ptr<LazySensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
+    ~GyroStreamProfile() noexcept override = default;
 
     OBGyroFullScaleRange           getFullScaleRange() const;
     OBGyroSampleRate               getSampleRate() const;
     void                           bindIntrinsic(const OBGyroIntrinsic &intrinsic);
     OBGyroIntrinsic                getIntrinsic() const;
     std::shared_ptr<StreamProfile> clone() const override;
+    std::ostream                  &operator<<(std::ostream &os) const override;
 
 protected:
     OBGyroFullScaleRange fullScaleRange_;
     OBGyroSampleRate     sampleRate_;
 };
+
+std::ostream &operator<<(std::ostream &os, const std::shared_ptr<const StreamProfile> &streamProfile);
 
 template <typename T> bool StreamProfile::is() const {
     switch(type_) {
@@ -114,13 +172,13 @@ template <typename T> bool StreamProfile::is() const {
         return typeid(T) == typeid(AccelStreamProfile);
     case OB_STREAM_GYRO:
         return typeid(T) == typeid(GyroStreamProfile);
+    case OB_STREAM_DISPARITY:
+        return typeid(T) == typeid(DisparityStreamProfile);
     default:
         break;
     }
     return false;
 }
-
-typedef std::vector<std::shared_ptr<const StreamProfile>> StreamProfileList;
 
 std::vector<std::shared_ptr<const VideoStreamProfile>> matchVideoStreamProfile(const StreamProfileList &profileList, uint32_t width, uint32_t height,
                                                                                uint32_t fps, OBFormat format);
@@ -132,17 +190,3 @@ std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(con
                                                                              OBGyroSampleRate sampleRate);
 
 }  // namespace libobsensor
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-struct ob_stream_profile_t {
-    std::shared_ptr<const libobsensor::StreamProfile> profile;
-};
-
-struct ob_stream_profile_list_t {
-    std::vector<std::shared_ptr<const libobsensor::StreamProfile>> profileList;
-};
-#ifdef __cplusplus
-}
-#endif

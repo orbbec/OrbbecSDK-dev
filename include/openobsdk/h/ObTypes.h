@@ -97,12 +97,12 @@ typedef enum {
  * For detailed error API interface functions and error logs, please refer to the information of ob_error
  */
 typedef enum {
-    OB_EXCEPTION_TYPE_UNKNOWN,                 /**< Unknown error, an error not clearly defined by the SDK */
-    OB_EXCEPTION_STD_EXCEPTION,                /** < Standard exception, an error caused by the standard library */
-    OB_EXCEPTION_TYPE_CAMERA_DISCONNECTED,     /**< Camera/Device has been disconnected, the camera/device is not available */
-    OB_EXCEPTION_TYPE_PLATFORM,                /**< An error in the SDK adaptation platform layer, which means an error in the implementation of a specific system
-                                                  platform */
-    OB_EXCEPTION_TYPE_INVALID_VALUE,           /**< Invalid parameter type exception, need to check input parameter */
+    OB_EXCEPTION_TYPE_UNKNOWN,             /**< Unknown error, an error not clearly defined by the SDK */
+    OB_EXCEPTION_STD_EXCEPTION,            /** < Standard exception, an error caused by the standard library */
+    OB_EXCEPTION_TYPE_CAMERA_DISCONNECTED, /**< Camera/Device has been disconnected, the camera/device is not available */
+    OB_EXCEPTION_TYPE_PLATFORM,            /**< An error in the SDK adaptation platform layer, which means an error in the implementation of a specific system
+                                              platform */
+    OB_EXCEPTION_TYPE_INVALID_VALUE,       /**< Invalid parameter type exception, need to check input parameter */
     OB_EXCEPTION_TYPE_WRONG_API_CALL_SEQUENCE, /**< Wrong API call sequence, the API is called in the wrong order or the wrong parameter is passed */
     OB_EXCEPTION_TYPE_NOT_IMPLEMENTED,         /**< SDK and firmware have not yet implemented this function or feature */
     OB_EXCEPTION_TYPE_IO,                      /**< SDK access IO exception error */
@@ -132,10 +132,14 @@ typedef enum {
     OB_SENSOR_DEPTH     = 3, /**< Depth */
     OB_SENSOR_ACCEL     = 4, /**< Accel */
     OB_SENSOR_GYRO      = 5, /**< Gyro */
-    OB_SENSOR_IR_LEFT   = 6, /**< left IR */
-    OB_SENSOR_IR_RIGHT  = 7, /**< Right IR */
+    OB_SENSOR_IR_LEFT   = 6, /**< left IR for stereo camera*/
+    OB_SENSOR_IR_RIGHT  = 7, /**< Right IR for stereo camera*/
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
-    OB_SENSOR_COUNT,
+    OB_SENSOR_DISPARITY = 9, /**< Disparity */
+    OB_SENSOR_COUNT,         /**The total number of sensor types, is not a valid sensor type */
+    OB_SENSOR_SYNTHETIC, /**< Synthetic sensor, used inside the SDK to handle multi sensor streams on one class/object, not a valid sensor type for external use
+                          */
+
 } OBSensorType,
     ob_sensor_type;
 
@@ -150,9 +154,11 @@ typedef enum {
     OB_STREAM_DEPTH     = 3,  /**< depth stream */
     OB_STREAM_ACCEL     = 4,  /**< Accelerometer data stream */
     OB_STREAM_GYRO      = 5,  /**< Gyroscope data stream */
-    OB_STREAM_IR_LEFT   = 6,  /**< Left IR stream */
-    OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream */
+    OB_STREAM_IR_LEFT   = 6,  /**< Left IR stream for stereo camera */
+    OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream for stereo camera */
     OB_STREAM_RAW_PHASE = 8,  /**< RawPhase Stream */
+    OB_STREAM_DISPARITY = 9,  /**< Disparity Stream*/
+    OB_STREAM_COUNT,          /**< The total number of stream type,is not a valid stream type */
 } OBStreamType,
     ob_stream_type;
 
@@ -172,6 +178,7 @@ typedef enum {
     OB_FRAME_IR_LEFT   = 8,  /**< Left IR frame for stereo camera */
     OB_FRAME_IR_RIGHT  = 9,  /**< Right IR frame for stereo camera */
     OB_FRAME_RAW_PHASE = 10, /**< Raw Phase frame*/
+    OB_FRAME_DISPARITY = 11, /**< Disparity frame*/
     OB_FRAME_COUNT,          /**< The total number of frame types, is not a valid frame type */
 } OBFrameType,
     ob_frame_type;
@@ -180,46 +187,55 @@ typedef enum {
  * @brief Enumeration value describing the pixel format
  */
 typedef enum {
-    OB_FORMAT_YUYV       = 0,    /**< YUYV format */
-    OB_FORMAT_YUY2       = 1,    /**< YUY2 format (the actual format is the same as YUYV) */
-    OB_FORMAT_UYVY       = 2,    /**< UYVY format */
-    OB_FORMAT_NV12       = 3,    /**< NV12 format */
-    OB_FORMAT_NV21       = 4,    /**< NV21 format */
-    OB_FORMAT_MJPG       = 5,    /**< MJPEG encoding format */
-    OB_FORMAT_H264       = 6,    /**< H.264 encoding format */
-    OB_FORMAT_H265       = 7,    /**< H.265 encoding format */
-    OB_FORMAT_Y16        = 8,    /**< Y16 format, 16-bit per pixel, single-channel*/
-    OB_FORMAT_Y8         = 9,    /**< Y8 format, 8-bit per pixel, single-channel */
-    OB_FORMAT_Y10        = 10,   /**< Y10 format, 10-bit per pixel, single-channel(SDK will unpack into Y16 by default) */
-    OB_FORMAT_Y11        = 11,   /**< Y11 format, 11-bit per pixel, single-channel (SDK will unpack into Y16 by default) */
-    OB_FORMAT_Y12        = 12,   /**< Y12 format, 12-bit per pixel, single-channel(SDK will unpack into Y16 by default) */
-    OB_FORMAT_GRAY       = 13,   /**< GRAY (the actual format is the same as YUYV) */
-    OB_FORMAT_HEVC       = 14,   /**< HEVC encoding format (the actual format is the same as H265) */
-    OB_FORMAT_I420       = 15,   /**< I420 format */
-    OB_FORMAT_ACCEL      = 16,   /**< Acceleration data format */
-    OB_FORMAT_GYRO       = 17,   /**< Gyroscope data format */
-    OB_FORMAT_POINT      = 19,   /**< XYZ 3D coordinate point format, @ref OBPoint */
-    OB_FORMAT_RGB_POINT  = 20,   /**< XYZ 3D coordinate point format with RGB information, @ref OBColorPoint */
-    OB_FORMAT_RLE        = 21,   /**< RLE pressure test format (SDK will be unpacked into Y16 by default) */
-    OB_FORMAT_RGB        = 22,   /**< RGB format (actual RGB888)  */
-    OB_FORMAT_BGR        = 23,   /**< BGR format (actual BGR888) */
-    OB_FORMAT_Y14        = 24,   /**< Y14 format, 14-bit per pixel, single-channel (SDK will unpack into Y16 by default) */
-    OB_FORMAT_BGRA       = 25,   /**< BGRA format */
-    OB_FORMAT_COMPRESSED = 26,   /**< Compression format */
-    OB_FORMAT_RVL        = 27,   /**< RVL pressure test format (SDK will be unpacked into Y16 by default) */
-    OB_FORMAT_Z16        = 28,   /**< Is same as Y16*/
-    OB_FORMAT_YV12       = 29,   /**< Is same as Y12, using for right ir stream*/
-    OB_FORMAT_BA81       = 30,   /**< Is same as Y8, using for right ir stream*/
-    OB_FORMAT_RGBA       = 31,   /**< RGBA format */
-    OB_FORMAT_BYR2       = 32,   /**< byr2 format */
-    OB_FORMAT_RW16       = 33,   /**< RAW16 format */
-    OB_FORMAT_DISP16     = 34,   /**< Y16 format for disparity map*/
-    OB_FORMAT_UNKNOWN    = 0xff, /**< unknown format */
+    OB_FORMAT_UNKNOWN    = -1, /*< unknown format */
+    OB_FORMAT_YUYV       = 0,  /**< YUYV format */
+    OB_FORMAT_YUY2       = 1,  /**< YUY2 format (the actual format is the same as YUYV) */
+    OB_FORMAT_UYVY       = 2,  /**< UYVY format */
+    OB_FORMAT_NV12       = 3,  /**< NV12 format */
+    OB_FORMAT_NV21       = 4,  /**< NV21 format */
+    OB_FORMAT_MJPG       = 5,  /**< MJPEG encoding format */
+    OB_FORMAT_H264       = 6,  /**< H.264 encoding format */
+    OB_FORMAT_H265       = 7,  /**< H.265 encoding format */
+    OB_FORMAT_Y16        = 8,  /**< Y16 format, 16-bit per pixel, single-channel*/
+    OB_FORMAT_Y8         = 9,  /**< Y8 format, 8-bit per pixel, single-channel */
+    OB_FORMAT_Y10        = 10, /**< Y10 format, 10-bit per pixel, single-channel(SDK will unpack into Y16 by default) */
+    OB_FORMAT_Y11        = 11, /**< Y11 format, 11-bit per pixel, single-channel (SDK will unpack into Y16 by default) */
+    OB_FORMAT_Y12        = 12, /**< Y12 format, 12-bit per pixel, single-channel(SDK will unpack into Y16 by default) */
+    OB_FORMAT_GRAY       = 13, /**< GRAY (the actual format is the same as YUYV) */
+    OB_FORMAT_HEVC       = 14, /**< HEVC encoding format (the actual format is the same as H265) */
+    OB_FORMAT_I420       = 15, /**< I420 format */
+    OB_FORMAT_ACCEL      = 16, /**< Acceleration data format */
+    OB_FORMAT_GYRO       = 17, /**< Gyroscope data format */
+    OB_FORMAT_POINT      = 19, /**< XYZ 3D coordinate point format, @ref OBPoint */
+    OB_FORMAT_RGB_POINT  = 20, /**< XYZ 3D coordinate point format with RGB information, @ref OBColorPoint */
+    OB_FORMAT_RLE        = 21, /**< RLE pressure test format (SDK will be unpacked into Y16 by default) */
+    OB_FORMAT_RGB        = 22, /**< RGB format (actual RGB888)  */
+    OB_FORMAT_BGR        = 23, /**< BGR format (actual BGR888) */
+    OB_FORMAT_Y14        = 24, /**< Y14 format, 14-bit per pixel, single-channel (SDK will unpack into Y16 by default) */
+    OB_FORMAT_BGRA       = 25, /**< BGRA format */
+    OB_FORMAT_COMPRESSED = 26, /**< Compression format */
+    OB_FORMAT_RVL        = 27, /**< RVL pressure test format (SDK will be unpacked into Y16 by default) */
+    OB_FORMAT_Z16        = 28, /**< Is same as Y16*/
+    OB_FORMAT_YV12       = 29, /**< Is same as Y12, using for right ir stream*/
+    OB_FORMAT_BA81       = 30, /**< Is same as Y8, using for right ir stream*/
+    OB_FORMAT_RGBA       = 31, /**< RGBA format */
+    OB_FORMAT_BYR2       = 32, /**< byr2 format */
+    OB_FORMAT_RW16       = 33, /**< RAW16 format */
+    OB_FORMAT_DISP16     = 34, /**< Y16 format for disparity map*/
 } OBFormat,
     ob_format;
 
 #define OB_FORMAT_RGB888 OB_FORMAT_RGB  // Alias of OB_FORMAT_RGB for compatibility
 #define OB_FORMAT_MJPEG OB_FORMAT_MJPG  // Alias of OB_FORMAT_MJPG for compatibility
+
+// Check if the format is a fixed data size format
+#define IS_FIXED_SIZE_FORMAT(format)                                                                                                         \
+    (format != OB_FORMAT_MJPG && format != OB_FORMAT_H264 && format != OB_FORMAT_H265 && format != OB_FORMAT_HEVC && format != OB_FORMAT_RLE \
+     && format != OB_FORMAT_RVL)
+
+// Check if the format is a packed format, which means the data of pixels is not continuous or bytes aligned in memory
+#define IS_PACKED_FORMAT(format) \
+    (format == OB_FORMAT_Y10 || format == OB_FORMAT_Y11 || format == OB_FORMAT_Y12 || format == OB_FORMAT_Y14 || format == OB_FORMAT_RLE)
 
 /**
  * @brief Enumeration value describing the firmware upgrade status
@@ -240,7 +256,7 @@ typedef enum {
     ERR_DDR             = -7, /**< DDR access error */
     ERR_TIMEOUT         = -8  /**< timeout error */
 } OBUpgradeState,
-    ob_upgrade_state;
+    OBFwUpdateState, ob_upgrade_state, ob_fw_update_state;
 
 /**
  * @brief Enumeration value describing the file transfer status
@@ -566,13 +582,14 @@ typedef enum {
     OB_SAMPLE_RATE_8_KHZ,         /**< 8KHz */
     OB_SAMPLE_RATE_16_KHZ,        /**< 16KHz */
     OB_SAMPLE_RATE_32_KHZ,        /**< 32Hz */
-} OBGyroSampleRate,
+} OBIMUSampleRate, OBGyroSampleRate,
     ob_gyro_sample_rate, OBAccelSampleRate, ob_accel_sample_rate, OB_SAMPLE_RATE;
 
 /**
  * @brief Enumeration of gyroscope ranges
  */
 typedef enum {
+    OB_GYRO_FS_UNKNOW = -1,
     OB_GYRO_FS_16dps = 1, /**< 16 degrees per second */
     OB_GYRO_FS_31dps,     /**< 31 degrees per second */
     OB_GYRO_FS_62dps,     /**< 62 degrees per second */
@@ -588,6 +605,7 @@ typedef enum {
  * @brief Enumeration of accelerometer ranges
  */
 typedef enum {
+    OB_ACCEL_FS_UNKNOW = -1,
     OB_ACCEL_FS_2g = 1, /**< 1x the acceleration of gravity */
     OB_ACCEL_FS_4g,     /**< 4x the acceleration of gravity */
     OB_ACCEL_FS_8g,     /**< 8x the acceleration of gravity */
@@ -640,9 +658,10 @@ typedef enum {
  * @brief Enumeration for device types
  */
 typedef enum {
-    OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA = 0, /**< Monocular structured light camera */
-    OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA = 1, /**< Binocular structured light camera */
-    OB_TOF_CAMERA                        = 2, /**< Time-of-flight camera */
+    OB_DEVICE_TYPE_UNKNOWN               = -1, /**< Unknown device type */
+    OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA = 0,  /**< Monocular structured light camera */
+    OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA = 1,  /**< Binocular structured light camera */
+    OB_TOF_CAMERA                        = 2,  /**< Time-of-flight camera */
 } OBDeviceType,
     ob_device_type, OB_DEVICE_TYPE;
 
@@ -695,6 +714,25 @@ typedef enum {
 } OBDepthPrecisionLevel,
     ob_depth_precision_level, OB_DEPTH_PRECISION_LEVEL;
 
+/**
+ * @brief disparity to depth param
+ *
+ */
+typedef struct {
+    double  zpd;           // the distance to calib plane
+    double  zpps;          // zpps=z0/fx
+    float   baseline;      // baseline length, for monocular camera,it means the distance of laser to the center of IR-CMOS
+    double  fx;            // focus
+    uint8_t bitSize;       // disparity bit size（raw disp bit size，for example: MX6000 is 12, MX6600 is 14）
+    float   unit;          // reference units：unit=10 denote 1cm; unit=1 denote 1mm; unit=0.5 denote 0.5mm; and so on
+    float   minDisparity;  // dual disparity coefficient
+    uint8_t packMode;      // data pack mode
+    float   dispOffset;    // disparity offset，actual disp=chip disp + disp_offset
+    int32_t invalidDisp;   // invalid disparity，usually is 0，dual IR add a auxiliary value.
+    int32_t dispIntPlace;  // disp integer digits，default is 8，Gemini2 XL is 10
+    uint8_t isDualCamera;  // 0 monocular camera，1 dual camera
+
+} OBDisparityProcessParam, ob_disparity_process_param;
 /**
  * @brief Enumeration for TOF filter scene ranges
  */
@@ -927,7 +965,7 @@ typedef struct {
  * @brief Hole fillig mode
  */
 typedef enum {
-    OB_HOLE_FILL_TOP     = 0,
+    OB_HOLE_FILL_LEFT    = 0,
     OB_HOLE_FILL_NEAREST = 1,  // "max" means farest for depth, and nearest for disparity; FILL_NEAREST
     OB_HOLE_FILL_FAREST  = 2,  // FILL_FAREST
 } OBHoleFillingMode,
@@ -970,7 +1008,6 @@ typedef struct {
     uint16_t              disp_diff;
     OBDDONoiseRemovalType type;
 } OBNoiseRemovalFilterParams, ob_noise_removal_filter_params;
-;
 
 /**
  * @brief Control command protocol version number
@@ -1005,56 +1042,6 @@ typedef enum {
     OB_CMD_VERSION_INVALID   = (uint16_t)0xffff,  ///< Invalid version
 } OB_CMD_VERSION,
     OBCmdVersion, ob_cmd_version;
-
-/**
- * @brief Internal API for future publication
- *
- * @note This data type matches OBCmdVersion of one propertyId. PropertyId has multiple OBCmdVersion, and different OBCmdVersion of this propertyId has
- * different data types. PropertyId and OBCmdVersion match only one data type. itemCount is the number of data types contained in data bytes. C language and C++
- * have differences.
- *
- * C language:
- * data's type is a uint8_t pointer, and the user parses data to the destination type.
- * itemTypeSize == 1, dataSize == itemCount;
- *
- * C++:
- * data's type is the propertyId and OBCmdVersion's data type.
- * itemTypeSize = sizeof(T), itemCount = dataSize / itemTypeSize;
- */
-typedef struct OBDataBundle {
-    /**
-     * @brief OBCmdVersion of propertyId
-     */
-    OBCmdVersion cmdVersion;
-
-    /**
-     * @brief Data containing itemCount of elements
-     *
-     * @note void *data = new T[itemCount];
-     */
-    void *data;
-
-    /**
-     * @brief Data size in bytes
-     *
-     * @note dataSize == itemTypeSize * itemCount
-     */
-    uint32_t dataSize;
-
-    /**
-     * @brief Size of data item
-     *
-     * @note C language: itemTypeSize = 1, C++: itemTypeSize = sizeof(T)
-     */
-    uint32_t itemTypeSize;
-
-    /**
-     * @brief Count of data item
-     *
-     * @note itemCount = dataSize / itemTypeSize; 0 == dataSize % itemTypeSize;
-     */
-    uint32_t itemCount;
-} OBDataBundle, ob_data_bundle;
 
 /**
  * @brief IP address configuration for network devices (IPv4)
@@ -1621,7 +1608,7 @@ typedef void (*ob_file_send_callback)(ob_file_tran_state state, const char *mess
  * @param percent Upgrade progress percentage
  * @param user_data User-defined data
  */
-typedef void (*ob_device_upgrade_callback)(ob_upgrade_state state, const char *message, uint8_t percent, void *user_data);
+typedef void (*ob_device_fw_update_callback)(ob_fw_update_state state, const char *message, uint8_t percent, void *user_data);
 
 /**
  * @brief Callback for device status

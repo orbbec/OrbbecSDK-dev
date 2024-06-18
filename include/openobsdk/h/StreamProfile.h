@@ -52,6 +52,9 @@ OB_EXPORT ob_stream_profile* ob_create_accel_stream_profile(ob_accel_full_scale_
  */
 OB_EXPORT ob_stream_profile* ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,ob_error **error);
 
+
+OB_EXPORT ob_stream_profile* ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error);
+
 /**
  * @brief Delete the stream configuration.
  *
@@ -160,6 +163,24 @@ OB_EXPORT ob_camera_distortion ob_video_stream_get_distortion(const ob_stream_pr
  * @param[out] error   Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_video_stream_set_distortion(ob_stream_profile *profile, ob_camera_distortion distortion, ob_error **error);
+
+/**
+ * @brief Get the process param of the disparity stream
+ *
+ * @param[in]  profile Stream profile object
+ * @param[out] error   Pointer to an error object that will be set if an error occurs.
+ * @return ob_disparity_process_param Return the disparity process param of the stream
+ */
+OB_EXPORT ob_disparity_process_param ob_disparity_stream_get_process_param(const ob_stream_profile *profile, ob_error **error);
+
+/**
+ * @brief Set the disparity process param of the disparity stream.
+ *
+ * @param[in] profile Stream profile object. If the profile is not for the disparity stream, an error will be returned.
+ * @param[in]  intrinsic The disparity process param of the disparity stream.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_disparity_stream_profile_set_process_param(ob_stream_profile *profile, ob_disparity_process_param param, ob_error **error);
 
 /**
  * @brief Get the full-scale range of the accelerometer stream.

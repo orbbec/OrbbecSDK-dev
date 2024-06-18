@@ -1,12 +1,12 @@
 #include "FrameMemoryPool.hpp"
 #include "utils/PublicTypeHelper.hpp"
+#include "stream/StreamProfile.hpp"
 #include <sstream>
 
 namespace libobsensor {
 
 std::mutex                     FrameMemoryPool::instanceMutex_;
 std::weak_ptr<FrameMemoryPool> FrameMemoryPool::instanceWeakPtr_;
-bool                           FrameMemoryPool::reuseFrameBufferManager_;
 
 std::shared_ptr<FrameMemoryPool> FrameMemoryPool::getInstance() {
     std::unique_lock<std::mutex> lk(instanceMutex_);
@@ -22,31 +22,30 @@ void FrameMemoryPool::setMaxFrameMemorySize(uint64_t sizeInMB) {
     FrameMemoryAllocator::getInstance()->setMaxFrameMemorySize(sizeInMB);
 }
 
-void FrameMemoryPool::activateFrameBufferManagerReuse(bool enable) {
-    reuseFrameBufferManager_ = enable;
-}
-
-FrameMemoryPool::FrameMemoryPool():logger_(Logger::getInstance()) {
+FrameMemoryPool::FrameMemoryPool() : logger_(Logger::getInstance()) {
     LOG_DEBUG("FrameMemoryPool created!");
 }
 
-FrameMemoryPool::~FrameMemoryPool() {
+FrameMemoryPool::~FrameMemoryPool() noexcept {
     bufMgrMap_.clear();
 }
 
 std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, size_t frameBufferSize) {
     std::unique_lock<std::mutex> lock(bufMgrMapMutex_);
     FrameBufferManagerInfo       info = { type, frameBufferSize };
-
-    if(reuseFrameBufferManager_) {
-        auto iter = bufMgrMap_.find(info);
-        if(iter != bufMgrMap_.end()) {
-            return iter->second;
-        }
+    
+    auto iter = bufMgrMap_.find(info);
+    if(iter != bufMgrMap_.end()) {
+        return iter->second;
     }
+
 
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {
+    case OB_FRAME_DISPARITY:
+        frameBufMgr = std::shared_ptr<FrameBufferManager<DisparityFrame>>(new FrameBufferManager<DisparityFrame>(frameBufferSize));
+        LOG_DEBUG("DisparityFrame bufferManager created!");
+        break;
     case OB_FRAME_DEPTH:
         frameBufMgr = std::shared_ptr<FrameBufferManager<DepthFrame>>(new FrameBufferManager<DepthFrame>(frameBufferSize));
         LOG_DEBUG("DepthFrame bufferManager created!");
@@ -90,20 +89,7 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
         break;
     }
 
-    if(reuseFrameBufferManager_) {
-        bufMgrMap_.insert({ info, frameBufMgr });
-    }
-    else {
-        auto iter = bufMgrWeakList_.begin();
-        while(iter != bufMgrWeakList_.end()) {
-            if(iter->expired()) {
-                iter = bufMgrWeakList_.erase(iter);
-                continue;
-            }
-            iter++;
-        }
-        bufMgrWeakList_.push_back(frameBufMgr);
-    }
+    bufMgrMap_.insert({ info, frameBufMgr });
 
     return frameBufMgr;
 }

@@ -129,34 +129,34 @@ void log_intvl(std::shared_ptr<ObLogIntvlRecord> record, uint64_t minIntvlMsec, 
 }
 
 // 控制日志输出时间间隔, 单位毫秒，0表示不控制
-#define LOG_INTVL(tag, minIntvlMsec, level, ...)                                                                                         \
-    do {                                                                                                                                 \
-        std::unique_lock<std::mutex> lock(logIntvlRecordMapMtx);                                                                         \
-        if(logIntvlRecordMapDestroyed) {                                                                                                 \
-            break;                                                                                                                       \
-        }                                                                                                                                \
-        if(logIntvlRecordMap.size() > LOG_RECORD_MAP_SIZE_LIMIT) {                                                                       \
-            LOG_WARN("logIntvlRecordMap size {} > {}, clear it!", logIntvlRecordMap.size(), LOG_RECORD_MAP_SIZE_LIMIT);                  \
-            auto nowTime = std::chrono::system_clock::now();                                                                             \
-            for(auto it = logIntvlRecordMap.begin(); it != logIntvlRecordMap.end();) {                                                   \
-                uint64_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - it->second->lastInvokeTime).count(); \
-                if(it->second->count == 0 && duration > it->second->interval) {                                                          \
-                    it = logIntvlRecordMap.erase(it);                                                                                    \
-                }                                                                                                                        \
-                else {                                                                                                                   \
-                    it++;                                                                                                                \
-                }                                                                                                                        \
-            }                                                                                                                            \
-        }                                                                                                                                \
-        auto iter = logIntvlRecordMap.find(tag);                                                                                         \
-        if(iter == logIntvlRecordMap.end()) {                                                                                            \
-            auto record      = std::make_shared<ObLogIntvlRecord>();                                                                     \
-            record->count    = 0;                                                                                                        \
-            record->interval = minIntvlMsec;                                                                                             \
-            logIntvlRecordMap.insert(std::make_pair(tag, record));                                                                       \
-            iter = logIntvlRecordMap.find(tag);                                                                                          \
-        }                                                                                                                                \
-        log_intvl(iter->second, minIntvlMsec, spdlog::source_loc{ __FILE__, __LINE__, SPDLOG_FUNCTION }, level, __VA_ARGS__);            \
+#define LOG_INTVL(tag, minIntvlMsec, level, ...)                                                                                                            \
+    do {                                                                                                                                                    \
+        std::unique_lock<std::mutex> logIntvlRecordMapLock(logIntvlRecordMapMtx);                                                                           \
+        if(logIntvlRecordMapDestroyed) {                                                                                                                    \
+            break;                                                                                                                                          \
+        }                                                                                                                                                   \
+        if(logIntvlRecordMap.size() > LOG_RECORD_MAP_SIZE_LIMIT) {                                                                                          \
+            LOG_WARN("logIntvlRecordMap size {} > {}, clear it!", logIntvlRecordMap.size(), LOG_RECORD_MAP_SIZE_LIMIT);                                     \
+            auto nowTime = std::chrono::system_clock::now();                                                                                                \
+            for(auto logIntvlRecordMapIter = logIntvlRecordMap.begin(); logIntvlRecordMapIter != logIntvlRecordMap.end();) {                                \
+                uint64_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - logIntvlRecordMapIter->second->lastInvokeTime).count(); \
+                if(logIntvlRecordMapIter->second->count == 0 && duration > logIntvlRecordMapIter->second->interval) {                                       \
+                    logIntvlRecordMapIter = logIntvlRecordMap.erase(logIntvlRecordMapIter);                                                                 \
+                }                                                                                                                                           \
+                else {                                                                                                                                      \
+                    logIntvlRecordMapIter++;                                                                                                                \
+                }                                                                                                                                           \
+            }                                                                                                                                               \
+        }                                                                                                                                                   \
+        auto logIntvlRecordMapIter = logIntvlRecordMap.find(tag);                                                                                           \
+        if(logIntvlRecordMapIter == logIntvlRecordMap.end()) {                                                                                              \
+            auto record      = std::make_shared<ObLogIntvlRecord>();                                                                                        \
+            record->count    = 0;                                                                                                                           \
+            record->interval = minIntvlMsec;                                                                                                                \
+            logIntvlRecordMap.insert(std::make_pair(tag, record));                                                                                          \
+            logIntvlRecordMapIter = logIntvlRecordMap.find(tag);                                                                                            \
+        }                                                                                                                                                   \
+        log_intvl(logIntvlRecordMapIter->second, minIntvlMsec, spdlog::source_loc{ __FILE__, __LINE__, SPDLOG_FUNCTION }, level, __VA_ARGS__);              \
     } while(0)
 
 #define LOG_INTVL_ON_THREAD(minIntvlMsec, level, ...)                                  \

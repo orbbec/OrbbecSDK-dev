@@ -6,9 +6,9 @@
 
 namespace libobsensor {
 
-template <typename T = Frame> class FrameQueue{
+template <typename T = Frame> class FrameQueue {
 public:
-    explicit FrameQueue(size_t capacity) : capacity_(capacity), stoped_(true), stopping_(false), flushing_(false), callback_(nullptr) {}
+    explicit FrameQueue(size_t capacity) : capacity_(capacity), stoped_(true), stopping_(false), callback_(nullptr), flushing_(false) {}
 
     ~FrameQueue() noexcept {
         clear();
@@ -17,12 +17,17 @@ public:
     size_t capacity() const {
         return capacity_;
     }
+
     size_t size() const {
         return queue_.size();
     }
 
     bool empty() const {
         return queue_.empty();
+    }
+
+    bool fulled() const {
+        return queue_.size() >= capacity_;
     }
 
     bool enqueue(std::shared_ptr<T> frame) {  // returns false if queue is full
@@ -76,7 +81,7 @@ public:
                 if(flushing_ && queue_.empty()) {
                     break;
                 }
-                std::shared_ptr<const Frame> frame = queue_.front();
+                std::shared_ptr<T> frame = queue_.front();
                 queue_.pop();
                 if(frame) {
                     callback_(frame);
@@ -124,10 +129,10 @@ private:
     const size_t                   capacity_;
 
     std::thread                             dequeueThread_;
-    std::function<void(std::shared_ptr<T>)> callback_;
     std::atomic<bool>                       stoped_;
     std::atomic<bool>                       stopping_;
-    std::atomic<bool>                       flushing_;
+    std::function<void(std::shared_ptr<T>)> callback_;
+    std::atomic<bool> flushing_;
 };
 
 }  // namespace libobsensor

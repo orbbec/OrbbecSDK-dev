@@ -129,7 +129,7 @@ AlignImpl::~AlignImpl() {
 
 void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
                            OBExtrinsic extrin, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy) {
-    /// TODO(timon): 
+    /// TODO(timon):
     if(initialized_) {
         return;
     }
@@ -206,7 +206,6 @@ void AlignImpl::prepareDepthResolution() {
     }
 
     /// TODO(timon): linear and distort for depth should be same since depth has no distortion
-    /// prepareRGBRes
     {
         float *rot_coeff1 = new float[depth_intric_.width * depth_intric_.height];
         float *rot_coeff2 = new float[depth_intric_.width * depth_intric_.height];
@@ -262,34 +261,8 @@ void AlignImpl::clearMatrixCache() {
     rot_coeff_ht_z.clear();
 }
 
-int AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height) {
-    if(!initialized_) {
-        LOG_ERROR("Make sure to initializa firstly");
-        return -1;
-    }
-
-    auto finder_x = rot_coeff_ht_x.find(std::make_pair(depth_width, depth_height));
-    auto finder_y = rot_coeff_ht_y.find(std::make_pair(depth_width, depth_height));
-    auto finder_z = rot_coeff_ht_z.find(std::make_pair(depth_width, depth_height));
-    if(rot_coeff_ht_x.cend() == finder_x) {
-        LOG_ERROR("Found a new resolution, but initialize failed!");
-        return -1;
-    }
-
-    if((!depth_buffer) || (!out_depth)) {
-        LOG_ERROR("depth_buffer or out_depth is NULL!");
-        return -1;
-    }
-
-    if(true)
-        memset(out_depth, 0xff, color_height * color_width * sizeof(uint16_t));
-    else
-        memset(out_depth, 0x0, color_height * color_width * sizeof(uint16_t));
-
-    const float *coeff_mat_x = finder_x->second;
-    const float *coeff_mat_y = finder_y->second;
-    const float *coeff_mat_z = finder_z->second;
-
+void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
+                                      const float *coeff_mat_z, int *map) {
     __m128 x1_limit = _mm_set_ps1(float(x_start_));
     __m128 x2_limit = _mm_set_ps1(float(x_end_));
     __m128 y1_limit = _mm_set_ps1(float(y_start_));
@@ -319,7 +292,7 @@ int AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_wid
     __m128  zero_f     = _mm_set_ps1(0.0);
     __m128  r2_max_loc = _mm_set_ps1(r2_max_loc_);
 
-    int imgSize = depth_width * depth_height;
+    int imgSize = depth_intric_.width * depth_intric_.height;
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
 #pragma omp parallel for
@@ -426,110 +399,44 @@ int AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_wid
         _mm_storeu_ps(y_hi, _mm_and_ps(cmp_flag_hi, pixely_hi));
         _mm_storeu_ps(z_hi, _mm_and_ps(cmp_flag_hi, Z_hi));
 
-        for(int j = 0; j < 4; j++) {
-            if(0 == static_cast<uint16_t>(z_lo[j]))
-                continue;
+        for(int k = 0; k < 2; k++) {
+            float *xptr = (k < 1 ? x_lo : x_hi);
+            float *yptr = (k < 1 ? y_lo : y_hi);
+            float *zptr = (k < 1 ? z_lo : z_hi);
 
-            if(gap_fill_copy_) {
-                int      pos       = static_cast<int>(y_lo[j]) * color_width + static_cast<int>(x_lo[j]);
-                uint16_t cur_depth = static_cast<uint16_t>(z_lo[j]);
+            for(int j = 0; j < 4; j++) {
 
-                bool b_cur                       = out_depth[pos] < cur_depth;
-                out_depth[pos]                   = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + 1] < cur_depth;
-                out_depth[pos + 1]               = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width] < cur_depth;
-                out_depth[pos + color_width]     = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
-            }
-            else {
-                int      pos         = static_cast<int>(y_lo[j]) * color_width + static_cast<int>(x_lo[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_lo[j]);
-                out_depth[pos]       = depth_value;
-            }
-        }
+                if(0 == static_cast<uint16_t>(zptr[j]))
+                    continue;
 
-        for(int j = 0; j < 4; j++) {
-            if(0 == static_cast<uint16_t>(z_hi[j]))
-                continue;
-
-            if(gap_fill_copy_) {
-                int      pos       = static_cast<int>(y_hi[j]) * color_width + static_cast<int>(x_hi[j]);
-                uint16_t cur_depth = static_cast<uint16_t>(z_hi[j]);
-
-                bool b_cur                       = out_depth[pos] < cur_depth;
-                out_depth[pos]                   = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + 1] < cur_depth;
-                out_depth[pos + 1]               = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width] < cur_depth;
-                out_depth[pos + color_width]     = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
-            }
-            else {
-                int      pos         = static_cast<int>(y_hi[j]) * color_width + static_cast<int>(x_hi[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_hi[j]);
-                out_depth[pos]       = depth_value;
+                int      pos       = static_cast<int>(yptr[j]) * rgb_intric_.width + static_cast<int>(xptr[j]);
+                uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+                if(gap_fill_copy_) {
+                    bool b_cur                             = out_depth[pos] < cur_depth;
+                    out_depth[pos]                         = b_cur * out_depth[pos] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + 1] < cur_depth;
+                    out_depth[pos + 1]                     = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width] < cur_depth;
+                    out_depth[pos + rgb_intric_.width]     = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
+                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
+                }
+                else {
+                    out_depth[pos] = cur_depth;
+                }
             }
         }
     }
-
-    if(true) {
-        int pixnum = color_width * color_height;
-#if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
-#endif
-        for(int idx = 0; idx < pixnum; idx++) {
-            if(65535 == out_depth[idx]) {
-                out_depth[idx] = 0;
-            }
-        }
-    }
-
-    return 0;
 }
 
-/// TOOD(timon): error handling
-int AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height) {
-    if(!initialized_) {
-        LOG_ERROR("Make sure LoadParameters() success before D2C!");
-        return -1;
-    }
-
-    auto finder_x = rot_coeff_ht_x.find(std::make_pair(depth_width, depth_height));
-    auto finder_y = rot_coeff_ht_y.find(std::make_pair(depth_width, depth_height));
-    auto finder_z = rot_coeff_ht_z.find(std::make_pair(depth_width, depth_height));
-    if(rot_coeff_ht_x.cend() == finder_x) {
-        LOG_ERROR("Found a new resolution, but initialize failed!");
-        return -1;
-    }
-
-    if(!depth_buffer) {
-        LOG_ERROR("depth_buffer is NULL!");
-        return -1;
-    }
-
-    if(!out_depth) {
-        LOG_ERROR("out_depth is NULL!");
-        return -1;
-    }
-
-    if(true)
-        memset(out_depth, 0xff, color_height * color_width * sizeof(uint16_t));
-    else
-        memset(out_depth, 0x0, color_height * color_width * sizeof(uint16_t));
-
-    const float *coeff_mat_x = finder_x->second;
-    const float *coeff_mat_y = finder_y->second;
-    const float *coeff_mat_z = finder_z->second;
+void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
+                                      const float *coeff_mat_z, int *map) {
 
     __m128 x1_limit = _mm_set_ps1(float(x_start_));
     __m128 x2_limit = _mm_set_ps1(float(x_end_));
     __m128 y1_limit = _mm_set_ps1(float(y_start_));
     __m128 y2_limit = _mm_set_ps1(float(y_end_));
 
-    /// TODO(timon): check K6?
     __m128 k1 = _mm_set_ps1(rgb_disto_.k1);
     __m128 k2 = _mm_set_ps1(rgb_disto_.k2);
     __m128 k3 = _mm_set_ps1(rgb_disto_.k3);
@@ -548,9 +455,11 @@ int AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_wid
     __m128  two        = _mm_set_ps1(2);
     __m128i zero       = _mm_setzero_si128();
 
-    int imgSize = depth_width * depth_height;
+    int imgSize = depth_intric_.width * depth_intric_.height;
 
+#if !defined(ANDROID) && !defined(__ANDROID__)
 #pragma omp parallel for
+#endif
     for(int i = 0; i < imgSize; i += 8) {
         __m128i depth_i16    = _mm_loadu_si128((__m128i *)(depth_buffer + i));
         __m128i depth_lo_i   = _mm_unpacklo_epi16(depth_i16, zero);
@@ -595,11 +504,7 @@ int AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_wid
         __m128 r_hi = _mm_sqrt_ps(r2_hi);
 
         // float theta=atan(r)
-#ifdef _WIN32
-        //#if _MSC_VER >= 1920    //
-        //        __m128 theta_lo = _mm_atan_ps(r_lo);
-        //        __m128 theta_hi = _mm_atan_ps(r_hi);
-        //#elif _MSC_VER == 1900  //
+
         float r_lo_[4] = { 0 }, r_hi_[4] = { 0 };
         float theta_lo_[4] = { 0 }, theta_hi_[4] = { 0 };
         _mm_storeu_ps(r_lo_, r_lo);
@@ -612,21 +517,6 @@ int AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_wid
 
         __m128 theta_lo = _mm_loadu_ps(theta_lo_);
         __m128 theta_hi = _mm_loadu_ps(theta_hi_);
-//#endif
-#else
-        float r_lo_[4] = { 0 }, r_hi_[4] = { 0 };
-        float theta_lo_[4] = { 0 }, theta_hi_[4] = { 0 };
-        _mm_storeu_ps(r_lo_, r_lo);
-        _mm_storeu_ps(r_hi_, r_hi);
-
-        theta_lo_[0] = atan(r_lo_[0]), theta_hi_[0] = atan(r_hi_[0]);
-        theta_lo_[1] = atan(r_lo_[1]), theta_hi_[1] = atan(r_hi_[1]);
-        theta_lo_[2] = atan(r_lo_[2]), theta_hi_[2] = atan(r_hi_[2]);
-        theta_lo_[3] = atan(r_lo_[3]), theta_hi_[3] = atan(r_hi_[3]);
-
-        __m128 theta_lo = _mm_loadu_ps(theta_lo_);
-        __m128 theta_hi = _mm_loadu_ps(theta_hi_);
-#endif
 
         __m128 theta2_lo = _mm_mul_ps(theta_lo, theta_lo);
         __m128 theta2_hi = _mm_mul_ps(theta_hi, theta_hi);
@@ -701,97 +591,38 @@ int AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, int depth_wid
         _mm_storeu_ps(y_hi, result_y_hi);
         _mm_storeu_ps(z_hi, result_z_hi);
 
-        for(int j = 0; j < 4; j++) {
-            if(0 == static_cast<uint16_t>(z_lo[j]))
-                continue;
+        for(int k = 0; k < 2; k++) {
+            float *xptr = (k < 1 ? x_lo : x_hi);
+            float *yptr = (k < 1 ? y_lo : y_hi);
+            float *zptr = (k < 1 ? z_lo : z_hi);
 
-            if(gap_fill_copy_) {
-                int      pos       = static_cast<int>(y_lo[j]) * color_width + static_cast<int>(x_lo[j]);
-                uint16_t cur_depth = static_cast<uint16_t>(z_lo[j]);
+            for(int j = 0; j < 4; j++) {
 
-                bool b_cur                       = out_depth[pos] < cur_depth;
-                out_depth[pos]                   = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + 1] < cur_depth;
-                out_depth[pos + 1]               = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width] < cur_depth;
-                out_depth[pos + color_width]     = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
-            }
-            else {
-                int      pos         = static_cast<int>(y_lo[j]) * color_width + static_cast<int>(x_lo[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_lo[j]);
-                out_depth[pos]       = depth_value;
-            }
-        }
+                if(0 == static_cast<uint16_t>(zptr[j]))
+                    continue;
 
-        for(int j = 0; j < 4; j++) {
-            if(0 == static_cast<uint16_t>(z_hi[j]))
-                continue;
-
-            if(gap_fill_copy_) {
-                int      pos       = static_cast<int>(y_hi[j]) * color_width + static_cast<int>(x_hi[j]);
-                uint16_t cur_depth = static_cast<uint16_t>(z_hi[j]);
-
-                bool b_cur                       = out_depth[pos] < cur_depth;
-                out_depth[pos]                   = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + 1] < cur_depth;
-                out_depth[pos + 1]               = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width] < cur_depth;
-                out_depth[pos + color_width]     = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
-            }
-            else {
-                int      pos         = static_cast<int>(y_hi[j]) * color_width + static_cast<int>(x_hi[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_hi[j]);
-                out_depth[pos]       = depth_value;
+                int      pos       = static_cast<int>(yptr[j]) * rgb_intric_.width + static_cast<int>(xptr[j]);
+                uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+                if(gap_fill_copy_) {
+                    bool b_cur                             = out_depth[pos] < cur_depth;
+                    out_depth[pos]                         = b_cur * out_depth[pos] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + 1] < cur_depth;
+                    out_depth[pos + 1]                     = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width] < cur_depth;
+                    out_depth[pos + rgb_intric_.width]     = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
+                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
+                }
+                else {
+                    out_depth[pos] = cur_depth;
+                }
             }
         }
     }
-
-    if(true) {
-        int pixnum = color_width * color_height;
-#pragma omp parallel for
-        for(int idx = 0; idx < pixnum; idx++) {
-            if(65535 == out_depth[idx]) {
-                out_depth[idx] = 0;
-            }
-        }
-    }
-
-    return 0;
 }
 
-/// TODO(timon): error handling
-int AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height) {
-    if(!initialized_) {
-        LOG_ERROR("Make sure LoadParameters() success before D2C!");
-        return -1;
-    }
-
-    auto finder_x = rot_coeff_ht_x.find(std::make_pair(depth_width, depth_height));
-    auto finder_y = rot_coeff_ht_y.find(std::make_pair(depth_width, depth_height));
-    auto finder_z = rot_coeff_ht_z.find(std::make_pair(depth_width, depth_height));
-    if(rot_coeff_ht_x.cend() == finder_x) {
-        LOG_ERROR("Found a new resolution, but initialize failed!");
-        return -1;
-    }
-
-    if(!depth_buffer || !out_depth) {
-        LOG_ERROR("depth_buffer is NULL!");
-        return -1;
-    }
-
-    /// TODO(timon)
-    if(true)
-        memset(out_depth, 0xff, color_height * color_width * sizeof(uint16_t));
-    else
-        memset(out_depth, 0x0, color_height * color_width * sizeof(uint16_t));
-
-    const float *coeff_mat_x = finder_x->second;
-    const float *coeff_mat_y = finder_y->second;
-    const float *coeff_mat_z = finder_z->second;
+void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
+                                    const float *coeff_mat_z, int *map) {
 
     __m128 x1_limit = _mm_set_ps1(float(x_start_));
     __m128 x2_limit = _mm_set_ps1(float(x_end_));
@@ -817,7 +648,7 @@ int AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width
     __m128  two        = _mm_set_ps1(2);
     __m128i zero       = _mm_setzero_si128();
 
-    int imgSize = depth_width * depth_height;
+    int imgSize = depth_intric_.width * depth_intric_.height;
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
 #pragma omp parallel for
@@ -944,100 +775,38 @@ int AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, int depth_width
         _mm_storeu_ps(y_hi, result_y_hi);
         _mm_storeu_ps(z_hi, result_z_hi);
 
-        for(int j = 0; j < 4; j++) {
-            if(0 == static_cast<uint16_t>(z_lo[j]))
-                continue;
+        for(int k = 0; k < 2; k++) {
+            float *xptr = (k < 1 ? x_lo : x_hi);
+            float *yptr = (k < 1 ? y_lo : y_hi);
+            float *zptr = (k < 1 ? z_lo : z_hi);
 
-            /// TODO(timon)
-            if(gap_fill_copy_) {
-                int      pos       = static_cast<int>(y_lo[j]) * color_width + static_cast<int>(x_lo[j]);
-                uint16_t cur_depth = static_cast<uint16_t>(z_lo[j]);
+            for(int j = 0; j < 4; j++) {
 
-                bool b_cur                       = out_depth[pos] < cur_depth;
-                out_depth[pos]                   = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + 1] < cur_depth;
-                out_depth[pos + 1]               = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width] < cur_depth;
-                out_depth[pos + color_width]     = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
-            }
-            else {
-                int      pos         = static_cast<int>(y_lo[j]) * color_width + static_cast<int>(x_lo[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_lo[j]);
-                out_depth[pos]       = depth_value;
-            }
-        }
+                if(0 == static_cast<uint16_t>(zptr[j]))
+                    continue;
 
-        for(int j = 0; j < 4; j++) {
-            if(0 == static_cast<uint16_t>(z_hi[j]))
-                continue;
-
-            if(gap_fill_copy_) {
-                int      pos       = static_cast<int>(y_hi[j]) * color_width + static_cast<int>(x_hi[j]);
-                uint16_t cur_depth = static_cast<uint16_t>(z_hi[j]);
-
-                bool b_cur                       = out_depth[pos] < cur_depth;
-                out_depth[pos]                   = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + 1] < cur_depth;
-                out_depth[pos + 1]               = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width] < cur_depth;
-                out_depth[pos + color_width]     = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
-            }
-            else {
-                int      pos         = static_cast<int>(y_hi[j]) * color_width + static_cast<int>(x_hi[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_hi[j]);
-                out_depth[pos]       = depth_value;
+                int      pos       = static_cast<int>(yptr[j]) * rgb_intric_.width + static_cast<int>(xptr[j]);
+                uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+                if(gap_fill_copy_) {
+                    bool b_cur                             = out_depth[pos] < cur_depth;
+                    out_depth[pos]                         = b_cur * out_depth[pos] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + 1] < cur_depth;
+                    out_depth[pos + 1]                     = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width] < cur_depth;
+                    out_depth[pos + rgb_intric_.width]     = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
+                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
+                }
+                else {
+                    out_depth[pos] = cur_depth;
+                }
             }
         }
     }
-
-    if(true) {
-        int pixnum = color_width * color_height;
-#if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
-#endif
-        for(int idx = 0; idx < pixnum; idx++) {
-            if(65535 == out_depth[idx]) {
-                out_depth[idx] = 0;
-            }
-        }
-    }
-
-    return 0;
 }
 
-/// TOOD(timon): error handeling
-int AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height) {
-    if(!initialized_) {
-        LOG_ERROR("Make sure LoadParameters() success before D2C!");
-        return -1;
-    }
-
-    auto finder_x = rot_coeff_ht_x.find(std::make_pair(depth_width, depth_height));
-    auto finder_y = rot_coeff_ht_y.find(std::make_pair(depth_width, depth_height));
-    auto finder_z = rot_coeff_ht_z.find(std::make_pair(depth_width, depth_height));
-
-    if(rot_coeff_ht_x.cend() == finder_x) {
-        LOG_ERROR("Found a new resolution, but initialize failed!");
-        return -1;
-    }
-
-    if(!depth_buffer || !out_depth) {
-        LOG_ERROR("depth_buffer is NULL!");
-        return -1;
-    }
-
-    if(true)
-        memset(out_depth, 0xff, color_height * color_width * sizeof(uint16_t));
-    else
-        memset(out_depth, 0x0, color_height * color_width * sizeof(uint16_t));
-
-    const float *coeff_mat_x = finder_x->second;
-    const float *coeff_mat_y = finder_y->second;
-    const float *coeff_mat_z = finder_z->second;
+void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
+                                 const float *coeff_mat_z, int *map) {
 
     __m128 x1 = _mm_set_ps1(float(x_start_));
     __m128 x2 = _mm_set_ps1(float(x_end_));
@@ -1056,7 +825,7 @@ int AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, int depth_width, i
     __m128  round_point_5 = _mm_set_ps1(0.5);
     __m128i zero          = _mm_setzero_si128();
 
-    int imgSize = depth_width * depth_height;
+    int imgSize = depth_intric_.width * depth_intric_.height;
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
 #pragma omp parallel for
@@ -1135,115 +904,49 @@ int AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, int depth_width, i
         _mm_storeu_ps(y_hi, result_y_hi);
         _mm_storeu_ps(z_hi, result_z_hi);
 
-        for(int j = 0; j < 4; j++) {
-            if(0 == static_cast<uint16_t>(z_lo[j]))
-                continue;
+        for(int k = 0; k < 2; k++) {
+            float *xptr = (k < 1 ? x_lo : x_hi);
+            float *yptr = (k < 1 ? y_lo : y_hi);
+            float *zptr = (k < 1 ? z_lo : z_hi);
 
-            if(gap_fill_copy_) {
-                int      pos       = static_cast<int>(y_lo[j]) * color_width + static_cast<int>(x_lo[j]);
-                uint16_t cur_depth = static_cast<uint16_t>(z_lo[j]);
+            for(int j = 0; j < 4; j++) {
 
-                bool b_cur                       = out_depth[pos] < cur_depth;
-                out_depth[pos]                   = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + 1] < cur_depth;
-                out_depth[pos + 1]               = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width] < cur_depth;
-                out_depth[pos + color_width]     = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
-            }
-            else {
-                int      pos         = static_cast<int>(y_lo[j]) * color_width + static_cast<int>(x_lo[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_lo[j]);
-                out_depth[pos]       = depth_value;
-            }
-        }
+                if(0 == static_cast<uint16_t>(zptr[j]))
+                    continue;
 
-        for(int j = 0; j < 4; j++) {
-            if(0 == static_cast<uint16_t>(z_hi[j]))
-                continue;
-
-            if(gap_fill_copy_) {
-                int      pos         = static_cast<int>(y_hi[j]) * color_width + static_cast<int>(x_hi[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_hi[j]);
-
-                uint16_t cur_depth               = depth_value;
-                bool     b_cur                   = out_depth[pos] < cur_depth;
-                out_depth[pos]                   = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + 1] < cur_depth;
-                out_depth[pos + 1]               = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width] < cur_depth;
-                out_depth[pos + color_width]     = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
-                b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
-            }
-            else {
-                int      pos         = static_cast<int>(y_hi[j]) * color_width + static_cast<int>(x_hi[j]);
-                uint16_t depth_value = static_cast<uint16_t>(z_hi[j]);
-                out_depth[pos]       = depth_value;
+                int      pos       = static_cast<int>(yptr[j]) * rgb_intric_.width + static_cast<int>(xptr[j]);
+                uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+                if(gap_fill_copy_) {
+                    bool b_cur                             = out_depth[pos] < cur_depth;
+                    out_depth[pos]                         = b_cur * out_depth[pos] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + 1] < cur_depth;
+                    out_depth[pos + 1]                     = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width] < cur_depth;
+                    out_depth[pos + rgb_intric_.width]     = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
+                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
+                }
+                else {
+                    out_depth[pos] = cur_depth;
+                }
             }
         }
     }
-
-    if(true) {
-        int pixnum = color_width * color_height;
-#if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
-#endif
-        for(int idx = 0; idx < pixnum; idx++) {
-            if(65535 == out_depth[idx]) {
-                out_depth[idx] = 0;
-            }
-        }
-    }
-
-    return 0;
 }
 
-/// TODO(timon): error handling
-int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height, int *depth_xy) {
-    if(!initialized_ || depth_width != depth_intric_.width || depth_height != depth_intric_.height || color_width != rgb_intric_.width
-       || color_height != rgb_intric_.height) {
-        LOG_ERROR("Not initialized or input parameters don't match");
-        return -2;
-    }
-
-    auto finder_x = rot_coeff_ht_x.find(std::make_pair(depth_width, depth_height));
-    auto finder_y = rot_coeff_ht_y.find(std::make_pair(depth_width, depth_height));
-    auto finder_z = rot_coeff_ht_z.find(std::make_pair(depth_width, depth_height));
-    if((rot_coeff_ht_x.cend() == finder_x) || (rot_coeff_ht_y.cend() == finder_y) || (rot_coeff_ht_z.cend() == finder_z)) {
-        LOG_ERROR("Found a new resolution, but initialize failed!");
-        return -1;
-    }
-
-    if((!depth_buffer) || ((!out_depth && !depth_xy))) {
-        LOG_ERROR("Buffer not initialized");
-        return -1;
-    }
-
-    /// TODO(timon): check default
-    // D2C_GAP_FILLED_DISABLE != d2c_cfg_.enable_gap_fill
-    if(out_depth) {
-        if(true)
-            memset(out_depth, 0xff, color_height * color_width * sizeof(uint16_t));
-        else
-            memset(out_depth, 0x0, color_height * color_width * sizeof(uint16_t));
-    }
-
-    const float *coeff_mat_x = finder_x->second;
-    const float *coeff_mat_y = finder_y->second;
-    const float *coeff_mat_z = finder_z->second;
+void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y, const float *coeff_mat_z,
+                              int *map) {
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
 #pragma omp parallel for
 #endif
 
-    for(int v = 0; v < depth_height; v += 1) {
+    for(int v = 0; v < depth_intric_.height; v += 1) {
         float dst[3];
         float pixel[2];
 
-        for(int u = 0; u < depth_width; u += 1) {
-            int      i     = v * depth_width + u;
+        for(int u = 0; u < depth_intric_.width; u += 1) {
+            int      i     = v * depth_intric_.width + u;
             uint16_t depth = depth_buffer[i];
             dst[0]         = depth * coeff_mat_x[i] + scaled_trans_[0];
             dst[1]         = depth * coeff_mat_y[i] + scaled_trans_[1];
@@ -1278,42 +981,95 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
 
             u_rgb = static_cast<int>(pixel[0]);
             v_rgb = static_cast<int>(pixel[1]);
-            if(depth_xy)  // coordinates mapping for C2D
+            if(map)  // coordinates mapping for C2D
             {
-                depth_xy[2 * i]     = u_rgb;
-                depth_xy[2 * i + 1] = v_rgb;
+                map[2 * i]     = u_rgb;
+                map[2 * i + 1] = v_rgb;
                 /// TODO(timon): filling for C2D
             }
+            int      pos       = v_rgb * rgb_intric_.width + u_rgb;
+            uint16_t cur_depth = uint16_t(dst[2]);
             if(out_depth) {
                 if(gap_fill_copy_) {
-                    int      pos       = v_rgb * color_width + u_rgb;
-                    uint16_t cur_depth = uint16_t(dst[2]);
-
                     bool b_cur     = out_depth[pos] < cur_depth;
                     out_depth[pos] = b_cur * out_depth[pos] + !b_cur * cur_depth;
 
                     b_cur              = out_depth[pos + 1] < cur_depth;
                     out_depth[pos + 1] = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
 
-                    b_cur                        = out_depth[pos + color_width] < cur_depth;
-                    out_depth[pos + color_width] = b_cur * out_depth[pos + color_width] + !b_cur * cur_depth;
+                    b_cur                              = out_depth[pos + rgb_intric_.width] < cur_depth;
+                    out_depth[pos + rgb_intric_.width] = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
 
-                    b_cur                            = out_depth[pos + color_width + 1] < cur_depth;
-                    out_depth[pos + color_width + 1] = b_cur * out_depth[pos + color_width + 1] + !b_cur * cur_depth;
+                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
+                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
                 }
                 else {
-                    u_rgb          = static_cast<int>(pixel[0]);
-                    v_rgb          = static_cast<int>(pixel[1]);
-                    uint16_t *pdst = out_depth + v_rgb * color_width + u_rgb;
+                    uint16_t *pdst = out_depth + v_rgb * rgb_intric_.width + u_rgb;
                     *pdst          = (uint16_t)dst[2];
                 }
             }
         }
     }
+}
 
-    /// TODO(timon): check default
-    if(true) {
-        int pixnum = color_width * color_height;
+int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height, int *map,
+                   bool withSSE) {
+    int ret = 0;
+    if(!initialized_ || depth_width != depth_intric_.width || depth_height != depth_intric_.height || color_width != rgb_intric_.width
+       || color_height != rgb_intric_.height) {
+        LOG_ERROR("Not initialized or input parameters don't match");
+        return -1;
+    }
+
+    auto finder_x = rot_coeff_ht_x.find(std::make_pair(depth_width, depth_height));
+    auto finder_y = rot_coeff_ht_y.find(std::make_pair(depth_width, depth_height));
+    auto finder_z = rot_coeff_ht_z.find(std::make_pair(depth_width, depth_height));
+    if((rot_coeff_ht_x.cend() == finder_x) || (rot_coeff_ht_y.cend() == finder_y) || (rot_coeff_ht_z.cend() == finder_z)) {
+        LOG_ERROR("Found a new resolution, but initialization failed!");
+        return -1;
+    }
+
+    if((!depth_buffer) || ((!out_depth && !map))) {
+        LOG_ERROR("Buffer not initialized");
+        return -1;
+    }
+
+    int pixnum = color_width * color_height;
+    if(out_depth) {
+        // init to 1s (depth 0 may be used as other useful date)
+        memset(out_depth, 0xff, pixnum * sizeof(uint16_t));
+    }
+
+    const float *coeff_mat_x = finder_x->second;
+    const float *coeff_mat_y = finder_y->second;
+    const float *coeff_mat_z = finder_z->second;
+
+    if(withSSE) {
+        if(add_target_distortion_) {
+            switch(rgb_intric_.model) {
+            case OB_DISTORTION_BROWN_CONRADY:
+                distortedD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
+                break;
+            case OB_DISTORTION_BROWN_CONRADY_K6:
+                BMDistortedD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
+                break;
+            case OB_DISTORTION_KANNALA_BRANDT4:
+                KBDistortedD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
+                break;
+            default:
+                LOG_ERROR("Distortion model not supported yet");
+                break;
+            }
+        }
+        else {
+            linearD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
+        }
+    }
+    else {
+        D2CWithoutSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
+    }
+
+    if(out_depth) {
 #if !defined(ANDROID) && !defined(__ANDROID__)
 #pragma omp parallel for
 #endif
@@ -1322,36 +1078,6 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
                 out_depth[idx] = 0;
             }
         }
-    }
-
-    return 0;
-}
-
-int AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height) {
-    int ret = 0;
-    if(depth_width != depth_intric_.width || depth_height != depth_intric_.height || color_width != rgb_intric_.width || color_height != rgb_intric_.height) {
-        LOG_ERROR("Input parameters don't match");
-        return -2;
-    }
-
-    if(add_target_distortion_) {
-        switch(rgb_intric_.model) {
-        case OB_DISTORTION_BROWN_CONRADY:
-            ret = distortedD2CWithSSE(depth_buffer, depth_width, depth_height, out_depth, color_width, color_height);
-            break;
-        case OB_DISTORTION_BROWN_CONRADY_K6:
-            ret = BMDistortedD2CWithSSE(depth_buffer, depth_width, depth_height, out_depth, color_width, color_height);
-            break;
-        case OB_DISTORTION_KANNALA_BRANDT4:
-            ret = KBDistortedD2CWithSSE(depth_buffer, depth_width, depth_height, out_depth, color_width, color_height);
-            break;
-        default:
-            LOG_ERROR("Distortion model not supported yet");
-            break;
-        }
-    }
-    else {
-        ret = linearD2CWithSSE(depth_buffer, depth_width, depth_height, out_depth, color_width, color_height);
     }
 
     return ret;
@@ -1369,18 +1095,18 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
     int *              depth_xy = new int[size];
     memset(depth_xy, -1, size * sizeof(int));
 
-    /// TODO(timon): error handling
+    int ret = -1;
     if(!D2C(depth_buffer, depth_width, depth_height, nullptr, color_width, color_height, depth_xy)) {
 
         switch(format) {
         case OB_FORMAT_Y8:
-            mapBytes<uint8_t>(depth_xy, static_cast<const uint8_t *>(rgb_buffer), color_width, color_height, (uint8_t *)out_rgb, depth_width);
+            mapPixel<uint8_t>(depth_xy, static_cast<const uint8_t *>(rgb_buffer), color_width, color_height, (uint8_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_Y16:
-            mapBytes<uint16_t>(depth_xy, static_cast<const uint16_t *>(rgb_buffer), color_width, color_height, (uint16_t *)out_rgb, depth_width);
+            mapPixel<uint16_t>(depth_xy, static_cast<const uint16_t *>(rgb_buffer), color_width, color_height, (uint16_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_RGB:
-            mapBytes<uint24_t>(depth_xy, static_cast<const uint24_t *>(rgb_buffer), color_width, color_height, (uint24_t *)out_rgb, depth_width);
+            mapPixel<uint24_t>(depth_xy, static_cast<const uint24_t *>(rgb_buffer), color_width, color_height, (uint24_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_BGR:
         case OB_FORMAT_BGRA:
@@ -1391,16 +1117,19 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
             LOG_ERROR("Not supported yet");
             break;
         }
+
+        ret = 0;
     }
     delete[] depth_xy;
     depth_xy = nullptr;
 
-    return 0;
+    return ret;
 }
 
-template <typename T> void libobsensor::AlignImpl::mapBytes(const int *map, const T *src_buffer, int src_width, int src_height, T *dst_buffer, int dst_width) {
-    for(int v = y_start_; v < y_end_; v++) {
-        for(int u = x_start_; u < x_end_; u++) {
+template <typename T>
+void libobsensor::AlignImpl::mapPixel(const int *map, const T *src_buffer, int src_width, int src_height, T *dst_buffer, int dst_width, int dst_height) {
+    for(int v = (y_start_ > 0 ? y_start_ : 0); v < (y_end_ < dst_height ? y_end_ : dst_height); v++) {
+        for(int u = (x_start_ > 0 ? x_start_ : 0); u < (x_end_ < dst_width ? x_end_ : dst_width); u++) {
             int id = v * dst_width + u;
             int us = map[2 * id], vs = map[2 * id + 1];
             if((us < 0) || (us > src_width - 1) || (vs < 0) || (vs > src_height - 1))

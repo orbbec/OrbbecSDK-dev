@@ -28,7 +28,7 @@ struct StandardUvcFramePayloadHeader {
 
 struct UvcMetadata {
     StandardUvcFramePayloadHeader header;
-    uint8_t                       metadata[0];
+    uint8_t                       metadata[1];
 };
 
 #pragma pack(pop)

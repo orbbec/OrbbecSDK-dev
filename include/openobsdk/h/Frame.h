@@ -379,6 +379,17 @@ OB_EXPORT uint32_t ob_video_frame_get_height(const ob_frame *frame, ob_error **e
 OB_EXPORT uint8_t ob_video_frame_get_pixel_available_bit_size(const ob_frame *frame, ob_error **error);
 
 /**
+ * @brief Set the effective number of pixels (such as Y16 format frame, but only the lower 10 bits are effective bits, and the upper 6 bits are filled with 0)
+ * @attention Only valid for Y8/Y10/Y11/Y12/Y14/Y16 format
+ *
+ * @param[in] frame video frame object
+ * @param[in] bit_size the effective number of pixels in the pixel, or 0 if it is an unsupported format
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ *
+ */
+OB_EXPORT void ob_video_frame_set_pixel_available_bit_size(const ob_frame *frame, uint8_t bit_size, ob_error **error);
+
+/**
  * @brief Get the source sensor type of the ir frame (left or right for dual camera)
  *
  * @param frame Frame object
@@ -396,6 +407,16 @@ OB_EXPORT ob_sensor_type ob_ir_frame_get_source_sensor_type(const ob_frame *fram
  * @return float The value scale of the depth frame
  */
 OB_EXPORT float ob_depth_frame_get_value_scale(const ob_frame *frame, ob_error **error);
+
+/**
+ * @brief Set the value scale of the depth frame. The pixel value of the depth frame is multiplied by the scale to give a depth value in millimeters.
+ * For example, if valueScale=0.1 and a certain coordinate pixel value is pixelValue=10000, then the depth value = pixelValue*valueScale = 10000*0.1=1000mm.
+ *
+ * @param[in] frame Frame object
+ * @param[in] value_scale The value scale of the depth frame
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_depth_frame_set_value_scale(const ob_frame *frame, float value_scale, ob_error **error);
 
 /**
  * @brief Get the point coordinate value scale of the points frame. The point position value of the points frame is multiplied by the scale to give a position
@@ -457,13 +478,13 @@ OB_EXPORT uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_erro
 
 /**
  * @brief Get the disparity frame from the frameset.
- * 
+ *
  * @attention The frame returned by this function should call @ref ob_delete_frame() to decrease the reference count when it is no longer needed.
- * 
+ *
  * @param[in] frameset Frameset object.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Returen the disparity frame.
-*/
+ */
 OB_EXPORT const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_error **error);
 
 /**

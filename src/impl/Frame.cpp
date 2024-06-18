@@ -182,6 +182,13 @@ float ob_depth_frame_get_value_scale(const ob_frame *frame, ob_error **error) BE
 }
 HANDLE_EXCEPTIONS_AND_RETURN(-1.0f, frame)
 
+void ob_depth_frame_set_value_scale(const ob_frame *frame, float value_scale, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    auto depthFrame = frame->frame->as<libobsensor::DepthFrame>();
+    depthFrame->setValueScale(value_scale);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(frame)
+
 float ob_points_frame_get_coordinate_value_scale(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     auto pointsFrame = frame->frame->as<libobsensor::PointsFrame>();
@@ -200,7 +207,6 @@ uint8_t *ob_frame_get_data_unsafe(const ob_frame *frame, ob_error **error) BEGIN
     return frame->frame->getDataUnsafe();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
-
 
 void ob_frame_update_data(ob_frame *frame, const uint8_t *data, uint32_t data_size, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
@@ -316,6 +322,12 @@ uint8_t ob_video_frame_get_pixel_available_bit_size(const ob_frame *frame, ob_er
     return frame->frame->as<libobsensor::VideoFrame>()->getPixelAvailableBitSize();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint8_t(0), frame)
+
+void ob_video_frame_set_pixel_available_bit_size(const ob_frame *frame, uint8_t bit_size, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    frame->frame->as<libobsensor::VideoFrame>()->setPixelAvailableBitSize(bit_size);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(frame)
 
 ob_sensor_type ob_ir_frame_get_data_source(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);

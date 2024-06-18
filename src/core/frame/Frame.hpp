@@ -78,7 +78,14 @@ public:
 
     virtual void copyInfo(std::shared_ptr<const Frame> sourceFrame);
 
-    template <typename T> bool               is() const;
+    template <typename T> bool               is() const{
+        return std::dynamic_pointer_cast<const T>(shared_from_this()) != nullptr;
+    }
+
+    template <typename T> bool               is(){
+        return std::dynamic_pointer_cast<T>(shared_from_this()) != nullptr;
+    } 
+
     template <typename T> std::shared_ptr<T> as() {
         if(!is<T>()) {
             throw unsupported_operation_exception("unsupported operation, object's type is not require type");
@@ -88,7 +95,7 @@ public:
     }
 
     template <typename T> std::shared_ptr<const T> as() const {
-        if(!is<T>())
+        if(!is<const T>())
             throw unsupported_operation_exception("unsupported operation, object's type is not require type");
 
         return std::dynamic_pointer_cast<const T>(shared_from_this());
@@ -234,36 +241,5 @@ public:
 public:
     void foreachFrame(ForeachBack foreachBack) const;
 };
-
-template <typename T> bool Frame::is() const {
-    switch(type_) {
-
-    case OB_FRAME_VIDEO:
-        return (typeid(T) == typeid(IRFrame) || typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(ColorFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_IR:
-        return (typeid(T) == typeid(IRFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_IR_LEFT:
-        return (typeid(T) == typeid(IRLeftFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_IR_RIGHT:
-        return (typeid(T) == typeid(IRRightFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_DISPARITY:
-        return (typeid(T) == typeid(DisparityFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_DEPTH:
-        return (typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_COLOR:
-        return (typeid(T) == typeid(ColorFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_ACCEL:
-        return (typeid(T) == typeid(AccelFrame));
-    case OB_FRAME_GYRO:
-        return (typeid(T) == typeid(GyroFrame));
-    case OB_FRAME_SET:
-        return (typeid(T) == typeid(FrameSet));
-    case OB_FRAME_POINTS:
-        return (typeid(T) == typeid(PointsFrame));
-    default:
-        break;
-    }
-    return false;
-}
 
 }  // namespace libobsensor

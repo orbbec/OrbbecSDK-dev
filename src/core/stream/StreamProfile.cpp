@@ -124,11 +124,14 @@ std::shared_ptr<StreamProfile> VideoStreamProfile::clone() const {
     return sp;
 }
 
-OBDisparityProcessParam DisparityStreamProfile::getDisparityProcessParam() const {
+StructuredLightStreamProfile::StructuredLightStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps)
+    : VideoStreamProfile(owner, type, format, width, height, fps) {}
+
+OBDisparityProcessParam StructuredLightStreamProfile::getDisparityProcessParam() const {
     return StreamDisparityParamManager::getInstance()->getVideoStreamDisparityParam(shared_from_this());
 }
 
-void DisparityStreamProfile::bindDisparityProcessParam(const OBDisparityProcessParam &param) {
+void StructuredLightStreamProfile::bindDisparityProcessParam(const OBDisparityProcessParam &param) {
     StreamDisparityParamManager::getInstance()->registerDisparityProcessParam(shared_from_this(), param);
 }
 

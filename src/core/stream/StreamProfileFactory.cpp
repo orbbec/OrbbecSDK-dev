@@ -5,7 +5,7 @@
 namespace libobsensor {
 namespace StreamProfileFactory {
 
-std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFormat frameFormat) {
+std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFormat frameFormat,OBDeviceType deviceType) {
     if(streamType == OB_STREAM_UNKNOWN || frameFormat == OB_FORMAT_UNKNOWN) {
         throw invalid_value_exception("Invalid frame type or format");
     }
@@ -22,20 +22,26 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFo
     case OB_STREAM_IR_RIGHT:
     case OB_STREAM_RAW_PHASE:
     case OB_STREAM_DISPARITY:
-        return createVideoStreamProfile(streamType, frameFormat, 0, 0, 0);
+        return createVideoStreamProfile(streamType, frameFormat, 0, 0, 0,deviceType);
 
     default:
         throw invalid_value_exception("Invalid stream type");
     }
 }
 
-std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps) {
-    return createVideoStreamProfile(std::shared_ptr<LazySensor>(), type, format, width, height, fps);
+std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps,OBDeviceType deviceType) {
+    return createVideoStreamProfile(std::shared_ptr<LazySensor>(), type, format, width, height, fps,deviceType);
 }
 
 std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width,
-                                                             uint32_t height, uint32_t fps) {
-    auto vsp = std::make_shared<VideoStreamProfile>(owner, type, format, width, height, fps);
+                                                             uint32_t height, uint32_t fps,OBDeviceType deviceType) {
+    std::shared_ptr<VideoStreamProfile> vsp;
+    if(type == OB_STREAM_DISPARITY || (type == OB_STREAM_DEPTH && (deviceType == OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA || deviceType == OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA))){
+        vsp = std::make_shared<StructuredLightStreamProfile>(owner, type, format, width, height, fps);
+    }else{
+        vsp = std::make_shared<VideoStreamProfile>(owner, type, format, width, height, fps);
+    }
+
     vsp->bindIntrinsic({ 0 });
     vsp->bindDistortion({ 0 });
     return vsp;

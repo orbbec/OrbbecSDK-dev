@@ -156,21 +156,21 @@ HANDLE_EXCEPTIONS_NO_RETURN(profile /*, distortion*/)  // TODO: add ob_camera_di
 
 ob_disparity_process_param ob_disparity_stream_get_process_param(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
-    if(!profile->profile->is<libobsensor::DisparityStreamProfile>()) {
+    if(!profile->profile->is<libobsensor::StructuredLightStreamProfile>()) {
         throw libobsensor::unsupported_operation_exception("It's not a disparity stream profile!");
     }
-    auto disparityProfile = profile->profile->as<libobsensor::DisparityStreamProfile>();
+    auto disparityProfile = profile->profile->as<libobsensor::StructuredLightStreamProfile>();
     return disparityProfile->getDisparityProcessParam();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_disparity_process_param(), profile)
 
 void ob_disparity_stream_profile_set_process_param(ob_stream_profile *profile, ob_disparity_process_param param, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
-    if(!profile->profile->is<libobsensor::DisparityStreamProfile>()) {
+    if(!profile->profile->is<libobsensor::StructuredLightStreamProfile>()) {
         throw libobsensor::unsupported_operation_exception("It's not a disparity stream profile!");
     }
     auto noneConstProfile = std::const_pointer_cast<libobsensor::StreamProfile>(profile->profile);
-    auto videoProfile     = noneConstProfile->as<libobsensor::DisparityStreamProfile>();
+    auto videoProfile     = noneConstProfile->as<libobsensor::StructuredLightStreamProfile>();
     videoProfile->bindDisparityProcessParam(param);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(profile /*, disparityprocessparam*/)  // TODO: add ob_disparity_process_param operator<<

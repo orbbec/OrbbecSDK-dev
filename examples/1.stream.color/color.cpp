@@ -82,7 +82,7 @@ int main(int argc, char **argv) try {
         }
 
         // Render frameset in the window, only color frames are rendered here.
-        app.addToRender(frameSet->getFrame(OB_FRAME_COLOR));
+        app.addToRender(colorFrame);
     }
 
     // Stop the Pipeline, no frame data will be generated

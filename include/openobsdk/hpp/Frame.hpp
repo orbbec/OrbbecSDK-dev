@@ -349,6 +349,24 @@ public:
 
         return std::make_shared<T>(impl_);
     }
+
+    /**
+     * @brief Convert the frame object to a target type.
+     *
+     * @tparam T The target type.
+     * @return std::shared_ptr<T> The result. If it cannot be converted, an exception will be thrown.
+     */
+    template <typename T> std::shared_ptr<const T> as() const{
+        if(!is<const T>()) {
+            throw std::runtime_error("unsupported operation, object's type is not require type");
+        }
+
+        ob_error *error = nullptr;
+        ob_frame_add_ref(impl_, &error);
+        Error::handle(&error);
+
+        return std::make_shared<const T>(impl_);
+    }
 };
 
 /**

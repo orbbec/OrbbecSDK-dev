@@ -14,7 +14,7 @@
 #include <openobsdk/hpp/Filter.hpp>
 #include <openobsdk/hpp/Frame.hpp>
 #include <openobsdk/hpp/Pipeline.hpp>
-#include <openobsdk/hpp/RecordPlayback.hpp>
+//#include <openobsdk/hpp/RecordPlayback.hpp>
 #include <openobsdk/hpp/Sensor.hpp>
 #include <openobsdk/hpp/StreamProfile.hpp>
 #include <openobsdk/hpp/Types.hpp>

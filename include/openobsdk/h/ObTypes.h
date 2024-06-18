@@ -45,6 +45,10 @@ typedef struct ob_device_preset_list_t   ob_device_preset_list;
 #define OB_FORMAT_ANY OB_FORMAT_UNKNOWN
 #define OB_PROFILE_DEFAULT 0
 #define OB_DEFAULT_STRIDE_BYTES 0
+#define OB_ACCEL_FULL_SCALE_RANGE_ANY OB_ACCEL_FS_UNKNOWN
+#define OB_ACCEL_SAMPLE_RATE_ANY OB_SAMPLE_RATE_UNKNOWN
+#define OB_GYRO_FULL_SCALE_RANGE_ANY OB_GYRO_FS_UNKNOWN
+#define OB_GYRO_SAMPLE_RATE_ANY OB_SAMPLE_RATE_UNKNOWN
 
 /**
  * @brief send data or receive data return status type
@@ -589,7 +593,7 @@ typedef enum {
  * @brief Enumeration of gyroscope ranges
  */
 typedef enum {
-    OB_GYRO_FS_UNKNOW = -1,
+    OB_GYRO_FS_UNKNOWN = -1,
     OB_GYRO_FS_16dps = 1, /**< 16 degrees per second */
     OB_GYRO_FS_31dps,     /**< 31 degrees per second */
     OB_GYRO_FS_62dps,     /**< 62 degrees per second */
@@ -605,7 +609,7 @@ typedef enum {
  * @brief Enumeration of accelerometer ranges
  */
 typedef enum {
-    OB_ACCEL_FS_UNKNOW = -1,
+    OB_ACCEL_FS_UNKNOWN = -1,
     OB_ACCEL_FS_2g = 1, /**< 1x the acceleration of gravity */
     OB_ACCEL_FS_4g,     /**< 4x the acceleration of gravity */
     OB_ACCEL_FS_8g,     /**< 8x the acceleration of gravity */

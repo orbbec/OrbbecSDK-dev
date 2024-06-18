@@ -161,39 +161,39 @@ private:
                     imuMat.release();
                     break;
                 }
-                if(frame->type() == OB_FRAME_COLOR) {
+                if(frame->getType() == OB_FRAME_COLOR) {
                     auto videoFrame = frame->as<ob::VideoFrame>();
-                    switch(videoFrame->format()) {
+                    switch(videoFrame->getFormat()) {
                     case OB_FORMAT_MJPG: {
-                        cv::Mat rawMat(1, videoFrame->dataSize(), CV_8UC1, videoFrame->data());
+                        cv::Mat rawMat(1, videoFrame->getDataSize(), CV_8UC1, videoFrame->getDataUnsafe());
                         rstMat = cv::imdecode(rawMat, 1);
                     } break;
                     case OB_FORMAT_NV21: {
-                        cv::Mat rawMat(videoFrame->height() * 3 / 2, videoFrame->width(), CV_8UC1, videoFrame->data());
+                        cv::Mat rawMat(videoFrame->getHeight() * 3 / 2, videoFrame->getWidth(), CV_8UC1, videoFrame->getDataUnsafe());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_YUV2BGR_NV21);
                     } break;
                     case OB_FORMAT_YUYV:
                     case OB_FORMAT_YUY2: {
-                        cv::Mat rawMat(videoFrame->height(), videoFrame->width(), CV_8UC2, videoFrame->data());
+                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC2, videoFrame->getDataUnsafe());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_YUV2BGR_YUY2);
                     } break;
                     case OB_FORMAT_RGB: {
-                        cv::Mat rawMat(videoFrame->height(), videoFrame->width(), CV_8UC3, videoFrame->data());
+                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC3, videoFrame->getDataUnsafe());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_RGB2BGR);
                     } break;
                     case OB_FORMAT_RGBA: {
-                        cv::Mat rawMat(videoFrame->height(), videoFrame->width(), CV_8UC4, videoFrame->data());
+                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getDataUnsafe());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_RGBA2BGRA);
                     } break;
                     case OB_FORMAT_BGRA: {
-                        rstMat = cv::Mat(videoFrame->height(), videoFrame->width(), CV_8UC4, videoFrame->data());
+                        rstMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getDataUnsafe());
                     } break;
                     case OB_FORMAT_UYVY: {
-                        cv::Mat rawMat(videoFrame->height(), videoFrame->width(), CV_8UC2, videoFrame->data());
+                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC2, videoFrame->getDataUnsafe());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_YUV2BGR_UYVY);
                     } break;
                     case OB_FORMAT_I420: {
-                        cv::Mat rawMat(videoFrame->height() * 3 / 2, videoFrame->width(), CV_8UC1, videoFrame->data());
+                        cv::Mat rawMat(videoFrame->getHeight() * 3 / 2, videoFrame->getWidth(), CV_8UC1, videoFrame->getDataUnsafe());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_YUV2BGR_I420);
                     } break;
                     default:
@@ -203,11 +203,11 @@ private:
                         drawInfo(rstMat, videoFrame);
                     }
                 }
-                else if(frame->type() == OB_FRAME_DEPTH) {
+                else if(frame->getType() == OB_FRAME_DEPTH) {
                     auto videoFrame = frame->as<ob::VideoFrame>();
-                    if(videoFrame->format() == OB_FORMAT_Y16 || videoFrame->format() == OB_FORMAT_Z16) {
+                    if(videoFrame->getFormat() == OB_FORMAT_Y16 || videoFrame->getFormat() == OB_FORMAT_Z16) {
                         cv::Mat cvtMat;
-                        cv::Mat rawMat = cv::Mat(videoFrame->height(), videoFrame->width(), CV_16UC1, videoFrame->data());
+                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getDataUnsafe());
                         // depth frame pixel value multiply scale to get distance in millimeter
                         float scale = videoFrame->as<ob::DepthFrame>()->getValueScale();
 
@@ -220,20 +220,20 @@ private:
                         drawInfo(rstMat, videoFrame);
                     }
                 }
-                else if(frame->type() == OB_FRAME_IR || frame->type() == OB_FRAME_IR_LEFT || frame->type() == OB_FRAME_IR_RIGHT) {
+                else if(frame->getType() == OB_FRAME_IR || frame->getType() == OB_FRAME_IR_LEFT || frame->getType() == OB_FRAME_IR_RIGHT) {
                     auto videoFrame = frame->as<ob::VideoFrame>();
-                    if(videoFrame->format() == OB_FORMAT_Y16) {
+                    if(videoFrame->getFormat() == OB_FORMAT_Y16) {
                         cv::Mat cvtMat;
-                        cv::Mat rawMat = cv::Mat(videoFrame->height(), videoFrame->width(), CV_16UC1, videoFrame->data());
+                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getDataUnsafe());
                         rawMat.convertTo(cvtMat, CV_8UC1, 1.0 / 16.0f);
                         cv::cvtColor(cvtMat, rstMat, cv::COLOR_GRAY2RGB);
                     }
-                    else if(videoFrame->format() == OB_FORMAT_Y8) {
-                        cv::Mat rawMat = cv::Mat(videoFrame->height(), videoFrame->width(), CV_8UC1, videoFrame->data());
+                    else if(videoFrame->getFormat() == OB_FORMAT_Y8) {
+                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC1, videoFrame->getDataUnsafe());
                         cv::cvtColor(rawMat * 2, rstMat, cv::COLOR_GRAY2RGB);
                     }
-                    else if(videoFrame->format() == OB_FORMAT_MJPG) {
-                        cv::Mat rawMat(1, videoFrame->dataSize(), CV_8UC1, videoFrame->data());
+                    else if(videoFrame->getFormat() == OB_FORMAT_MJPG) {
+                        cv::Mat rawMat(1, videoFrame->getDataSize(), CV_8UC1, videoFrame->getDataUnsafe());
                         rstMat = cv::imdecode(rawMat, 1);
                         cv::cvtColor(rstMat * 2, rstMat, cv::COLOR_GRAY2RGB);
                     }
@@ -241,15 +241,15 @@ private:
                         drawInfo(rstMat, videoFrame);
                     }
                 }
-                else if(frame->type() == OB_FRAME_ACCEL) {
+                else if(frame->getType() == OB_FRAME_ACCEL) {
                     if(imuMat.empty()) {
                         imuMat = cv::Mat::zeros(640, 360, CV_8UC3);
                     }
                     auto        accelFrame = frame->as<ob::AccelFrame>();
-                    auto        value      = accelFrame->value();
+                    auto        value      = accelFrame->getValue();
                     std::string str        = "Accel:";
                     cv::putText(imuMat, str.c_str(), cv::Point(8, 60), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
-                    str = std::string(" timestamp=") + std::to_string(accelFrame->timeStampUs()) + "us";
+                    str = std::string(" timestamp=") + std::to_string(accelFrame->getTimeStampUs()) + "us";
                     cv::putText(imuMat, str.c_str(), cv::Point(8, 120), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
                     str = std::string(" x=") + std::to_string(value.x) + "m/s^2";
                     cv::putText(imuMat, str.c_str(), cv::Point(8, 180), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
@@ -259,15 +259,15 @@ private:
                     cv::putText(imuMat, str.c_str(), cv::Point(8, 300), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
                     continue;
                 }
-                else if(frame->type() == OB_FRAME_GYRO) {
+                else if(frame->getType() == OB_FRAME_GYRO) {
                     if(imuMat.empty()) {
                         imuMat = cv::Mat(640, 360, CV_8UC3);
                     }
                     auto        gyroFrame = frame->as<ob::GyroFrame>();
-                    auto        value     = gyroFrame->value();
+                    auto        value     = gyroFrame->getValue();
                     std::string str       = "Gyro:";
                     cv::putText(imuMat, str.c_str(), cv::Point(8, 360), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
-                    str = std::string(" timestamp=") + std::to_string(gyroFrame->timeStampUs()) + "us";
+                    str = std::string(" timestamp=") + std::to_string(gyroFrame->getTimeStampUs()) + "us";
                     cv::putText(imuMat, str.c_str(), cv::Point(8, 420), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
                     str = std::string(" x=") + std::to_string(value.x) + "rad/s";
                     cv::putText(imuMat, str.c_str(), cv::Point(8, 480), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
@@ -315,28 +315,28 @@ private:
         };
 
         // Drawing text with background based on frame type
-        if(frame->type() == OB_FRAME_COLOR && frame->format() == OB_FORMAT_NV21) {
+        if(frame->getType() == OB_FRAME_COLOR && frame->getFormat() == OB_FORMAT_NV21) {
             putTextWithBackground("Color-NV21", cv::Point(8, 16));
         }
-        else if(frame->type() == OB_FRAME_COLOR && frame->format() == OB_FORMAT_MJPG) {
+        else if(frame->getType() == OB_FRAME_COLOR && frame->getFormat() == OB_FORMAT_MJPG) {
             putTextWithBackground("Color-MJPG", cv::Point(8, 16));
         }
-        else if(frame->type() == OB_FRAME_DEPTH) {
+        else if(frame->getType() == OB_FRAME_DEPTH) {
             putTextWithBackground("Depth", cv::Point(8, 16));
         }
-        else if(frame->type() == OB_FRAME_IR) {
+        else if(frame->getType() == OB_FRAME_IR) {
             putTextWithBackground("IR", cv::Point(8, 16));
         }
-        else if(frame->type() == OB_FRAME_IR_LEFT) {
+        else if(frame->getType() == OB_FRAME_IR_LEFT) {
             putTextWithBackground("IR_LEFT", cv::Point(8, 16));
         }
-        else if(frame->type() == OB_FRAME_IR_RIGHT) {
+        else if(frame->getType() == OB_FRAME_IR_RIGHT) {
             putTextWithBackground("IR_RIGHT", cv::Point(8, 16));
         }
 
         // Timestamp information with background
-        putTextWithBackground("frame timestamp(ms):  " + std::to_string(frame->timeStamp()), cv::Point(8, 40));
-        putTextWithBackground("system timestamp(ms): " + std::to_string(frame->systemTimeStamp()), cv::Point(8, 64));
+        putTextWithBackground("frame timestamp(ms):  " + std::to_string(frame->getTimeStampUs()), cv::Point(8, 40));
+        putTextWithBackground("system timestamp(ms): " + std::to_string(frame->getSystemTimeStampUs()), cv::Point(8, 64));
     }
 
     void render() {

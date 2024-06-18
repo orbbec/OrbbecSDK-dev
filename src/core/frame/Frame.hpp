@@ -139,9 +139,9 @@ private:
     float valueScale_;
 };
 
-class DisparityFrame: public VideoFrame {
+class DisparityFrame : public VideoFrame {
 public:
-    DisparityFrame(uint8_t * data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
+    DisparityFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 };
 
 class IRFrame : public VideoFrame {

@@ -43,7 +43,7 @@ protected:
     /**
      * @brief The pointer to the internal (c api level) frame object.
      */
-    const ob_frame *impl_;
+    const ob_frame *impl_ = nullptr;
 
 public:
     /**
@@ -619,11 +619,11 @@ public:
      * @return float The temperature value in celsius
      */
     float getTemperature() const {
-        ob_error *error = nullptr;
-        auto      temp  = ob_gyro_frame_get_temperature(impl_, &error);
+        ob_error *error       = nullptr;
+        auto      temperature = ob_gyro_frame_get_temperature(impl_, &error);
         Error::handle(&error);
 
-        return temp;
+        return temperature;
     }
 };
 
@@ -704,47 +704,6 @@ public:
  */
 class FrameFactory {
 public:
-    /**
-     * @brief Create a Frame object from a given pointer to the internal frame object (impl).
-     * @brief This function will create a Frame object of the corresponding type based on the frame type.
-     *
-     * @attention After calling this function, the return frame object will own the internal frame object, and the internal frame object will be deleted when
-     * the frame object is destroyed.
-     * @attention The internal frame object should not be deleted by the caller.
-     *
-     * @param impl The pointer to the internal frame object.
-     */
-    // static std::shared_ptr<Frame> createFrameFromImpl(const ob_frame *impl) {
-    //     if(impl == nullptr) {
-    //         return nullptr;
-    //     }
-    //     ob_error *error     = nullptr;
-    //     auto      frameType = ob_frame_get_type(impl, &error);
-    //     Error::handle(&error);
-    //     switch(frameType) {
-    //     case OB_FRAME_IR_LEFT:   // Follow
-    //     case OB_FRAME_IR_RIGHT:  // Follow
-    //     case OB_FRAME_IR:
-    //         return std::shared_ptr<Frame>(new IRFrame(impl));
-    //     case OB_FRAME_DEPTH:
-    //         return std::shared_ptr<Frame>(new DepthFrame(impl));
-    //     case OB_FRAME_COLOR:
-    //         return std::shared_ptr<Frame>(new ColorFrame(impl));
-    //     case OB_FRAME_GYRO:
-    //         return std::shared_ptr<Frame>(new GyroFrame(impl));
-    //     case OB_FRAME_ACCEL:
-    //         return std::shared_ptr<Frame>(new AccelFrame(impl));
-    //     case OB_FRAME_POINTS:
-    //         return std::shared_ptr<Frame>(new PointsFrame(impl));
-    //     case OB_FRAME_SET:
-    //         return std::shared_ptr<Frame>(new FrameSet(impl));
-    //     default:
-    //         std::cout << "ob::FrameFactory:: createFrameFromImpl() did not catch frame type: " << frameType << std::endl;
-    //         break;
-    //     }
-    //     return nullptr;
-    // }
-
     /**
      * @brief Create a Frame object of a specific type with a given format and data size.
      *
@@ -862,7 +821,7 @@ private:
     };
 
     static void BufferDestroy(uint8_t *buffer, void *context) {
-        BufferDestroyContext *ctx = static_cast<BufferDestroyContext *>(context);
+        auto *ctx = static_cast<BufferDestroyContext *>(context);
         ctx->callback(buffer);
         delete ctx;
     }
@@ -889,7 +848,8 @@ template <typename T> bool Frame::is() {
         return (typeid(T) == typeid(PointsFrame));
     case OB_FRAME_SET:
         return (typeid(T) == typeid(FrameSet));
-    default : std::cout << "ob::Frame::is() did not catch frame type: " << (int)this->getType() << std::endl;
+    default:
+        std::cout << "ob::Frame::is() did not catch frame type: " << (int)this->getType() << std::endl;
         break;
     }
     return false;

@@ -3,6 +3,7 @@
 #include <memory>
 #include "openobsdk/h/ObTypes.h"
 #include "exception/ObException.hpp"
+#include "property/HostProtocol.hpp"
 
 namespace libobsensor {
 typedef union {
@@ -26,6 +27,8 @@ template <typename T> struct OBPropertyRangeT {
     T def;
 };
 
+using get_data_callback = std::function<void(ob_data_tran_state state, ob_data_chunk *dataChunk)>;
+
 class IPropertyPort {
 public:
     virtual ~IPropertyPort() noexcept                                          = default;
@@ -34,11 +37,15 @@ public:
     virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) = 0;
 };
 
-class IPropertyExtensionPort : public IPropertyPort {
+template <uint16_t CMD_VER> class IPropertyExtensionPort : public IPropertyPort {
 public:
-    virtual ~IPropertyExtensionPort() noexcept                                                                 = default;
-    virtual void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
-    virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId)                                   = 0;
+    virtual ~IPropertyExtensionPort() noexcept                                                                                                   = default;
+    virtual void                              setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data)                            = 0;
+    virtual const std::vector<uint8_t>       &getStructureData(uint32_t propertyId)                                                              = 0;
+    virtual void                              getCmdVersionProtoV11(uint32_t propertyId, uint16_t *version)                                      = 0;
+    virtual void                              getRawData(uint32_t propertyId, get_data_callback callback, uint32_t transPacketSize)              = 0;
+    virtual std::vector<uint8_t>              getStructureDataProtoV11(uint32_t propertyId)                                                      = 0;
+    virtual std::vector<std::vector<uint8_t>> getStructureDataListProtoV11(uint32_t propertyId, uint32_t tran_packet_size = 3 * FLASH_PAGE_SIZE) = 0;
 };
 
 enum PropertyAccessType {
@@ -73,9 +80,8 @@ public:
     }
 
     template <typename T>
-    typename std::enable_if<std::is_same<T, float>::value, void>::type setPropertyValueT(uint32_t           propertyId,
-                                                                                      const T &          value,
-                                                                                      PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+    typename std::enable_if<std::is_same<T, float>::value, void>::type setPropertyValueT(uint32_t propertyId, const T &value,
+                                                                                         PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
         OBPropertyValue obValue;
         obValue.floatValue = static_cast<float>(value);
         setPropertyValue(propertyId, obValue, accessType);

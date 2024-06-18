@@ -9,6 +9,11 @@ namespace protocol {
 #define HP_REQUEST_MAGIC 0x4d47   // MG
 #define HP_RESPONSE_MAGIC 0x4252  // BR
 
+#define MAX_PACKET_SIZE 4096 * 2
+#define MAX_STRUCTURED_DATA_SIZE 1008  // 1024 -sizeof(ProtocolHeader) -sizeof(property_id) -sizeof(error_code)
+#define FLASH_PAGE_SIZE 256
+#define FLASH_BLOCK_SIZE 0x1000064k
+
 #define HP_REQ_HEADER_SIZE sizeof(ReqHeader)
 #define HP_RESP_HEADER_SIZE sizeof(RespHeader)
 
@@ -25,10 +30,14 @@ enum HpOpCodes {
     OPCODE_SET_STRUCTURE_DATA  = 4,
     OPCODE_HEARTBEAT_AND_STATE = 5,
 
+    OPCODE_INIT_READ_RAW_DATA   = 17,
+    OPCODE_READ_RAW_DATA        = 18,
+    OPCODE_FINISH_READ_RAW_DATA = 19,
+
     // v1.1 protocol introduction
-    OPCODE_GET_COMMAND_VERSION           = 26,    // v1.1 control command version number, determines how the control command parses data content
-    OPCODE_GET_STRUCTURE_DATA_V1_1       = 27,    // v1.1 structure type data reading
-    OPCODE_SET_STRUCTURE_DATA_V1_1       = 28,    // v.1.1 Structure type data setting
+    OPCODE_GET_COMMAND_VERSION     = 26,  // v1.1 control command version number, determines how the control command parses data content
+    OPCODE_GET_STRUCTURE_DATA_V1_1 = 27,  // v1.1 structure type data reading
+    OPCODE_SET_STRUCTURE_DATA_V1_1 = 28,  // v.1.1 Structure type data setting
 
     OPCODE_INIT_READ_STRUCT_DATA_LIST    = 29,    // v1.1 Initialize structure type list data reading
     OPCODE_READ_STRUCT_DATA_LIST         = 30,    // v1.1 Structure type list data reading
@@ -141,31 +150,137 @@ typedef struct {
 
 typedef struct {
     RespHeader header;
-    uint8_t    data[0];
+// if gnu compiler is used, ignore the zero-length array warning
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 } GetStructureDataResp;
 
 typedef struct {
     ReqHeader header;
     uint32_t  propertyId;
-    uint8_t   data[0];
+// if gnu compiler is used, ignore the zero-length array warning
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 } SetStructureDataReq;
 
 typedef struct {
     RespHeader header;
 } SetStructureDataResp;
 
+typedef struct {
+    ReqHeader header;
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+} GetCmdVerDataResp;
+
+typedef struct {
+    ReqHeader header;
+    uint32_t  propertyId;
+    uint16_t  cmdVer;
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+} SetStructureDataV11Req;
+
+typedef struct {
+    RespHeader header;
+} SetStructureDataV11Resp;
+
+typedef struct {
+    ReqHeader header;
+    uint32_t  propertyId;
+} GetStructureDataV11Req;
+
+typedef struct {
+    RespHeader header;
+    uint16_t   cmdVer;
+    // if gnu compiler is used, ignore the zero-length array warning
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+    uint8_t data[0];
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+} GetStructureDataV11Resp;
+
+typedef struct {
+    RespHeader header;
+    uint16_t   cmdVer;
+    uint32_t   dataSize;
+} InitStructureDataListResp;
+
+typedef struct {
+    ReqHeader header;
+    uint32_t  propertyId;
+    uint32_t  offset;
+    uint32_t  size;
+} GetStructureDataListReq;
+
+typedef struct {
+    ReqHeader header;
+    uint32_t  propertyId;
+    uint32_t  offset;
+    uint32_t  size;
+} ReadRawData;
+
+typedef struct {
+    ReqHeader header;
+    uint32_t  dataSize;
+} GetReadDataResp;
+
 #pragma pack(pop)
 
-GetPropertyReq     *initGetPropertyReq(uint8_t *dataBuf, uint32_t propertyId);
-SetPropertyReq     *initSetPropertyReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t value);
+GetPropertyReq      *initGetPropertyReq(uint8_t *dataBuf, uint32_t propertyId);
+SetPropertyReq      *initSetPropertyReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t value);
 GetStructureDataReq *initGetStructureDataReq(uint8_t *dataBuf, uint32_t propertyId);
 SetStructureDataReq *initSetStructureDataReq(uint8_t *dataBuf, uint32_t propertyId, const uint8_t *data, uint16_t dataSize);
+GetPropertyReq      *initGetCmdVersionReq(uint8_t *dataBuf, uint32_t propertyId);
 
-GetPropertyResp     *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
-SetPropertyResp     *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
-GetStructureDataResp *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
-uint16_t              getStructureDataSize(const GetStructureDataResp *resp);
-SetStructureDataResp *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
+GetStructureDataV11Req *initGetStructureDataV11Req(uint8_t *dataBuf, uint32_t propertyId);
+GetStructureDataV11Req *initGetStructureDataListV11Req(uint8_t *dataBuf, uint32_t propertyId);
+
+GetPropertyReq          *initStartGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId);
+GetStructureDataListReq *initReadStructureDataList(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t dataSize);
+GetPropertyReq          *initFinishGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId);
+GetPropertyReq          *initGetRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t cmd);
+ReadRawData             *initReadRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t size);
+
+GetPropertyResp           *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
+SetPropertyResp           *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
+GetStructureDataResp      *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
+GetStructureDataV11Resp   *parseGetStructureDataV11Resp(uint8_t *dataBuf, uint16_t dataSize);
+uint16_t                   getStructureDataSize(const GetStructureDataResp *resp);
+SetStructureDataResp      *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
+GetCmdVerDataResp         *parseGetCmdVerDataResp(uint8_t *dataBuf, uint16_t dataSize);
+GetReadDataResp           *parseGetReadDataResp(uint8_t *dataBuf, uint16_t dataSize);
+InitStructureDataListResp *parseInitStructureDataListResp(uint8_t *dataBuf, uint16_t dataSize);
+uint16_t                   getProtoV11StructureDataSize(const GetStructureDataV11Resp &resp);
 
 HpStatus execute(const std::shared_ptr<IVendorDataPort> &dataPort, uint8_t *reqData, uint16_t reqDataSize, uint8_t *respData, uint16_t *respDataSize);
 bool     checkStatus(HpStatus stat, bool throwException = true);

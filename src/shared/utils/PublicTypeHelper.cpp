@@ -2,6 +2,7 @@
 #include "exception/ObException.hpp"
 
 #include <map>
+#include <algorithm>
 
 namespace libobsensor {
 namespace utils {

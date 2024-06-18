@@ -10,14 +10,14 @@ SensorBase::SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType senso
       owner_(owner),
       backend_(backend),
       streamState_(STREAM_STATE_STOPED),
-      recoveryEnabled_(false),
       onRecovering_(false),
-      recoveryCount_(0),
+      recoveryEnabled_(false),
       maxRecoveryCount_(DefaultMaxRecoveryCount),
+      recoveryCount_(0),
       noStreamTimeoutMs_(DefaultNoStreamTimeoutMs),
       streamInterruptTimeoutMs_(DefaultStreamInterruptTimeoutMs){
 
-      };
+      }
 
 SensorBase::~SensorBase() noexcept {
     if(streamStateWatcherThread_.joinable()) {
@@ -55,7 +55,7 @@ void SensorBase::setStreamStateChangedCallback(StreamStateChangedCallback callba
 StreamProfileList SensorBase::getStreamProfileList() const{
     StreamProfileList list;
     auto streamType = utils::mapSensorTypeToStreamType(sensorType_);
-    for(auto sp : streamProfileList_) {
+    for(auto& sp : streamProfileList_) {
         auto spOwner = sp->getOwner();
         if(!spOwner || spOwner->device.lock() != owner_.lock() || sp->getType() == streamType) {
             auto newOwner = std::make_shared<LazySensor>(owner_, sensorType_);

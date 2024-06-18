@@ -26,7 +26,7 @@ FrameMemoryPool::FrameMemoryPool() : logger_(Logger::getInstance()) {
     LOG_DEBUG("FrameMemoryPool created!");
 }
 
-FrameMemoryPool::~FrameMemoryPool() {
+FrameMemoryPool::~FrameMemoryPool() noexcept {
     bufMgrMap_.clear();
 }
 

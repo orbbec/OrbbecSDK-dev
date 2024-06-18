@@ -6,6 +6,7 @@
 namespace libobsensor {
 UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(ObPal::getInstance()) {
     devChangedCallback_ = [callback, this](const DeviceEnumInfoList &removedList, const DeviceEnumInfoList &addedList) {
+        (void)this;
 #ifdef __ANDROID__
         // On the Android platform, it is necessary to call back to Java in the same thread, and complete the release of relevant resources in the callback
         // function.
@@ -122,7 +123,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid)
 
 DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    auto portInfoList = obPal_->queryUsbSourcePort();
+    auto                                   portInfoList = obPal_->queryUsbSourcePort();
     if(portInfoList != currentUsbPortInfoList_) {
         currentUsbPortInfoList_ = portInfoList;
         LOG_DEBUG("Current usb device port list:");
@@ -138,7 +139,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
 
 DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
     DeviceEnumInfoList deviceInfoList;
-    auto g330Devs =       G330DeviceInfo::createDeviceInfos(portInfoList);
+    auto               g330Devs = G330DeviceInfo::createDeviceInfos(portInfoList);
     std::copy(g330Devs.begin(), g330Devs.end(), std::back_inserter(deviceInfoList));
     return deviceInfoList;
 }
@@ -173,7 +174,7 @@ void UsbDeviceEnumerator::deviceArrivalHandleThreadFunc() {
             }
         }
 
-        if(addedDevList.size()) {
+        if(!addedDevList.empty()) {
             LOG_DEBUG("device list changed: added={0}, current={1}", addedDevList.size(), deviceInfoList_.size());
             if(!deviceInfoList_.empty()) {
                 LOG_DEBUG("Current device list: ");
@@ -197,6 +198,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::getDeviceInfoList() {
 void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callback) {
     std::unique_lock<std::mutex> lock(callbackMutex_);
     devChangedCallback_ = [callback, this](const DeviceEnumInfoList &removedList, const DeviceEnumInfoList &addedList) {
+        (void)this;
 #ifdef __ANDROID__
         // On the Android platform, it is necessary to call back to Java in the same thread, and complete the release of relevant resources in the callback
         // function.
@@ -223,6 +225,5 @@ void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callbac
 #endif
     };
 }
-
 
 }  // namespace libobsensor

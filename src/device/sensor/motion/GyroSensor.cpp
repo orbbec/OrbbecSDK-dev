@@ -44,7 +44,7 @@ GyroSensor::~GyroSensor() noexcept {
         TRY_EXECUTE(stop());
     }
     LOG_DEBUG("GyroSensor is destroyed");
-};
+}
 
 void GyroSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) {
     activatedStreamProfile_ = sp;

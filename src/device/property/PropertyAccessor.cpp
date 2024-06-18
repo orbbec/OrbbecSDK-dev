@@ -1,6 +1,7 @@
 #include "PropertyAccessor.hpp"
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
+#include <memory>
 
 namespace libobsensor {
 
@@ -118,8 +119,8 @@ void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<u
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
+    // FIXME: This is a bug, the cast should be IPropertyExtensionPort<0>
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort<0>>(port);
     extensionPort->setStructureData(propId, data);
     LOG_DEBUG("Property {} set firmware data successfully", propId);
 }
@@ -137,7 +138,8 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t property
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    auto        extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
+    // FIXME: This is a bug, the cast should be IPropertyExtensionPort<0>
+    auto        extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort<0>>(port);
     const auto &data          = extensionPort->getStructureData(propId);
     LOG_DEBUG("Property {} get firmware data successfully, size {}", propId, data.size());
     return data;

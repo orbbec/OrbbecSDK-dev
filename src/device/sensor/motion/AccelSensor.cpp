@@ -45,7 +45,7 @@ AccelSensor::~AccelSensor() noexcept {
         TRY_EXECUTE(stop());
     }
     LOG_DEBUG("AccelSensor is destroyed");
-};
+}
 
 void AccelSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) {
     activatedStreamProfile_ = sp;

@@ -13,6 +13,8 @@
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
+#include "stream/StreamProfile.hpp"
+#include "utils/PublicTypeHelper.hpp"
 
 namespace libobsensor {
 
@@ -181,6 +183,14 @@ std::vector<std::shared_ptr<V4lDeviceInfo>> ObV4lUvcDevicePort::queryRelatedDevi
     return devs;
 }
 
+uint32_t ObV4lUvcDevicePort::sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) {
+    (void)sendData;
+    (void)sendLen;
+    (void)recvData;
+    (void)exceptedRecvLen;
+    return 0;
+}
+
 bool ObV4lUvcDevicePort::isContainedMetadataDevice(std::shared_ptr<const USBSourcePortInfo> portInfo) {
     auto devs = queryRelatedDevices(portInfo);
     for(auto &dev: devs) {
@@ -235,11 +245,12 @@ void foreachProfile(std::vector<std::shared_ptr<V4lDeviceHandle>>               
                             continue;
                         }
 
-                        auto width   = frame_size.discrete.width;
-                        auto height  = frame_size.discrete.height;
-                        auto fps     = static_cast<float>(frame_interval.discrete.denominator) / static_cast<float>(frame_interval.discrete.numerator);
-                        auto format  = formatIter->second;
-                        auto profile = std::make_shared<VideoStreamProfile>(OB_STREAM_VIDEO, format, width, height, fps);
+                        auto width  = frame_size.discrete.width;
+                        auto height = frame_size.discrete.height;
+                        auto fps    = static_cast<float>(frame_interval.discrete.denominator) / static_cast<float>(frame_interval.discrete.numerator);
+                        auto format = utils::uvcFourccToOBFormat(fourcc);
+                        // FIXME:
+                        auto profile = std::make_shared<VideoStreamProfile>(std::shared_ptr<LazySensor>(), OB_STREAM_VIDEO, format, width, height, fps);
                         if(fourcc != 0) {
                             quit = func(devHandle, profile);
                         }
@@ -251,7 +262,6 @@ void foreachProfile(std::vector<std::shared_ptr<V4lDeviceHandle>>               
         }
         ++pixel_format.index;
     }
-}
 }
 
 uint32_t CIDFromOBPropertyID(OBPropertyID id) {
@@ -490,8 +500,8 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
     }
 }
 
-std::vector<std::shared_ptr<const VideoStreamProfile>> ObV4lUvcDevicePort::getStreamProfileList() {
-    std::vector<std::shared_ptr<const VideoStreamProfile>> profileList;
+StreamProfileListUnsafe ObV4lUvcDevicePort::getStreamProfileList() {
+    StreamProfileListUnsafe profileList;
     foreachProfile(deviceHandles_, [&profileList](std::shared_ptr<V4lDeviceHandle> devHandle, std::shared_ptr<VideoStreamProfile> profile) {
         (void)devHandle;
         profileList.push_back(profile);
@@ -504,34 +514,35 @@ uint32_t phaseProfileFormatToFourcc(std::shared_ptr<const VideoStreamProfile> pr
     int      formatFourcc    = 0;
     OBFormat format          = profile->getFormat();
     auto     foundFormatIter = std::find_if(v4lFourccMap.begin(), v4lFourccMap.end(),
-                                            [&](const std::pair<uint32_t, uint32_t> &item) { return item.second == mapFormatToFourcc(format); });
+                                            [&](const std::pair<uint32_t, uint32_t> &item) { return item.second == utils::obFormatToUvcFourcc(format); });
     if(foundFormatIter != v4lFourccMap.end()) {
-        (const utils::big_endian<int> &)(foundFormatIter->first);
+        return (const utils::big_endian<int> &)(foundFormatIter->first);
     }
 
-    auto formatFourcc = utils::obFormatToUvcFourcc(format);
+    formatFourcc = utils::obFormatToUvcFourcc(format);
     if(formatFourcc == 0) {
-        LOG_ERROR("unsupported format {}", profile->format);
+        LOG_ERROR("unsupported format {}", profile->getFormat());
         return 0;
     }
 
     return (const utils::big_endian<int> &)(formatFourcc);
 }
 
-void ObV4lUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) {
-    std::shared_ptr<V4lDeviceHandle> devHandle = nullptr;
+void ObV4lUvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) {
+    std::shared_ptr<V4lDeviceHandle> devHandle    = nullptr;
+    auto                             videoProfile = profile->as<VideoStreamProfile>();
     foreachProfile(deviceHandles_, [&](std::shared_ptr<V4lDeviceHandle> handle, std::shared_ptr<VideoStreamProfile> prof) {
-        if(prof->getWidth() == profile->getWidth() && prof->getHeight() == profile->getHeight() && prof->getFps() == profile->getFps()
-           && prof->getFormat() == profile->getFormat()) {
+        if(prof->getWidth() == videoProfile->getWidth() && prof->getHeight() == videoProfile->getHeight() && prof->getFps() == videoProfile->getFps()
+           && prof->getFormat() == videoProfile->getFormat()) {
             devHandle = handle;
             return true;
         }
         return false;
     });
     if(!devHandle) {
-        throw libobsensor::linux_pal_exception("No v4l device found for profile: width=" + std::to_string(profile->getWidth())
-                                               + ", height=" + std::to_string(profile->getHeight()) + ", fps=" + std::to_string(profile->getFps())
-                                               + ", format=" + std::to_string(profile->getFormat()));
+        throw libobsensor::linux_pal_exception("No v4l device found for profile: width=" + std::to_string(videoProfile->getWidth())
+                                               + ", height=" + std::to_string(videoProfile->getHeight()) + ", fps=" + std::to_string(videoProfile->getFps())
+                                               + ", format=" + std::to_string(videoProfile->getFormat()));
     }
     if(devHandle->isCapturing) {
         throw libobsensor::linux_pal_exception("V4l device is already capturing");
@@ -588,10 +599,10 @@ void ObV4lUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
 
     v4l2_format fmt         = {};
     fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    fmt.fmt.pix.width       = profile->getWidth();
-    fmt.fmt.pix.height      = profile->getHeight();
+    fmt.fmt.pix.width       = videoProfile->getWidth();
+    fmt.fmt.pix.height      = videoProfile->getHeight();
     fmt.fmt.pix.field       = V4L2_FIELD_NONE;
-    fmt.fmt.pix.pixelformat = phaseProfileFormatToFourcc(profile);
+    fmt.fmt.pix.pixelformat = phaseProfileFormatToFourcc(videoProfile);
     if(xioctl(devHandle->fd, VIDIOC_S_FMT, &fmt) < 0) {
         throw libobsensor::io_exception("Failed to set format!" + devHandle->info->name + ", " + strerror(errno));
     }
@@ -603,7 +614,7 @@ void ObV4lUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
     v4l2_streamparm streamparm                       = {};
     streamparm.type                                  = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     streamparm.parm.capture.timeperframe.numerator   = 1;
-    streamparm.parm.capture.timeperframe.denominator = profile->getFps();
+    streamparm.parm.capture.timeperframe.denominator = videoProfile->getFps();
     if(xioctl(devHandle->fd, VIDIOC_S_PARM, &streamparm) < 0) {
         throw libobsensor::io_exception("Failed to set streamparm!" + devHandle->info->name + ", " + strerror(errno));
     }
@@ -640,12 +651,12 @@ void ObV4lUvcDevicePort::startStream(std::shared_ptr<const VideoStreamProfile> p
     }
 
     devHandle->isCapturing   = true;
-    devHandle->profile       = profile;
+    devHandle->profile       = videoProfile;
     devHandle->frameCallback = callback;
     devHandle->captureThread = std::make_shared<std::thread>([devHandle]() { captureLoop(devHandle); });
 }
 
-void ObV4lUvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> profile) {
+void ObV4lUvcDevicePort::stopStream(std::shared_ptr<const StreamProfile> profile) {
     if(deviceHandles_.empty()) {
         return;
     }
@@ -674,9 +685,9 @@ void ObV4lUvcDevicePort::stopStream(std::shared_ptr<const VideoStreamProfile> pr
             devHandle->stopPipeFd[1] = -1;
         }
     };
-
+    auto videoProfile = profile->as<VideoStreamProfile>();
     for(auto &devHandle: deviceHandles_) {
-        if(!devHandle->profile || !(*devHandle->profile == *profile) || !devHandle->isCapturing) {
+        if(!devHandle->profile || !(*devHandle->profile == *videoProfile) || !devHandle->isCapturing) {
             continue;
         }
 
@@ -767,7 +778,7 @@ bool ObV4lUvcDevicePort::recvData(uint8_t *data, uint32_t *dataLen) {
 
 bool ObV4lUvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {
     auto                fd      = deviceHandles_.front()->fd;
-    auto                cid     = CIDFromOBPropertyID(propertyId);
+    auto                cid     = CIDFromOBPropertyID(static_cast<OBPropertyID>(propertyId));
     struct v4l2_control control = { cid, 0 };
     if(xioctl(fd, VIDIOC_G_CTRL, &control) < 0) {
         LOG_ERROR("get {0} xioctl(VIDIOC_G_CTRL) failed, {1}", propertyId, strerror(errno));
@@ -784,7 +795,7 @@ bool ObV4lUvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {
 
 bool ObV4lUvcDevicePort::setPu(uint32_t propertyId, int32_t value) {
     auto                fd      = deviceHandles_.front()->fd;
-    auto                cid     = CIDFromOBPropertyID(propertyId);
+    auto                cid     = CIDFromOBPropertyID(static_cast<OBPropertyID>(propertyId));
     struct v4l2_control control = { cid, value };
     if(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL == propertyId) {
         control.value = value ? V4L2_EXPOSURE_AUTO : V4L2_EXPOSURE_MANUAL;
@@ -895,7 +906,8 @@ UvcControlRange ObV4lUvcDevicePort::getPuRange(uint32_t propertyId) {
         return range;
     }
     struct v4l2_queryctrl query = {};
-    query.id                    = CIDFromOBPropertyID(propertyId);
+    query.id                    = CIDFromOBPropertyID(static_cast<OBPropertyID>(propertyId));
+    VALIDATE_GE(fd, 0);
     if(xioctl(fd, VIDIOC_QUERYCTRL, &query) < 0) {
         query.minimum = query.maximum = 0;
     }
@@ -905,13 +917,6 @@ UvcControlRange ObV4lUvcDevicePort::getPuRange(uint32_t propertyId) {
 
 std::shared_ptr<const SourcePortInfo> ObV4lUvcDevicePort::getSourcePortInfo() const {
     return portInfo_;
-}
-
-std::vector<uint8_t> ObV4lUvcDevicePort::sendAndReceive(const std::vector<uint8_t> &sendData, uint32_t exceptedRevLen) {
-    // TODO: implement
-    (void)sendData;
-    (void)exceptedRevLen;
-    return {};
 }
 
 bool ObV4lUvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {

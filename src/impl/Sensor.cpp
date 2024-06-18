@@ -67,7 +67,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, sensor_list)
 
 ob_sensor_type ob_sensor_list_get_sensor_type(ob_sensor_list *sensor_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor_list);
-    VALIDATE_INDEX(index, sensor_list->sensorTypes.size());
+    VALIDATE_UNSIGNED_INDEX(index, sensor_list->sensorTypes.size());
     return sensor_list->sensorTypes[index];
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_SENSOR_UNKNOWN, sensor_list, index)
@@ -88,7 +88,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, sensor_list, sensorType)
 
 ob_sensor *ob_sensor_list_get_sensor(ob_sensor_list *sensor_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor_list);
-    VALIDATE_INDEX(index, sensor_list->sensorTypes.size());
+    VALIDATE_UNSIGNED_INDEX(index, sensor_list->sensorTypes.size());
     auto implSensor    = new ob_sensor();
     implSensor->device = sensor_list->device;
     implSensor->type   = sensor_list->sensorTypes[index];

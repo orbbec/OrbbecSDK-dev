@@ -63,7 +63,7 @@ private:
 
     std::vector<std::shared_ptr<IFilter>> filters_;
 
-    std::shared_ptr<FrameProcessorFactory> frameProcessorFactory_;
+    std::shared_ptr<FrameProcessorFactory> frameProcessorFactory_ = nullptr;
 };
 /* #endregion ------------G330Device declare end---------------- */
 

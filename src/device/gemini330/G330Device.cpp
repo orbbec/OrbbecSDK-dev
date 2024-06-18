@@ -59,12 +59,6 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
     else {
         videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter_);
     }
-
-    try{
-        frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this());
-    }catch(...){
-
-    }
 }
 
 G330Device::~G330Device() noexcept {}
@@ -304,9 +298,10 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
         return ResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
     }
     std::shared_ptr<FrameProcessor> frameProcessor = nullptr;
-    if(frameProcessorFactory_){
-        frameProcessor = frameProcessorFactory_->createFrameProcessor(type);
+    if(!frameProcessorFactory_) {
+        frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this());
     }
+    frameProcessor = frameProcessorFactory_->createFrameProcessor(type);
 
     // create
     if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {

@@ -8,8 +8,7 @@ namespace libobsensor{
 class FrameProcessor;
 struct FrameProcessorContext
 {
-    ob_frame_processor_context *context;
-    std::map<OBSensorType,ob_frame_processor *> processors;
+    ob_frame_processor_context *context = nullptr;
     
     pfunc_ob_create_frame_processor_context create_context;
     pfunc_ob_create_frame_processor create_processor;
@@ -32,9 +31,11 @@ private:
     FrameProcessorContext context_;
 };
 
-class FrameProcessor{
+class FrameProcessor final{
 public:
     FrameProcessor(FrameProcessorContext *context,OBSensorType sensorType);
+
+    ~FrameProcessor() noexcept;
 
     std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame);
 
@@ -43,14 +44,13 @@ public:
     void updateConfig(std::vector<std::string> &params);
 
 private:
-    ob_frame_processor *getFrameProcessor(OBSensorType sensorType);
-
-private:
     FrameProcessorContext *context_;
 
     OBSensorType sensorType_;
 
     std::string configSchema_;
+
+    ob_frame_processor *privateProcessor_;
 };
 
 }//namespace libobsensor

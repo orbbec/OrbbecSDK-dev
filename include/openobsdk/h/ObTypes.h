@@ -586,6 +586,7 @@ typedef enum {
  * @brief Enumeration of gyroscope ranges
  */
 typedef enum {
+    OB_GYRO_FS_UNKNOW = -1,
     OB_GYRO_FS_16dps = 1, /**< 16 degrees per second */
     OB_GYRO_FS_31dps,     /**< 31 degrees per second */
     OB_GYRO_FS_62dps,     /**< 62 degrees per second */
@@ -601,6 +602,7 @@ typedef enum {
  * @brief Enumeration of accelerometer ranges
  */
 typedef enum {
+    OB_ACCEL_FS_UNKNOW = -1,
     OB_ACCEL_FS_2g = 1, /**< 1x the acceleration of gravity */
     OB_ACCEL_FS_4g,     /**< 4x the acceleration of gravity */
     OB_ACCEL_FS_8g,     /**< 8x the acceleration of gravity */

@@ -5,6 +5,7 @@
 
 #include "property/VendorPropertyPort.hpp"
 #include "property/UvcPropertyPort.hpp"
+#include "property/FilterPropertyPort.hpp"
 #include "property/PropertyAccessor.hpp"
 #include "sensor/video/VideoSensor.hpp"
 #include "sensor/motion/MotionStreamer.hpp"
@@ -150,8 +151,6 @@ void G330Device::initProperties() {
 
             // todo: add these properties to the frame processor
             // propertyAccessor_->registerProperty(OB_PROP_SDK_DEPTH_FRAME_UNPACK_BOOL, "rw", "rw", vendorPropertyPort);
-            // propertyAccessor_->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", vendorPropertyPort);
-            // propertyAccessor_->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", vendorPropertyPort);
 
             propertyAccessor_->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
@@ -171,6 +170,14 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL, "r", "r", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyPort);
+        }else if(sensor.first == OB_SENSOR_ACCEL){
+            auto imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
+            auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
+            propertyAccessor_->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
+        }else if(sensor.first == OB_SENSOR_GYRO){
+            auto imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
+            auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
+            propertyAccessor_->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
         }
     }
     propertyAccessor_->aliasProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
@@ -293,7 +300,11 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     // create
     if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
         auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
-        auto motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, nullptr);  // todo: add data phaser
+        std::shared_ptr<MotionStreamer> motionStreamer = nullptr;
+        auto imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
+        if(imuCorrecterFilter){
+            motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, imuCorrecterFilter);  // todo: add data phaser
+        }
 
         auto accelIter           = sensors_.find(OB_SENSOR_ACCEL);
         auto accelSensor         = std::make_shared<AccelSensor>(shared_from_this(), accelIter->second.backend, motionStreamer);
@@ -403,5 +414,22 @@ const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uin
     utils::unusedVar(data);
     static std::vector<uint8_t> emptyData;
     return emptyData;
+}
+
+std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name,bool createIfNotExist) {
+    auto filterIter = std::find_if(filters_.begin(),filters_.end(),[name](const std::shared_ptr<IFilter> &filter){
+        return filter->getName() == name;
+    });
+
+    if(filterIter != filters_.end()) {
+        return *filterIter;
+    }else if(!createIfNotExist){
+        return nullptr;
+    }
+
+    auto filterFactory = FilterFactory::getInstance();
+    auto filter = filterFactory->createFilter(name);
+    filters_.push_back(filter);
+    return filter;
 }
 }  // namespace libobsensor

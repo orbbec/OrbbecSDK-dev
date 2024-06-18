@@ -29,9 +29,9 @@ public:
     const std::string &getConfigSchema() const override;
 
 private:
-    std::shared_ptr<Frame> createDepthPointCloud(std::shared_ptr<Frame> frame);
-    std::shared_ptr<Frame> createRGBDPointCloud(std::shared_ptr<Frame> frame);
-    std::shared_ptr<Frame> createRGBDPointCloud(std::shared_ptr<Frame> depthFrame, std::shared_ptr<Frame> colorFrame);
+    std::shared_ptr<Frame> createDepthPointCloud(std::shared_ptr<const Frame> frame);
+    std::shared_ptr<Frame> createRGBDPointCloud(std::shared_ptr<const Frame> frame);
+    std::shared_ptr<Frame> createRGBDPointCloud(std::shared_ptr<const Frame> depthFrame, std::shared_ptr<const Frame> colorFrame);
 
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 

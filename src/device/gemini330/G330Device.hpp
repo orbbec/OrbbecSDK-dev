@@ -43,6 +43,8 @@ private:
 
     ResourceLock tryLockResource();
 
+    std::shared_ptr<IFilter> getSpecifyFilter(const std::string &name,bool createIfNotExist = true);
+
 private:
     const std::shared_ptr<const IDeviceEnumInfo> enumInfo_;
     std::shared_ptr<DeviceInfo>                 deviceInfo_;
@@ -57,6 +59,8 @@ private:
     // std::shared_ptr<IFrameTimestampCalculator>     imuFrameTimestampCalculator_;
 
     std::recursive_timed_mutex componentLock_;
+
+    std::vector<std::shared_ptr<IFilter>> filters_;
 };
 /* #endregion ------------G330Device declare end---------------- */
 

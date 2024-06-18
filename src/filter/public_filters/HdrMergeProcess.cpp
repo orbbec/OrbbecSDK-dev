@@ -29,7 +29,7 @@ template <typename T> bool isInfraredValid(T ir_value, OBFormat ir_format) {
 }
 
 template <typename T>
-void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, uint16_t *d1, const std::shared_ptr<Frame> first_ir, const std::shared_ptr<Frame> second_ir,
+void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, uint16_t *d1, const std::shared_ptr<const Frame> first_ir, const std::shared_ptr<const Frame> second_ir,
                         int width_height_prod) {
     auto i0 = (T *)first_ir->getData();
     auto i1 = (T *)second_ir->getData();
@@ -56,14 +56,13 @@ void mergeFramesUsingOnlyDepth(uint16_t *new_data, uint16_t *d0, uint16_t *d1, i
     }
 }
 
-std::shared_ptr<IRFrame> getIRFrameFromFrameSet(const std::shared_ptr<Frame> frame_fs) {
+std::shared_ptr<const IRFrame> getIRFrameFromFrameSet(std::shared_ptr<const Frame> frame_fs) {
     if(!frame_fs->is<FrameSet>()) {
         return nullptr;
     }
 
-    std::shared_ptr<FrameSet> frameSet = frame_fs->as<FrameSet>();
-    std::shared_ptr<Frame>  irFrame  = nullptr;
-    irFrame                          = frameSet->getIRFrame();
+    auto frameSet = frame_fs->as<FrameSet>();
+    auto irFrame  = frameSet->getFrame(OB_FRAME_IR);
     if(!irFrame) {
         irFrame = frameSet->getFrame(OB_FRAME_IR_LEFT);
         if(!irFrame) {
@@ -78,8 +77,8 @@ std::shared_ptr<IRFrame> getIRFrameFromFrameSet(const std::shared_ptr<Frame> fra
     return nullptr;
 }
 
-bool shouldIrBeUsedForMerging(const std::shared_ptr<DepthFrame> first_depth, const std::shared_ptr<IRFrame> first_ir,
-                              const std::shared_ptr<DepthFrame> second_depth, const std::shared_ptr<IRFrame> second_ir) {
+bool shouldIrBeUsedForMerging(std::shared_ptr<const DepthFrame> first_depth, std::shared_ptr<const IRFrame> first_ir,
+                              std::shared_ptr<const DepthFrame> second_depth, std::shared_ptr<const IRFrame> second_ir) {
 
     // checking ir frames are not null
     bool use_ir = (first_ir && second_ir);
@@ -128,15 +127,15 @@ bool shouldIrBeUsedForMerging(const std::shared_ptr<DepthFrame> first_depth, con
     return use_ir;
 }
 
-bool checkFramesMergeAbility(const std::shared_ptr<Frame> first_f, const std::shared_ptr<Frame> second_f, bool &use_ir) {
-    std::shared_ptr<DepthFrame> first_depth  = nullptr;
-    std::shared_ptr<DepthFrame> second_depth = nullptr;
+bool checkFramesMergeAbility(std::shared_ptr<const Frame> first_f, std::shared_ptr<const Frame> second_f, bool &use_ir) {
+    std::shared_ptr<const DepthFrame> first_depth  = nullptr;
+    std::shared_ptr<const DepthFrame> second_depth = nullptr;
 
-    std::shared_ptr<IRFrame> first_ir     = nullptr;
-    std::shared_ptr<IRFrame> second_ir = nullptr;
+    std::shared_ptr<const IRFrame> first_ir     = nullptr;
+    std::shared_ptr<const IRFrame> second_ir = nullptr;
 
     if(first_f->is<FrameSet>()) {
-        first_depth = first_f->as<FrameSet>()->getDepthFrame()->as<DepthFrame>();
+        first_depth = first_f->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
     }
     else {
         first_depth = first_f->as<DepthFrame>();
@@ -144,7 +143,7 @@ bool checkFramesMergeAbility(const std::shared_ptr<Frame> first_f, const std::sh
     first_ir = getIRFrameFromFrameSet(first_f);
 
     if(second_f->is<FrameSet>()) {
-        second_depth = second_f->as<FrameSet>()->getDepthFrame()->as<DepthFrame>();
+        second_depth = second_f->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
     }
     else {
         second_depth = second_f->as<DepthFrame>();
@@ -192,9 +191,9 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
 
     // 1.get depth frame,check the depth frame exists
     auto                        outFrame   = FrameFactory::cloneFrame(frame);
-    std::shared_ptr<DepthFrame> depthFrame = nullptr;
+    std::shared_ptr<const DepthFrame> depthFrame = nullptr;
     if(outFrame->is<FrameSet>()) {
-        depthFrame = outFrame->as<FrameSet>()->getDepthFrame()->as<DepthFrame>();
+        depthFrame = outFrame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
     }
     else {
         depthFrame = outFrame->as<DepthFrame>();
@@ -229,8 +228,8 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
     // 3. check if size of this vector is at least 2 (if not - return latest merge frame)
     if(frames_.size() >= 2) {
         // 4. pop out both framesets from the vector
-        std::shared_ptr<Frame> frame_0 = frames_[0];
-        std::shared_ptr<Frame> frame_1 = frames_[1];
+        std::shared_ptr<const Frame> frame_0 = frames_[0];
+        std::shared_ptr<const Frame> frame_1 = frames_[1];
         frames_.clear();
 
         bool use_ir = false;
@@ -259,14 +258,14 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
     return outFrame;
 }
 
-void HdrMerge::discardDepthMergedFrameIfNeeded(const std::shared_ptr<Frame> frame) {
+void HdrMerge::discardDepthMergedFrameIfNeeded(std::shared_ptr<Frame> frame) {
     if(depth_merged_frame_) {
         // criteria for discarding saved merged_depth_frame:
         // 1 - frame counter for merged depth is greater than the input frame
         // 2 - resolution change
-        std::shared_ptr<DepthFrame> newDepthFrame = nullptr;
+        std::shared_ptr<const DepthFrame> newDepthFrame = nullptr;
         if(frame->is<FrameSet>()) {
-            newDepthFrame = frame->as<FrameSet>()->getDepthFrame()->as<DepthFrame>();
+            newDepthFrame = frame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
         }
         else {
             newDepthFrame = frame->as<DepthFrame>();
@@ -287,14 +286,14 @@ void HdrMerge::discardDepthMergedFrameIfNeeded(const std::shared_ptr<Frame> fram
     }
 }
 
-std::shared_ptr<Frame> HdrMerge::mergingAlgorithm(const std::shared_ptr<Frame> first_fs, const std::shared_ptr<Frame> second_fs, const bool use_ir) {
-    std::shared_ptr<DepthFrame> first_depth  = nullptr;
-    std::shared_ptr<DepthFrame> second_depth = nullptr;
-    std::shared_ptr<IRFrame>    first_ir     = nullptr;
-    std::shared_ptr<IRFrame>    second_ir    = nullptr;
+std::shared_ptr<Frame> HdrMerge::mergingAlgorithm(std::shared_ptr<const Frame> first_fs, std::shared_ptr<const Frame> second_fs, const bool use_ir) {
+    std::shared_ptr<const DepthFrame> first_depth  = nullptr;
+    std::shared_ptr<const DepthFrame> second_depth = nullptr;
+    std::shared_ptr<const IRFrame>    first_ir     = nullptr;
+    std::shared_ptr<const IRFrame>    second_ir    = nullptr;
 
     if(first_fs->is<FrameSet>()) {
-        first_depth = first_fs->as<FrameSet>()->getDepthFrame()->as<DepthFrame>();
+        first_depth = first_fs->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
     }
     else {
         first_depth = first_fs->as<DepthFrame>();
@@ -302,7 +301,7 @@ std::shared_ptr<Frame> HdrMerge::mergingAlgorithm(const std::shared_ptr<Frame> f
     first_ir = getIRFrameFromFrameSet(first_fs);
 
     if(second_fs->is<FrameSet>()) {
-        second_depth = second_fs->as<FrameSet>()->getDepthFrame()->as<DepthFrame>();
+        second_depth = second_fs->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
     }
     else {
         second_depth = second_fs->as<DepthFrame>();
@@ -338,7 +337,7 @@ std::shared_ptr<Frame> HdrMerge::mergingAlgorithm(const std::shared_ptr<Frame> f
         return newFrame;
     }
 
-    return first_fs;
+    return FrameFactory::cloneFrame(first_fs,true);
 }
 
 }  // namespace libobsensor

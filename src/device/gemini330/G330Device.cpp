@@ -59,6 +59,12 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
     else {
         videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter_);
     }
+
+    try{
+        frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this());
+    }catch(...){
+
+    }
 }
 
 G330Device::~G330Device() noexcept {}
@@ -297,6 +303,11 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     if(iter->second.sensor) {
         return ResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
     }
+    std::shared_ptr<FrameProcessor> frameProcessor = nullptr;
+    if(frameProcessorFactory_){
+        frameProcessor = frameProcessorFactory_->createFrameProcessor(type);
+    }
+
     // create
     if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
         auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
@@ -359,6 +370,9 @@ IDevice::ResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
             // todo: implement this
             videoSensor->setFrameMetadataParserContainer(colorMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+        }
+        if(frameProcessor){
+            videoSensor->setFrameProcessor(frameProcessor);
         }
     }
 

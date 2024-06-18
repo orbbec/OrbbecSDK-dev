@@ -78,6 +78,10 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
 
         updateStreamState(STREAM_STATE_STREAMING);
 
+        if(frameProcessor_){
+            frame = frameProcessor_->process(frame);
+        }
+
         if(frameMetadataParserContainer_) {
             frame->registerMetadataParsers(frameMetadataParserContainer_);
         }
@@ -151,6 +155,10 @@ void VideoSensor::setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadata
 
 void VideoSensor::setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator) {
     frameTimestampCalculator_ = calculator;
+}
+
+void VideoSensor::setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcessor){
+    frameProcessor_ = frameProcessor;
 }
 
 }  // namespace libobsensor

@@ -107,6 +107,13 @@ void ob_delete_frame(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(frame)
 
+void ob_frame_copy_info(const ob_frame *srcframe, ob_frame *dstframe, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(srcframe);
+    VALIDATE_NOT_NULL(dstframe);
+    dstframe->frame->copyInfo(srcframe->frame);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(srcframe, dstframe)
+
 uint64_t ob_frame_get_index(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->getNumber();

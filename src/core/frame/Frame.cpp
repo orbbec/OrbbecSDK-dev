@@ -2,8 +2,8 @@
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
-#include "Frame/FrameMemoryPool.hpp"
-#include "Frame/FrameBufferManager.hpp"
+#include "frame/FrameMemoryPool.hpp"
+#include "frame/FrameBufferManager.hpp"
 
 namespace libobsensor {
 

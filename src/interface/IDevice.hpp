@@ -14,7 +14,7 @@ struct DeviceInfo {
     std::string name_;
 
     std::string connectionType_;  // Device connection type
-    uint16_t    type_ = 0;        // 0: Monocular structured light; 1: Binocular structured light; 2: tof
+    uint16_t    type_ = 0;        // 0: Monocular disparity based; 1: Binocular disparity based; 2: tof
     std::string fwVersion_;
     std::string hwVersion_;
     std::string supportedSdkVersion_;

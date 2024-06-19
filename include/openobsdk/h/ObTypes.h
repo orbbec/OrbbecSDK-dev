@@ -135,7 +135,6 @@ typedef enum {
     OB_SENSOR_IR_LEFT   = 6, /**< left IR for stereo camera*/
     OB_SENSOR_IR_RIGHT  = 7, /**< Right IR for stereo camera*/
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
-    OB_SENSOR_DISPARITY = 9, /**< Disparity */
     OB_SENSOR_COUNT,         /**The total number of sensor types, is not a valid sensor type */
     OB_SENSOR_SYNTHETIC, /**< Synthetic sensor, used inside the SDK to handle multi sensor streams on one class/object, not a valid sensor type for external use
                           */
@@ -157,7 +156,6 @@ typedef enum {
     OB_STREAM_IR_LEFT   = 6,  /**< Left IR stream for stereo camera */
     OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream for stereo camera */
     OB_STREAM_RAW_PHASE = 8,  /**< RawPhase Stream */
-    OB_STREAM_DISPARITY = 9,  /**< Disparity Stream*/
     OB_STREAM_COUNT,          /**< The total number of stream type,is not a valid stream type */
 } OBStreamType,
     ob_stream_type;
@@ -178,7 +176,6 @@ typedef enum {
     OB_FRAME_IR_LEFT   = 8,  /**< Left IR frame for stereo camera */
     OB_FRAME_IR_RIGHT  = 9,  /**< Right IR frame for stereo camera */
     OB_FRAME_RAW_PHASE = 10, /**< Raw Phase frame*/
-    OB_FRAME_DISPARITY = 11, /**< Disparity frame*/
     OB_FRAME_COUNT,          /**< The total number of frame types, is not a valid frame type */
 } OBFrameType,
     ob_frame_type;
@@ -715,7 +712,7 @@ typedef enum {
     ob_depth_precision_level, OB_DEPTH_PRECISION_LEVEL;
 
 /**
- * @brief disparity to depth param
+ * @brief disparity parameters for disparity based camera
  *
  */
 typedef struct {
@@ -731,7 +728,7 @@ typedef struct {
     int32_t invalidDisp;   // invalid disparity，usually is 0，dual IR add a auxiliary value.
     int32_t dispIntPlace;  // disp integer digits，default is 8，Gemini2 XL is 10
     uint8_t isDualCamera;  // 0 monocular camera，1 dual camera
-} OBDisparityProcessParam, ob_disparity_process_param;
+} OBDisparityParam, ob_disparity_param;
 
 /**
  * @brief Enumeration for TOF filter scene ranges

@@ -30,7 +30,7 @@ typedef struct {
 } DEVICE_TIME, OBDeviceTime, ob_device_time;
 
 /**
- * @brief Post-process parameters after depth align to color
+ *@brief Post-process parameters after depth align to color
  *
  */
 typedef struct {
@@ -64,13 +64,20 @@ typedef struct {
 } OBD2CProfile, ob_d2c_supported_profile_info;
 
 typedef struct {
-    uint32_t depthMode;    ///< 单目/双目
-    float    baseline;     ///< 基线距离
-    float    z0;           ///< 标定距离
-    float    focalPix;     ///< 用于深度计算的焦距或rectify后的焦距f
-    float    unit;         ///< 单位 x1 mm，如：unit=0.25, 表示0.25*1mm=0.25mm
-    float    dispOffset;   ///< 视差偏移，真实视差=芯片输出的视差 + disp_offset
-    int32_t  invalidDisp;  ///< 无效视差，一般情况下为0；当芯片min_disp 不等于0或者-128时，无效视差不再等于0
+    uint32_t depthMode;    ///< Monocular/Binocular
+    float    baseline;     ///< baseline distance
+    float    z0;           ///< Calibration distance
+    float    focalPix;     ///< Focal length used for depth calculation or focal length f after rectify
+    float    unit;         ///< Unit x1 mm, such as: unit=0.25, means 0.25*1mm=0.25mm
+    float    dispOffset;   ///< Parallax offset, real parallax = chip output parallax + disp_offset
+    int32_t  invalidDisp;  ///< Invalid parallax, usually 0; when the chip min_disp is not equal to 0 or -128, the invalid parallax is no longer equal to 0
 } OBDepthCalibrationParam;
+
+typedef enum {
+    OB_DISP_PACK_ORIGINAL     = 0,  // MX6000 Parallax
+    OB_DISP_PACK_OPENNI       = 1,  // OpenNI disparity
+    OB_DISP_PACK_ORIGINAL_NEW = 2,  // MX6600 Parallax
+    OB_DISP_PACK_GEMINI2XL    = 3,  // Gemini2XL parallax
+} OBDisparityPackMode;
 
 #pragma pack(pop)

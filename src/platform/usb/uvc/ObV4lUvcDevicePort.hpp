@@ -85,7 +85,7 @@ public:
     explicit ObV4lUvcDevicePort(std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~ObV4lUvcDevicePort() noexcept override;
 
-    StreamProfileListUnsafe getStreamProfileList() override;
+    StreamProfileList getStreamProfileList() override;
 
     void startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
     void stopStream(std::shared_ptr<const StreamProfile> profile) override;

@@ -45,7 +45,8 @@ OBStreamState SensorBase::getStreamState() const {
 }
 
 bool SensorBase::isStreamActivated() const {
-    return streamState_ == STREAM_STATE_STARTING || streamState_ == STREAM_STATE_STREAMING || streamState_ == STREAM_STATE_ERROR;
+    return streamState_ == STREAM_STATE_STARTING || streamState_ == STREAM_STATE_STREAMING || streamState_ == STREAM_STATE_ERROR
+           || streamState_ == STREAM_STATE_STOPPING;
 }
 
 void SensorBase::setStreamStateChangedCallback(StreamStateChangedCallback callback) {
@@ -53,18 +54,7 @@ void SensorBase::setStreamStateChangedCallback(StreamStateChangedCallback callba
 }
 
 StreamProfileList SensorBase::getStreamProfileList() const{
-    StreamProfileList list;
-    auto streamType = utils::mapSensorTypeToStreamType(sensorType_);
-    for(auto& sp : streamProfileList_) {
-        auto spOwner = sp->getOwner();
-        if(!spOwner || spOwner->device.lock() != owner_.lock() || sp->getType() == streamType) {
-            auto newOwner = std::make_shared<LazySensor>(owner_, sensorType_);
-            sp->bindOwner(newOwner);
-            sp->setType(streamType);
-        }
-        list.push_back(sp);
-    }
-    return list;
+    return streamProfileList_;
 }
 
 std::shared_ptr<const StreamProfile> SensorBase::getActivatedStreamProfile() const {

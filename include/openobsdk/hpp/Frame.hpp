@@ -21,13 +21,13 @@
  *      |           |          |          |           |
  *   VideoFrame PointsFrame AccelFrame GyroFrame   FrameSet
  *        |
- *   +----+----------+---------------+----------------+
- *   |               |               |                |
- * ColorFrame    DepthFrame    DisparityFrame      IRFrame
- *                                                    |
- *                                              +-----+-----+
- *                                              |           |
- *                                         IRLeftFrame  IRRightFrame
+ *   +----+----------+-------------------+
+ *   |               |                   |
+ * ColorFrame    DepthFrame           IRFrame
+ *                                       |
+ *                                 +-----+-----+
+ *                                 |           |
+ *                            IRLeftFrame  IRRightFrame
  */
 
 namespace ob {
@@ -467,29 +467,6 @@ public:
 };
 
 /**
- * @brief Define the DisparityFrame class, which inherits from the VideoFrame class
- */
-class DisparityFrame : public VideoFrame {
-private:
-    /**
-     * @brief Construct a new DisparityFrame object with a given pointer to the internal frame object.
-     *
-     * @attention After calling this constructor,the frame object will own the internal frame object,and the internal frame object will be deleted when the
-     * frame object is destroyed.
-     * @attention The internal frame object should not be deleted by the caller.
-     * @attention Please use the FrameFactory to create a Frame object.
-     *
-     * @param impl The pointer to the internal frame object.
-     *
-     */
-    explicit DisparityFrame(const ob_frame *impl) : VideoFrame(impl){};
-    friend class FrameFactory;
-
-public:
-    ~DisparityFrame() noexcept override = default;
-};
-
-/**
  * @brief Define the IRFrame class, which inherits from the VideoFrame class
  *
  */
@@ -834,8 +811,6 @@ template <typename T> bool Frame::is() {
     case OB_FRAME_IR_RIGHT:  // Follow
     case OB_FRAME_IR:
         return (typeid(T) == typeid(IRFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_DISPARITY:
-        return (typeid(T) == typeid(DisparityFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_DEPTH:
         return (typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_COLOR:

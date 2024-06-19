@@ -1,7 +1,6 @@
 #include "G330AlgParamManager.hpp"
 #include "stream/StreamIntrinsicsManager.hpp"
 #include "stream/StreamExtrinsicsManager.hpp"
-#include "stream/StreamDisparityParamManager.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "property/InternalProperty.hpp"
 #include "DevicePids.hpp"
@@ -308,7 +307,7 @@ void G330AlgParamManager::fixD2CParmaList() {
 void G330AlgParamManager::bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
     bindExtrinsic(streamProfileList);
     bindIntrinsic(streamProfileList);
-    bindDisparityProcessParam(streamProfileList);
+    bindDisparityParam(streamProfileList);
 }
 
 void G330AlgParamManager::bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
@@ -388,52 +387,40 @@ void G330AlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const Stream
     }
 }
 
-void G330AlgParamManager::bindDisparityProcessParam(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
-    // todo:
+void G330AlgParamManager::bindDisparityParam(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
+    auto dispParam    = getCurrentDisparityProcessParam();
+    auto intrinsicMgr = StreamIntrinsicsManager::getInstance();
+    for(const auto &sp: streamProfileList) {
+        if(!sp->is<DisparityBasedStreamProfile>()) {
+            continue;
+        }
+        intrinsicMgr->registerDisparityBasedStreamDisparityParam(sp, dispParam);
+    }
 }
 
-OBDisparityProcessParam G330AlgParamManager::getCurrentDisparityProcessParam() {
-    // std::vector<uint8_t> data;
-    // OBCmdVersion         localCmdVersion = OB_CMD_VERSION_INVALID;
-    // // depth calib param
-    // BEGIN_TRY_EXECUTE(devCommand_->getStructDataList(
-    //     OB_RAW_DATA_DEPTH_CALIB_PARAM,
-    //     [&](OBDataTranState state, OBCmdVersion cmdVersion, OBDataChunk *dataChunk) {
-    //         if(state == DATA_TRAN_STAT_TRANSFERRING) {
-    //             data.insert(data.end(), dataChunk->data, dataChunk->data + dataChunk->size);
-    //             localCmdVersion = cmdVersion;
-    //         }
-    //     },
-    //     false);)
-    // CATCH_EXCEPTION_AND_EXECUTE({
-    //     LOG_ERROR("Get depth calibration params failed!");
-    //     data.clear();
-    // })
+OBDisparityParam G330AlgParamManager::getCurrentDisparityProcessParam() {
+    try {
+        auto propertyAccessor = propertyAccessorGetter_.get();
+        depthCalibParamList_  = propertyAccessor->getStructureDataListProtoV1_1_T<OBDepthCalibrationParam, 1>(OB_RAW_DATA_DEPTH_CALIB_PARAM);
+    }
+    catch(const std::exception &e) {
+        LOG_ERROR("Get depth calibration params failed! {}", e.what());
+    }
 
-    // if(!data.empty() && localCmdVersion != OB_CMD_VERSION_INVALID) {
-    //     depthCalibParamList_ = depthCalibParamParse(localCmdVersion, data.data(), data.size());
-    //     LOG_DEBUG("Get depth calibration params success! num={}", depthCalibParamList_.size());
-    //     for(auto &&param: depthCalibParamList_) {
-    //         std::stringstream ss;
-    //         ss << param;
-    //         LOG_DEBUG(" - {}", ss.str());
-    //     }
-    // }
-
-    // OBDisparityProcessParam param      = { 0 };
-    // const auto             &depthCalib = depthCalibParamList_.front();
-    // param.baseline                     = depthCalib.baseline;
-    // param.zpd                          = depthCalib.z0;
-    // param.fx                           = depthCalib.focalPix;
-    // param.zpps                         = depthCalib.z0 / depthCalib.focalPix;
-    // param.bitSize                      = 14;  // low 14 bit
-    // param.dispIntPlace                 = 8;
-    // param.unit                         = depthCalib.unit;
-    // param.dispOffset                   = depthCalib.dispOffset;
-    // param.invalidDisp                  = depthCalib.invalidDisp;
-    // param.packMode                     = OB_DISP_PACK_ORIGINAL_NEW;
-    // return param;
-    return { 0 };
+    OBDisparityParam param      = { 0 };
+    const auto      &depthCalib = depthCalibParamList_.front();
+    param.baseline              = depthCalib.baseline;
+    param.zpd                   = depthCalib.z0;
+    param.fx                    = depthCalib.focalPix;
+    param.zpps                  = depthCalib.z0 / depthCalib.focalPix;
+    param.bitSize               = 14;  // low 14 bit
+    param.dispIntPlace          = 8;
+    param.unit                  = depthCalib.unit;
+    param.dispOffset            = depthCalib.dispOffset;
+    param.invalidDisp           = depthCalib.invalidDisp;
+    param.packMode              = OB_DISP_PACK_ORIGINAL_NEW;
+    param.isDualCamera          = true;
+    return param;
 }
 
 // bool G330AlgParamManager::isBinocularCamera() const {

@@ -500,8 +500,8 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
     }
 }
 
-StreamProfileListUnsafe ObV4lUvcDevicePort::getStreamProfileList() {
-    StreamProfileListUnsafe profileList;
+StreamProfileList ObV4lUvcDevicePort::getStreamProfileList() {
+    StreamProfileList profileList;
     foreachProfile(deviceHandles_, [&profileList](std::shared_ptr<V4lDeviceHandle> devHandle, std::shared_ptr<VideoStreamProfile> profile) {
         (void)devHandle;
         profileList.push_back(profile);

@@ -785,7 +785,7 @@ void WmfUvcDevicePort::reloadSourceAndReader() {
     setPowerStateD0();
 }
 
-StreamProfileListUnsafe WmfUvcDevicePort::getStreamProfileList() {
+StreamProfileList WmfUvcDevicePort::getStreamProfileList() {
     if(profileList_.empty()) {
         std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
         checkConnection();

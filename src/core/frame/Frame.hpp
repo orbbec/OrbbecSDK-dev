@@ -84,7 +84,7 @@ public:
 
     template <typename T> bool               is(){
         return std::dynamic_pointer_cast<T>(shared_from_this()) != nullptr;
-    } 
+    }
 
     template <typename T> std::shared_ptr<T> as() {
         if(!is<T>()) {
@@ -160,11 +160,6 @@ public:
 
 private:
     float valueScale_;
-};
-
-class DisparityFrame : public VideoFrame {
-public:
-    DisparityFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 };
 
 class IRFrame : public VideoFrame {

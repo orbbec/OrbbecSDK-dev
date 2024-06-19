@@ -116,7 +116,7 @@ class IVideoStreamPort : virtual public ISourcePort {  // Virtual inheritance so
 public:
     ~IVideoStreamPort() noexcept override = default;
 
-    virtual StreamProfileListUnsafe getStreamProfileList()                                                                  = 0;
+    virtual StreamProfileList       getStreamProfileList()                                                                  = 0;
     virtual void                    startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) = 0;
     virtual void                    stopStream(std::shared_ptr<const StreamProfile> profile)                                = 0;
     virtual void                    stopAllStream()                                                                         = 0;

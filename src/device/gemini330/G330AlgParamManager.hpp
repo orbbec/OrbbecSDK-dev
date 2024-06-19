@@ -17,9 +17,10 @@ public:
     virtual ~G330AlgParamManager() = default;
 
     void bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
+    void bindDisparityParam(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
 
-    OBDisparityProcessParam getCurrentDisparityProcessParam();                                             // get from device
-    OBDisparityProcessParam getDisparityProcessParam(std::shared_ptr<const StreamProfile> profile) const;  // get from cache
+    OBDisparityParam getCurrentDisparityProcessParam();                                      // get from device
+    OBDisparityParam getDisparityParam(std::shared_ptr<const StreamProfile> profile) const;  // get from cache
 
     const std::vector<OBD2CProfile> &getD2CProfileList() const {
         return fixedD2cProfileList_;
@@ -39,7 +40,6 @@ private:
     void registerBasicExtrinsics();
     void bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
     void bindIntrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
-    void bindDisparityProcessParam(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
 
 private:
     std::shared_ptr<const DeviceInfo>       deviceInfo_;

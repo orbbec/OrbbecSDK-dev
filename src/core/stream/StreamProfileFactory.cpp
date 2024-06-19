@@ -9,7 +9,7 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType) {
     return createStreamProfile(streamType, OB_FORMAT_ANY);
 }
 
-std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFormat frameFormat,OBDeviceType deviceType) {
+std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFormat frameFormat) {
     if(streamType == OB_STREAM_UNKNOWN || frameFormat == OB_FORMAT_UNKNOWN) {
         throw invalid_value_exception("Invalid frame type or format");
     }

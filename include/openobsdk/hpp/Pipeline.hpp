@@ -280,6 +280,9 @@ public:
     std::shared_ptr<FrameSet> waitForFrames(uint32_t timeout_ms) {
         ob_error *error    = nullptr;
         auto      frameSet = ob_pipeline_wait_for_frameset(impl_, timeout_ms, &error);
+        if (frameSet == nullptr) {
+            return nullptr;
+        }
         Error::handle(&error, false);
         return std::make_shared<FrameSet>(frameSet);
     }

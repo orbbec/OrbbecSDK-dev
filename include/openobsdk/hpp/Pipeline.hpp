@@ -73,7 +73,8 @@ public:
      * @param fps The video stream frame rate (default is OB_FPS_ANY, which selects the default frame rate).
      * @param format The video stream format (default is OB_FORMAT_ANY, which selects the default format).
      */
-    void enableVideoStream(ob_stream_type stream_type, int width = OB_WIDTH_ANY, int height = OB_HEIGHT_ANY, int fps = OB_FPS_ANY, OBFormat format = OB_FORMAT_ANY){
+    void enableVideoStream(ob_stream_type stream_type, int width = OB_WIDTH_ANY, int height = OB_HEIGHT_ANY, int fps = OB_FPS_ANY,
+                           OBFormat format = OB_FORMAT_ANY) {
         ob_error *error = nullptr;
         ob_config_enable_video_stream(impl_, stream_type, width, height, fps, format, &error);
         Error::handle(&error, false);
@@ -90,7 +91,7 @@ public:
      * @param sampleRate The sample rate of the accelerometer (default is OB_ACCEL_SAMPLE_RATE_ANY, which selects the default rate).
      */
     void enableAccelStream(ob_accel_full_scale_range fullScaleRange = OB_ACCEL_FULL_SCALE_RANGE_ANY,
-                           ob_accel_sample_rate      sampleRate     = OB_ACCEL_SAMPLE_RATE_ANY){
+                           ob_accel_sample_rate      sampleRate     = OB_ACCEL_SAMPLE_RATE_ANY) {
         ob_error *error = nullptr;
         ob_config_enable_accel_stream(impl_, fullScaleRange, sampleRate, &error);
         Error::handle(&error, false);
@@ -106,12 +107,11 @@ public:
      * @param fullScaleRange The full-scale range of the gyroscope (default is OB_GYRO_FULL_SCALE_RANGE_ANY, which selects the default range).
      * @param sampleRate The sample rate of the gyroscope (default is OB_GYRO_SAMPLE_RATE_ANY, which selects the default rate).
      */
-    void enableGyroStream(ob_gyro_full_scale_range fullScaleRange = OB_GYRO_FULL_SCALE_RANGE_ANY, ob_gyro_sample_rate sampleRate = OB_GYRO_SAMPLE_RATE_ANY){
+    void enableGyroStream(ob_gyro_full_scale_range fullScaleRange = OB_GYRO_FULL_SCALE_RANGE_ANY, ob_gyro_sample_rate sampleRate = OB_GYRO_SAMPLE_RATE_ANY) {
         ob_error *error = nullptr;
         ob_config_enable_gyro_stream(impl_, fullScaleRange, sampleRate, &error);
         Error::handle(&error, false);
     }
-
 
     /**
      * @brief Disable a stream to be used in the pipeline
@@ -277,10 +277,10 @@ public:
      * @param timeout_ms The waiting timeout in milliseconds
      * @return std::shared_ptr<FrameSet> The waiting frameset data
      */
-    std::shared_ptr<FrameSet> waitForFrames(uint32_t timeout_ms) {
+    std::shared_ptr<FrameSet> waitForFrames(uint32_t timeout_ms = 100) {
         ob_error *error    = nullptr;
         auto      frameSet = ob_pipeline_wait_for_frameset(impl_, timeout_ms, &error);
-        if (frameSet == nullptr) {
+        if(frameSet == nullptr) {
             return nullptr;
         }
         Error::handle(&error, false);

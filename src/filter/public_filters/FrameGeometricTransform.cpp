@@ -275,17 +275,16 @@ std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> fra
         return nullptr;
     }
 
+    auto outFrame = FrameFactory::cloneFrame(frame);
+    if(frame->is<FrameSet>()) {
+        return outFrame;
+    }
+
     if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV
        && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA
        && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameMirror unsupported to process this format: {}", frame->getFormat());
-        return FrameFactory::cloneFrame(frame);
-    }
-
-    auto outFrame = FrameFactory::cloneFrame(frame);
-    if(outFrame == nullptr) {
-        LOG_ERROR_INTVL("Acquire frame from frameBufferManager failed!");
-        return nullptr;
+        return outFrame;
     }
 
     auto videoFrame      = frame->as<VideoFrame>();
@@ -317,8 +316,6 @@ std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> fra
         isMirrorSupport = false;
         break;
     }
-
-    outFrame->copyInfo(frame);
 
     try {
         if(isMirrorSupport) {
@@ -388,16 +385,15 @@ std::shared_ptr<Frame> FrameFlip::processFunc(std::shared_ptr<const Frame> frame
         return nullptr;
     }
 
+    auto outFrame = FrameFactory::cloneFrame(frame);
+    if(frame->is<FrameSet>()) {
+        return outFrame;
+    }
+
     if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV && frame->getFormat() != OB_FORMAT_BGR
        && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameFlip unsupported to process this format:{}", frame->getFormat());
-        return FrameFactory::cloneFrame(frame);
-    }
-
-    auto outFrame = FrameFactory::cloneFrame(frame);
-    if(outFrame == nullptr) {
-        LOG_ERROR_INTVL("Acquire frame from frameBufferManager failed!");
-        return nullptr;
+        return outFrame;
     }
 
     bool isSupportFlip = true;
@@ -422,7 +418,6 @@ std::shared_ptr<Frame> FrameFlip::processFunc(std::shared_ptr<const Frame> frame
         isSupportFlip = false;
         break;
     }
-    outFrame->copyInfo(frame);
 
     try {
         if(isSupportFlip) {
@@ -494,21 +489,20 @@ std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> fra
         return nullptr;
     }
 
+    auto outFrame = FrameFactory::cloneFrame(frame);
+    if(frame->is<FrameSet>()) {
+        return outFrame;
+    }
+
     if(rotateDegree_ == 0) {
-        return FrameFactory::cloneFrame(frame);
+        return outFrame;
     }
 
     if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV
        && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA
        && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameRotate unsupported to process this format: {}", frame->getFormat());
-        return FrameFactory::cloneFrame(frame);
-    }
-
-    auto outFrame = FrameFactory::cloneFrame(frame);
-    if(outFrame == nullptr) {
-        LOG_ERROR_INTVL("Acquire frame from frameBufferManager failed!");
-        return nullptr;
+        return outFrame;
     }
 
     std::lock_guard<std::mutex> rotateLock(mtx_);
@@ -540,8 +534,6 @@ std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> fra
         isSupportRotate = false;
         break;
     }
-
-    outFrame->copyInfo(frame);
 
     try {
         if(isSupportRotate) {

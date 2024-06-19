@@ -94,21 +94,25 @@ const std::string &IMUCorrecter::getConfigSchema() const {
 }
 
 std::shared_ptr<Frame> IMUCorrecter::processFunc(std::shared_ptr<const Frame> frame) {
-    if(!frame->is<FrameSet>()){
-        return FrameFactory::cloneFrame(frame);
+    if(frame == nullptr) {
+        return nullptr;
     }
 
-    auto frameSet = frame->as<FrameSet>();
-    auto accelFrame = frameSet->getFrame(OB_FRAME_ACCEL);
+    auto newFrame = FrameFactory::cloneFrame(frame, true);
+    if(!frame->is<FrameSet>()){
+        return newFrame;
+    }
 
+    auto frameSet   = newFrame->as<FrameSet>();
+    auto accelFrame = frameSet->getFrame(OB_FRAME_ACCEL);
     if(accelFrame){
         auto frameData = (AccelFrame::OBAccelFrameData *)accelFrame->getData();
         Eigen::Vector3d accelEigenVec(frameData->accelData[0], frameData->accelData[1], frameData->accelData[2]);
-        accelEigenVec = correctAccel(accelEigenVec, &param_);
+        accelEigenVec           = correctAccel(accelEigenVec, &param_);
         frameData->accelData[0] = static_cast<float>(accelEigenVec.x());
         frameData->accelData[1] = static_cast<float>(accelEigenVec.y());
         frameData->accelData[2] = static_cast<float>(accelEigenVec.z());
-        frameData->temp = calculateRegisterTemperature(static_cast<int16_t>(frameData->temp));
+        frameData->temp         = calculateRegisterTemperature(static_cast<int16_t>(frameData->temp));
     }
 
     auto gyroFrame = frameSet->getFrame(OB_FRAME_GYRO);
@@ -122,7 +126,7 @@ std::shared_ptr<Frame> IMUCorrecter::processFunc(std::shared_ptr<const Frame> fr
         frameData->temp = calculateRegisterTemperature(static_cast<int16_t>(frameData->temp));
     }
 
-    return nullptr;
+    return newFrame;
 }
 
 Eigen::Vector3d IMUCorrecter::correctAccel(const Eigen::Vector3d& accelVec, IMUCalibrateParams *params){

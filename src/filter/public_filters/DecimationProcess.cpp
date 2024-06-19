@@ -203,11 +203,11 @@ void DecimationFilter::updateConfig(std::vector<std::string> &params) {
         if(value >= 1 && value <= 8) {
             if(value != control_val_) {
                 std::lock_guard<std::recursive_mutex> lk(scaleChangedMutex_);
-                // decimationRange_.cur = value;
-                control_val_ = value;
-                patch_size_ = decimation_factor_ = control_val_;
-                kernel_size_                     = patch_size_ * patch_size_;
-                options_changed_                 = true;
+                control_val_       = value;
+                patch_size_        = control_val_;
+                decimation_factor_ = control_val_;
+                kernel_size_       = patch_size_ * patch_size_;
+                options_changed_   = true;
             }
         }
     }
@@ -242,15 +242,13 @@ std::shared_ptr<Frame> DecimationFilter::processFunc(std::shared_ptr<const Frame
         std::lock_guard<std::recursive_mutex> lk(scaleChangedMutex_);
         updateOutputProfile(outFrame);
 
-        OBFrameType frameType   = outFrame->getType();
         OBFormat    frameFormat = outFrame->getFormat();
         auto        newOutFrame = FrameFactory::createFrameFromStreamProfile(target_stream_profile_);
         if(newOutFrame) {
             newOutFrame->copyInfo(outFrame);
             auto oldVideoFrame = outFrame->as<VideoFrame>();
             auto newViodeFrame = newOutFrame->as<VideoFrame>();
-
-            if(frameType == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16 || frameFormat == OB_FORMAT_DISP16)) {
+            if(outFrame->getType() == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16 || frameFormat == OB_FORMAT_DISP16)) {
                 decimateDepth((uint16_t *)outFrame->getData(), (uint16_t *)newViodeFrame->getData(), oldVideoFrame->getWidth(), patch_size_);
             }
             else {

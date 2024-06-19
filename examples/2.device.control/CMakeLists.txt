@@ -6,10 +6,9 @@ project(Sample-SensorControl)
 add_executable(SensorControl SensorControl.cpp)
 
 set_property(TARGET SensorControl PROPERTY CXX_STANDARD 11)
-target_link_libraries(SensorControl OrbbecSDK )
-IF(USE_PROJECT_FOLDERS)
-    set_target_properties (SensorControl PROPERTIES FOLDER "Samples")
-ENDIF()
+target_link_libraries(SensorControl ob::openobsdk ob::examples::common )
 
-ob_install_example_target(SensorControl)
-ob_install_example_current_source("/cpp/Sample-SensorControl")
+set_target_properties (SensorControl PROPERTIES FOLDER "Examples")
+
+# ob_install_example_target(SensorControl)
+# ob_install_example_current_source("/cpp/Sample-SensorControl")

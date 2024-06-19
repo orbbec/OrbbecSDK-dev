@@ -2,7 +2,7 @@
 
 #include "window.hpp"
 
-int main(int argc, char **argv) try {
+int main(void) try {
     // Create a pipeline with default device.
     ob::Pipeline pipe;
     // Get the device from pipeline.
@@ -14,7 +14,7 @@ int main(int argc, char **argv) try {
 
     // Distinguish between single IR and double IR.
     bool isDoubleIR = true;
-    for(int index = 0; index < sensorList->count(); index++) {
+    for(uint32_t index = 0; index < sensorList->count(); index++) {
         // Get the sensor type.
         auto sensorType = sensorList->type(index);
         if(sensorType == OB_SENSOR_IR) {
@@ -39,7 +39,7 @@ int main(int argc, char **argv) try {
 
             // Render a set of frame in the window, only the infrared frame is rendered here.
             // If the open stream type is not OB_SENSOR_IR, use the getFrame interface to get the frame.
-            app.addToRender(frameSet->irFrame());
+            app.addToRender(frameSet->getFrame(OB_FRAME_IR)->as<ob::IRFrame>());
         }
     }else{
         // Enable the left and right infrared streams.
@@ -69,7 +69,8 @@ int main(int argc, char **argv) try {
             }
 
             // Render a set of frame in the window, only the infrared frame is rendered here, but it must also be passed in as an array.
-            app.addToRender({ leftFrame, rightFrame });
+         app.addToRender({ leftFrame, rightFrame });
+           std::cout << "...." << std::endl;
         }
     }
 
@@ -78,6 +79,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

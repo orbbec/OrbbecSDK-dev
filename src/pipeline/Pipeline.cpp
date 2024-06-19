@@ -145,6 +145,7 @@ StreamProfileList Pipeline::getEnabledStreamProfileList() {
 std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config> cfg) {
     LOG_INFO("Check and set config start!");
     std::shared_ptr<Config> config                = cfg->clone();
+    config->disableAllStream();
     const auto              enabledStreamProfiles = cfg->getEnabledStreamProfileList();
     for(auto sp: enabledStreamProfiles) {
         auto streamType = sp->getType();

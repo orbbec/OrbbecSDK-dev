@@ -4,11 +4,11 @@ file(GLOB subdirectories RELATIVE ${CMAKE_CURRENT_LIST_DIR} "*")
 
 
 
-# foreach(subdir ${subdirectories})
-#     if(IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${subdir})
-#         add_subdirectory(${subdir})
-#     endif()
-# endforeach()
+foreach(subdir ${subdirectories})
+    if(IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${subdir})
+        add_subdirectory(${subdir})
+    endif()
+endforeach()
 
 # set(OpenCV_DIR "${CMAKE_SOURCE_DIR}/3rdparty/OpenCV430/Windows")
 # find_package(OpenCV REQUIRED)
@@ -16,9 +16,10 @@ file(GLOB subdirectories RELATIVE ${CMAKE_CURRENT_LIST_DIR} "*")
 add_subdirectory(${OB_3RDPARTY_DIR}/OpenCV430 opencv)
 # message("***opencv: ${OB_3RDPARTY_DIR}/OpenCV430")
 
-add_subdirectory(1.stream.depth)
-add_subdirectory(common)
-add_subdirectory(c_examples)
+# add_subdirectory(1.stream.depth)
+# add_subdirectory(common)
+# add_subdirectory(c_examples)
+# add_subdirectory(0.basic.enumerate)
 
 
 # if(UNIX)

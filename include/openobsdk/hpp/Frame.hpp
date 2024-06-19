@@ -636,7 +636,6 @@ public:
         ob_error *error = nullptr;
         auto      count = ob_frameset_get_frame_count(impl_, &error);
         Error::handle(&error);
-
         return count;
     }
 
@@ -649,8 +648,10 @@ public:
     std::shared_ptr<const Frame> getFrame(OBFrameType frameType) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame(impl_, frameType, &error);
+        if(!frame){
+            return nullptr;
+        }
         Error::handle(&error);
-
         return std::make_shared<Frame>(frame);
     }
 
@@ -663,8 +664,10 @@ public:
     std::shared_ptr<const Frame> getFrame(int index) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame_by_index(impl_, index, &error);
+        if(!frame){
+            return nullptr;
+        }
         Error::handle(&error);
-
         return std::make_shared<Frame>(frame);
     }
 

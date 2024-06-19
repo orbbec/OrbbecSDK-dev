@@ -79,7 +79,7 @@ public:
      * @param frame The frame to be processed.
      * @return std::shared_ptr< Frame > The processed frame.
      */
-    virtual std::shared_ptr<Frame> process(std::shared_ptr<Frame> frame) {
+    virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) {
         ob_error *error  = nullptr;
         auto      result = ob_filter_process(impl_, frame->getImpl(), &error);
         Error::handle(&error, true);

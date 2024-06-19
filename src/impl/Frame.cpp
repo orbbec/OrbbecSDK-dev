@@ -18,7 +18,13 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame_type, format, data_size)
 
 ob_frame *ob_clone_frame(const ob_frame *ref_frame, bool copy_data, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(ref_frame);
-    auto innerFrame  = libobsensor::FrameFactory::cloneFrame(ref_frame->frame, copy_data);
+    std::shared_ptr<libobsensor::Frame> innerFrame;
+    if(ref_frame->frame->is<libobsensor::FrameSet>()){
+        auto frameSet = ref_frame->frame->as<const libobsensor::FrameSet>();
+        innerFrame = libobsensor::FrameFactory::cloneFrameSet(frameSet, copy_data);
+    }else{
+        innerFrame  = libobsensor::FrameFactory::cloneFrame(ref_frame->frame, copy_data);
+    }
     auto frameImpl   = new ob_frame();
     frameImpl->frame = innerFrame;
     return frameImpl;

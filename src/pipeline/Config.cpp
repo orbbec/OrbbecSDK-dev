@@ -15,6 +15,11 @@ void Config::enableStream(std::shared_ptr<const StreamProfile> prf) {
     enabledStreamProfileList_.push_back(prf);
 }
 
+void Config::enableStream(OBStreamType type) {
+    auto prf = StreamProfileFactory::createStreamProfile(type);
+    enableStream(prf);
+}
+
 void Config::enableVideoStream(OBStreamType type, uint32_t width, uint32_t height, uint32_t fps, OBFormat format) {
     auto prf = StreamProfileFactory::createVideoStreamProfile(type, format, width, height, fps);
     enableStream(prf);

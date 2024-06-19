@@ -31,7 +31,7 @@ public:
           key_(-1),
           showInfo_(false),
           renderType_(renderType_),
-          alpha_(0.6) {
+          alpha_(0.6f) {
         processThread_ = std::thread(&Window::processFrames, this);
 #ifndef __APPLE__
         renderThread_ = std::thread(&Window::renderMats, this);
@@ -53,13 +53,14 @@ public:
         cv::resizeWindow(name_, width_, height_);
     }
 
-    void addToRender(std::shared_ptr<ob::Frame> frame) {
-        std::vector<std::shared_ptr<ob::Frame>> frames = { frame };
+    void addToRender(std::shared_ptr<const ob::Frame> frame) {
+        std::vector<std::shared_ptr<const ob::Frame>> frames;
+        frames.push_back(frame);
         addToRender(frames);
     }
 
     // add frames to the rendering
-    inline void addToRender(std::vector<std::shared_ptr<ob::Frame>> frames) {
+    inline void addToRender(std::vector<std::shared_ptr<const ob::Frame>> frames) {
         std::lock_guard<std::mutex> lk(srcFramesMtx_);
         srcFrames_ = frames;
         srcFramesCv_.notify_one();
@@ -127,7 +128,7 @@ private:
     std::condition_variable keyCv_;
 
     std::thread                             processThread_;
-    std::vector<std::shared_ptr<ob::Frame>> srcFrames_;
+    std::vector<std::shared_ptr<const ob::Frame>> srcFrames_;
     std::mutex                              srcFramesMtx_;
     std::condition_variable                 srcFramesCv_;
 
@@ -143,7 +144,7 @@ private:
         std::vector<cv::Mat>                    mats;
         cv::Mat                                 imuMat;
         cv::Mat                                 rstMat;
-        std::vector<std::shared_ptr<ob::Frame>> frames;
+        std::vector<std::shared_ptr<const ob::Frame>> frames;
         while(!threadExit_) {
             {
                 std::unique_lock<std::mutex> lk(srcFramesMtx_);
@@ -162,7 +163,7 @@ private:
                     break;
                 }
                 if(frame->getType() == OB_FRAME_COLOR) {
-                    auto videoFrame = frame->as<ob::VideoFrame>();
+                    auto videoFrame = frame->as<const ob::VideoFrame>();
                     switch(videoFrame->getFormat()) {
                     case OB_FORMAT_MJPG: {
                         cv::Mat rawMat(1, videoFrame->getDataSize(), CV_8UC1, videoFrame->getDataUnsafe());
@@ -204,7 +205,7 @@ private:
                     }
                 }
                 else if(frame->getType() == OB_FRAME_DEPTH) {
-                    auto videoFrame = frame->as<ob::VideoFrame>();
+                    auto videoFrame = frame->as<const ob::VideoFrame>();
                     if(videoFrame->getFormat() == OB_FORMAT_Y16 || videoFrame->getFormat() == OB_FORMAT_Z16) {
                         cv::Mat cvtMat;
                         cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getDataUnsafe());
@@ -221,7 +222,7 @@ private:
                     }
                 }
                 else if(frame->getType() == OB_FRAME_IR || frame->getType() == OB_FRAME_IR_LEFT || frame->getType() == OB_FRAME_IR_RIGHT) {
-                    auto videoFrame = frame->as<ob::VideoFrame>();
+                    auto videoFrame = frame->as<const ob::VideoFrame>();
                     if(videoFrame->getFormat() == OB_FORMAT_Y16) {
                         cv::Mat cvtMat;
                         cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getDataUnsafe());
@@ -248,15 +249,15 @@ private:
                     auto        accelFrame = frame->as<ob::AccelFrame>();
                     auto        value      = accelFrame->getValue();
                     std::string str        = "Accel:";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 60), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 60), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     str = std::string(" timestamp=") + std::to_string(accelFrame->getTimeStampUs()) + "us";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 120), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 120), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     str = std::string(" x=") + std::to_string(value.x) + "m/s^2";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 180), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 180), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     str = std::string(" y=") + std::to_string(value.y) + "m/s^2";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 240), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 240), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     str = std::string(" z=") + std::to_string(value.z) + "m/s^2";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 300), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 300), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     continue;
                 }
                 else if(frame->getType() == OB_FRAME_GYRO) {
@@ -266,15 +267,15 @@ private:
                     auto        gyroFrame = frame->as<ob::GyroFrame>();
                     auto        value     = gyroFrame->getValue();
                     std::string str       = "Gyro:";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 360), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 360), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     str = std::string(" timestamp=") + std::to_string(gyroFrame->getTimeStampUs()) + "us";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 420), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 420), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     str = std::string(" x=") + std::to_string(value.x) + "rad/s";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 480), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 480), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     str = std::string(" y=") + std::to_string(value.y) + "rad/s";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 540), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 540), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     str = std::string(" z=") + std::to_string(value.z) + "rad/s";
-                    cv::putText(imuMat, str.c_str(), cv::Point(8, 600), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 0.5, cv::LINE_AA);
+                    cv::putText(imuMat, str.c_str(), cv::Point(8, 600), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
                     continue;
                 }
                 if(!rstMat.empty()) {
@@ -296,7 +297,7 @@ private:
     }
 
     // add info to mat
-    static void drawInfo(cv::Mat &imageMat, std::shared_ptr<ob::VideoFrame> &frame) {
+    static void drawInfo(cv::Mat &imageMat, std::shared_ptr<const ob::VideoFrame> &frame) {
         int      baseline = 0;  // Used to calculate text size and baseline
         cv::Size textSize;      // Size of the text to be drawn
         int      padding = 5;   // Padding around the text for the background
@@ -364,12 +365,12 @@ private:
             renderMat_.release();
             try {
                 if(renderType_ == RENDER_SINGLE) {
-                    cv::resize(mats[0], renderMat_, cv::Size(width_, height_));
+                    cv::resize(mats[0], renderMat_, cv::Size(static_cast<int>(width_), static_cast<int>(height_)));
                 }
                 else if(renderType_ == RENDER_ONE_ROW) {
                     for(auto mat: mats) {
                         cv::Mat resizeMat;
-                        cv::resize(mat, resizeMat, cv::Size(width_ / mats.size(), height_));
+                        cv::resize(mat, resizeMat, cv::Size(static_cast<int>(width_ / mats.size()), height_));
                         if(renderMat_.dims > 0 && renderMat_.cols > 0 && renderMat_.rows > 0) {
                             cv::hconcat(renderMat_, resizeMat, renderMat_);
                         }
@@ -382,7 +383,7 @@ private:
                 else if(renderType_ == RENDER_ONE_COLUMN) {
                     for(auto mat: mats) {
                         cv::Mat resizeMat;
-                        cv::resize(mat, resizeMat, cv::Size(width_, height_ / mats.size()));
+                        cv::resize(mat, resizeMat, cv::Size(static_cast<int>(width_), static_cast<int>(height_ / mats.size())));
                         if(renderMat_.dims > 0 && renderMat_.cols > 0 && renderMat_.rows > 0) {
                             cv::vconcat(renderMat_, resizeMat, renderMat_);
                         }
@@ -393,13 +394,13 @@ private:
                     cv::imshow(name_, renderMat_);
                 }
                 else if(renderType_ == RENDER_GRID) {
-                    int count = mats.size();
+                    int count = static_cast<int>(mats.size());
                     if(count == 0) {
                         std::cerr << "Error: No input images." << std::endl;
                         return;  // No input images
                     }
 
-                    int idealSide = std::sqrt(count);
+                    int idealSide = static_cast<int> (std::sqrt(count));
                     int rows      = idealSide;
                     int cols      = idealSide;
                     while(rows * cols < count) {  // find the best row and column count

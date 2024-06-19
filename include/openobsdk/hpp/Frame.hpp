@@ -271,10 +271,7 @@ public:
         ob_error *error   = nullptr;
         auto      profile = ob_frame_get_stream_profile(impl_, &error);
         Error::handle(&error);
-
-        // TODO： Implement this function
-        throw std::runtime_error("not implemented");
-        return nullptr;
+        return std::make_shared<StreamProfile>(profile);
     }
 
     /**
@@ -286,10 +283,9 @@ public:
         ob_error *error  = nullptr;
         auto      sensor = ob_frame_get_sensor(impl_, &error);
         Error::handle(&error);
-
-        // TODO： Implement this function
-        throw std::runtime_error("not implemented");
-        return nullptr;
+        
+        return std::make_shared<Sensor>(sensor);
+       
     }
 
     /**
@@ -302,9 +298,7 @@ public:
         auto      device = ob_frame_get_device(impl_, &error);
         Error::handle(&error);
 
-        // TODO： Implement this function
-        throw std::runtime_error("not implemented");
-        return nullptr;
+        return std::make_shared<Device>(device);
     }
 
     /**
@@ -330,7 +324,7 @@ public:
      * @tparam T The given type.
      * @return bool The result.
      */
-    template <typename T> bool is();
+    template <typename T> bool is() const;
 
     /**
      * @brief Convert the frame object to a target type.
@@ -654,7 +648,7 @@ class FrameSet : public Frame {
 public:
     explicit FrameSet(const ob_frame *impl) : Frame(impl){};
 
-    ~FrameSet() noexcept override;
+    ~FrameSet() noexcept override = default;
 
     /**
      * @brief Get the number of frames in the FrameSet
@@ -846,7 +840,7 @@ private:
 };
 
 // Define the is() template function for the Frame class
-template <typename T> bool Frame::is() {
+template <typename T> bool Frame::is() const {
     switch(this->getType()) {
     case OB_FRAME_IR_LEFT:   // Follow
     case OB_FRAME_IR_RIGHT:  // Follow

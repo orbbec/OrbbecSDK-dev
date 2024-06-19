@@ -11,7 +11,7 @@ target_link_libraries(${PROJECT_NAME} ob::openobsdk ob::examples::common)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Examples")
 
-if(OpenCV_FOUND)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCV_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
-endif()
+set(OpenCV_DIR "${CMAKE_SOURCE_DIR}/3rdparty/OpenCV420/Windows")
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})

@@ -571,6 +571,7 @@ typedef enum {
  * @brief Enumeration of IMU sample rate values (gyroscope or accelerometer)
  */
 typedef enum {
+    OB_SAMPLE_RATE_UNKNOWN   = 0,
     OB_SAMPLE_RATE_1_5625_HZ = 1, /**< 1.5625Hz */
     OB_SAMPLE_RATE_3_125_HZ,      /**< 3.125Hz */
     OB_SAMPLE_RATE_6_25_HZ,       /**< 6.25Hz */

@@ -2,7 +2,7 @@
 
 #include "window.hpp"
 
-int main(int argc, char **argv) try {
+int main(void) try {
 
     // Create a pipeline with default device.
     ob::Pipeline pipe;
@@ -38,6 +38,8 @@ int main(int argc, char **argv) try {
             // attention: if the distance is 0, it means that the depth camera cannot detect the object (may be out of detection range).
             std::cout << "Facing an object " << centerDistance << " mm away. " << std::endl;
         }
+        // auto aa = std::dynamic_pointer_cast<const 
+        // >(depthFrame);
 
         // Render frame in the window
         app.addToRender(depthFrame);
@@ -49,6 +51,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

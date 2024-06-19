@@ -20,6 +20,7 @@
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
 #include "G330TimestampCalculator.hpp"
+#include "filter/public_filters/FrameIMUCorrectProcess.hpp"
 
 #include <algorithm>
 
@@ -55,7 +56,7 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
         return std::move(propAccessor);
     });
     algParamManager_       = std::make_shared<G330AlgParamManager>(deviceInfo_, propertyAccessorGetter);
-    // globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>(propertyAccessorGetter);
+    globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>(propertyAccessorGetter);
 
     auto iter = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo_->pid_);
     if(iter != gG330LPids.end()) {
@@ -319,6 +320,9 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
         std::shared_ptr<MotionStreamer> motionStreamer     = nullptr;
         auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
         if(imuCorrecterFilter) {
+            //TODO change set param way
+            auto imuCorrectionParams = algParamManager_->getIMUCalibrationParam();
+            std::dynamic_pointer_cast<IMUCorrecter>(imuCorrecterFilter)->setIMUCalibrationParam(imuCorrectionParams);
             motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, imuCorrecterFilter);  // todo: add data phaser
         }
 

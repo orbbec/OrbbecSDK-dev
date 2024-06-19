@@ -98,7 +98,13 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
     if(tablesData_ == nullptr) {
         uint32_t tablesSize = w * h * 2;
         tablesData_         = std::shared_ptr<float>(new float[tablesSize], std::default_delete<float[]>());
-        if(!CoordinateUtil::transformationInitXYTables(cameraParam_, OB_SENSOR_DEPTH, reinterpret_cast<float *>(tablesData_.get()), &tablesSize, &xyTables_)) {
+
+        OBCameraIntrinsic  depthIntrinsic;
+        OBCameraDistortion depthDisto;      
+        memcpy(&depthIntrinsic, &cameraParam_.depthIntrinsic, sizeof(OBCameraIntrinsic));
+        memcpy(&depthDisto, &cameraParam_.depthDistortion, sizeof(OBCameraDistortion));
+        if(!CoordinateUtil::transformationInitXYTables(depthIntrinsic, depthDisto, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
+                                                       &xyTables_)) {
             LOG_ERROR_INTVL("Init transformation coordinate tables failed!");
             tablesData_.reset();
             return nullptr;
@@ -238,23 +244,33 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
         tablesData_         = std::shared_ptr<float>(new float[tablesSize], std::default_delete<float[]>());
         // TODO: need to get cameraParam
         if(distortionType_ == OBPointcloudDistortionType::OB_POINTCLOUD_UN_DISTORTION_TYPE) {
-            if(!CoordinateUtil::transformationInitXYTables(cameraParam_, OB_SENSOR_COLOR, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
+            OBCameraIntrinsic rgbIntrinsic; //TODO
+            OBCameraDistortion rgbDisto;    //TODO
+            memcpy(&rgbIntrinsic, &cameraParam_.rgbIntrinsic, sizeof(OBCameraIntrinsic));
+            memcpy(&rgbDisto, &cameraParam_.rgbDistortion, sizeof(OBCameraDistortion));
+            if(!CoordinateUtil::transformationInitXYTables(rgbIntrinsic, rgbDisto, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
                                                            &xyTables_)) {
                 LOG_ERROR_INTVL("Init transformation coordinate tables failed!");
                 return nullptr;
             }
         }
         else if(distortionType_ == OBPointcloudDistortionType::OB_POINTCLOUD_ADD_DISTORTION_TYPE) {
-            if(!CoordinateUtil::transformationInitAddDistortionUVTables(cameraParam_, reinterpret_cast<float *>(tablesData_.get()), &tablesSize, &xyTables_)) {
+            OBCameraIntrinsic  rgbIntrinsic;  // TODO
+            OBCameraDistortion rgbDisto;      // TODO
+            memcpy(&rgbIntrinsic, &cameraParam_.rgbIntrinsic, sizeof(OBCameraIntrinsic));
+            memcpy(&rgbDisto, &cameraParam_.rgbDistortion, sizeof(OBCameraDistortion));
+            if(!CoordinateUtil::transformationInitAddDistortionUVTables(rgbIntrinsic, rgbDisto, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
+                                                                        &xyTables_)) {
                 LOG_ERROR_INTVL("Init add distortion transformation coordinate tables failed!");
                 return nullptr;
             }
         }
         else if(distortionType_ == OBPointcloudDistortionType::OB_POINTCLOUD_ZERO_DISTORTION_TYPE) {
-            OBCameraParam cameraParam = cameraParam_;
-            memset(&cameraParam.depthDistortion, 0, sizeof(OBCameraDistortion));
-            memset(&cameraParam.rgbDistortion, 0, sizeof(OBCameraDistortion));
-            if(!CoordinateUtil::transformationInitXYTables(cameraParam, OB_SENSOR_COLOR, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
+            OBCameraIntrinsic  rgbIntrinsic;  // TODO
+            OBCameraDistortion rgbDisto;      
+            memcpy(&rgbIntrinsic, &cameraParam_.rgbIntrinsic, sizeof(OBCameraIntrinsic));
+            memset(&rgbDisto, 0, sizeof(OBCameraDistortion));
+            if(!CoordinateUtil::transformationInitXYTables(rgbIntrinsic, rgbDisto, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
                                                            &xyTables_)) {
                 LOG_ERROR_INTVL("Init transformation coordinate tables failed!");
                 return nullptr;

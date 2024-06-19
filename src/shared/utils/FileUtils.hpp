@@ -13,5 +13,7 @@ void forEachFileInDirectory(const std::string &directory, const std::function<vo
 void forEachSubDirInDirectory(const std::string &directory, const std::function<void(const std::string &)> &callback);
 std::string removeExtensionOfFileName(const std::string &fileName);
 
+std::string makeRealPath(const std::string &path);
+
 }  // namespace utils
 }  // namespace libobsensor

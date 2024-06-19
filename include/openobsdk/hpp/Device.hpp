@@ -867,6 +867,22 @@ public:
     }
 
     /**
+     * @brief Get the name of the device at the specified index in the device list.
+     *
+     * This function retrieves the name of the device at the given index in the device list.
+     * If an error occurs during the operation, it will be handled by the Error::handle function.
+     *
+     * @param index The index of the device in the device list.
+     * @return const char* The name of the device at the specified index.
+     */
+    const char *name(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      name  = ob_device_list_get_device_name(impl_, index, &error);
+        Error::handle(&error);
+        return name;
+    }
+
+    /**
      * @brief Get device connection type
      *
      * @param index device index

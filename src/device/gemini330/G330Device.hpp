@@ -3,6 +3,7 @@
 #include "IDeviceEnumerator.hpp"
 
 #include "timestamp/GlobalTimestampFitter.hpp"
+#include "frameprocessor/FrameProcessor.hpp"
 
 #include <map>
 #include <memory>
@@ -61,6 +62,8 @@ private:
     std::recursive_timed_mutex componentLock_;
 
     std::vector<std::shared_ptr<IFilter>> filters_;
+
+    std::shared_ptr<FrameProcessorFactory> frameProcessorFactory_ = nullptr;
 };
 /* #endregion ------------G330Device declare end---------------- */
 

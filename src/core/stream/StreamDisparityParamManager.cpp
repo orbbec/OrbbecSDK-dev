@@ -23,7 +23,7 @@ void StreamDisparityParamManager::registerDisparityProcessParam(std::shared_ptr<
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
-    if(!profile->is<const DisparityStreamProfile>()) {
+    if(!profile->is<const StructuredLightStreamProfile>()) {
         throw invalid_value_exception("Input stream profile is not a disparity stream profile.");
     }
     std::lock_guard<std::mutex> lock(mutex_);
@@ -44,7 +44,7 @@ OBDisparityProcessParam StreamDisparityParamManager::getVideoStreamDisparityPara
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
     }
-    if(!profile->is<const DisparityStreamProfile>()) {
+    if(!profile->is<const StructuredLightStreamProfile>()) {
         throw invalid_value_exception("Input stream profile is not a disparity stream profile.");
     }
 

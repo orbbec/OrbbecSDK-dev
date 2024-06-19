@@ -25,7 +25,7 @@ public:
     static std::shared_ptr<Context> getInstance(const std::string &configPath = "");
     static bool                     hasInstance();
 
-    std::shared_ptr<DeviceManager>   getDeviceManager() const;
+    std::shared_ptr<DeviceManager>   getDeviceManager();
     std::shared_ptr<Logger>          getLogger() const;
     std::shared_ptr<FrameMemoryPool> getFrameMemoryPool() const;
 

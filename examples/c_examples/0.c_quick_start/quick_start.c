@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include <openobsdk/ObSensor.h>
-
+#include <stdio.h>
 #include "utils.hpp"
 #define ESC 27
 
@@ -43,8 +43,11 @@ int main(void) {
 
     // Main loop
     while(true) {  // Wait in a loop, and exit after the window receives the "ESC_KEY" key
-        // Wait for up to 1000ms for a frameset in blocking mode.
-        ob_frame *frameset = ob_pipeline_wait_for_frameset(pipe, 1000, &error);
+        if(_kbhit() && _getch() == ESC) {
+            break;
+        }
+        // Wait for up to 100ms for a frameset in blocking mode.
+        ob_frame *frameset = ob_pipeline_wait_for_frameset(pipe, 100, &error);
         check_ob_error(&error);
 
         if(frameset != NULL) {

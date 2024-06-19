@@ -1,7 +1,7 @@
 #include "window.hpp"
 
-#include "openobsdk/hpp/Pipeline.hpp"
-#include "openobsdk/hpp/Error.hpp"
+#include <openobsdk/ObSensor.h>
+
 #include <mutex>
 #include <thread>
 

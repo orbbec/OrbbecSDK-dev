@@ -1,6 +1,7 @@
+#include <openobsdk/ObSensor.hpp>
+
 #include <iostream>
 #include <mutex>
-#include <openobsdk/ObSensor.hpp>
 #include "utils.hpp"
 
 #define ESC 27

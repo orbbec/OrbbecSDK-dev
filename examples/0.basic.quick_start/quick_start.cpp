@@ -1,6 +1,7 @@
+#include <openobsdk/ObSensor.hpp>
+
 #include "window.hpp"
-#include "openobsdk/hpp/Pipeline.hpp"
-#include "openobsdk/hpp/Error.hpp"
+
 // #include "utils.hpp"
 
 int main(int argc, char **argv) try {

@@ -5,15 +5,19 @@
 namespace libobsensor {
 namespace StreamProfileFactory {
 
-std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFormat frameFormat,OBDeviceType deviceType) {
+std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType) {
+    return createStreamProfile(streamType, OB_FORMAT_ANY);
+}
+
+std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFormat frameFormat) {
     if(streamType == OB_STREAM_UNKNOWN || frameFormat == OB_FORMAT_UNKNOWN) {
         throw invalid_value_exception("Invalid frame type or format");
     }
     switch(streamType) {
     case OB_STREAM_ACCEL:
-        return createAccelStreamProfile(OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
+        return createAccelStreamProfile(OB_ACCEL_FULL_SCALE_RANGE_ANY, OB_ACCEL_SAMPLE_RATE_ANY);
     case OB_STREAM_GYRO:
-        return createGyroStreamProfile(OB_GYRO_FS_16dps, OB_SAMPLE_RATE_1_5625_HZ);
+        return createGyroStreamProfile(OB_GYRO_FULL_SCALE_RANGE_ANY, OB_GYRO_SAMPLE_RATE_ANY);
     case OB_STREAM_VIDEO:
     case OB_STREAM_DEPTH:
     case OB_STREAM_COLOR:
@@ -21,7 +25,8 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFo
     case OB_STREAM_IR_LEFT:
     case OB_STREAM_IR_RIGHT:
     case OB_STREAM_RAW_PHASE:
-        return createVideoStreamProfile(streamType, frameFormat, 0, 0, 0,deviceType);
+    case OB_STREAM_DISPARITY:
+        return createVideoStreamProfile(streamType, frameFormat, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
 
     default:
         throw invalid_value_exception("Invalid stream type");

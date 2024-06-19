@@ -1,8 +1,8 @@
+#include <openobsdk/ObSensor.h>
+
 #include "window.hpp"
 
 #include <iostream>
-#include "openobsdk/hpp/Pipeline.hpp"
-#include "openobsdk/hpp/Error.hpp"
 
 int main(int argc, char **argv) try {
     // Create a pipeline with default device.

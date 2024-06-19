@@ -138,9 +138,9 @@ debian/
 *.pch
 
 # Compiled Dynamic libraries
-*.so
-*.Dylib
-*.dll
+# *.so
+# *.Dylib
+# *.dll
 
 # Fortran module files
 *.mod
@@ -150,7 +150,7 @@ debian/
 *.lai
 *.la
 *.a
-*.lib
+# *.lib
 
 # Executables
 *.exe
@@ -261,7 +261,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/

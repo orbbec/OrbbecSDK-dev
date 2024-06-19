@@ -159,13 +159,27 @@ OB_EXPORT ob_config *ob_create_config(ob_error **error);
 OB_EXPORT void ob_delete_config(ob_config *config, ob_error **error);
 
 /**
- * @brief Enable the specified stream in the pipeline configuration
+ * @brief Enable a stream accroding to the stream profile
  *
  * @param[in] config The pipeline configuration
- * @param[in] profile The stream configuration to be enabled
+ * @param[in] profile The stream profile to be enabled
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-OB_EXPORT void ob_config_enable_stream(ob_config *config, ob_stream_profile *profile, ob_error **error);
+OB_EXPORT void ob_config_enable_stream_with_stream_profile(ob_config *config, ob_stream_profile *profile, ob_error **error);
+
+/**
+ * @brief Enable a stream with default profile
+ *
+ * @param[in] config The pipeline configuration
+ * @param[in] stream_type The type of the stream to be enabled
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_config_enable_stream(ob_config *config, ob_stream_type stream_type, ob_error **error);
+
+
+OB_EXPORT void ob_config_enable_video_stream(ob_config *config, ob_stream_type stream_type, uint32_t width,  uint32_t height,  uint32_t fps,  ob_format format, ob_error **error);
+OB_EXPORT void ob_config_enable_accel_stream(ob_config *config, ob_accel_full_scale_range full_scale_range, ob_accel_sample_rate sample_rate, ob_error **error);
+OB_EXPORT void ob_config_enable_gyro_stream(ob_config *config, ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate, ob_error **error);
 
 /**
  * @brief  Get the enabled stream profile list in the pipeline configuration

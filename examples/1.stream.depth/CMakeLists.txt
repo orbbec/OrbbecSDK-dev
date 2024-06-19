@@ -8,7 +8,6 @@ add_executable(${PROJECT_NAME} depth.cpp)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
 target_link_libraries(${PROJECT_NAME} ob::openobsdk ob::examples::common opencv::opencv)
-# message("**********OPENCV_INCLUDE_DIRS : ${OPENCV_INCLUDE_DIRS}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/OpenCV430/lib/Windows/include/)
 

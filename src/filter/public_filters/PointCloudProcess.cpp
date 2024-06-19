@@ -284,7 +284,9 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
                                                             coordinateSystemType_, isColorDataNormalization_);
     }
     else if(distortionType_ == OBPointcloudDistortionType::OB_POINTCLOUD_ADD_DISTORTION_TYPE) {
-        CoordinateUtil::transformationDepthToRGBDPointCloudByUVTables(cameraParam_, &xyTables_, depthFrame->getData(), colorData, (void *)pointFrame->getData(),
+        OBCameraIntrinsic  rgbIntrinsic;  // TODO
+        memcpy(&rgbIntrinsic, &cameraParam_.rgbIntrinsic, sizeof(OBCameraIntrinsic));
+        CoordinateUtil::transformationDepthToRGBDPointCloudByUVTables(rgbIntrinsic, &xyTables_, depthFrame->getData(), colorData, (void *)pointFrame->getData(),
                                                                       positionDataScale_, coordinateSystemType_, isColorDataNormalization_);
     }
 

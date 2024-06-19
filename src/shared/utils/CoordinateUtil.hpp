@@ -49,7 +49,7 @@ public:
                                                     float positionDataScale = 1.0f, OBCoordinateSystemType type = OB_RIGHT_HAND_COORDINATE_SYSTEM,
                                                     bool colorDataNormalization = false);
 
-    static void transformationDepthToRGBDPointCloudByUVTables(const OBCameraParam cameraParam, OBXYTables *uvTables, const void *depthImageData,
+    static void transformationDepthToRGBDPointCloudByUVTables(const OBCameraIntrinsic rgbIntrinsic, OBXYTables *uvTables, const void *depthImageData,
                                                               const void *colorImageData, void *pointCloudData, float positionDataScale = 1.0f,
                                                               OBCoordinateSystemType type                   = OB_RIGHT_HAND_COORDINATE_SYSTEM,
                                                               bool                   colorDataNormalization = false);

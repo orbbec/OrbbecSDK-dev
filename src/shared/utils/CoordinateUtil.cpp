@@ -47,41 +47,44 @@ static bool undistortIterativeUnproject(const OBCameraIntrinsic intrinsic, const
     double bestErr = 99999;
     int valid          = 1;
 
-    for(int i = 0; i < 20; i++) {
-        // Iterate to remove distortion
-        r2     = x * x + y * y;
-        r4     = r2 * r2;
-        r6     = r4 * r2;
-        kr_inv = (1 + disto.k4 * r2 + disto.k5 * r4 + disto.k6 * r6) / (1 + disto.k1 * r2 + disto.k2 * r4 + disto.k3 * r6);
-        dx     = disto.p1 * 2 * x * y + disto.p2 * (r2 + 2 * x * x);
-        dy     = disto.p2 * 2 * x * y + disto.p1 * (r2 + 2 * y * y);
-        x      = (xd - dx) * kr_inv;
-        y      = (yd - dy) * kr_inv;
+    if(disto.distoMode == OB_DISTORTION_BROWN_CONRADY) {
 
-        // Add distortion to distortion-free points,
-        // double a1, a2, a3, cdist, icdist2;
-        double a1, a2, a3, cdist;
-        double xd0, yd0;
-        r2            = x * x + y * y;
-        r4            = r2 * r2;
-        r6            = r4 * r2;
-        a1            = 2 * x * y;
-        a2            = r2 + 2 * x * x;
-        a3            = r2 + 2 * y * y;
-        cdist         = (1 + disto.k1 * r2 + disto.k2 * r4 + disto.k3 * r6) / (1 + disto.k4 * r2 + disto.k5 * r4 + disto.k6 * r6);
-        xd0           = x * cdist + disto.p1 * a1 + disto.p2 * a2;
-        yd0           = y * cdist + disto.p1 * a3 + disto.p2 * a1;
-        double x_proj = xd0 * intrinsic.fx + intrinsic.cx;
-        double y_proj = yd0 * intrinsic.fy + intrinsic.cy;
-        double error  = sqrt(pow(x_proj - pixel.x, 2) + pow(y_proj - pixel.y, 2));
+        for(int i = 0; i < 20; i++) {
+            // Iterate to remove distortion
+            r2     = x * x + y * y;
+            r4     = r2 * r2;
+            r6     = r4 * r2;
+            kr_inv = (1 + disto.k4 * r2 + disto.k5 * r4 + disto.k6 * r6) / (1 + disto.k1 * r2 + disto.k2 * r4 + disto.k3 * r6);
+            dx     = disto.p1 * 2 * x * y + disto.p2 * (r2 + 2 * x * x);
+            dy     = disto.p2 * 2 * x * y + disto.p1 * (r2 + 2 * y * y);
+            x      = (xd - dx) * kr_inv;
+            y      = (yd - dy) * kr_inv;
 
-        if(error > bestErr)
-            break;
+            // Add distortion to distortion-free points,
+            // double a1, a2, a3, cdist, icdist2;
+            double a1, a2, a3, cdist;
+            double xd0, yd0;
+            r2            = x * x + y * y;
+            r4            = r2 * r2;
+            r6            = r4 * r2;
+            a1            = 2 * x * y;
+            a2            = r2 + 2 * x * x;
+            a3            = r2 + 2 * y * y;
+            cdist         = (1 + disto.k1 * r2 + disto.k2 * r4 + disto.k3 * r6) / (1 + disto.k4 * r2 + disto.k5 * r4 + disto.k6 * r6);
+            xd0           = x * cdist + disto.p1 * a1 + disto.p2 * a2;
+            yd0           = y * cdist + disto.p1 * a3 + disto.p2 * a1;
+            double x_proj = xd0 * intrinsic.fx + intrinsic.cx;
+            double y_proj = yd0 * intrinsic.fy + intrinsic.cy;
+            double error  = sqrt(pow(x_proj - pixel.x, 2) + pow(y_proj - pixel.y, 2));
 
-        bestErr = error;
+            if(error > bestErr)
+                break;
 
-        if(error < 0.01) {
-            break;
+            bestErr = error;
+
+            if(error < 0.01) {
+                break;
+            }
         }
     }
 
@@ -148,18 +151,19 @@ static void project3dPointToPixelWithDistortion(const OBCameraIntrinsic intrinsi
     double xd = x, yd = y;
     //if k1 >0, we need to take image distortion into accout when projecting onto an image
     if(fabsf(distortion.k1) > EPS || fabsf(distortion.k2) > EPS) {
-
-        double a1, a2, a3, cdist;        
-        double r2, r4, r6;
-        r2           = x * x + y * y;
-        r4           = r2 * r2;
-        r6           = r4 * r2;
-        a1           = 2 * x * y;
-        a2           = r2 + 2 * x * x;
-        a3           = r2 + 2 * y * y;
-        cdist        = (1 + distortion.k1 * r2 + distortion.k2 * r4 + distortion.k3 * r6) / (1 + distortion.k4 * r2 + distortion.k5 * r4 + distortion.k6 * r6);
-        xd           = x * cdist + distortion.p1 * a1 + distortion.p2 * a2;
-        yd           = y * cdist + distortion.p1 * a3 + distortion.p2 * a1;      
+        if(distortion.distoMode == OB_DISTORTION_BROWN_CONRADY){
+            double a1, a2, a3, cdist;
+            double r2, r4, r6;
+            r2    = x * x + y * y;
+            r4    = r2 * r2;
+            r6    = r4 * r2;
+            a1    = 2 * x * y;
+            a2    = r2 + 2 * x * x;
+            a3    = r2 + 2 * y * y;
+            cdist = (1 + distortion.k1 * r2 + distortion.k2 * r4 + distortion.k3 * r6) / (1 + distortion.k4 * r2 + distortion.k5 * r4 + distortion.k6 * r6);
+            xd    = x * cdist + distortion.p1 * a1 + distortion.p2 * a2;
+            yd    = y * cdist + distortion.p1 * a3 + distortion.p2 * a1;   
+        }
     }
 
     pixel->x = (float)xd * intrinsic.fx + intrinsic.cx;
@@ -277,8 +281,7 @@ bool CoordinateUtil::transformation2dTo3d(const OBCameraIntrinsic sourceIntrinsi
 bool CoordinateUtil::transformation3dTo2d(const OBPoint3f sourcePoint3f, const OBCameraIntrinsic targetIntrinsic, const OBCameraDistortion targetDistortion,
                                           OBD2CTransform transSourceToTarget, OBPoint2f *targetPoint2f) {
     
-
-    // step1: Convert the 3D point under the source to the target camera coordinates
+    // step 1: Convert the 3D point under the source to the target camera coordinates
     OBPoint3f targetPoint3f;
     bool ret = transformation3dTo3d(sourcePoint3f, transSourceToTarget, &targetPoint3f);
     if(!ret) {
@@ -526,20 +529,24 @@ bool CoordinateUtil::transformationInitAddDistortionUVTables(const OBCameraIntri
             for(int col = 0; col < width; col++, idx++) {
                 double x = ((double)col - intrinsic.cx) / intrinsic.fx;
 
-                // Add distortion, only supports Brown model, k2, k3, k6 model, KB is not supported
-                // double a1, a2, a3, cdist, icdist2;
-                double a1, a2, a3, cdist;
-                double xd, yd;
-                double r2, r4, r6;
-                r2           = x * x + y * y;
-                r4           = r2 * r2;
-                r6           = r4 * r2;
-                a1           = 2 * x * y;
-                a2           = r2 + 2 * x * x;
-                a3           = r2 + 2 * y * y;
-                cdist = (1 + distortion.k1 * r2 + distortion.k2 * r4 + distortion.k3 * r6) / (1 + distortion.k4 * r2 + distortion.k5 * r4 + distortion.k6 * r6);
-                xd    = x * cdist + distortion.p1 * a1 + distortion.p2 * a2;
-                yd    = y * cdist + distortion.p1 * a3 + distortion.p2 * a1;
+                double xd = x, yd = y;
+                if(distortion.distoMode == OB_DISTORTION_BROWN_CONRADY) {
+                     // Add distortion, only supports Brown model, k2, k3, k6 model, KB is not supported
+                     // double a1, a2, a3, cdist, icdist2;
+                     double a1, a2, a3, cdist;
+                     double r2, r4, r6;
+                     r2    = x * x + y * y;
+                     r4    = r2 * r2;
+                     r6    = r4 * r2;
+                     a1    = 2 * x * y;
+                     a2    = r2 + 2 * x * x;
+                     a3    = r2 + 2 * y * y;
+                     cdist = (1 + distortion.k1 * r2 + distortion.k2 * r4 + distortion.k3 * r6)
+                             / (1 + distortion.k4 * r2 + distortion.k5 * r4 + distortion.k6 * r6);
+                     xd = x * cdist + distortion.p1 * a1 + distortion.p2 * a2;
+                     yd = y * cdist + distortion.p1 * a3 + distortion.p2 * a1;
+                }
+                
                 float x_proj = (float)xd * intrinsic.fx + intrinsic.cx;
                 float y_proj = (float)yd * intrinsic.fy + intrinsic.cy;
 
@@ -640,7 +647,7 @@ void CoordinateUtil::transformationDepthToRGBDPointCloud(OBXYTables *xyTables, c
     }
 }
 
-void CoordinateUtil::transformationDepthToRGBDPointCloudByUVTables(const OBCameraParam cameraParam, OBXYTables *uvTables, const void *depthImageData,
+void CoordinateUtil::transformationDepthToRGBDPointCloudByUVTables(const OBCameraIntrinsic rgbIntrinsic, OBXYTables *uvTables, const void *depthImageData,
                                                                    const void *colorImageData, void *pointCloudData, float positionDataScale,
                                                                    OBCoordinateSystemType type, bool colorDataNormalization) {
     const uint16_t *dImageData = (const uint16_t *)depthImageData;
@@ -651,7 +658,6 @@ void CoordinateUtil::transformationDepthToRGBDPointCloudByUVTables(const OBCamer
     int             coordinateSystemCoefficient = type == OB_LEFT_HAND_COORDINATE_SYSTEM ? -1 : 1;
     float           colorDivCoeff               = colorDataNormalization ? 255.0f : 1.0f;
 
-    OBCameraIntrinsic rgbIntrinsic = cameraParam.rgbIntrinsic;
     for(int i = 0; i < uvTables->width * uvTables->height; i++) {
         // int u_tab = (int)uvTables->xTable[i];
         // int v_tab = (int)uvTables->yTable[i];

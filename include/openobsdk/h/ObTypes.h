@@ -393,6 +393,15 @@ typedef struct {
     double tempSlope[9];          ///< linear temperature drift coefficient
 } OBGyroIntrinsic, ob_gyro_intrinsic;
 
+/** \brief Distortion model: defines how pixel coordinates should be mapped to sensor coordinates. */
+typedef enum {
+    OB_DISTORTION_NONE,                   /**< Rectilinear images. No distortion compensation required. */
+    OB_DISTORTION_MODIFIED_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except that tangential distortion is applied to radially distorted points
+                                           */
+    OB_DISTORTION_INVERSE_BROWN_CONRADY,  /**< Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it */
+    OB_DISTORTION_BROWN_CONRADY,          /**< Unmodified Brown-Conrady distortion model */
+} OBCameraDistortionModel, ob_camera_distortion_model;
+
 /**
  * @brief Structure for distortion parameters
  */
@@ -405,17 +414,8 @@ typedef struct {
     float k6;  ///< Radial distortion factor 6
     float p1;  ///< Tangential distortion factor 1
     float p2;  ///< Tangential distortion factor 2
+    ob_camera_distortion_model distoMode;
 } OBCameraDistortion, ob_camera_distortion;
-
-/** \brief Distortion model: defines how pixel coordinates should be mapped to sensor coordinates. */
-typedef enum {
-    OB_DISTORTION_NONE,                   /**< Rectilinear images. No distortion compensation required. */
-    OB_DISTORTION_MODIFIED_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except that tangential distortion is applied to radially distorted points
-                                           */
-    OB_DISTORTION_INVERSE_BROWN_CONRADY,  /**< Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it */
-    OB_DISTORTION_BROWN_CONRADY,          /**< Unmodified Brown-Conrady distortion model */
-} OBCameraDistortionModel,
-    ob_camera_distortion_model;
 
 /** \brief Video stream intrinsics. */
 typedef struct {

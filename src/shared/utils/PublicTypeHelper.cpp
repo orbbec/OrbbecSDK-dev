@@ -110,8 +110,6 @@ OBFrameType mapStreamTypeToFrameType(OBStreamType type) {
         return OB_FRAME_IR_RIGHT;
     case OB_STREAM_RAW_PHASE:
         return OB_FRAME_RAW_PHASE;
-    case OB_STREAM_DISPARITY:
-        return OB_FRAME_DISPARITY;
     default:
         break;
     }
@@ -138,8 +136,6 @@ OBStreamType mapFrameTypeToStreamType(OBFrameType type) {
         return OB_STREAM_IR_RIGHT;
     case OB_FRAME_RAW_PHASE:
         return OB_STREAM_RAW_PHASE;
-    case OB_FRAME_DISPARITY:
-        return OB_STREAM_DISPARITY;
     default:
         break;
     }

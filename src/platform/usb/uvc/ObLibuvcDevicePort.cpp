@@ -348,8 +348,8 @@ bool ObLibuvcDevicePort::recvData(uint8_t *data, uint32_t *dataLen) {
     return getXu(ctrl, data, dataLen);
 }
 
-StreamProfileListUnsafe ObLibuvcDevicePort::getStreamProfileList() {
-    StreamProfileListUnsafe results;
+StreamProfileList ObLibuvcDevicePort::getStreamProfileList() {
+    StreamProfileList results;
 
     auto uvcProfiles = queryAvailableUvcProfile();
     for(auto &&pf: uvcProfiles) {

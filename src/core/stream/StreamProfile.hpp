@@ -11,7 +11,6 @@ namespace libobsensor {
 class Logger;
 class StreamIntrinsicsManager;
 class StreamExtrinsicsManager;
-class StreamDisparityParamManager;
 
 class StreamProfileBackendLifeSpan {
 public:
@@ -22,7 +21,6 @@ private:
     std::shared_ptr<Logger>                      logger_;
     std::shared_ptr<StreamIntrinsicsManager>     intrinsicsManager_;
     std::shared_ptr<StreamExtrinsicsManager>     extrinsicsManager_;
-    std::shared_ptr<StreamDisparityParamManager> disparityParamManager_;
 };
 
 class StreamProfile : public std::enable_shared_from_this<StreamProfile>, private StreamProfileBackendLifeSpan {
@@ -46,7 +44,7 @@ public:
     void        bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile);
 
     virtual std::shared_ptr<StreamProfile> clone() const = 0;
-    virtual std::shared_ptr<StreamProfile> clone(OBFormat newFromat) const;
+    virtual std::shared_ptr<StreamProfile> clone(OBFormat newFormat) const;
 
     template <typename T> bool               is() const {
         return std::dynamic_pointer_cast<const T>(shared_from_this()) != nullptr;
@@ -57,15 +55,17 @@ public:
     }
 
     template <typename T> std::shared_ptr<T> as() {
-        if(!is<T>())
+        if(!is<T>()) {
             throw unsupported_operation_exception("unsupported operation, object's type is not require type");
+        }
 
         return std::dynamic_pointer_cast<T>(shared_from_this());
     }
 
     template <typename T> std::shared_ptr<const T> as() const {
-        if(!is<const T>())
+        if(!is<const T>()) {
             throw unsupported_operation_exception("unsupported operation, object's type is not require type");
+        }
 
         return std::dynamic_pointer_cast<const T>(shared_from_this());
     }
@@ -120,13 +120,16 @@ protected:
     uint32_t fps_;
 };
 
-class StructuredLightStreamProfile : public VideoStreamProfile {
+class DisparityBasedStreamProfile : public VideoStreamProfile {
 public:
-    StructuredLightStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
-    ~StructuredLightStreamProfile() noexcept override = default;
+    DisparityBasedStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
+    DisparityBasedStreamProfile(std::shared_ptr<const VideoStreamProfile> other);
+    ~DisparityBasedStreamProfile() noexcept override = default;
 
-    OBDisparityProcessParam getDisparityProcessParam() const;
-    void                    bindDisparityProcessParam(const OBDisparityProcessParam &param);
+    OBDisparityParam getDisparityParam() const;
+    void             bindDisparityParam(const OBDisparityParam &param);
+
+    std::shared_ptr<StreamProfile> clone() const override;
 };
 
 class AccelStreamProfile : public StreamProfile {

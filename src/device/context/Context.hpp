@@ -9,7 +9,6 @@
 #include "frame/FrameMemoryPool.hpp"
 #include "stream/StreamIntrinsicsManager.hpp"
 #include "stream/StreamExtrinsicsManager.hpp"
-#include "stream/StreamDisparityParamManager.hpp"
 
 namespace libobsensor {
 class Context {
@@ -35,7 +34,6 @@ private:
     std::shared_ptr<FrameMemoryPool> frameMemoryPool_;
     std::shared_ptr<StreamIntrinsicsManager>     streamIntrinsicsManager_;
     std::shared_ptr<StreamExtrinsicsManager>     streamExtrinsicsManager_;
-    std::shared_ptr<StreamDisparityParamManager> streamDisparityParamManager_;
 };
 }  // namespace libobsensor
 

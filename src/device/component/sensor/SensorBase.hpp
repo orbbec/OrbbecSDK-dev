@@ -47,7 +47,7 @@ protected:
     std::weak_ptr<IDevice>       owner_;
     std::shared_ptr<ISourcePort> backend_;
 
-    StreamProfileListUnsafe streamProfileList_;
+    StreamProfileList streamProfileList_;
 
     std::shared_ptr<const StreamProfile> activatedStreamProfile_;
     FrameCallback                        frameCallback_;

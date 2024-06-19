@@ -29,7 +29,6 @@ Context::Context(const std::string &configFilePath) {
     frameMemoryPool_ = FrameMemoryPool::getInstance();
     streamIntrinsicsManager_     = StreamIntrinsicsManager::getInstance();
     streamExtrinsicsManager_     = StreamExtrinsicsManager::getInstance();
-    streamDisparityParamManager_ = StreamDisparityParamManager::getInstance();
 
     utils::unusedVar(configFilePath);  // todo: use to load config file
 }

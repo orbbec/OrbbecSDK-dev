@@ -166,7 +166,7 @@ Eigen::Vector3d IMUCorrecter::correctGyro(const Eigen::Vector3d& gyroVec, IMUCal
     double bias2 = params->singleIMUParams->gyro.bias[2];
     bias_gyr << Eigen::Vector3d(bias0, bias1, bias2);
     gyrE = M_gyr * (gyroVec - bias_gyr);
-    
+
     return gyrE;
 }
 

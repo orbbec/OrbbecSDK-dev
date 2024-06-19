@@ -2,39 +2,31 @@
 
 #include "IDevice.hpp"
 #include "IProperty.hpp"
+#include "InternalTypes.hpp"
+#include "openobsdk/h/ObTypes.h"
+#include "imu_calibration_params.h"
+
+#include <vector>
+#include <memory>
 
 namespace libobsensor {
 
-
 class G330AlgParamManager {
 public:
-    G330AlgParamManager(const std::shared_ptr<IPropertyAccessor> &propertyAccessor, uint16_t pid);
+    G330AlgParamManager(std::shared_ptr<const DeviceInfo> deviceInfo, DeviceResourceGetter<IPropertyAccessor> &propertyAccessorGetter);
     virtual ~G330AlgParamManager() = default;
 
-    OBCameraIntrinsic  getCameraIntrinsic(std::shared_ptr<const StreamProfile> profile) const override;
-    void               registerCameraIntrinsic(std::shared_ptr<const StreamProfile> profile, const OBCameraIntrinsic &intrinsic) override;
-    OBCameraDistortion getCameraDistortion(std::shared_ptr<const StreamProfile> profile) const override;
-    void               registerCameraDistortion(std::shared_ptr<const StreamProfile> profile, const OBCameraDistortion &distortion) override;
-    OBAccelIntrinsic   getAccelIntrinsic(std::shared_ptr<const StreamProfile> profile) const override;
-    void               registerAccelIntrinsic(std::shared_ptr<const StreamProfile> profile, const OBAccelIntrinsic &intrinsic) override;
-    OBGyroIntrinsic    getGyroIntrinsic(std::shared_ptr<const StreamProfile> profile) const override;
-    void               registerGyroIntrinsic(std::shared_ptr<const StreamProfile> profile, const OBGyroIntrinsic &intrinsic) override;
+    void bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
+    void bindDisparityParam(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
 
-    OBExtrinsic getExtrinsic(std::shared_ptr<const StreamProfile> source, std::shared_ptr<const StreamProfile> target) const override;
-    void registerExtrinsic(std::shared_ptr<const StreamProfile> source, std::shared_ptr<const StreamProfile> target, const OBExtrinsic &extrinsic) override;
-    void registerSameExtrinsic(std::shared_ptr<const StreamProfile> profile, std::shared_ptr<const StreamProfile> target) override;
-    void bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
+    OBDisparityParam getCurrentDisparityProcessParam();                                      // get from device
+    OBDisparityParam getDisparityParam(std::shared_ptr<const StreamProfile> profile) const;  // get from cache
 
-    OBDisparityProcessParam getCurrentDisparityProcessParam();
-    OBDisparityProcessParam getDisparityProcessParam(std::shared_ptr<const StreamProfile> profile) const override;
-    void                    registerDisparityProcessParam(std::shared_ptr<const StreamProfile> profile, const OBDisparityProcessParam &param) override;
-    bool                    isBinocularCamera() const override;
-
-    std::vector<OBD2CProfile> getD2CProfileList() const {
+    const std::vector<OBD2CProfile> &getD2CProfileList() const {
         return fixedD2cProfileList_;
     }
 
-    std::vector<OBCameraParam> getCalibrationCameraParamList() const {
+    const std::vector<OBCameraParam> &getCalibrationCameraParamList() const {
         return fixedCalibrationCameraParamList_;
     }
 
@@ -46,9 +38,12 @@ private:
     void fetchParams();
     void fixD2CParmaList();
     void registerBasicExtrinsics();
+    void bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
+    void bindIntrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
 
 private:
-    uint16_t devicePid_;
+    std::shared_ptr<const DeviceInfo>       deviceInfo_;
+    DeviceResourceGetter<IPropertyAccessor> propertyAccessorGetter_;
 
     // using empty stream profile to initialize and register extrinsic to GlobalStreamExtrinsicsManager
     std::shared_ptr<const StreamProfile> colorEmptyStreamProfile_;
@@ -58,21 +53,12 @@ private:
     std::shared_ptr<const StreamProfile> accelEmptyStreamProfile_;
     std::shared_ptr<const StreamProfile> gyroEmptyStreamProfile_;
 
-    std::shared_ptr<IPropertyAccessor>      devCommand_;
     std::vector<OBDepthCalibrationParam> depthCalibParamList_;
     IMUCalibrateParams                   imuCalibParam_;
-
-    std::vector<OBCameraParam> calibrationCameraParamList_;
-    std::vector<OBD2CProfile>  d2cProfileList_;
-    std::vector<OBCameraParam> fixedCalibrationCameraParamList_;
-    std::vector<OBD2CProfile>  fixedD2cProfileList_;
-
-    std::map<const StreamProfile *, std::pair<std::weak_ptr<const StreamProfile>, OBCameraIntrinsic>>       cameraIntrinsicMap_;
-    std::map<const StreamProfile *, std::pair<std::weak_ptr<const StreamProfile>, OBCameraDistortion>>      cameraDistortionMap_;
-    std::map<const StreamProfile *, std::pair<std::weak_ptr<const StreamProfile>, OBAccelIntrinsic>>        accelIntrinsicMap_;
-    std::map<const StreamProfile *, std::pair<std::weak_ptr<const StreamProfile>, OBGyroIntrinsic>>         gyroIntrinsicMap_;
-    std::map<const StreamProfile *, std::pair<std::weak_ptr<const StreamProfile>, OBDisparityProcessParam>> disparityProcessParamMap_;
+    std::vector<OBCameraParam>           calibrationCameraParamList_;
+    std::vector<OBD2CProfile>            d2cProfileList_;
+    std::vector<OBCameraParam>           fixedCalibrationCameraParamList_;
+    std::vector<OBD2CProfile>            fixedD2cProfileList_;
 };
-
 
 }  // namespace libobsensor

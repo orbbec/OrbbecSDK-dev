@@ -55,7 +55,7 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
         return std::move(propAccessor);
     });
     algParamManager_       = std::make_shared<G330AlgParamManager>(deviceInfo_, propertyAccessorGetter);
-    globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>(propertyAccessorGetter);
+    // globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>(propertyAccessorGetter);
 
     auto iter = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo_->pid_);
     if(iter != gG330LPids.end()) {
@@ -168,8 +168,14 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_STRUCT_DEVICE_TIME, "", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_GYRO_ODR_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_ACCEL_ODR_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_PROP_ACCEL_SWITCH_BOOL, "", "rw", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_PROP_GYRO_SWITCH_BOOL, "", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_GYRO_FULL_SCALE_INT, "", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_ACCEL_FULL_SCALE_INT, "", "rw", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST, "", "rw", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_ODR_LIST, "", "rw", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_IR_BRIGHTNESS_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_DEVICE_USB2_REPEAT_IDENTIFY_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_RAW_DATA_DEVICE_EXTENSION_INFORMATION, "", "r", vendorPropertyPort);

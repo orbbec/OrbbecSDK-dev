@@ -58,6 +58,12 @@ void StreamProfile::bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> tar
     StreamExtrinsicsManager::getInstance()->registerSameExtrinsics(shared_from_this(), targetStreamProfile);
 }
 
+std::shared_ptr<StreamProfile> StreamProfile::clone() const{
+    auto sp = std::make_shared<StreamProfile>(owner_.lock(), type_, format_);
+    sp->bindSameExtrinsicTo(shared_from_this());
+    return sp;
+}
+
 std::shared_ptr<StreamProfile> StreamProfile::clone(OBFormat newFormat) const {
     auto newSp = clone();
     newSp->setFormat(newFormat);
@@ -66,6 +72,11 @@ std::shared_ptr<StreamProfile> StreamProfile::clone(OBFormat newFormat) const {
 
 OBExtrinsic StreamProfile::getExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile) const {
     return StreamExtrinsicsManager::getInstance()->getExtrinsics(shared_from_this(), targetStreamProfile);
+}
+
+std::ostream &StreamProfile::operator<<(std::ostream &os) const {
+    os << "StreamProfile{" << "type: " << type_ << ", format: " << format_ << "}";
+    return os;
 }
 
 VideoStreamProfile::VideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps)
@@ -154,7 +165,7 @@ bool VideoStreamProfile::operator==(const VideoStreamProfile &other) const {
 }
 
 std::ostream &VideoStreamProfile::operator<<(std::ostream &os) const {
-    os << "StreamProfile{" << "type: " << type_ << ", format: " << format_ << ", width: " << width_ << ", height: " << height_ << ", fps: " << fps_ << "}";
+    os << "VideoStreamProfile{" << "type: " << type_ << ", format: " << format_ << ", width: " << width_ << ", height: " << height_ << ", fps: " << fps_ << "}";
     return os;
 }
 
@@ -182,7 +193,7 @@ std::shared_ptr<StreamProfile> AccelStreamProfile::clone() const {
 }
 
 std::ostream &AccelStreamProfile::operator<<(std::ostream &os) const {
-    os << "StreamProfile{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
+    os << "AccelStreamProfile{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
     return os;
 }
 
@@ -213,7 +224,7 @@ std::shared_ptr<StreamProfile> GyroStreamProfile::clone() const {
 }
 
 std::ostream &GyroStreamProfile::operator<<(std::ostream &os) const {
-    os << "StreamProfile{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
+    os << "GyroStreamProfile{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
     return os;
 }
 

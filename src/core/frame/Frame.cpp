@@ -30,6 +30,9 @@ Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferRec
       dataBufSize_(dataBufSize),
       bufferReclaimFunc_(bufferReclaimFunc) {}
 
+Frame::Frame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc) : Frame(data,dataBufSize,OB_FRAME_UNKNOWN,bufferReclaimFunc) {}
+
+
 Frame::~Frame() noexcept {
     if(bufferReclaimFunc_) {
         bufferReclaimFunc_();

@@ -43,7 +43,7 @@ public:
     void        bindExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile, const OBExtrinsic &extrinsic);
     void        bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile);
 
-    virtual std::shared_ptr<StreamProfile> clone() const = 0;
+    virtual std::shared_ptr<StreamProfile> clone() const;
     virtual std::shared_ptr<StreamProfile> clone(OBFormat newFormat) const;
 
     template <typename T> bool               is() const {
@@ -70,7 +70,7 @@ public:
         return std::dynamic_pointer_cast<const T>(shared_from_this());
     }
 
-    virtual std::ostream &operator<<(std::ostream &os) const = 0;
+    virtual std::ostream &operator<<(std::ostream &os) const;
 
 protected:
     std::weak_ptr<LazySensor> owner_;

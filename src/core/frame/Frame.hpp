@@ -44,6 +44,7 @@ using FrameBufferReclaimFunc = std::function<void(void)>;
 class Frame : public std::enable_shared_from_this<Frame>, private FrameBackendLifeSpan {
 public:
     Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
+    Frame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     virtual ~Frame() noexcept;
 
     OBFrameType getType() const;

@@ -10,9 +10,6 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType) {
 }
 
 std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFormat frameFormat) {
-    if(streamType == OB_STREAM_UNKNOWN || frameFormat == OB_FORMAT_UNKNOWN) {
-        throw invalid_value_exception("Invalid frame type or format");
-    }
     switch(streamType) {
     case OB_STREAM_ACCEL:
         return createAccelStreamProfile(OB_ACCEL_FULL_SCALE_RANGE_ANY, OB_ACCEL_SAMPLE_RATE_ANY);
@@ -28,7 +25,7 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFo
         return createVideoStreamProfile(streamType, frameFormat, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
 
     default:
-        throw invalid_value_exception("Invalid stream type");
+        return std::make_shared<StreamProfile>(std::shared_ptr<LazySensor>(), streamType,frameFormat);
     }
 }
 

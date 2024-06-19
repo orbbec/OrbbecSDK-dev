@@ -105,10 +105,11 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
         }
     }
 
-    auto streamProfile    = depthVideoFrame->getStreamProfile();
+    auto streamProfile      = depthVideoFrame->getStreamProfile();
     auto videoStreamProfile = frame->getStreamProfile();
     if(!currentStreamProfile_ || currentStreamProfile_.get() != videoStreamProfile.get()) {
-        tarStreamProfile_ = videoStreamProfile->clone();
+        tarStreamProfile_     = videoStreamProfile->clone();
+        currentStreamProfile_ = videoStreamProfile;
     }
 
     CoordinateUtil::transformationDepthToPointCloud(&xyTables_, depthFrame->getData(), (void *)pointFrame->getData(), positionDataScale_,
@@ -163,7 +164,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     cacheRGBDPointsBufferManagerWidth_  = dstWidth;
     cacheRGBDPointsBufferManagerHeight_ = dstHeight;
 
-    // 申请rgbd点云帧
+    // Create an RGBD point cloud frame
     auto pointFrame = FrameFactory::createFrame(OB_FRAME_POINTS, OB_FORMAT_RGB_POINT, dstWidth * dstHeight * sizeof(OBColorPoint));
     if(pointFrame == nullptr) {
         LOG_WARN_INTVL("Acquire frame from frameBufferManager failed!");
@@ -230,7 +231,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     }
     else {
         LOG_ERROR_INTVL("get rgb data failed!");
-        return FrameFactory::cloneFrame(tarFrame,true);
+        return nullptr;
     }
 
     if(tablesData_ == nullptr) {

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include <openobsdk/ObSensor.h>
-
+#include <stdio.h>
 #include "utils.hpp"
 #define ESC 27
 
@@ -19,8 +19,8 @@ void check_ob_error(ob_error **err) {
     if(*err) {
         const char *error_message = ob_error_get_message(*err);
         fprintf(stderr, "Error: %s\n", error_message);
-        exit(-1);
         ob_delete_error(*err);
+        exit(-1);
     }
     *err = NULL;
 }
@@ -41,7 +41,7 @@ int main(void){
 
     // Main loop
     while(true) {  // Wait in a loop, and exit after the window receives the "ESC_KEY" key
-        if(kbhit() && getch() == ESC) {
+        if(_kbhit() && _getch() == ESC) {
             break;
         }
         // Wait for up to 100ms for a frameset in blocking mode.

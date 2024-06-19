@@ -18,6 +18,7 @@ add_subdirectory(${OB_3RDPARTY_DIR}/OpenCV430 opencv)
 
 add_subdirectory(1.stream.depth)
 add_subdirectory(common)
+add_subdirectory(c_examples)
 
 
 # if(UNIX)

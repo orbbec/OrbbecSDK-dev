@@ -28,23 +28,29 @@ std::shared_ptr<Frame> IMUFrameReversion::processFunc(std::shared_ptr<const Fram
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::cloneFrame(frame);
-    if(frame->getType() == OB_FRAME_ACCEL) {
-        AccelFrame::OBAccelFrameData *frameData = (AccelFrame::OBAccelFrameData *)outFrame->getData();
+    auto newFrame = FrameFactory::cloneFrame(frame, true);
+    if(!frame->is<FrameSet>()) {
+        return newFrame;
+    }
+
+    auto frameSet   = newFrame->as<FrameSet>();
+    auto accelFrame = frameSet->getFrame(OB_FRAME_ACCEL);
+    if(accelFrame) {
+        AccelFrame::OBAccelFrameData *frameData = (AccelFrame::OBAccelFrameData *)accelFrame->getData();
         frameData->accelData[0] *= -1;
         frameData->accelData[1] *= -1;
         frameData->accelData[2] *= -1;
-        return outFrame;
     }
-    else if(frame->getType() == OB_FRAME_GYRO) {
-        GyroFrame::OBGyroFrameData *gyroFrameData = (GyroFrame::OBGyroFrameData *)outFrame->getData();
+
+    auto gyroFrame = frameSet->getFrame(OB_FRAME_GYRO);
+    if(gyroFrame) {
+        GyroFrame::OBGyroFrameData *gyroFrameData = (GyroFrame::OBGyroFrameData *)gyroFrame->getData();
         gyroFrameData->gyroData[0] *= -1;
         gyroFrameData->gyroData[1] *= -1;
         gyroFrameData->gyroData[2] *= -1;
-        return outFrame;
     }
 
-    return outFrame;
+    return newFrame;
 }
 
 }  // namespace libobsensor

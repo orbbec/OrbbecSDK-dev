@@ -8,7 +8,6 @@ namespace libobsensor
 class StreamProfile;
 
 typedef std::vector<std::shared_ptr<const StreamProfile>> StreamProfileList;
-typedef std::vector<std::shared_ptr<StreamProfile>>       StreamProfileListUnsafe;
 
 } // namespace libobsensor
 

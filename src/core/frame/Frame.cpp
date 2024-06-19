@@ -205,11 +205,6 @@ void Frame::setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile)
 }
 
 void Frame::copyInfo(const std::shared_ptr<const Frame> sourceFrame) {
-    // type is determined during construction. It is an inherent property of the object and cannot be changed.
-    // type_ = sourceFrame->type_;
-
-    // todo: check if it is necessary to copy those properties.
-
     number_              = sourceFrame->number_;
     timeStampUsec_       = sourceFrame->timeStampUsec_;
     systemTimeStampUsec_ = sourceFrame->systemTimeStampUsec_;
@@ -229,8 +224,8 @@ VideoFrame::VideoFrame(uint8_t *data, size_t dataBufSize, OBFrameType type, Fram
 
 uint8_t VideoFrame::getPixelAvailableBitSize() const {
     if(availableBitSize_ == 0) {
-        // However, for Depth/Ir non-encoded format, it must be able to return
-        LOG_WARN("Unknown pixel available bit size!");
+        auto format = getFormat();
+        return static_cast<uint8_t>(utils::getBytesPerPixel(format) * 8);
     }
     return availableBitSize_;
 }
@@ -269,9 +264,6 @@ void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
         valueScale_ = df->valueScale_;
     }
 }
-
-DisparityFrame::DisparityFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
-    : VideoFrame(data, dataBufSize, OB_FRAME_DISPARITY, bufferReclaimFunc) {}
 
 IRFrame::IRFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc, OBFrameType frameType)
     : VideoFrame(data, dataBufSize, frameType, bufferReclaimFunc) {}
@@ -333,8 +325,7 @@ uint32_t FrameSet::getFrameCount() const {
     return frameCnt;
 }
 
-
-std::shared_ptr<const Frame> FrameSet::getFrame(OBFrameType frameType) const{
+std::shared_ptr<const Frame> FrameSet::getFrame(OBFrameType frameType) const {
     std::shared_ptr<const Frame> frame;
     foreachFrame([&](void *item) {
         auto pFrame = (std::shared_ptr<const Frame> *)item;
@@ -349,8 +340,8 @@ std::shared_ptr<const Frame> FrameSet::getFrame(OBFrameType frameType) const{
 
 std::shared_ptr<const Frame> FrameSet::getFrame(int index) const {
     std::shared_ptr<const Frame> frame;
-    uint32_t               itemSize = sizeof(std::shared_ptr<const Frame>);
-    auto                   itemCnt  = getDataBufSize() / itemSize;
+    uint32_t                     itemSize = sizeof(std::shared_ptr<const Frame>);
+    auto                         itemCnt  = getDataBufSize() / itemSize;
     if(index >= (int)itemCnt) {
         throw invalid_value_exception("FrameSet::getFrame() index out of range");
     }
@@ -394,7 +385,7 @@ void FrameSet::clearAllFrame() {
     });
 }
 
-void FrameSet::foreachFrame(ForeachBack foreachBack) const{
+void FrameSet::foreachFrame(ForeachBack foreachBack) const {
     uint32_t itemSize = sizeof(std::shared_ptr<Frame>);
     auto     itemCnt  = getDataBufSize() / itemSize;
     auto     pItem    = const_cast<uint8_t *>(getData());

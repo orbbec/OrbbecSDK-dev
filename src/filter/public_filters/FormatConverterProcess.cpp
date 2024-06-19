@@ -9,7 +9,7 @@
 
 namespace libobsensor {
 
-FormatConverter::FormatConverter(const std::string &name) : FilterBase(name) {}
+FormatConverter::FormatConverter(const std::string &name) : FilterBase(name), convertType_(FORMAT_I420_TO_RGB) {}
 FormatConverter::~FormatConverter() noexcept {}
 
 void FormatConverter::updateConfig(std::vector<std::string> &params) {
@@ -69,6 +69,7 @@ std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame>
 
     auto videoStreamProfile = frame->getStreamProfile();
     if(!currentStreamProfile_ || currentStreamProfile_.get() != videoStreamProfile.get()) {
+        currentStreamProfile_ = videoStreamProfile;
         tarStreamProfile_ = videoStreamProfile->clone();
     }
 

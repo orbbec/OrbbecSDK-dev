@@ -18,8 +18,8 @@ typedef struct {
 
 class GlobalTimestampFitter {
 public:
-    GlobalTimestampFitter(IDevice::PropertyAccessorGetter propertyAccessorGetter);
-    virtual ~GlobalTimestampFitter();
+    GlobalTimestampFitter(DeviceResourceGetter<IPropertyAccessor> &propertyAccessorGetter);
+    ~GlobalTimestampFitter();
     LinearFuncParam getLinearFuncParam();
     void            reFitting();
     void            pause();
@@ -29,7 +29,7 @@ private:
     void fittingLoop();
 
 private:
-    IDevice::PropertyAccessorGetter propertyAccessorGetter_;
+    DeviceResourceGetter<IPropertyAccessor> propertyAccessorGetter_;
 
     std::thread             sampleThread_;
     std::mutex              sampleMutex_;

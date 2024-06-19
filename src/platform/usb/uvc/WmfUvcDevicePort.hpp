@@ -76,7 +76,7 @@ public:
     explicit WmfUvcDevicePort(std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~WmfUvcDevicePort() noexcept override;
     std::shared_ptr<const SourcePortInfo> getSourcePortInfo(void) const override;
-    StreamProfileListUnsafe               getStreamProfileList() override;
+    StreamProfileList                     getStreamProfileList() override;
     void                                  startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
     void                                  stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void                                  stopAllStream() override;
@@ -143,7 +143,7 @@ private:
     std::atomic<bool> isStarted_ = { false };
     std::wstring      deviceId_;
 
-    StreamProfileListUnsafe profileList_;
+    StreamProfileList profileList_;
 
     std::string             timeoutMsg_;
     std::mutex              timeoutMutex_;

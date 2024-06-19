@@ -1,7 +1,6 @@
 #include "StreamProfile.hpp"
 #include "StreamExtrinsicsManager.hpp"
 #include "StreamIntrinsicsManager.hpp"
-#include "StreamDisparityParamManager.hpp"
 #include "utils/PublicTypeHelper.hpp"
 
 #include "frame/Frame.hpp"
@@ -9,19 +8,15 @@
 namespace libobsensor {
 
 StreamProfileBackendLifeSpan::StreamProfileBackendLifeSpan()
-    : logger_(Logger::getInstance()),
-      intrinsicsManager_(StreamIntrinsicsManager::getInstance()),
-      extrinsicsManager_(StreamExtrinsicsManager::getInstance()),
-      disparityParamManager_(StreamDisparityParamManager::getInstance()) {}
+    : logger_(Logger::getInstance()), intrinsicsManager_(StreamIntrinsicsManager::getInstance()), extrinsicsManager_(StreamExtrinsicsManager::getInstance()) {}
 
 StreamProfileBackendLifeSpan::~StreamProfileBackendLifeSpan() {
     intrinsicsManager_.reset();
     extrinsicsManager_.reset();
-    disparityParamManager_.reset();
     logger_.reset();
 }
 
-StreamProfile::StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format) : owner_(owner), type_(type), format_(format), index_(0){}
+StreamProfile::StreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format) : owner_(owner), type_(type), format_(format), index_(0) {}
 
 std::shared_ptr<LazySensor> StreamProfile::getOwner() const {
     return owner_.lock();
@@ -63,9 +58,9 @@ void StreamProfile::bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> tar
     StreamExtrinsicsManager::getInstance()->registerSameExtrinsics(shared_from_this(), targetStreamProfile);
 }
 
-std::shared_ptr<StreamProfile> StreamProfile::clone(OBFormat newFromat) const {
+std::shared_ptr<StreamProfile> StreamProfile::clone(OBFormat newFormat) const {
     auto newSp = clone();
-    newSp->setFormat(newFromat);
+    newSp->setFormat(newFormat);
     return newSp;
 }
 
@@ -74,7 +69,7 @@ OBExtrinsic StreamProfile::getExtrinsicTo(std::shared_ptr<const StreamProfile> t
 }
 
 VideoStreamProfile::VideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps)
-    : StreamProfile(owner, type, format), width_(width), height_(height), fps_(fps){}
+    : StreamProfile(owner, type, format), width_(width), height_(height), fps_(fps) {}
 
 void VideoStreamProfile::setWidth(uint32_t width) {
     width_ = width;
@@ -124,15 +119,32 @@ std::shared_ptr<StreamProfile> VideoStreamProfile::clone() const {
     return sp;
 }
 
-StructuredLightStreamProfile::StructuredLightStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps)
+DisparityBasedStreamProfile::DisparityBasedStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height,
+                                                         uint32_t fps)
     : VideoStreamProfile(owner, type, format, width, height, fps) {}
 
-OBDisparityProcessParam StructuredLightStreamProfile::getDisparityProcessParam() const {
-    return StreamDisparityParamManager::getInstance()->getVideoStreamDisparityParam(shared_from_this());
+DisparityBasedStreamProfile::DisparityBasedStreamProfile(std::shared_ptr<const VideoStreamProfile> other)
+    : VideoStreamProfile(other->getOwner(), other->getType(), other->getFormat(), other->getWidth(), other->getHeight(), other->getFps()) {
+    bindIntrinsic(other->getIntrinsic());
+    bindDistortion(other->getDistortion());
+    bindSameExtrinsicTo(other);
 }
 
-void StructuredLightStreamProfile::bindDisparityProcessParam(const OBDisparityProcessParam &param) {
-    StreamDisparityParamManager::getInstance()->registerDisparityProcessParam(shared_from_this(), param);
+OBDisparityParam DisparityBasedStreamProfile::getDisparityParam() const {
+    return StreamIntrinsicsManager::getInstance()->getDisparityBasedStreamDisparityParam(shared_from_this());
+}
+
+void DisparityBasedStreamProfile::bindDisparityParam(const OBDisparityParam &param) {
+    StreamIntrinsicsManager::getInstance()->registerDisparityBasedStreamDisparityParam(shared_from_this(), param);
+}
+
+std::shared_ptr<StreamProfile> DisparityBasedStreamProfile::clone() const {
+    auto sp = std::make_shared<DisparityBasedStreamProfile>(owner_.lock(), type_, format_, width_, height_, fps_);
+    sp->bindIntrinsic(getIntrinsic());
+    sp->bindDistortion(getDistortion());
+    sp->bindSameExtrinsicTo(shared_from_this());
+    sp->bindDisparityParam(getDisparityParam());
+    return sp;
 }
 
 AccelStreamProfile::AccelStreamProfile(std::shared_ptr<LazySensor> owner, OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate)
@@ -175,7 +187,7 @@ std::ostream &AccelStreamProfile::operator<<(std::ostream &os) const {
 }
 
 GyroStreamProfile::GyroStreamProfile(std::shared_ptr<LazySensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate)
-    : StreamProfile{ owner, OB_STREAM_GYRO, OB_FORMAT_GYRO }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate){}
+    : StreamProfile{ owner, OB_STREAM_GYRO, OB_FORMAT_GYRO }, fullScaleRange_(fullScaleRange), sampleRate_(sampleRate) {}
 
 OBGyroFullScaleRange GyroStreamProfile::getFullScaleRange() const {
     return fullScaleRange_;

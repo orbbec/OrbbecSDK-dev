@@ -4,26 +4,25 @@
 
 namespace libobsensor {
 
-template <uint16_t CMD_VER>
-VendorPropertyPort<CMD_VER>::VendorPropertyPort(const std::shared_ptr<ISourcePort> &backend) : backend_(backend), recvData_(1024), sendData_(1024) {
+VendorPropertyPort::VendorPropertyPort(const std::shared_ptr<ISourcePort> &backend) : backend_(backend), recvData_(1024), sendData_(1024) {
     auto port = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
     if(!port) {
         throw invalid_value_exception("VendorPropertyPort backend must be IVendorDataPort");
     }
 }
 
-template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void VendorPropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initSetPropertyReq(sendData_.data(), propertyId, value.intValue);
 
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
     uint16_t respDataSize = 0;
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);  // todo: check respDataSize, here and below
     protocol::checkStatus(res);
 }
 
-template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+void VendorPropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initGetPropertyReq(sendData_.data(), propertyId);
@@ -38,7 +37,7 @@ template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getPropertyValue(u
     value->intValue = resp->data.cur;
 }
 
-template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+void VendorPropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initGetPropertyReq(sendData_.data(), propertyId);
@@ -56,7 +55,7 @@ template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getPropertyRange(u
     range->def.intValue  = resp->data.def;
 }
 
-template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
+void VendorPropertyPort::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initSetStructureDataReq(sendData_.data(), propertyId, data.data(), static_cast<uint16_t>(data.size()));
@@ -67,7 +66,7 @@ template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::setStructureData(u
     protocol::checkStatus(res);
 }
 
-template <uint16_t CMD_VER> const std::vector<uint8_t> &VendorPropertyPort<CMD_VER>::getStructureData(uint32_t propertyId) {
+const std::vector<uint8_t> &VendorPropertyPort::getStructureData(uint32_t propertyId) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initGetStructureDataReq(sendData_.data(), propertyId);
@@ -79,25 +78,19 @@ template <uint16_t CMD_VER> const std::vector<uint8_t> &VendorPropertyPort<CMD_V
 
     auto resp              = protocol::parseGetStructureDataResp(recvData_.data(), respDataSize);
     auto structureDataSize = protocol::getStructureDataSize(resp);
+    if(structureDataSize <= 0) {
+        res.statusCode    = protocol::HP_STATUS_DEVICE_RESPONSE_DATA_SIZE_ERROR;
+        res.respErrorCode = protocol::HP_RESP_ERROR_UNKNOWN;
+        res.msg           = "get structure data return data size invalid";
+        protocol::checkStatus(res);
+    }
     outputData_.resize(structureDataSize);
     memcpy(outputData_.data(), resp->data, structureDataSize);
     return outputData_;
 }
 
-template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getCmdVersionProtoV11(uint32_t propertyId, uint16_t *version) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    clearBuffers();
-    auto     req          = protocol::initGetCmdVersionReq(sendData_.data(), propertyId);
-    uint16_t respDataSize = 64;
-    auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
-    protocol::checkStatus(res);
-
-    auto resp = protocol::parseGetCmdVerDataResp(recvData_.data(), respDataSize);
-    *version  = *(uint16_t *)(resp->data);
-}
-
-template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getRawData(uint32_t propertyId, get_data_callback callback, uint32_t transPacketSize) {
+void VendorPropertyPort::getRawData(uint32_t propertyId, GetDataCallback callback) {
+    constexpr uint32_t          transPacketSize = 3 * DATA_PAGE_SIZE;
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     OBDataTranState tranState = DATA_TRAN_STAT_TRANSFERRING;
@@ -112,10 +105,11 @@ template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getRawData(uint32_
         auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
         auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
         protocol::checkStatus(res);
-        auto resp = protocol::parseGetReadDataResp(recvData_.data(), respDataSize);
+        auto resp = protocol::parseGetRawDataResp(recvData_.data(), respDataSize);
         dataSize  = resp->dataSize;
     }
 
+    // get raw data in packet size
     for(uint32_t packetOffset = 0; packetOffset < dataSize; packetOffset += transPacketSize) {
         uint32_t packetLen = std::min(transPacketSize, dataSize - packetOffset);
         clearBuffers();
@@ -130,13 +124,9 @@ template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getRawData(uint32_
             dataChunk.size         = packetLen;
             dataChunk.offset       = packetOffset;
             dataChunk.fullDataSize = dataSize;
-            if(packetOffset + packetLen >= dataSize) {
-                tranState = DATA_TRAN_STAT_DONE;
-            }
             callback(tranState, &dataChunk);
         }
     }
-
     // finish
     {
         clearBuffers();
@@ -146,37 +136,61 @@ template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::getRawData(uint32_
         auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
         protocol::checkStatus(res);
     }
+    dataChunk.data         = nullptr;
+    dataChunk.size         = 0;
+    dataChunk.offset       = dataSize;
+    dataChunk.fullDataSize = dataSize;
+    callback(DATA_TRAN_STAT_DONE, &dataChunk);
 }
 
-template <uint16_t CMD_VER> std::vector<uint8_t> VendorPropertyPort<CMD_VER>::getStructureDataProtoV11(uint32_t propertyId) {
+uint16_t VendorPropertyPort::getCmdVersionProtoV1_1(uint32_t propertyId) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    clearBuffers();
+    auto     req          = protocol::initGetCmdVersionReq(sendData_.data(), propertyId);
+    uint16_t respDataSize = 64;
+    auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    protocol::checkStatus(res);
+
+    auto resp = protocol::parseGetCmdVerDataResp(recvData_.data(), respDataSize);
+    return *(uint16_t *)(resp->data);
+}
+
+const std::vector<uint8_t> &VendorPropertyPort::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
 
-    auto     req          = protocol::initGetStructureDataV11Req(sendData_.data(), propertyId);
+    auto     req          = protocol::initGetStructureDataReqV1_1(sendData_.data(), propertyId);
     uint16_t respDataSize = 0;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
     auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 
-    auto resp = protocol::parseGetStructureDataV11Resp(recvData_.data(), respDataSize);
-    if(resp->cmdVer != CMD_VER) {
+    auto resp = protocol::parseGetStructureDataRespV1_1(recvData_.data(), respDataSize);
+    if(resp->cmdVer != cmdVersion) {
         res.statusCode    = protocol::HP_STATUS_DEVICE_RESPONSE_CMD_VERSION_UNMATCHED;
         res.respErrorCode = protocol::HP_RESP_ERROR_UNKNOWN;
-        res.msg           = "get structure data return cmd version unmatched" + std::to_string(resp->cmdVer) + " expect: " + std::to_string(CMD_VER);
+        res.msg           = "get structure data return cmd version unmatched" + std::to_string(resp->cmdVer) + " expect: " + std::to_string(cmdVersion);
         protocol::checkStatus(res);
     }
 
-    uint16_t             dataSize = protocol::getProtoV11StructureDataSize(resp);
-    std::vector<uint8_t> structureData;
-    memcpy(structureData.data(), resp->data, dataSize);
-    return structureData;
+    int16_t dataSize = protocol::getStructureDataSizeV1_1(resp);
+    if(dataSize <= 0) {
+        res.statusCode    = protocol::HP_STATUS_DEVICE_RESPONSE_DATA_SIZE_ERROR;
+        res.respErrorCode = protocol::HP_RESP_ERROR_UNKNOWN;
+        res.msg           = "get structure data over protocol version 1.1 return data size invalid";
+        protocol::checkStatus(res);
+    }
+    outputData_.resize(dataSize);
+    memcpy(outputData_.data(), resp->data, dataSize);
+    return outputData_;
 }
 
-template <uint16_t CMD_VER>
-std::vector<std::vector<uint8_t>> VendorPropertyPort<CMD_VER>::getStructureDataListProtoV11(uint32_t propertyId, uint32_t tranPacketSize) {
+const std::vector<uint8_t> &VendorPropertyPort::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
+    constexpr uint32_t transPacketSize = 3 * DATA_PAGE_SIZE;
+
     std::lock_guard<std::mutex>       lock(mutex_);
     uint32_t                          dataSize = 0;
-    std::vector<std::vector<uint8_t>> structureDataList{};
     clearBuffers();
     auto     req          = protocol::initStartGetStructureDataList(sendData_.data(), propertyId);
     uint16_t respDataSize = 64;
@@ -184,56 +198,42 @@ std::vector<std::vector<uint8_t>> VendorPropertyPort<CMD_VER>::getStructureDataL
     auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 
-    auto resp = protocol::parseInitStructureDataListResp(recvData_.data(), respDataSize);
-    if(resp->cmdVer != CMD_VER) {
+    auto resp = protocol::parseStartStructureDataListResp(recvData_.data(), respDataSize);
+    if(resp->cmdVer != cmdVersion) {
         res.statusCode    = protocol::HP_STATUS_DEVICE_RESPONSE_CMD_VERSION_UNMATCHED;
         res.respErrorCode = protocol::HP_RESP_ERROR_UNKNOWN;
         res.msg           = "init get structure data list return cmd version unmatched";
         protocol::checkStatus(res);
     }
-    auto resp1 = protocol::parseGetReadDataResp(recvData_.data(), respDataSize);
-    dataSize   = resp1->dataSize;
-
+    dataSize = resp->dataSize;
+    outputData_.resize(dataSize);
     {
-        std::vector<uint8_t> dataVec;
-        for(uint32_t packetOffset = 0; packetOffset < dataSize; packetOffset += tranPacketSize) {
+        for(uint32_t packetOffset = 0; packetOffset < dataSize; packetOffset += transPacketSize) {
             clearBuffers();  // reset request and response buffer cache
-            uint32_t packetSize = std::min(tranPacketSize, dataSize - packetOffset);
+            uint32_t packetSize = std::min(transPacketSize, dataSize - packetOffset);
 
             auto req1    = protocol::initReadStructureDataList(sendData_.data(), propertyId, packetOffset, packetSize);
             respDataSize = 1024;
             port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
             res          = protocol::execute(port, sendData_.data(), sizeof(req1), recvData_.data(), &respDataSize);
-            if(!protocol::checkStatus(res)) {
-                break;
-            }
-
-            dataVec.insert(dataVec.end(), recvData_.data() + sizeof(protocol::RespHeader), recvData_.data() + sizeof(protocol::RespHeader) + packetSize);
-        }
-        if(dataVec.size() == dataSize) {
-            for(uint32_t offset = 0; offset < dataSize; offset += sizeof(std::vector<uint8_t>)) {
-                // FIXME: check if the size is correct
-                structureDataList.push_back(*(std::vector<uint8_t> *)(dataVec.data() + offset));
-            }
+            protocol::checkStatus(res);
+            memcpy(outputData_.data() + packetOffset, recvData_.data() + sizeof(protocol::RespHeader), packetSize);
         }
     }
 
     {
         clearBuffers();
-        req = protocol::initFinishGetStructureDataList(sendData_.data(), propertyId);
-        res = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+        auto req2 = protocol::initFinishGetStructureDataList(sendData_.data(), propertyId);
+        res       = protocol::execute(port, sendData_.data(), sizeof(req2), recvData_.data(), &respDataSize);
         protocol::checkStatus(res);
     }
 
     protocol::checkStatus(res);
-    return structureDataList;
+    return outputData_;
 }
 
-template <uint16_t CMD_VER> void VendorPropertyPort<CMD_VER>::clearBuffers() {
+void VendorPropertyPort::clearBuffers() {
     memset(recvData_.data(), 0, recvData_.size());
     memset(sendData_.data(), 0, sendData_.size());
 }
-
-template class VendorPropertyPort<0>;
-template class VendorPropertyPort<1>;
 }  // namespace libobsensor

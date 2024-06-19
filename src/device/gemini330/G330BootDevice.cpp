@@ -15,7 +15,7 @@ G330BootDevice::G330BootDevice(std::shared_ptr<ObPal> obPal, const std::shared_p
             auto port = obPal_->createSourcePort(portInfo);
             if(port) {
                 auto vendorPort   = std::dynamic_pointer_cast<VendorDataPort>(port);
-                auto hostProtocol = std::make_shared<G330HostProtocol>(vendorPort, FLASH_PAGE_SIZE, HP_ERASE_FLASH_CMD_DATA_SIZE, FLASH_PAGE_SIZE);
+                auto hostProtocol = std::make_shared<G330HostProtocol>(vendorPort, DATA_PAGE_SIZE, HP_ERASE_FLASH_CMD_DATA_SIZE, DATA_PAGE_SIZE);
                 command_          = std::make_shared<MX6600VendorCommand>(hostProtocol);
 #ifdef __ANDROID__
                 auto vendorUsbPort           = std::dynamic_pointer_cast<VendorUsbDevicePort>(port);

@@ -38,17 +38,22 @@ std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(OBStreamType type, 
 }
 
 std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width,
-                                                             uint32_t height, uint32_t fps,OBDeviceType deviceType) {
+                                                             uint32_t height, uint32_t fps, OBDeviceType deviceType) {
     std::shared_ptr<VideoStreamProfile> vsp;
-    if(type == OB_STREAM_DISPARITY || (type == OB_STREAM_DEPTH && (deviceType == OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA || deviceType == OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA))){
-        vsp = std::make_shared<StructuredLightStreamProfile>(owner, type, format, width, height, fps);
-    }else{
+    if(type == OB_STREAM_DEPTH && (deviceType == OB_STRUCTURED_LIGHT_MONOCULAR_CAMERA || deviceType == OB_STRUCTURED_LIGHT_BINOCULAR_CAMERA)) {
+        vsp = std::make_shared<DisparityBasedStreamProfile>(owner, type, format, width, height, fps);
+    }
+    else {
         vsp = std::make_shared<VideoStreamProfile>(owner, type, format, width, height, fps);
     }
 
     vsp->bindIntrinsic({ 0 });
     vsp->bindDistortion({ 0 });
     return vsp;
+}
+
+std::shared_ptr<DisparityBasedStreamProfile> createDisparityBasedStreamProfile(std::shared_ptr<const VideoStreamProfile> videoProfile) {
+    return std::make_shared<DisparityBasedStreamProfile>(videoProfile);
 }
 
 std::shared_ptr<AccelStreamProfile> createAccelStreamProfile(OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate) {

@@ -27,7 +27,7 @@ template <typename T> struct OBPropertyRangeT {
     T def;
 };
 
-using get_data_callback = std::function<void(ob_data_tran_state state, ob_data_chunk *dataChunk)>;
+using GetDataCallback = std::function<void(OBDataTranState state, OBDataChunk *dataChunk)>;
 
 class IPropertyPort {
 public:
@@ -37,15 +37,21 @@ public:
     virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) = 0;
 };
 
-template <uint16_t CMD_VER> class IPropertyExtensionPort : public IPropertyPort {
+class IPropertyExtensionPort : virtual public IPropertyPort {
 public:
-    virtual ~IPropertyExtensionPort() noexcept                                                                                                   = default;
-    virtual void                              setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data)                            = 0;
-    virtual const std::vector<uint8_t>       &getStructureData(uint32_t propertyId)                                                              = 0;
-    virtual void                              getCmdVersionProtoV11(uint32_t propertyId, uint16_t *version)                                      = 0;
-    virtual void                              getRawData(uint32_t propertyId, get_data_callback callback, uint32_t transPacketSize)              = 0;
-    virtual std::vector<uint8_t>              getStructureDataProtoV11(uint32_t propertyId)                                                      = 0;
-    virtual std::vector<std::vector<uint8_t>> getStructureDataListProtoV11(uint32_t propertyId, uint32_t tran_packet_size = 3 * FLASH_PAGE_SIZE) = 0;
+    virtual ~IPropertyExtensionPort() noexcept                                                                  = default;
+    virtual void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
+    virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId)                                   = 0;
+    virtual void                        getRawData(uint32_t propertyId, GetDataCallback callback)               = 0;
+};
+
+class IPropertyExtensionPortV1_1 : virtual public IPropertyPort {
+public:
+    virtual ~IPropertyExtensionPortV1_1() noexcept = default;
+
+    virtual uint16_t                    getCmdVersionProtoV1_1(uint32_t propertyId)                             = 0;
+    virtual const std::vector<uint8_t> &getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion)     = 0;
+    virtual const std::vector<uint8_t> &getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) = 0;
 };
 
 enum PropertyAccessType {
@@ -70,6 +76,14 @@ public:
 
     virtual void setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
     virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL)            = 0;
+
+    virtual void getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
+
+    virtual uint16_t                    getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
+    virtual const std::vector<uint8_t> &getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion,
+                                                                  PropertyAccessType accessType = PROP_ACCESS_INTERNAL)                   = 0;
+    virtual const std::vector<uint8_t> &getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion,
+                                                                      PropertyAccessType accessType = PROP_ACCESS_INTERNAL)               = 0;
 
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type
@@ -148,7 +162,31 @@ public:
             LOG_WARN("Firmware data size is not match with property type");
         }
         std::memcpy(&data, vec.data(), std::min(vec.size(), sizeof(T)));
-        return data;
+        return std::move(data);
+    }
+
+    template <typename T, uint32_t CMD_VER> T getStructureDataProtoV1_1_T(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+        std::vector<uint8_t> vec = getStructureDataProtoV1_1(propertyId, CMD_VER);
+        T                    data;
+        if(vec.size() != sizeof(T)) {
+            LOG_WARN("Firmware data size is not match with property type");
+        }
+        std::memcpy(&data, vec.data(), std::min(vec.size(), sizeof(T)));
+        return std::move(data);
+    }
+
+    template <typename T, uint32_t CMD_VER>
+    std::vector<T> getStructureDataListProtoV1_1_T(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+        auto data     = getStructureDataListProtoV1_1(propertyId, CMD_VER, accessType);
+        auto itemSize = sizeof(T);
+        auto rst      = std::vector<T>();
+        for(size_t i = 0; i < data.size() && i + itemSize <= data.size(); i += itemSize) {
+            T item;
+            std::memcpy(&item, data.data() + i, itemSize);
+            rst.emplace_back(item);
+        }
+
+        return std::move(rst);
     }
 };
 

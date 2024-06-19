@@ -1,6 +1,7 @@
 #include "PropertyAccessor.hpp"
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
+#include "utils/Utils.hpp"
 #include <memory>
 
 namespace libobsensor {
@@ -119,10 +120,12 @@ void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<u
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    // FIXME: This is a bug, the cast should be IPropertyExtensionPort<0>
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort<0>>(port);
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
+    if(extensionPort == nullptr) {
+        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data setting");
+    }
     extensionPort->setStructureData(propId, data);
-    LOG_DEBUG("Property {} set firmware data successfully", propId);
+    LOG_DEBUG("Property {} set structure data successfully", propId);
 }
 
 const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t propertyId, PropertyAccessType accessType) {
@@ -138,10 +141,99 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t property
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    // FIXME: This is a bug, the cast should be IPropertyExtensionPort<0>
-    auto        extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort<0>>(port);
-    const auto &data          = extensionPort->getStructureData(propId);
-    LOG_DEBUG("Property {} get firmware data successfully, size {}", propId, data.size());
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
+    if(extensionPort == nullptr) {
+        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data getting");
+    }
+    const auto &data = extensionPort->getStructureData(propId);
+    LOG_DEBUG("Property {} get structure data successfully, size {}", propId, data.size());
     return data;
 }
+
+void PropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+        throw invalid_value_exception("Property not readable");
+    }
+
+    auto  it     = properties_.find(propertyId);
+    auto &port   = it->second.port;
+    auto &propId = it->second.propertyId;
+    if(propId != propertyId) {
+        LOG_DEBUG("Property {} alias to {}", propId, propertyId);
+    }
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
+    if(extensionPort == nullptr) {
+        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support raw data getting");
+    }
+
+    extensionPort->getRawData(propId, callback);  // todo: add async support
+
+    LOG_DEBUG("Property {} get raw data successfully", propId);
+}
+
+uint16_t PropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAccessType accessType) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+        throw invalid_value_exception("Property not readable");
+    }
+
+    auto  it     = properties_.find(propertyId);
+    auto &port   = it->second.port;
+    auto &propId = it->second.propertyId;
+    if(propId != propertyId) {
+        LOG_DEBUG("Property {} alias to {}", propId, propertyId);
+    }
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
+    if(extensionPort == nullptr) {
+        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support cmd version getting");
+    }
+
+    auto ver = extensionPort->getCmdVersionProtoV1_1(propId);
+    LOG_DEBUG("Property {} get cmd version successfully, version {}", propId, ver);
+    return ver;
+}
+
+const std::vector<uint8_t> &PropertyAccessor::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+        throw invalid_value_exception("Property not readable");
+    }
+
+    auto  it     = properties_.find(propertyId);
+    auto &port   = it->second.port;
+    auto &propId = it->second.propertyId;
+    if(propId != propertyId) {
+        LOG_DEBUG("Property {} alias to {}", propId, propertyId);
+    }
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
+    if(extensionPort == nullptr) {
+        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data getting over proto v1.1");
+    }
+    const auto &data = extensionPort->getStructureDataProtoV1_1(propId, cmdVersion);
+    LOG_DEBUG("Property {} get structure data successfully over proto v1.1, size {}", propId, data.size());
+    return data;
+}
+
+const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+        throw invalid_value_exception("Property not readable");
+    }
+
+    auto  it     = properties_.find(propertyId);
+    auto &port   = it->second.port;
+    auto &propId = it->second.propertyId;
+    if(propId != propertyId) {
+        LOG_DEBUG("Property {} alias to {}", propId, propertyId);
+    }
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
+    if(extensionPort == nullptr) {
+        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data list getting over proto v1.1");
+    }
+    const auto &dataList = extensionPort->getStructureDataListProtoV1_1(propId, cmdVersion);
+    LOG_DEBUG("Property {} get structure data list successfully over proto v1.1, size {}", propId, dataList.size());
+    return dataList;
+}
+
 }  // namespace libobsensor

@@ -5,8 +5,6 @@
 
 namespace libobsensor {
 
-const OBExtrinsic IdentityExtrinsic = { {1, 0, 0, 0, 1, 0, 0, 0, 1}, {0, 0, 0} };
-
 OBExtrinsic multiplyExtrinsics(const OBExtrinsic &a, const OBExtrinsic &b) {
     OBExtrinsic result;
     result.rot[0]   = a.rot[0] * b.rot[0] + a.rot[1] * b.rot[3] + a.rot[2] * b.rot[6];

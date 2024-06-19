@@ -20,6 +20,5 @@ public:
     static std::shared_ptr<Frame> createFrameFromStreamProfile(std::shared_ptr<const StreamProfile> sp);
 
     static std::shared_ptr<FrameSet> createFrameSet();
-    static std::shared_ptr<FrameSet> cloneFrameSet(std::shared_ptr<const FrameSet> frame, bool copyData = false);
 };
 }  // namespace libobsensor

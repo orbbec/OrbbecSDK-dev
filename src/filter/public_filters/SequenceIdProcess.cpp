@@ -14,8 +14,14 @@ void SequenceIdFilter::updateConfig(std::vector<std::string> &params) {
         throw invalid_value_exception("SequenceIdFilter config error: params size not match");
     }
     try {
-        std::lock_guard<std::recursive_mutex> lk(valueUpdateMutex_);
-        select_sequence_id_ = std::stoi(params[0]);
+        
+        uint32_t select_sequence_id = std::stoi(params[0]);
+        if (select_sequence_id >= 0 && select_sequence_id <= 2) {
+            if (select_sequence_id != select_sequence_id_) {
+                std::lock_guard<std::recursive_mutex> lk(valueUpdateMutex_);
+                select_sequence_id_ = select_sequence_id;
+            }
+        }
     }
     catch(const std::exception &e) {
         throw invalid_value_exception("SequenceIdFilter config error: " + std::string(e.what()));

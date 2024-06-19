@@ -379,7 +379,6 @@ typedef struct {
     float   cy;      ///< Optical center ordinate
     int16_t width;   ///< Image width
     int16_t height;  ///< Image height
-    OBCameraDistortionModel model;
 } OBCameraIntrinsic, ob_camera_intrinsic;
 
 /**
@@ -419,6 +418,7 @@ typedef struct {
     float k6;  ///< Radial distortion factor 6
     float p1;  ///< Tangential distortion factor 1
     float p2;  ///< Tangential distortion factor 2
+    OBCameraDistortionModel model;
 } OBCameraDistortion, ob_camera_distortion;
 
 /** \brief Video stream intrinsics. */

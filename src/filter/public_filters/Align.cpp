@@ -64,28 +64,27 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
         return FrameFactory::cloneFrame(frame);
     }
 
-    auto frames = frame->as<FrameSet>();
+    auto newFrame = FrameFactory::cloneFrame(frame);
+    auto frames   = newFrame->as<FrameSet>();
     // get type of align_to_stream_
     auto existFrame = frames->getFrame(getAlignFrameType());
     if(!existFrame) {
-        return FrameFactory::cloneFrameSet(frames, true);
+        return frames;
     }
 
     auto depth = frames->getFrame(OB_FRAME_DEPTH);
     if(!depth) {
         LOG_WARN("Invalid depth frame!");
-        return FrameFactory::cloneFrameSet(frames, true);
+        return frames;
     }
 
     auto depthFormat = depth->getFormat();
     if(!(depthFormat == OB_FORMAT_Z16 || depthFormat == OB_FORMAT_Y16)) {
         LOG_WARN("Invalid depth frame!");
-        return FrameFactory::cloneFrameSet(frames, true);
+        return frames;
     }
 
     depth_unit_mm_ = depth->as<DepthFrame>()->getValueScale();
-
-    auto newFrames = FrameFactory::createFrameSet();
 
     // prepare "other" data buffer to vector of Frame
     std::vector<std::shared_ptr<const Frame>> other_frames;
@@ -96,7 +95,6 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
             if((item->getType() != OB_STREAM_DEPTH) && item->is<VideoFrame>()) {
                 other_frames.push_back(item);
             }
-            newFrames->pushFrame(std::move(item));
         }
     }
     else {
@@ -106,7 +104,6 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
             if((item->getType() != align_to_stream_)) {
                 other_frames.push_back(item);
             }
-            newFrames->pushFrame(std::move(item));
         }
     }
 
@@ -127,7 +124,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
                 aligned_frame->copyInfo(from);
                 aligned_frame->setStreamProfile(alignProfile);
                 alignFrames(aligned_frame, from, depth);
-                newFrames->pushFrame(std::move(aligned_frame));
+                frames->pushFrame(std::move(aligned_frame));
             }
         }
     }
@@ -143,11 +140,11 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
             aligned_frame->copyInfo(depth);
             aligned_frame->setStreamProfile(alignProfile);
             alignFrames(aligned_frame, depth, to);
-            newFrames->pushFrame(std::move(aligned_frame));
+            frames->pushFrame(std::move(aligned_frame));
         }
     }
 
-    return newFrames;
+    return frames;
 }
 
 OBFrameType Align::getAlignFrameType() {

@@ -33,20 +33,22 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
     initProperties();
     initFrameMetadataParserContainer();
 
-    auto propAccessor                 = getPropertyAccessor();
-    auto version                      = propAccessor->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
-    deviceInfo_                       = std::make_shared<DeviceInfo>();
-    deviceInfo_->name_                = version.deviceName;
-    deviceInfo_->fwVersion_           = version.firmwareVersion;
-    deviceInfo_->deviceSn_            = version.serialNumber;
-    deviceInfo_->asicName_            = version.depthChip;
-    deviceInfo_->hwVersion_           = version.hardwareVersion;
-    deviceInfo_->type_                = static_cast<uint16_t>(version.deviceType);
-    deviceInfo_->supportedSdkVersion_ = version.sdkVersion;
-    deviceInfo_->pid_                 = enumInfo_->getPid();
-    deviceInfo_->vid_                 = enumInfo_->getVid();
-    deviceInfo_->uid_                 = enumInfo_->getUid();
-    deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
+    {
+        auto propAccessor                 = getPropertyAccessor();
+        auto version                      = propAccessor->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
+        deviceInfo_                       = std::make_shared<DeviceInfo>();
+        deviceInfo_->name_                = version.deviceName;
+        deviceInfo_->fwVersion_           = version.firmwareVersion;
+        deviceInfo_->deviceSn_            = version.serialNumber;
+        deviceInfo_->asicName_            = version.depthChip;
+        deviceInfo_->hwVersion_           = version.hardwareVersion;
+        deviceInfo_->type_                = static_cast<uint16_t>(version.deviceType);
+        deviceInfo_->supportedSdkVersion_ = version.sdkVersion;
+        deviceInfo_->pid_                 = enumInfo_->getPid();
+        deviceInfo_->vid_                 = enumInfo_->getVid();
+        deviceInfo_->uid_                 = enumInfo_->getUid();
+        deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
+    }
 
     DeviceResourceGetter<IPropertyAccessor> propertyAccessorGetter([this]() {
         auto propAccessor = getPropertyAccessor();

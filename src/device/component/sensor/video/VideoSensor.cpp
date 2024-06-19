@@ -14,9 +14,17 @@ VideoSensor::VideoSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sen
         throw invalid_value_exception("Backend is not a valid IVideoStreamPort");
     }
 
-    backendStreamProfileList_ = vsPort->getStreamProfileList();
     auto lazySelf             = std::make_shared<LazySensor>(owner, sensorType_);
     auto streamType           = utils::mapSensorTypeToStreamType(sensorType_);
+
+    auto backendSpList = vsPort->getStreamProfileList();
+    for(auto &backendSp: backendSpList) {
+        auto sp = backendSp->clone();
+        sp->bindOwner(lazySelf);
+        sp->setType(streamType);
+        backendStreamProfileList_.push_back(sp);
+    }
+
     for(auto &backendSp: backendStreamProfileList_) {
         auto sp = backendSp->clone();
         sp->bindOwner(lazySelf);
@@ -39,7 +47,7 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     currentBackendStreamProfile_ = backendIter->second.first;
     currentFormatFilterConfig_   = backendIter->second.second;
 
-    if(currentFormatFilterConfig_->converter) {
+    if(currentFormatFilterConfig_ != formatFilterConfigs_.end() && currentFormatFilterConfig_->converter) {
         currentFormatFilterConfig_->converter->setConversion(currentFormatFilterConfig_->srcFormat, currentFormatFilterConfig_->dstFormat);
         currentFormatFilterConfig_->converter->setCallback(callback);
     }
@@ -159,6 +167,7 @@ void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig>
         sp->setFormat(iter->dstFormat);
         sp->bindOwner(lazySelf);
         sp->setType(streamType);
+        streamProfileList_.push_back(sp);
         streamProfileBackendMap_[sp] = { backendSp, iter };
     }
 

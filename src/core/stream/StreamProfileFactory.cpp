@@ -3,6 +3,8 @@
 #include "StreamIntrinsicsManager.hpp"
 #include "StreamExtrinsicsManager.hpp"
 #include "exception/ObException.hpp"
+#include "envconfig/EnvConfig.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 namespace StreamProfileFactory {
@@ -88,6 +90,31 @@ std::shared_ptr<GyroStreamProfile> createGyroStreamProfile(std::shared_ptr<LazyS
     auto gsp = std::make_shared<GyroStreamProfile>(owner, fullScaleRange, sampleRate);
     gsp->bindIntrinsic({ 0 });
     return gsp;
+}
+
+std::shared_ptr<const StreamProfile> getDefaultStreamProfileFormEnvConfig(const std::string &deviceName, OBSensorType sensorType) {
+    if(sensorType == OB_SENSOR_ACCEL || sensorType == OB_SENSOR_GYRO) {
+        // todo: add support for accel/gyro default stream profile
+        throw std::runtime_error("Default stream profile for accel/gyro is not supported");
+    }
+
+    auto devName = utils::remove(deviceName, " ");
+
+    auto        envConfig    = EnvConfig::getInstance();
+    std::string nodePathName = "Device." + devName + ".";
+    nodePathName += utils::getSensorName(sensorType);
+    int         w = 0, h = 0, fps = 0;
+    std::string fmt;
+    if(envConfig->getIntValue(nodePathName + ".Width", w) && envConfig->getIntValue(nodePathName + ".Height", h)
+       && envConfig->getIntValue(nodePathName + ".FPS", fps) && envConfig->getStringValue(nodePathName + ".Format", fmt)) {
+        auto width      = static_cast<uint32_t>(w);
+        auto height     = static_cast<uint32_t>(h);
+        auto frameRate  = static_cast<uint32_t>(fps);
+        auto format     = utils::strToOBFormat(fmt);
+        auto streamType = utils::mapSensorTypeToStreamType(sensorType);
+        return StreamProfileFactory::createVideoStreamProfile(streamType, format, width, height, frameRate);
+    }
+    return nullptr;
 }
 
 }  // namespace StreamProfileFactory

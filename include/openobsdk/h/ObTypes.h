@@ -140,9 +140,6 @@ typedef enum {
     OB_SENSOR_IR_RIGHT  = 7, /**< Right IR for stereo camera*/
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
     OB_SENSOR_COUNT,         /**The total number of sensor types, is not a valid sensor type */
-    OB_SENSOR_SYNTHETIC, /**< Synthetic sensor, used inside the SDK to handle multi sensor streams on one class/object, not a valid sensor type for external use
-                          */
-
 } OBSensorType,
     ob_sensor_type;
 

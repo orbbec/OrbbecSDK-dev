@@ -1,6 +1,7 @@
 #include "ImplTypes.hpp"
 #include "openobsdk/h/Context.h"
 #include "context/Context.hpp"
+#include "logger/Logger.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,54 +84,24 @@ void ob_free_idle_memory(ob_context *context, ob_error **error) BEGIN_API_CALL {
 HANDLE_EXCEPTIONS_NO_RETURN(context)
 
 void ob_set_logger_severity(ob_log_severity severity, ob_error **error) BEGIN_API_CALL {
-    if(libobsensor::Context::hasInstance()) {
-        auto context = libobsensor::Context::getInstance();
-        auto logger  = context->getLogger();
-        logger->setLogSeverity(severity);
-    }
-    else {
-        libobsensor::setGlobalLogSeverity(severity);
-    }
+    libobsensor::Logger::setLogSeverity(severity);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(severity)
 
 void ob_set_logger_to_file(ob_log_severity severity, const char *directory, ob_error **error) BEGIN_API_CALL {
-    if(libobsensor::Context::hasInstance()) {
-        auto context = libobsensor::Context::getInstance();
-        auto logger  = context->getLogger();
-        logger->setLogToFile(severity, directory);
-    }
-    else {
-        libobsensor::setGlobalFileLogConfig(severity, directory);
-    }
+    libobsensor::Logger::setFileLogConfig(severity, directory);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(severity, directory)
 
 void ob_set_logger_callback(ob_log_severity severity, ob_log_callback callback, void *user_data, ob_error **error) BEGIN_API_CALL {
-    if(libobsensor::Context::hasInstance()) {
-        auto context = libobsensor::Context::getInstance();
-        auto logger  = context->getLogger();
-        logger->setLogCallback(severity, [callback, user_data](ob_log_severity severity, const std::string logMsg) {  //
-            callback(severity, logMsg.c_str(), user_data);
-        });
-    }
-    else {
-        libobsensor::setGlobalLogCallback(severity, [callback, user_data](ob_log_severity severity, const std::string logMsg) {  //
-            callback(severity, logMsg.c_str(), user_data);
-        });
-    }
+    libobsensor::Logger::setLogCallback(severity, [callback, user_data](ob_log_severity severity, const std::string logMsg) {  //
+        callback(severity, logMsg.c_str(), user_data);
+    });
 }
 HANDLE_EXCEPTIONS_NO_RETURN(severity, callback, user_data)
 
 void ob_set_logger_to_console(ob_log_severity severity, ob_error **error) BEGIN_API_CALL {
-    if(libobsensor::Context::hasInstance()) {
-        auto context = libobsensor::Context::getInstance();
-        auto logger  = context->getLogger();
-        logger->setLogToConsole(severity);
-    }
-    else {
-        libobsensor::setGlobalConsoleLogSeverity(severity);
-    }
+    libobsensor::Logger::setConsoleLogSeverity(severity);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(severity)
 

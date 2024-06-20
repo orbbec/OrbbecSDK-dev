@@ -41,33 +41,32 @@
 namespace libobsensor {
 typedef std::function<void(OBLogSeverity severity, const std::string &logMsg)> LogCallback;
 
-void setGlobalLogSeverity(OBLogSeverity severity);
-void setGlobalConsoleLogSeverity(OBLogSeverity severity);
-void setGlobalFileLogConfig(OBLogSeverity severity, const std::string &directory = "", uint32_t maxFileSize = 0, uint32_t maxFileNum = 0);
-void setGlobalFileLogDir(const std::string &directory);  // for api2
-void setGlobalLogCallback(OBLogSeverity severity, LogCallback callback);
-
 class Logger {
+
 private:
     Logger();
 
     static std::mutex            instanceMutex_;
     static std::weak_ptr<Logger> instanceWeakPtr_;
 
+    struct LoggerConfig;
+    static LoggerConfig config_;
+
 public:
     static std::shared_ptr<Logger> getInstance();
 
     ~Logger() noexcept;
 
-    // both console and file and callback log
-    void setLogSeverity(OBLogSeverity severity);
+    static void setLogSeverity(OBLogSeverity severity);
+    static void setConsoleLogSeverity(OBLogSeverity severity);
+    static void setFileLogConfig(OBLogSeverity severity, const std::string &directory = "", uint32_t maxFileSize = 0, uint32_t maxFileNum = 0);
+    static void setLogCallback(OBLogSeverity severity, LogCallback callback);
 
-    void setLogToConsole(OBLogSeverity severity);
-    void setLogToFile(OBLogSeverity severity, const std::string &directory = "", uint32_t maxFileSize = 0, uint32_t maxFileNum = 0);
-    void setLogToFileDir(const std::string &directory);
-    void setLogCallback(OBLogSeverity severity, LogCallback callback);
-
-    void createSinkFromGlobalConfig();
+private:
+    void loadEnvConfig();
+    void createConsoleSink();
+    void createFileSink();
+    void createCallbackSink();
     void updateDefaultSpdLogger();
 
 private:

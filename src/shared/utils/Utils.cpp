@@ -30,13 +30,6 @@ void sleepMs(uint64_t msec) {
 #endif
 }
 
-void     safeDelete(void *ptr){
-    if(ptr) {
-        delete ptr;
-        ptr = nullptr;
-    }
-}
-
 bool checkJpgImageData(const uint8_t *data, size_t dataLen) {
     bool validImage = dataLen >= 2 && data[0] == 0xFF && data[1] == 0xD8;
     if(validImage) {

@@ -32,7 +32,7 @@ FrameProcessorFactory::~FrameProcessorFactory() noexcept{
         context_.destroy_context(context_.context, &error);
         if(error){
             //TODO
-            utils::safeDelete(error);
+            delete error;
         }
     }
 }
@@ -54,7 +54,7 @@ FrameProcessor::FrameProcessor(FrameProcessorContext *context,OBSensorType senso
         const char *schema = context_->get_config_schema(privateProcessor_, &error);
         if(error){
             //TODO
-            utils::safeDelete(error);
+            delete error;
         }
         if(schema){
             configSchema_ = std::string(schema);
@@ -68,7 +68,7 @@ FrameProcessor::~FrameProcessor() noexcept{
         context_->destroy_processor(privateProcessor_, &error);
         if(error){
             //TODO
-            utils::safeDelete(error);
+            delete error;
         }
     }
 }
@@ -89,7 +89,7 @@ std::shared_ptr<Frame> FrameProcessor::process(std::shared_ptr<const Frame> fram
         
         if(error){
             //TODO
-            utils::safeDelete(error);
+            delete error;
             return FrameFactory::cloneFrame(frame,true);
         }
         return resultFrame;
@@ -111,7 +111,7 @@ void FrameProcessor::updateConfig(std::vector<std::string> &params){
     context_->update_config(privateProcessor_, params.size(), c_params.data(), &error);
     if(error){
         //TODO
-        utils::safeDelete(error);
+        delete error;
     }
 }
 

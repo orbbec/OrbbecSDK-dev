@@ -20,6 +20,8 @@ void DisparityBasedSensor::convertProfileAsDisparityBasedProfile() {
     for(auto &sp: oldSpList) {
         auto vsp   = sp->as<const VideoStreamProfile>();
         auto newSp = StreamProfileFactory::createDisparityBasedStreamProfile(vsp);
+        auto iter = streamProfileBackendMap_.find(sp);
+        streamProfileBackendMap_.insert({newSp,{iter->second.first, iter->second.second}});
         streamProfileList_.push_back(newSp);
     }
 }

@@ -5,14 +5,21 @@
 namespace libobsensor {
 FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device){
     //TODO
-    dylib_ = std::make_shared<dylib>("./frameprocessor/","ob_frame_processor");
-    context_.create_context         = dylib_->get_function<ob_frame_processor_context*(ob_device *,ob_error **)>("ob_create_frame_processor_context");
-    context_.create_processor       = dylib_->get_function<ob_frame_processor*(ob_frame_processor_context *,ob_sensor_type type,ob_error **)>("ob_create_frame_processor");
-    context_.get_config_schema = dylib_->get_function<const char *(ob_frame_processor *,ob_error **)>("ob_frame_processor_get_config_schema");
-    context_.update_config = dylib_->get_function<void(ob_frame_processor *,size_t, const char **,ob_error **)>("ob_frame_processor_update_config");
-    context_.process_frame = dylib_->get_function<ob_frame*(ob_frame_processor *,ob_frame *,ob_error **)>("ob_frame_processor_process_frame");
-    context_.destroy_processor = dylib_->get_function<void(ob_frame_processor *,ob_error **)>("ob_destroy_frame_processor");
-    context_.destroy_context = dylib_->get_function<void(ob_frame_processor_context *,ob_error **)>("ob_destroy_frame_processor_context");
+    try{
+        dylib_ = std::make_shared<dylib>(moduleLoadPath_.c_str(),"ob_frame_processor");
+    }catch(...){
+
+    }
+
+    if(dylib_){
+        context_.create_context         = dylib_->get_function<ob_frame_processor_context*(ob_device *,ob_error **)>("ob_create_frame_processor_context");
+        context_.create_processor       = dylib_->get_function<ob_frame_processor*(ob_frame_processor_context *,ob_sensor_type type,ob_error **)>("ob_create_frame_processor");
+        context_.get_config_schema = dylib_->get_function<const char *(ob_frame_processor *,ob_error **)>("ob_frame_processor_get_config_schema");
+        context_.update_config = dylib_->get_function<void(ob_frame_processor *,size_t, const char **,ob_error **)>("ob_frame_processor_update_config");
+        context_.process_frame = dylib_->get_function<ob_frame*(ob_frame_processor *,ob_frame *,ob_error **)>("ob_frame_processor_process_frame");
+        context_.destroy_processor = dylib_->get_function<void(ob_frame_processor *,ob_error **)>("ob_destroy_frame_processor");
+        context_.destroy_context = dylib_->get_function<void(ob_frame_processor_context *,ob_error **)>("ob_destroy_frame_processor_context");
+    }
 
     if(context_.create_context && !context_.context){
         ob_device cDevice;
@@ -38,6 +45,9 @@ FrameProcessorFactory::~FrameProcessorFactory() noexcept{
 }
 
 std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSensorType sensorType){
+    if(!context_.context || context_.create_processor == nullptr){
+        return nullptr;
+    }
     return std::make_shared<FrameProcessor>(&context_,sensorType);
 }
 
@@ -50,7 +60,10 @@ FrameProcessor::FrameProcessor(FrameProcessorContext *context,OBSensorType senso
             //TODO
             throw std::runtime_error("create frame processor failed");
         }
+    }
 
+    if(context_->context && context_->get_config_schema){
+        ob_error *error = nullptr;
         const char *schema = context_->get_config_schema(privateProcessor_, &error);
         if(error){
             //TODO

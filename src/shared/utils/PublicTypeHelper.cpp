@@ -87,7 +87,6 @@ uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t hei
         break;
     }
     return maxFrameDataSize;
-
 }
 
 OBFrameType mapStreamTypeToFrameType(OBStreamType type) {
@@ -254,117 +253,52 @@ float mapIMUSampleRateToValue(OBIMUSampleRate rate) {
     }
 }
 
+const std::map<OBSensorType, std::string> SENSOR_STR_MAP = {
+    { OB_SENSOR_IR, "IR" },           { OB_SENSOR_COLOR, "Color" },     { OB_SENSOR_DEPTH, "Depth" },       { OB_SENSOR_ACCEL, "Accel" },
+    { OB_SENSOR_GYRO, "Gyro" },       { OB_SENSOR_IR_LEFT, "IR_LEFT" }, { OB_SENSOR_IR_RIGHT, "IR_RIGHT" }, { OB_SENSOR_RAW_PHASE, "RAW_PHASE" },
+    { OB_SENSOR_UNKNOWN, "Unknown" },
+};
+
+const std::string &getSensorName(OBSensorType type) {
+    auto it = SENSOR_STR_MAP.find(type);
+    if(it == SENSOR_STR_MAP.end()) {
+        throw invalid_value_exception("Unregistered sensor type");
+    }
+    return it->second;
+}
+
+const std::map<std::string, OBFormat> STR_FORMAT_MAP = {
+    { "YUYV", OB_FORMAT_YUYV },       { "YUY2", OB_FORMAT_YUY2 }, { "UYVY", OB_FORMAT_UYVY }, { "NV12", OB_FORMAT_NV12 },     { "NV21", OB_FORMAT_NV21 },
+    { "MJPG", OB_FORMAT_MJPG },       { "H264", OB_FORMAT_H264 }, { "H265", OB_FORMAT_H265 }, { "Y16", OB_FORMAT_Y16 },       { "Y8", OB_FORMAT_Y8 },
+    { "Y10", OB_FORMAT_Y10 },         { "Y11", OB_FORMAT_Y11 },   { "Y12", OB_FORMAT_Y12 },   { "Y14", OB_FORMAT_Y14 },       { "HEVC", OB_FORMAT_HEVC },
+    { "I420", OB_FORMAT_I420 },       { "RGB", OB_FORMAT_RGB },   { "RGB", OB_FORMAT_RGB },   { "RGB888", OB_FORMAT_RGB888 }, { "BGR", OB_FORMAT_BGR },
+    { "BGRA", OB_FORMAT_BGRA },       { "RLE", OB_FORMAT_RLE },   { "RVL", OB_FORMAT_RVL },   { "Z16", OB_FORMAT_Z16 },       { "YV12", OB_FORMAT_YV12 },
+    { "BA81", OB_FORMAT_BA81 },       { "RGBA", OB_FORMAT_RGBA }, { "BYR2", OB_FORMAT_BYR2 }, { "RAW16", OB_FORMAT_RW16 },    { "DISP16", OB_FORMAT_DISP16 },
+    { "UNKNOWN", OB_FORMAT_UNKNOWN },
+};
+
+const OBFormat strToOBFormat(const std::string &str) {
+    auto it = STR_FORMAT_MAP.find(str);
+    if(it == STR_FORMAT_MAP.end()) {
+        return OB_FORMAT_UNKNOWN;
+    }
+    return it->second;
+}
+
+const std::string &obFormatToStr(OBFormat format) {
+    for(auto it = STR_FORMAT_MAP.begin(); it != STR_FORMAT_MAP.end(); ++it) {
+        if(it->second == format) {
+            return it->first;
+        }
+    }
+    throw invalid_value_exception("Unable to determine the string value.");
+}
+
 }  // namespace utils
 }  // namespace libobsensor
 
 std::ostream &operator<<(std::ostream &os, const OBFormat &format) {
-    switch(format) {
-    case OB_FORMAT_YUYV:
-        os << "YUYV";
-        break;
-    case OB_FORMAT_YUY2:
-        os << "YUY2";
-        break;
-    case OB_FORMAT_UYVY:
-        os << "UYVY";
-        break;
-    case OB_FORMAT_NV12:
-        os << "NV12";
-        break;
-    case OB_FORMAT_NV21:
-        os << "NV21";
-        break;
-    case OB_FORMAT_MJPG:
-        os << "MJPG";
-        break;
-    case OB_FORMAT_H264:
-        os << "H264";
-        break;
-    case OB_FORMAT_H265:
-        os << "H265";
-        break;
-    case OB_FORMAT_Y16:
-        os << "Y16";
-        break;
-    case OB_FORMAT_Y8:
-        os << "Y8";
-        break;
-    case OB_FORMAT_Y10:
-        os << "Y10";
-        break;
-    case OB_FORMAT_Y11:
-        os << "Y11";
-        break;
-    case OB_FORMAT_Y12:
-        os << "Y12";
-        break;
-    case OB_FORMAT_GRAY:
-        os << "GRAY";
-        break;
-    case OB_FORMAT_HEVC:
-        os << "HEVC";
-        break;
-    case OB_FORMAT_I420:
-        os << "I420";
-        break;
-    case OB_FORMAT_ACCEL:
-        os << "ACCEL";
-        break;
-    case OB_FORMAT_GYRO:
-        os << "GYRO";
-        break;
-    case OB_FORMAT_POINT:
-        os << "POINT";
-        break;
-    case OB_FORMAT_RGB_POINT:
-        os << "RGB_POINT";
-        break;
-    case OB_FORMAT_RLE:
-        os << "RLE";
-        break;
-    case OB_FORMAT_RGB:
-        os << "RGB";
-        break;
-    case OB_FORMAT_BGR:
-        os << "BGR";
-        break;
-    case OB_FORMAT_Y14:
-        os << "Y14";
-        break;
-    case OB_FORMAT_BGRA:
-        os << "BGRA";
-        break;
-    case OB_FORMAT_COMPRESSED:
-        os << "COMPRESSED";
-        break;
-    case OB_FORMAT_RVL:
-        os << "RVL";
-        break;
-    case OB_FORMAT_Z16:
-        os << "Z16";
-        break;
-    case OB_FORMAT_YV12:
-        os << "YV12";
-        break;
-    case OB_FORMAT_BA81:
-        os << "BA81";
-        break;
-    case OB_FORMAT_RGBA:
-        os << "RGBA";
-        break;
-    case OB_FORMAT_BYR2:
-        os << "BYR2";
-        break;
-    case OB_FORMAT_RW16:
-        os << "RW16";
-        break;
-    case OB_FORMAT_DISP16:
-        os << "DISP16";
-        break;
-    default:
-        os << "Unknown format";
-        break;
-    }
+    os << libobsensor::utils::obFormatToStr(format);
     return os;
 }
 
@@ -407,31 +341,31 @@ std::ostream &operator<<(std::ostream &os, const OBFrameType &type) {
 std::ostream &operator<<(std::ostream &os, const OBStreamType &type) {
     switch(type) {
     case OB_STREAM_VIDEO:
-        os << "STREAM_VIDEO";
+        os << "Video";
         break;
     case OB_STREAM_IR:
-        os << "STREAM_IR";
+        os << "IR";
         break;
     case OB_STREAM_COLOR:
-        os << "STREAM_COLOR";
+        os << "Color";
         break;
     case OB_STREAM_DEPTH:
-        os << "STREAM_DEPTH";
+        os << "Depth";
         break;
     case OB_STREAM_ACCEL:
-        os << "STREAM_ACCEL";
+        os << "Accel";
         break;
     case OB_STREAM_GYRO:
-        os << "STREAM_GYRO";
+        os << "Gyro";
         break;
     case OB_STREAM_IR_LEFT:
-        os << "STREAM_IR_LEFT";
+        os << "IR_LEFT";
         break;
     case OB_STREAM_IR_RIGHT:
-        os << "STREAM_IR_RIGHT";
+        os << "IR_RIGHT";
         break;
     case OB_STREAM_RAW_PHASE:
-        os << "STREAM_RAW_PHASE";
+        os << "RawPhase";
         break;
     default:
         os << "Unknown stream type";
@@ -441,35 +375,7 @@ std::ostream &operator<<(std::ostream &os, const OBStreamType &type) {
 }
 
 std::ostream &operator<<(std::ostream &os, const OBSensorType &type) {
-    switch(type) {
-    case OB_SENSOR_IR:
-        os << "SENSOR_IR";
-        break;
-    case OB_SENSOR_COLOR:
-        os << "SENSOR_COLOR";
-        break;
-    case OB_SENSOR_DEPTH:
-        os << "SENSOR_DEPTH";
-        break;
-    case OB_SENSOR_ACCEL:
-        os << "SENSOR_ACCEL";
-        break;
-    case OB_SENSOR_GYRO:
-        os << "SENSOR_GYRO";
-        break;
-    case OB_SENSOR_IR_LEFT:
-        os << "SENSOR_IR_LEFT";
-        break;
-    case OB_SENSOR_IR_RIGHT:
-        os << "SENSOR_IR_RIGHT";
-        break;
-    case OB_SENSOR_RAW_PHASE:
-        os << "SENSOR_RAW_PHASE";
-        break;
-    default:
-        os << "Unknown sensor type";
-        break;
-    }
+    os << libobsensor::utils::getSensorName(type);
     return os;
 }
 

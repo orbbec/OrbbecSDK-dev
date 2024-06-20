@@ -1,5 +1,6 @@
 #pragma once
 #include "xml/XmlReader.hpp"
+#include "openobsdk/h/ObTypes.h"
 
 namespace libobsensor {
 

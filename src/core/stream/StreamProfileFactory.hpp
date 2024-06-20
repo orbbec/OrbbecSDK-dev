@@ -21,5 +21,7 @@ std::shared_ptr<AccelStreamProfile> createAccelStreamProfile(std::shared_ptr<Laz
 std::shared_ptr<GyroStreamProfile> createGyroStreamProfile(OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
 std::shared_ptr<GyroStreamProfile> createGyroStreamProfile(std::shared_ptr<LazySensor> owner, OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);
 
+std::shared_ptr<const StreamProfile> getDefaultStreamProfileFormEnvConfig(const std::string &deviceName, OBSensorType sensorType);
+
 }  // namespace StreamProfileFactory
 }  // namespace libobsensor

@@ -4,6 +4,7 @@
 
 namespace libobsensor {
 namespace utils {
+bool        fileExists(const char *file);
 bool        checkDir(const char *dir);
 int         mkDirs(const char *dir);
 std::string getCurrentWorkDirectory();

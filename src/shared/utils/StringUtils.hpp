@@ -77,6 +77,12 @@ std::string              remove(const std::string &s, const std::string &rm);
 std::string              replace(const std::string &s, const std::string &src, const std::string &rep);
 std::string              toLower(const std::string &s);
 std::string              toUpper(const std::string &s);
-char                     my_toupper(char ch);
+
+std::string clearHeadAndTailSpace(const std::string &string);
+bool        string2Int(const std::string &string, int &dst);
+bool        string2Float(const std::string &string, float &dst);
+bool        string2Double(const std::string &string, double &dst);
+bool        string2Boolean(const std::string &string, bool &dst);
+
 }  // namespace utils
 }  // namespace libobsensor

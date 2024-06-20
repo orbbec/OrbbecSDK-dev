@@ -1,10 +1,17 @@
-﻿#include "AlignImpl.hpp"
-#include "logger/Logger.hpp"
-#include "exception/ObException.hpp"
-#include <omp.h>
-#include <fstream>
+
+extern "C" {
+#include <openobsdk/h/Frame.h>
+#include <openobsdk/h/Filter.h>
+#include <openobsdk/h/Error.h>
+}
+
 #include <iostream>
-#include <chrono>
+#include <unordered_map>
+#include <omp.h>
+
+#include <fstream>
+#include <string>
+#include <regex>
 
 #ifdef _WIN32
 #include <xmmintrin.h>
@@ -13,7 +20,147 @@
 #include "SSE2NEON.h"
 #endif
 
-namespace libobsensor {
+#define LOG_ERROR printf
+
+#define EPSILON (1e-6)
+
+struct ResHashFunc {
+    size_t operator()(const std::pair<int, int> &p) const {
+        return (((uint32_t)p.first & 0xFFFF) << 16) | ((uint32_t)p.second & 0xFFFF);
+    }
+};
+
+struct ResComp {
+    bool operator()(const std::pair<int, int> &p1, const std::pair<int, int> &p2) const {
+        return p1.first == p2.first && p1.second == p2.second;
+    }
+};
+
+/**
+ * @brief Implementation of Alignment
+ */
+class AlignImpl {
+public:
+    AlignImpl();
+
+    ~AlignImpl();
+
+    /**
+     * @brief Load parameters and set up LUT
+     * @param[in] depth_intrin intrisics of depth frame
+     * @param[in] depth_disto distortion parameters of depth frame
+     * @param[in] rgb_intrin intrinsics of color frame
+     * @param[in] rgb_disto distortion parameters of color frame
+     * @param[in] depth_to_rgb rotation and translation from depth to color
+     * @param[in] depth_unit_mm depth scale in millimeter
+     * @param[in] add_target_distortion switch to add distortion of the target frame
+     * @param[in] gap_fill_copy switch to fill gaps with copy or nearest-interpolation after alignment
+     *
+     */
+    void initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
+                    OBExtrinsic depth_to_rgb, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy);
+
+    /**
+     * @brief Get depth unit in millimeter
+     *
+     * @return float depth scale in millimeter
+     */
+    float getDepthUnit() {
+        return depth_unit_mm_;
+    };
+
+    /**
+     * @brief Prepare LUTs of depth undistortion and rotation
+     */
+    void prepareDepthResolution();
+
+    /**
+     * @brief Clear buffer and de-initialize
+     */
+    void reset();
+
+    /**
+     * @brief       Align depth to color
+     * @param[in]       depth_buffer  data buffer of the depth frame in row-major order
+     * @param[in]       depth_width   width of the depth frame
+     * @param[in]       depth_height  height of the depth frame
+     * @param[out]  out_depth     aligned data buffer in row-major order
+     * @param[in]       color_width   width of the color frame
+     * @param[in]       color_height  height of the color frame
+     * @param[in]       map    coordinate mapping for C2D
+     * @param[in]       withSSE switch to speed up with SSE
+     * @retval  -1  fail
+     * @retval  0   succeed
+     */
+    int D2C(const uint16_t *depth_buffer, int depth_width, int depth_height, uint16_t *out_depth, int color_width, int color_height, int *map = nullptr,
+            bool withSSE = true);
+
+    /**
+     * @brief Align color to depth
+     * @param[in] depth_buffer data buffer of the depth frame in row-major order
+     * @param[in] depth_width  width of the depth frame
+     * @param[in] depth_height height of the depth frame
+     * @param[in] rgb_buffer   data buffer the to-align color frame
+     * @param[out] out_rgb      aligned data buffer of the color frame
+     * @param[in] color_width  width of the to-align color frame
+     * @param[in] color_height height of the to-align color frame
+     * @param[in] format       pixel format of the color fraem
+     * @retval -1 fail
+     * @retval 0 succeed
+     */
+    int C2D(const uint16_t *depth_buffer, int depth_width, int depth_height, const void *rgb_buffer, void *out_rgb, int color_width, int color_height,
+            OBFormat format, bool withSSE = true);
+
+private:
+    void clearMatrixCache();
+
+    void D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z, int *map = nullptr);
+    /** SSE speed-ed depth to color alignment with different distortion model */
+    void distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
+                             int *map = nullptr);
+    void KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
+                               int *map = nullptr);
+    void BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
+                               int *map = nullptr);
+    void linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
+                          int *map = nullptr);
+
+    /**
+     * @brief               Transfer pixels of the source image buffer to the target
+     * @tparam T            pixel type, like uint8_t, uint16_t, etc.
+     * @param map           coordinate map of the same dimensions as the target
+     * @param src_buffer    the source image buffer
+     * @param src_width     columns of the source image
+     * @param src_height    rows of the source image
+     * @param dst_buffer    the target image buffer
+     * @param dst_width
+     */
+    template <typename T> void mapPixel(const int *map, const T *src_buffer, int src_width, int src_height, T *dst_buffer, int dst_width, int dst_height);
+
+private:
+    bool initialized_;
+
+    /** Linear/Distortion Rotation Coeff hash table */
+    std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_x;
+    std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_y;
+    std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_z;
+
+    /** ROI setting */
+    int x_start_, y_start_, x_end_, y_end_;
+
+    float              depth_unit_mm_;          // depth scale
+    bool               add_target_distortion_;  // distort align frame with target coefficent
+    bool               gap_fill_copy_;          // filling cracks with copy
+    OBCameraIntrinsic  depth_intric_;
+    OBCameraIntrinsic  rgb_intric_;
+    OBCameraDistortion depth_disto_;
+    OBCameraDistortion rgb_disto_;
+    OBExtrinsic        transform_;        // should be depth-to-rgb all the time
+    float              scaled_trans_[3];  // scaled translation
+
+    // possible inflection point of the calibrated K6 distortion curve
+    float r2_max_loc_;
+};
 
 static inline void addDistortion(const OBCameraDistortion &distort_param, const float pt_ud[2], float pt_d[2]) {
     float k1 = distort_param.k1, k2 = distort_param.k2, k3 = distort_param.k3;
@@ -129,6 +276,7 @@ AlignImpl::~AlignImpl() {
 
 void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
                            OBExtrinsic extrin, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy) {
+    /// TODO(timon):
     if(initialized_) {
         return;
     }
@@ -145,6 +293,7 @@ void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion de
     for(int i = 0; i < 3; ++i)
         scaled_trans_[i] = transform_.trans[i] / depth_unit_mm_;
 
+    /// TODO(timon): Set ROI to full temporarily
     x_start_ = 0;
     y_start_ = 0;
     x_end_   = rgb_intric_.width;
@@ -203,6 +352,7 @@ void AlignImpl::prepareDepthResolution() {
             r2_max_loc_ = r2;
     }
 
+    /// TODO(timon): linear and distort for depth should be same since depth has no distortion
     {
         float *rot_coeff1 = new float[depth_intric_.width * depth_intric_.height];
         float *rot_coeff2 = new float[depth_intric_.width * depth_intric_.height];
@@ -607,13 +757,13 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                 if(0 == static_cast<uint16_t>(zptr[j]))
                     continue;
 
-				int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
+                int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
                 if(map) {
                     map[2 * i + k * 4 + j]     = u_rgb;
                     map[2 * i + 1 + k * 4 + j] = v_rgb;
                 }
 
-                int pos = v_rgb * rgb_intric_.width + u_rgb;
+                int      pos       = v_rgb * rgb_intric_.width + u_rgb;
                 uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
                 if(gap_fill_copy_) {
                     bool b_cur                             = out_depth[pos] < cur_depth;
@@ -933,8 +1083,7 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
                     continue;
 
                 int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
-                if (map)
-                {
+                if(map) {
                     map[2 * i + k * 4 + j]     = u_rgb;
                     map[2 * i + 1 + k * 4 + j] = v_rgb;
                 }
@@ -1165,4 +1314,128 @@ void AlignImpl::mapPixel(const int *map, const T *src_buffer, int src_width, int
     }
 }
 
-}  // namespace libobsensor
+
+void check_ob_error(ob_error **err) {
+    if(*err) {
+        std::cerr << "Error: " << ob_error_get_message(*err) << std::endl;
+        ob_delete_error(*err);
+        exit(-1);
+    }
+    *err = nullptr;
+}
+
+int parse_obviewer_data(char *filename, OBCameraIntrinsic &depth_intr, OBCameraIntrinsic &color_intr, OBCameraDistortion &depth_disto, OBCameraDistortion &color_disto, OBTransform &trans) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file." << std::endl;
+        return 1;
+    }
+
+    std::string line;
+
+    const std::string numberPattern = R"([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)";
+
+    // Define regular expressions for each type of line
+    //std::regex intrinsicRegex(R"(fx:(\d+\.\d+) fy:(\d+\.\d+) cx:(\d+\.?\d+) cy:(\d+\.?\d+) width:(\d+) height:(\d+))");
+    std::regex distortionRegex(R"(k1:(-?\d+\.?\d?) k2:(-?\d+\.?\d?) k3:(-?\d+\.?\d?) k4:(-?\d+) k5:(-?\d+) k6:(-?\d+) p1:(-?\d+\.?\d?) p2:(-?\d+\.?\d?))");
+    std::regex extrinsicRotationRegex(R"(rotation:(-?\d+\.\d+) (-?\d+\.\d+) (-?\d+\.\d+) (-?\d+\.\d+) (-?\d+\.\d+) (-?\d+\.\d+) (-?\d+\.\d+) (-?\d+\.\d+) (-?\d+\.\d+))");
+    std::regex extrinsicTranslationRegex(R"(translation:(-?\d+\.\d+) (-?\d+\.\d+) (-?\d+\.\d+))");
+    // Define regular expressions for each type of line using the number pattern
+    std::regex intrinsicRegex("fx:(" + numberPattern + ") fy:" + numberPattern + " cx:(" + numberPattern + ") cy:" + numberPattern
+                              + R"( width:(\d+) height:(\d+))");
+
+    //std::regex distortionRegex(R"(k1:()" + numberPattern + R"( k2:()" + numberPattern + R"( k3:()" + numberPattern + R"( k4:()" + numberPattern + R"( k5:()"
+    //                           + numberPattern + R"( k6:()" + numberPattern + R"( p1:()" + numberPattern + R"( p2:()" + numberPattern + R"())");
+
+    //std::regex extrinsicRotationRegex(R"(rotation:()" + numberPattern + R"( )()" + numberPattern + R"( )()" + numberPattern + R"( )()" + numberPattern
+    //                                  + R"( )()" + numberPattern + R"( )()" + numberPattern + R"( )()" + numberPattern + R"( )()" + numberPattern + R"( )()"
+    //                                  + numberPattern + R"())");
+
+    //std::regex extrinsicTranslationRegex(R"(translation:()" + numberPattern + R"( )()" + numberPattern + R"( )()" + numberPattern + R"())");
+
+
+    while (std::getline(file, line)) {
+        std::smatch match;
+
+        // Match color intrinsic parameters
+        if (std::regex_search(line, match, intrinsicRegex) && line.find("Color Intrinsic") != std::string::npos) {
+            color_intr = {std::stof(match[1]), std::stof(match[2]), std::stof(match[3]), std::stof(match[4]), int16_t(std::stoi(match[5])), int16_t(std::stoi(match[6]))};
+        }
+
+        // Match depth intrinsic parameters
+        else if (std::regex_search(line, match, intrinsicRegex) && line.find("Depth Intrinsic") != std::string::npos) {
+            depth_intr = {std::stof(match[1]), std::stof(match[2]), std::stof(match[3]), std::stof(match[4]), int16_t(std::stoi(match[5])), int16_t(std::stoi(match[6]))};
+        }
+
+        // Match color distortion parameters
+        else if (std::regex_search(line, match, distortionRegex) && line.find("Color Distortion") != std::string::npos) {
+            color_disto = {std::stof(match[1]), std::stof(match[2]), std::stof(match[3]), std::stof(match[4]), std::stof(match[5]), std::stof(match[6]), std::stof(match[7]), std::stof(match[8])}, OBCameraDistortionModel::OB_DISTORTION_BROWN_CONRADY;
+        }
+
+        // Match depth distortion parameters
+        else if (std::regex_search(line, match, distortionRegex) && line.find("Depth Distortion") != std::string::npos) {
+            depth_disto = {std::stof(match[1]), std::stof(match[2]), std::stof(match[3]), std::stof(match[4]), std::stof(match[5]), std::stof(match[6]), std::stof(match[7]), std::stof(match[8])}, OBCameraDistortionModel::OB_DISTORTION_BROWN_CONRADY;
+        }
+
+        // Match depth to color rotation parameters
+        else if (std::regex_search(line, match, extrinsicRotationRegex)) {
+            for (int i = 0; i < 9; ++i) {
+                    trans.rot[i] = std::stof(match[1 + i]);
+            }
+        }
+
+        // Match depth to color translation parameters
+        else if (std::regex_search(line, match, extrinsicTranslationRegex)) {
+            for (int i = 0; i < 3; ++i) {
+                trans.trans[i] = std::stof(match[1 + i]);
+            }
+        }
+    }
+
+    file.close();
+    return 0;
+}
+
+
+int main(int argc, char* argv[]) {
+    if(argc < 3) {
+        std::cerr << "Usage: %s <param_file> <image_file>" << std::endl;
+        return -1;
+    }
+
+    OBCameraIntrinsic depth_intr, color_intr;
+    OBCameraDistortion depth_disto, color_disto;
+    OBTransform        transform;
+    if(0 != parse_obviewer_data(argv[1], depth_intr, color_intr, depth_disto, color_disto, transform)) {
+        std::cerr << "Parse parameter file error." << std::endl;
+        return -1;
+    }
+
+    ob_error *err   = nullptr;
+
+    FILE *                             depth_file = fopen(argv[1], "rb");
+    if(!depth_file) {
+        *err = { ob_status::OB_STATUS_ERROR, "read file error", "fopen", *argv[1], ob_exception_type::OB_EXCEPTION_TYPE_IO };
+        check_ob_error(&err);
+    }
+    auto      depth_width = 1280, depth_height = 800;
+    uint32_t  buffer_size = depth_width * depth_height * sizeof(uint16_t);
+    uint16_t *depth_data  = (uint16_t*)malloc(buffer_size);
+    fread(depth_data, buffer_size, 1, depth_file);
+    for(int i = 0; i < depth_width * depth_height; i++) {
+        depth_data[i] = _byteswap_ushort(depth_data[i]);
+    }
+    auto      frame       = ob_create_frame_from_buffer(OB_FRAME_DEPTH, OB_FORMAT_Y16, (uint8_t *)depth_data, buffer_size, nullptr, nullptr, &err);
+
+    char nname[256];
+	sprintf(nname, "%s_filtered.raw", argv[1]);
+	FILE* fp = fopen(nname, "wb");
+	if (fp)
+	{
+		fwrite(frame, 1, buffer_size, fp);
+		fclose(fp);
+	}
+    ob_delete_frame(frame, &err);
+    check_ob_error(&err);
+    return 0;
+}

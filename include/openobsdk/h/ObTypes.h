@@ -379,7 +379,6 @@ typedef struct {
     float   cy;      ///< Optical center ordinate
     int16_t width;   ///< Image width
     int16_t height;  ///< Image height
-    OBCameraDistortionModel model;
 } OBCameraIntrinsic, ob_camera_intrinsic;
 
 /**
@@ -419,20 +418,8 @@ typedef struct {
     float k6;  ///< Radial distortion factor 6
     float p1;  ///< Tangential distortion factor 1
     float p2;  ///< Tangential distortion factor 2
+    OBCameraDistortionModel model;
 } OBCameraDistortion, ob_camera_distortion;
-
-/** \brief Video stream intrinsics. */
-//typedef struct {
-//    int                     width;  /**< Width of the image in pixels */
-//    int                     height; /**< Height of the image in pixels */
-//    float                   ppx;    /**< Horizontal coordinate of the principal point of the image, as a pixel offset from the left edge */
-//    float                   ppy;    /**< Vertical coordinate of the principal point of the image, as a pixel offset from the top edge */
-//    float                   fx;     /**< Focal length of the image plane, as a multiple of pixel width */
-//    float                   fy;     /**< Focal length of the image plane, as a multiple of pixel height */
-//    OBCameraDistortionModel model;  /**< Distortion model of the image */
-//    float coeffs[5]; /**< Distortion coefficients. Order for Brown-Conrady: [k1, k2, p1, p2, k3]. Order for F-Theta Fish-eye: [k1, k2, k3, k4, 0]. Other models
-//                        are subject to their own interpretations */
-//} OBCameraAlignIntrinsic, ob_camera_align_intrinsic;
 
 /**
  * @brief Structure for rotation/transformation
@@ -453,18 +440,6 @@ typedef struct {
     OBD2CTransform     transform;        ///< Rotation/transformation matrix
     bool               isMirrored;       ///< Whether the image frame corresponding to this group of parameters is mirrored
 } OBCameraParam, ob_camera_param;
-
-/**
- * @brief Camera parameters
- */
-typedef struct {
-    OBCameraIntrinsic  depthIntrinsic;   ///< Depth camera internal parameters
-    OBCameraIntrinsic  rgbIntrinsic;     ///< Color camera internal parameters
-    OBCameraDistortion depthDistortion;  ///< Depth camera distortion parameters
-
-    OBCameraDistortion rgbDistortion;  ///< Distortion parameters for color camera
-    OBD2CTransform     transform;      ///< Rotation/transformation matrix
-} OBCameraParam_V0, ob_camera_param_v0;
 
 /**
  * @brief calibration parameters

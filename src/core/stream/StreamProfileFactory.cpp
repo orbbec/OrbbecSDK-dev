@@ -1,5 +1,7 @@
 
 #include "StreamProfileFactory.hpp"
+#include "StreamIntrinsicsManager.hpp"
+#include "StreamExtrinsicsManager.hpp"
 #include "exception/ObException.hpp"
 
 namespace libobsensor {
@@ -25,12 +27,13 @@ std::shared_ptr<StreamProfile> createStreamProfile(OBStreamType streamType, OBFo
         return createVideoStreamProfile(streamType, frameFormat, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
 
     default:
-        return std::make_shared<StreamProfile>(std::shared_ptr<LazySensor>(), streamType,frameFormat);
+        return std::make_shared<StreamProfile>(std::shared_ptr<LazySensor>(), streamType, frameFormat);
     }
 }
 
-std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps,OBDeviceType deviceType) {
-    return createVideoStreamProfile(std::shared_ptr<LazySensor>(), type, format, width, height, fps,deviceType);
+std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps,
+                                                             OBDeviceType deviceType) {
+    return createVideoStreamProfile(std::shared_ptr<LazySensor>(), type, format, width, height, fps, deviceType);
 }
 
 std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width,
@@ -49,7 +52,20 @@ std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(std::shared_ptr<Laz
 }
 
 std::shared_ptr<DisparityBasedStreamProfile> createDisparityBasedStreamProfile(std::shared_ptr<const VideoStreamProfile> videoProfile) {
-    return std::make_shared<DisparityBasedStreamProfile>(videoProfile);
+    auto vsp           = std::make_shared<DisparityBasedStreamProfile>(videoProfile->getOwner(), videoProfile->getType(), videoProfile->getFormat(),
+                                                                       videoProfile->getWidth(), videoProfile->getHeight(), videoProfile->getFps());
+    auto intrinsicsMgr = StreamIntrinsicsManager::getInstance();
+    if(intrinsicsMgr->containsVideoStreamIntrinsics(videoProfile)) {
+        auto intrinsics = intrinsicsMgr->getVideoStreamIntrinsics(videoProfile);
+        vsp->bindIntrinsic(intrinsics);
+    }
+    if(intrinsicsMgr->containsVideoStreamDistortion(videoProfile)) {
+        auto distortion = intrinsicsMgr->getVideoStreamDistortion(videoProfile);
+        vsp->bindDistortion(distortion);
+    }
+    auto extrinsicsMgr = StreamExtrinsicsManager::getInstance();
+    extrinsicsMgr->registerSameExtrinsics(vsp, videoProfile);
+    return vsp;
 }
 
 std::shared_ptr<AccelStreamProfile> createAccelStreamProfile(OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate) {

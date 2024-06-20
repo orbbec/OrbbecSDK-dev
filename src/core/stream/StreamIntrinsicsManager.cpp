@@ -57,6 +57,23 @@ OBCameraIntrinsic StreamIntrinsicsManager::getVideoStreamIntrinsics(const std::s
     throw invalid_value_exception("Intrinsics for the input stream profile is not found.");
 }
 
+bool StreamIntrinsicsManager::containsVideoStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile) {
+    if(!profile) {
+        throw invalid_value_exception("Input stream profile is null.");
+    }
+    if(!profile->is<const VideoStreamProfile>()) {
+        throw invalid_value_exception("Input stream profile is not a video stream profile.");
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    for(const auto &pair: videoStreamIntrinsicsMap_) {
+        if(pair.first.lock() == profile) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void StreamIntrinsicsManager::registerVideoStreamDistortion(const std::shared_ptr<const StreamProfile> &profile, const OBCameraDistortion &distortion) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
@@ -93,6 +110,23 @@ OBCameraDistortion StreamIntrinsicsManager::getVideoStreamDistortion(const std::
         }
     }
     throw invalid_value_exception("Distortion for the input stream profile is not found.");
+}
+
+bool StreamIntrinsicsManager::containsVideoStreamDistortion(const std::shared_ptr<const StreamProfile> &profile) {
+    if(!profile) {
+        throw invalid_value_exception("Input stream profile is null.");
+    }
+    if(!profile->is<const VideoStreamProfile>()) {
+        throw invalid_value_exception("Input stream profile is not a video stream profile.");
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    for(const auto &pair: videoStreamDistortionMap_) {
+        if(pair.first.lock() == profile) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void StreamIntrinsicsManager::registerGyroStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile, const OBGyroIntrinsic &intrinsics) {
@@ -133,6 +167,23 @@ OBGyroIntrinsic StreamIntrinsicsManager::getGyroStreamIntrinsics(const std::shar
     throw invalid_value_exception("Intrinsics for the input stream profile is not found.");
 }
 
+bool StreamIntrinsicsManager::containsGyroStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile) {
+    if(!profile) {
+        throw invalid_value_exception("Input stream profile is null.");
+    }
+    if(!profile->is<const GyroStreamProfile>()) {
+        throw invalid_value_exception("Input stream profile is not a gyro stream profile.");
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    for(const auto &pair: gyroStreamIntrinsicsMap_) {
+        if(pair.first.lock() == profile) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void StreamIntrinsicsManager::registerAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile, const OBAccelIntrinsic &intrinsics) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
@@ -171,6 +222,23 @@ OBAccelIntrinsic StreamIntrinsicsManager::getAccelStreamIntrinsics(const std::sh
     throw invalid_value_exception("Intrinsics for the input stream profile is not found.");
 }
 
+bool StreamIntrinsicsManager::containsAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile) {
+    if(!profile) {
+        throw invalid_value_exception("Input stream profile is null.");
+    }
+    if(!profile->is<const AccelStreamProfile>()) {
+        throw invalid_value_exception("Input stream profile is not a accel stream profile.");
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    for(const auto &pair: accelStreamIntrinsicsMap_) {
+        if(pair.first.lock() == profile) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void StreamIntrinsicsManager::registerDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile,
                                                                          const OBDisparityParam                     &disparityParam) {
     if(!profile) {
@@ -192,6 +260,7 @@ void StreamIntrinsicsManager::registerDisparityBasedStreamDisparityParam(const s
 
     disparityParamMap_.insert({ std::weak_ptr<const StreamProfile>(profile), disparityParam });
 }
+
 OBDisparityParam StreamIntrinsicsManager::getDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile) {
     if(!profile) {
         throw invalid_value_exception("Input stream profile is null.");
@@ -209,4 +278,20 @@ OBDisparityParam StreamIntrinsicsManager::getDisparityBasedStreamDisparityParam(
     throw invalid_value_exception("Disparity parameter for the input stream profile is not found.");
 }
 
+bool StreamIntrinsicsManager::containsDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile) {
+    if(!profile) {
+        throw invalid_value_exception("Input stream profile is null.");
+    }
+    if(!profile->is<const DisparityBasedStreamProfile>()) {
+        throw invalid_value_exception("Input stream profile is not a disparity based stream profile.");
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    for(const auto &pair: disparityParamMap_) {
+        if(pair.first.lock() == profile) {
+            return true;
+        }
+    }
+    return false;
+}
 }  // namespace libobsensor

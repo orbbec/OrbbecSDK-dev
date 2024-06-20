@@ -3,7 +3,7 @@
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
 #include "pipeline/Pipeline.hpp"
-#include "config/Config.hpp"
+#include "pipeline/Config.hpp"
 #include "context/Context.hpp"
 
 #ifdef __cplusplus

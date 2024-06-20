@@ -123,7 +123,6 @@ protected:
 class DisparityBasedStreamProfile : public VideoStreamProfile {
 public:
     DisparityBasedStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
-    DisparityBasedStreamProfile(std::shared_ptr<const VideoStreamProfile> other);
     ~DisparityBasedStreamProfile() noexcept override = default;
 
     OBDisparityParam getDisparityParam() const;

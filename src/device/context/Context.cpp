@@ -24,11 +24,11 @@ bool Context::hasInstance() {
 }
 
 Context::Context(const std::string &configFilePath) {
-    // Perform initialization here for sequential order.
-    logger_          = Logger::getInstance();
-    frameMemoryPool_ = FrameMemoryPool::getInstance();
-    streamIntrinsicsManager_     = StreamIntrinsicsManager::getInstance();
-    streamExtrinsicsManager_     = StreamExtrinsicsManager::getInstance();
+    envConfig_               = EnvConfig::getInstance(configFilePath);
+    logger_                  = Logger::getInstance();
+    frameMemoryPool_         = FrameMemoryPool::getInstance();
+    streamIntrinsicsManager_ = StreamIntrinsicsManager::getInstance();
+    streamExtrinsicsManager_ = StreamExtrinsicsManager::getInstance();
 
     utils::unusedVar(configFilePath);  // todo: use to load config file
 }
@@ -36,7 +36,7 @@ Context::Context(const std::string &configFilePath) {
 Context::~Context() noexcept {}
 
 std::shared_ptr<DeviceManager> Context::getDeviceManager() {
-    if(deviceManager_ == nullptr){
+    if(deviceManager_ == nullptr) {
         deviceManager_ = DeviceManager::getInstance();
     }
     return deviceManager_;

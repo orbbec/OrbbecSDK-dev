@@ -19,7 +19,7 @@ const std::string &FilterBase::getName() const {
 }
 
 std::shared_ptr<Frame> FilterBase::process(std::shared_ptr<const Frame> frame) {
-    if(!enabled_){
+    if(!enabled_) {
         return FrameFactory::cloneFrame(frame);
     }
     std::unique_lock<std::mutex> lock(mutex_);
@@ -30,14 +30,16 @@ void FilterBase::pushFrame(std::shared_ptr<const Frame> frame) {
     if(!srcFrameQueue_->isStarted()) {
         srcFrameQueue_->start([&](std::shared_ptr<const Frame> frameToProcess) {
             std::shared_ptr<Frame> rstFrame;
-            if(enabled_){
+            if(enabled_) {
                 std::unique_lock<std::mutex> lock(mutex_);
                 BEGIN_TRY_EXECUTE({ rstFrame = processFunc(frameToProcess); })
                 CATCH_EXCEPTION_AND_EXECUTE({  // catch all exceptions to avoid crashing on the inner thread
-                    LOG_WARN("Filter {}: exception caught while processing frame {}#{}, this frame will be dropped", name_, frameToProcess->getType(), frameToProcess->getNumber());
+                    LOG_WARN("Filter {}: exception caught while processing frame {}#{}, this frame will be dropped", name_, frameToProcess->getType(),
+                             frameToProcess->getNumber());
                     return;
                 })
-            }else{
+            }
+            else {
                 rstFrame = FrameFactory::cloneFrame(frameToProcess);
             }
             std::unique_lock<std::mutex> lock(callbackMutex_);

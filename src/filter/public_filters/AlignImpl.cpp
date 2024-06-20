@@ -407,25 +407,36 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                     continue;
 
                 int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
-                if(map) {
-                    map[2 * i + k * 4 + j]     = u_rgb;
-                    map[2 * i + 1 + k * 4 + j] = v_rgb;
-                }
+                if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
-                int      pos       = v_rgb * rgb_intric_.width + u_rgb;
-                uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
-                if(gap_fill_copy_) {
-                    bool b_cur                             = out_depth[pos] < cur_depth;
-                    out_depth[pos]                         = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + 1] < cur_depth;
-                    out_depth[pos + 1]                     = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + rgb_intric_.width] < cur_depth;
-                    out_depth[pos + rgb_intric_.width]     = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
-                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
-                }
-                else {
-                    out_depth[pos] = cur_depth;
+                    if(map) {
+                        map[2 * i + k * 4 + j]     = u_rgb;
+                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                    }
+
+                    if(out_depth) {
+						int      pos       = v_rgb * rgb_intric_.width + u_rgb;
+						uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+						if(out_depth[pos] > cur_depth) {
+							out_depth[pos] = cur_depth;
+						}
+
+						if(gap_fill_copy_) {
+							bool right_valid = (u_rgb + 1) < rgb_intric_.width, bottom_valid = (v_rgb + 1) < rgb_intric_.height;
+							if(right_valid) {
+								if(out_depth[pos + 1] > cur_depth)
+									out_depth[pos + 1] = cur_depth;
+							}
+							if(bottom_valid) {
+								if(out_depth[pos + rgb_intric_.width] > cur_depth)
+									out_depth[pos + rgb_intric_.width] = cur_depth;
+							}
+							if(right_valid && bottom_valid) {
+								if(out_depth[pos + rgb_intric_.width + 1] > cur_depth)
+									out_depth[pos + rgb_intric_.width + 1] = cur_depth;
+							}
+						}
+                    }
                 }
             }
         }
@@ -607,26 +618,37 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                 if(0 == static_cast<uint16_t>(zptr[j]))
                     continue;
 
-				int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
-                if(map) {
-                    map[2 * i + k * 4 + j]     = u_rgb;
-                    map[2 * i + 1 + k * 4 + j] = v_rgb;
-                }
+                int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
+                if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
-                int pos = v_rgb * rgb_intric_.width + u_rgb;
-                uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
-                if(gap_fill_copy_) {
-                    bool b_cur                             = out_depth[pos] < cur_depth;
-                    out_depth[pos]                         = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + 1] < cur_depth;
-                    out_depth[pos + 1]                     = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + rgb_intric_.width] < cur_depth;
-                    out_depth[pos + rgb_intric_.width]     = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
-                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
-                }
-                else {
-                    out_depth[pos] = cur_depth;
+                    if(map) {
+                        map[2 * i + k * 4 + j]     = u_rgb;
+                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                    }
+
+                    if(out_depth) {
+                        int      pos       = v_rgb * rgb_intric_.width + u_rgb;
+                        uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+                        if(out_depth[pos] > cur_depth) {
+                            out_depth[pos] = cur_depth;
+                        }
+
+                        if(gap_fill_copy_) {
+                            bool right_valid = (u_rgb + 1) < rgb_intric_.width, bottom_valid = (v_rgb + 1) < rgb_intric_.height;
+                            if(right_valid) {
+                                if(out_depth[pos + 1] > cur_depth)
+                                    out_depth[pos + 1] = cur_depth;
+                            }
+                            if(bottom_valid) {
+                                if(out_depth[pos + rgb_intric_.width] > cur_depth)
+                                    out_depth[pos + rgb_intric_.width] = cur_depth;
+                            }
+                            if(right_valid && bottom_valid) {
+                                if(out_depth[pos + rgb_intric_.width + 1] > cur_depth)
+                                    out_depth[pos + rgb_intric_.width + 1] = cur_depth;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -798,25 +820,36 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
                     continue;
 
                 int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
-                if(map) {
-                    map[2 * i + k * 4 + j]     = u_rgb;
-                    map[2 * i + 1 + k * 4 + j] = v_rgb;
-                }
+                if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
-                int      pos       = v_rgb * rgb_intric_.width + u_rgb;
-                uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
-                if(gap_fill_copy_) {
-                    bool b_cur                             = out_depth[pos] < cur_depth;
-                    out_depth[pos]                         = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + 1] < cur_depth;
-                    out_depth[pos + 1]                     = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + rgb_intric_.width] < cur_depth;
-                    out_depth[pos + rgb_intric_.width]     = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
-                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
-                }
-                else {
-                    out_depth[pos] = cur_depth;
+                    if(map) {
+                        map[2 * i + k * 4 + j]     = u_rgb;
+                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                    }
+
+                    if(out_depth) {
+                        int      pos       = v_rgb * rgb_intric_.width + u_rgb;
+                        uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+                        if(out_depth[pos] > cur_depth) {
+                            out_depth[pos] = cur_depth;
+                        }
+
+                        if(gap_fill_copy_) {
+                            bool right_valid = (u_rgb + 1) < rgb_intric_.width, bottom_valid = (v_rgb + 1) < rgb_intric_.height;
+                            if(right_valid) {
+                                if(out_depth[pos + 1] > cur_depth)
+                                    out_depth[pos + 1] = cur_depth;
+                            }
+                            if(bottom_valid) {
+                                if(out_depth[pos + rgb_intric_.width] > cur_depth)
+                                    out_depth[pos + rgb_intric_.width] = cur_depth;
+                            }
+                            if(right_valid && bottom_valid) {
+                                if(out_depth[pos + rgb_intric_.width + 1] > cur_depth)
+                                    out_depth[pos + rgb_intric_.width + 1] = cur_depth;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -933,26 +966,34 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
                     continue;
 
                 int u_rgb = static_cast<int>(xptr[j]), v_rgb = static_cast<int>(yptr[j]);
-                if (map)
-                {
-                    map[2 * i + k * 4 + j]     = u_rgb;
-                    map[2 * i + 1 + k * 4 + j] = v_rgb;
-                }
+                if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
-                int      pos       = v_rgb * rgb_intric_.width + u_rgb;
-                uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
-                if(gap_fill_copy_) {
-                    bool b_cur                             = out_depth[pos] < cur_depth;
-                    out_depth[pos]                         = b_cur * out_depth[pos] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + 1] < cur_depth;
-                    out_depth[pos + 1]                     = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + rgb_intric_.width] < cur_depth;
-                    out_depth[pos + rgb_intric_.width]     = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
-                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
-                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
-                }
-                else {
-                    out_depth[pos] = cur_depth;
+                    if(map) {
+                        map[2 * i + k * 4 + j]     = u_rgb;
+                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                    }
+
+                    int      pos       = v_rgb * rgb_intric_.width + u_rgb;
+                    uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+                    if(out_depth[pos] > cur_depth) {
+                        out_depth[pos] = cur_depth;
+                    }
+
+                    if(gap_fill_copy_) {
+                        bool right_valid = (u_rgb + 1) < rgb_intric_.width, bottom_valid = (v_rgb + 1) < rgb_intric_.height;
+                        if(right_valid) {
+                            if(out_depth[pos + 1] > cur_depth)
+                                out_depth[pos + 1] = cur_depth;
+                        }
+                        if(bottom_valid) {
+                            if(out_depth[pos + rgb_intric_.width] > cur_depth)
+                                out_depth[pos + rgb_intric_.width] = cur_depth;
+                        }
+                        if(right_valid && bottom_valid) {
+                            if(out_depth[pos + rgb_intric_.width + 1] > cur_depth)
+                                out_depth[pos + rgb_intric_.width + 1] = cur_depth;
+                        }
+                    }
                 }
             }
         }
@@ -1006,33 +1047,39 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
 
             u_rgb = static_cast<int>(pixel[0]);
             v_rgb = static_cast<int>(pixel[1]);
-            if(map)  // coordinates mapping for C2D
-            {
-                map[2 * i]     = u_rgb;
-                map[2 * i + 1] = v_rgb;
-                /// TODO(timon): filling for C2D
-            }
-            int      pos       = v_rgb * rgb_intric_.width + u_rgb;
-            uint16_t cur_depth = uint16_t(dst[2]);
-            if(out_depth) {
-                if(gap_fill_copy_) {
-                    bool b_cur     = out_depth[pos] < cur_depth;
-                    out_depth[pos] = b_cur * out_depth[pos] + !b_cur * cur_depth;
+            if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
-                    b_cur              = out_depth[pos + 1] < cur_depth;
-                    out_depth[pos + 1] = b_cur * out_depth[pos + 1] + !b_cur * cur_depth;
-
-                    b_cur                              = out_depth[pos + rgb_intric_.width] < cur_depth;
-                    out_depth[pos + rgb_intric_.width] = b_cur * out_depth[pos + rgb_intric_.width] + !b_cur * cur_depth;
-
-                    b_cur                                  = out_depth[pos + rgb_intric_.width + 1] < cur_depth;
-                    out_depth[pos + rgb_intric_.width + 1] = b_cur * out_depth[pos + rgb_intric_.width + 1] + !b_cur * cur_depth;
+				if(map)  // coordinates mapping for C2D
+				{
+					map[2 * i]     = u_rgb;
+					map[2 * i + 1] = v_rgb;
+					/// TODO(timon): filling for C2D
+				}
+            
+                if(out_depth) {
+					int      pos       = v_rgb * rgb_intric_.width + u_rgb;
+					uint16_t cur_depth = uint16_t(dst[2]);
+					if(out_depth[pos] > cur_depth) {
+						out_depth[pos] = cur_depth;
+					}
+                    if(gap_fill_copy_) {
+                        bool right_valid = (u_rgb + 1) < rgb_intric_.width, bottom_valid = (v_rgb + 1) < rgb_intric_.height;
+                        if(right_valid) {
+                            if(out_depth[pos + 1] > cur_depth)
+                                out_depth[pos + 1] = cur_depth;
+                        }
+                        if(bottom_valid) {
+                            if(out_depth[pos + rgb_intric_.width] > cur_depth)
+                                out_depth[pos + rgb_intric_.width] = cur_depth;
+                        }
+                        if(right_valid && bottom_valid) {
+                            if(out_depth[pos + rgb_intric_.width + 1] > cur_depth)
+                                out_depth[pos + rgb_intric_.width + 1] = cur_depth;
+                        }
+                    }
                 }
-                else {
-                    uint16_t *pdst = out_depth + v_rgb * rgb_intric_.width + u_rgb;
-                    *pdst          = (uint16_t)dst[2];
-                }
             }
+
         }
     }
 }
@@ -1125,12 +1172,15 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
 
         switch(format) {
         case OB_FORMAT_Y8:
+            memset(out_rgb, 0, color_width * color_height * sizeof(uint8_t));
             mapPixel<uint8_t>(depth_xy, static_cast<const uint8_t *>(rgb_buffer), color_width, color_height, (uint8_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_Y16:
+            memset(out_rgb, 0, color_width * color_height * sizeof(uint16_t));
             mapPixel<uint16_t>(depth_xy, static_cast<const uint16_t *>(rgb_buffer), color_width, color_height, (uint16_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_RGB:
+            memset(out_rgb, 0, color_width * color_height * sizeof(uint24_t));
             mapPixel<uint24_t>(depth_xy, static_cast<const uint24_t *>(rgb_buffer), color_width, color_height, (uint24_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_BGR:

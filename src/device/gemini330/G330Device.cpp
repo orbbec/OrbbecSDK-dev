@@ -192,12 +192,12 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyPort);
         }
         else if(sensor.first == OB_SENSOR_ACCEL) {
-            auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter");
+            auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter", sensor.first);
             auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
             propertyAccessor_->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
         }
         else if(sensor.first == OB_SENSOR_GYRO) {
-            auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter");
+            auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter", sensor.first);
             auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
             propertyAccessor_->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
         }
@@ -307,12 +307,12 @@ std::vector<OBSensorType> G330Device::getSensorTypeList() const {
 std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessingFilters(OBSensorType type) {
     if(type == OB_SENSOR_DEPTH) {
         std::vector<std::shared_ptr<IFilter>> depthFilterList;
-        depthFilterList.push_back(getSpecifyFilter("DecimationFilter"));
-        depthFilterList.push_back(getSpecifyFilter("HdrMerge"));
-        depthFilterList.push_back(getSpecifyFilter("SequenceIdFilter"));
-        depthFilterList.push_back(getSpecifyFilter("PixelValueCutOff"));
+        depthFilterList.push_back(getSpecifyFilter("DecimationFilter", type));
+        depthFilterList.push_back(getSpecifyFilter("HdrMerge", type));
+        depthFilterList.push_back(getSpecifyFilter("SequenceIdFilter", type));
+        depthFilterList.push_back(getSpecifyFilter("PixelValueCutOff", type));
 
-        auto noiseFilter = getSpecifyFilter("NoiseRemovalFilter");
+        auto noiseFilter = getSpecifyFilter("NoiseRemovalFilter", type);
         if(noiseFilter) {
             //max_size, min_diff, width, height
             std::vector<std::string> params = { "80", "256", "848", "480" };
@@ -320,7 +320,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(noiseFilter);
         }
 
-        auto spatFilter = getSpecifyFilter("SpatialAdvancedFilter");
+        auto spatFilter = getSpecifyFilter("SpatialAdvancedFilter", type);
         if(spatFilter) {
             // magnitude, alpha, disp_diff, radius
             std::vector<std::string> params = { "1", "0.5", "160", "1" };
@@ -328,7 +328,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(spatFilter);
         }
 
-        auto tempFilter = getSpecifyFilter("TemporalFilter");
+        auto tempFilter = getSpecifyFilter("TemporalFilter", type);
         if(tempFilter) {
             // diff_scale, weight
             std::vector<std::string> params = { "0.1", "0.4" };
@@ -336,12 +336,12 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(tempFilter);
         }
 
-        auto hfFilter = getSpecifyFilter("HoleFillingFilter");
+        auto hfFilter = getSpecifyFilter("HoleFillingFilter", type);
         if(hfFilter) {
             depthFilterList.push_back(hfFilter);
         }
 
-        auto dtFilter = getSpecifyFilter("DisparityTransform");
+        auto dtFilter = getSpecifyFilter("DisparityTransform", type);
         if(dtFilter) {
             depthFilterList.push_back(dtFilter);
         }
@@ -356,7 +356,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     }
     else if(type == OB_SENSOR_COLOR) {
         std::vector<std::shared_ptr<IFilter>> colorFilterList;
-        auto decFilter = getSpecifyFilter("DecimationFilter");
+        auto                                  decFilter = getSpecifyFilter("DecimationFilter", type);
         decFilter->enable(false);
         colorFilterList.push_back(decFilter);
         return colorFilterList;
@@ -382,7 +382,7 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
         auto                            dataStreamPort     = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
         std::shared_ptr<MotionStreamer> motionStreamer     = nullptr;
-        auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
+        auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter", type);
         if(imuCorrecterFilter) {
             // TODO change set param way
             auto imuCorrectionParams = algParamManager_->getIMUCalibrationParam();
@@ -525,11 +525,18 @@ const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uin
     return emptyData;
 }
 
-std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, bool createIfNotExist) {
-    auto filterIter = std::find_if(filters_.begin(), filters_.end(), [name](const std::shared_ptr<IFilter> &filter) { return filter->getName() == name; });
+ std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, OBSensorType type, bool createIfNotExist) {
+    auto filterIter = std::find_if(filters_.begin(), filters_.end(), [name, type](const auto &pair) {
+        if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
+            return (pair.first == OB_SENSOR_ACCEL || pair.first == OB_SENSOR_GYRO) && (pair.second->getName() == name);
+        }
+        else {
+            return (pair.first == type) && (pair.second->getName() == name);
+        }
+    });
 
     if(filterIter != filters_.end()) {
-        return *filterIter;
+        return filterIter->second;
     }
     else if(!createIfNotExist) {
         return nullptr;
@@ -537,7 +544,8 @@ std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, b
 
     auto filterFactory = FilterFactory::getInstance();
     auto filter        = filterFactory->createFilter(name);
-    filters_.push_back(filter);
+    filters_[type]     = filter;
     return filter;
 }
+
 }  // namespace libobsensor

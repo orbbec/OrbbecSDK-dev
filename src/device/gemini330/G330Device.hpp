@@ -45,7 +45,7 @@ private:
 
     DeviceResourceLock tryLockResource();
 
-    std::shared_ptr<IFilter> getSpecifyFilter(const std::string &name,bool createIfNotExist = true);
+    std::shared_ptr<IFilter> getSpecifyFilter(const std::string &name, OBSensorType type, bool createIfNotExist = true);
 
 private:
     const std::shared_ptr<const IDeviceEnumInfo> enumInfo_;
@@ -63,7 +63,7 @@ private:
 
     std::recursive_timed_mutex componentLock_;
 
-    std::vector<std::shared_ptr<IFilter>> filters_;
+    std::map<OBSensorType, std::shared_ptr<IFilter>> filters_;
 
     std::shared_ptr<FrameProcessorFactory> frameProcessorFactory_ = nullptr;
 };

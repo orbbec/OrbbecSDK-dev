@@ -73,15 +73,17 @@ void G330AlgParamManager::fetchParams() {
 
     try {
         auto propertyAccessor = propertyAccessorGetter_.get();
-        auto cameraParamList  = propertyAccessor->getStructureDataListProtoV1_1_T<OBCameraParam_V0, 0>(OB_RAW_DATA_ALIGN_CALIB_PARAM);
+        auto cameraParamList  = propertyAccessor->getStructureDataListProtoV1_1_T<OBCameraParam_Internal_V0, 0>(OB_RAW_DATA_ALIGN_CALIB_PARAM);
         for(auto &cameraParam: cameraParamList) {
             OBCameraParam param;
-            param.depthIntrinsic  = cameraParam.depthIntrinsic;
-            param.rgbIntrinsic    = cameraParam.rgbIntrinsic;
-            param.depthDistortion = cameraParam.depthDistortion;
-            param.rgbDistortion   = cameraParam.rgbDistortion;
-            param.transform       = cameraParam.transform;
-            param.isMirrored      = false;
+            param.depthIntrinsic = cameraParam.depthIntrinsic;
+            param.rgbIntrinsic   = cameraParam.rgbIntrinsic;
+            memcpy(&param.depthDistortion, &cameraParam.depthDistortion, sizeof(param.depthDistortion));
+            param.depthDistortion.model = OB_DISTORTION_BROWN_CONRADY;
+            memcpy(&param.rgbDistortion, &cameraParam.rgbDistortion, sizeof(param.rgbDistortion));
+            param.rgbDistortion.model = OB_DISTORTION_BROWN_CONRADY;
+            param.transform           = cameraParam.transform;
+            param.isMirrored          = false;
             calibrationCameraParamList_.emplace_back(param);
         }
     }

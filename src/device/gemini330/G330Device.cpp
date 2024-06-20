@@ -308,6 +308,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
 
         auto noiseFilter = getSpecifyFilter("NoiseRemovalFilter");
         if(noiseFilter) {
+            //max_size, min_diff, width, height
             std::vector<std::string> params = { "80", "256", "848", "480" };
             noiseFilter->updateConfig(params);
             depthFilterList.push_back(noiseFilter);

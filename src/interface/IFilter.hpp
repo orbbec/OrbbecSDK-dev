@@ -64,6 +64,11 @@ extern "C" {
 struct ob_filter_t {
     std::shared_ptr<libobsensor::IFilter> filter;
 };
+
+struct ob_filter_list_t {
+    std::vector<std::shared_ptr<libobsensor::IFilter>> filterList;
+};
+
 #ifdef __cplusplus
 }
 #endif

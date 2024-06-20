@@ -111,6 +111,27 @@ void ob_filter_push_frame(ob_filter *filter, const ob_frame *frame, ob_error **e
 }
 HANDLE_EXCEPTIONS_NO_RETURN(filter, frame)
 
+uint32_t ob_filter_list_get_count(ob_filter_list *filter_list, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter_list);
+    return static_cast<uint32_t>(filter_list->filterList.size());
+}
+HANDLE_EXCEPTIONS_AND_RETURN(0, filter_list)
+
+ob_filter *ob_filter_list_get_filter(ob_filter_list *filter_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter_list);
+    auto filter        = filter_list->filterList.at(index);
+    auto filterImpl    = new ob_filter();
+    filterImpl->filter = filter;
+    return filterImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, filter_list, index)
+
+void ob_delete_filter_list(ob_filter_list *filter_list, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter_list);
+    delete filter_list;
+}
+HANDLE_EXCEPTIONS_NO_RETURN(filter_list)
+
 #ifdef __cplusplus
 }
 #endif

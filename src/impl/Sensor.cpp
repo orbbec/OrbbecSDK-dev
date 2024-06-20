@@ -47,9 +47,10 @@ HANDLE_EXCEPTIONS_NO_RETURN(sensor)
 
 ob_filter_list *ob_sensor_get_recommended_filter_list(ob_sensor *sensor, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor);
-
-    // todo: implement this
-    throw libobsensor::not_implemented_exception("not implemented yet!");
+    auto filterList  = sensor->device->createRecommendedPostProcessingFilters(sensor->type);
+    auto impl        = new ob_filter_list();
+    impl->filterList = filterList;
+    return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, sensor)
 

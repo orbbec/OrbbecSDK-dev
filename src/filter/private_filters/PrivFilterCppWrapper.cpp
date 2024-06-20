@@ -10,7 +10,10 @@ PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, std::s
         LOG_WARN("Private filter {} get config schema failed: {}", name_, error->message);
         delete error;
     }
-    configSchema_ = desc;
+        
+    if(desc != nullptr){
+        configSchema_ = desc;
+    }
 }
 
 PrivFilterCppWrapper::~PrivFilterCppWrapper() noexcept {
@@ -46,15 +49,22 @@ void PrivFilterCppWrapper::reset() {
 std::shared_ptr<Frame> PrivFilterCppWrapper::processFunc(std::shared_ptr<const Frame> frame) {
     ob_error *error   = nullptr;
     ob_frame *c_frame = new ob_frame();
+    std::shared_ptr<Frame> resultFrame;
     c_frame->frame    = std::const_pointer_cast<Frame>(frame);
 
     auto rst_frame = privFilterCtx_->process(privFilterCtx_->filter, c_frame, &error);
+    if(rst_frame) {
+        resultFrame = rst_frame->frame;
+        delete rst_frame;
+    }
+    delete c_frame;
+
     if(error) {
         LOG_WARN("Private filter {} process failed: {}", name_, error->message);
         delete error;
         return nullptr;
     }
-    return rst_frame->frame;
+    return resultFrame;
 }
 
 }  // namespace libobsensor

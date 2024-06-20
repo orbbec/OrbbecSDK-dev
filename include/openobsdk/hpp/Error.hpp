@@ -38,7 +38,6 @@ public:
 
         if(throw_exception) {
             throw Error(*error);
-            *error = nullptr;
         }
         else {
             ob_delete_error(*error);

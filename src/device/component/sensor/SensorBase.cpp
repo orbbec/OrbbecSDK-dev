@@ -15,9 +15,7 @@ SensorBase::SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType senso
       maxRecoveryCount_(DefaultMaxRecoveryCount),
       recoveryCount_(0),
       noStreamTimeoutMs_(DefaultNoStreamTimeoutMs),
-      streamInterruptTimeoutMs_(DefaultStreamInterruptTimeoutMs){
-
-      }
+      streamInterruptTimeoutMs_(DefaultStreamInterruptTimeoutMs) {}
 
 SensorBase::~SensorBase() noexcept {
     if(streamStateWatcherThread_.joinable()) {
@@ -45,26 +43,58 @@ OBStreamState SensorBase::getStreamState() const {
 }
 
 bool SensorBase::isStreamActivated() const {
-    return streamState_ == STREAM_STATE_STARTING || streamState_ == STREAM_STATE_STREAMING || streamState_ == STREAM_STATE_ERROR;
+    return streamState_ == STREAM_STATE_STARTING || streamState_ == STREAM_STATE_STREAMING || streamState_ == STREAM_STATE_ERROR
+           || streamState_ == STREAM_STATE_STOPPING;
 }
 
 void SensorBase::setStreamStateChangedCallback(StreamStateChangedCallback callback) {
     streamStateChangedCallback_ = callback;
 }
 
-StreamProfileList SensorBase::getStreamProfileList() const{
-    StreamProfileList list;
-    auto streamType = utils::mapSensorTypeToStreamType(sensorType_);
-    for(auto& sp : streamProfileList_) {
-        auto spOwner = sp->getOwner();
-        if(!spOwner || spOwner->device.lock() != owner_.lock() || sp->getType() == streamType) {
-            auto newOwner = std::make_shared<LazySensor>(owner_, sensorType_);
-            sp->bindOwner(newOwner);
-            sp->setType(streamType);
+StreamProfileList SensorBase::getStreamProfileList() const {
+    return streamProfileList_;
+}
+
+void SensorBase::updateDefaultStreamProfile(const std::shared_ptr<const StreamProfile> &profile) {
+    std::shared_ptr<const StreamProfile> defaultProfile;
+    for(auto iter = streamProfileList_.begin(); iter != streamProfileList_.end(); ++iter) {
+        if((*iter)->is<VideoStreamProfile>() && profile->is<VideoStreamProfile>()) {
+            auto vsp    = (*iter)->as<VideoStreamProfile>();
+            auto vspCmp = profile->as<VideoStreamProfile>();
+            if(vsp->getFormat() == vspCmp->getFormat() && vsp->getWidth() == vspCmp->getWidth() && vsp->getHeight() == vspCmp->getHeight()
+               && vsp->getFps() == vspCmp->getFps()) {
+                defaultProfile = *iter;
+                streamProfileList_.erase(iter);
+                break;
+            }
         }
-        list.push_back(sp);
+        else if((*iter)->is<AccelStreamProfile>() && profile->is<AccelStreamProfile>()) {
+            auto asp    = (*iter)->as<AccelStreamProfile>();
+            auto aspCmp = profile->as<AccelStreamProfile>();
+            if(asp->getFullScaleRange() == aspCmp->getFullScaleRange() && asp->getSampleRate() == aspCmp->getSampleRate()) {
+                defaultProfile = *iter;
+                streamProfileList_.erase(iter);
+                break;
+            }
+        }
+        else if((*iter)->is<GyroStreamProfile>() && profile->is<GyroStreamProfile>()) {
+            auto gsp    = (*iter)->as<GyroStreamProfile>();
+            auto gspCmp = profile->as<GyroStreamProfile>();
+            if(gsp->getFullScaleRange() == gspCmp->getFullScaleRange() && gsp->getSampleRate() == gspCmp->getSampleRate()) {
+                defaultProfile = *iter;
+                streamProfileList_.erase(iter);
+                break;
+            }
+        }
     }
-    return list;
+
+    if(defaultProfile) {
+        // insert the default profile at the beginning of the list
+        streamProfileList_.insert(streamProfileList_.begin(), defaultProfile);
+    }
+    else {
+        LOG_WARN("Failed to update default stream profile for sensor due to no matching stream profile found");
+    }
 }
 
 std::shared_ptr<const StreamProfile> SensorBase::getActivatedStreamProfile() const {
@@ -72,11 +102,11 @@ std::shared_ptr<const StreamProfile> SensorBase::getActivatedStreamProfile() con
 }
 
 FrameCallback SensorBase::getFrameCallback() const {
-    return  frameCallback_;
+    return frameCallback_;
 }
 
 void SensorBase::restartStream() {
-    auto curSp = activatedStreamProfile_;
+    auto curSp    = activatedStreamProfile_;
     auto callback = frameCallback_;
     stop();
     start(curSp, callback);
@@ -89,7 +119,7 @@ void SensorBase::updateStreamState(OBStreamState state) {
     }
     auto oldState = streamState_.load();
     streamState_.store(state);
-    if( oldState != state && streamStateChangedCallback_) {
+    if(oldState != state && streamStateChangedCallback_) {
         streamStateChangedCallback_(state, activatedStreamProfile_);  // call the callback function
     }
     streamStateCv_.notify_all();
@@ -98,9 +128,9 @@ void SensorBase::updateStreamState(OBStreamState state) {
 void SensorBase::enableStreamRecovery(bool enable, uint32_t maxRecoveryCount, int noStreamTimeoutMs, int streamInterruptTimeoutMs) {
     {
         std::unique_lock<std::mutex> lock(streamStateMutex_);
-        recoveryCount_          = 0;
-        recoveryEnabled_        = enable;
-        maxRecoveryCount_       = maxRecoveryCount == 0 ? maxRecoveryCount_ : maxRecoveryCount;
+        recoveryCount_            = 0;
+        recoveryEnabled_          = enable;
+        maxRecoveryCount_         = maxRecoveryCount == 0 ? maxRecoveryCount_ : maxRecoveryCount;
         noStreamTimeoutMs_        = noStreamTimeoutMs == 0 ? noStreamTimeoutMs_ : noStreamTimeoutMs;
         streamInterruptTimeoutMs_ = streamInterruptTimeoutMs == 0 ? streamInterruptTimeoutMs_ : streamInterruptTimeoutMs;
     }
@@ -126,7 +156,7 @@ void SensorBase::watchStreamState() {
             streamStateCv_.wait(lock);
             recoveryCount_ = 0;
         }
-        else if(streamState_ == STREAM_STATE_STARTING && noStreamTimeoutMs_ > 0 ) {
+        else if(streamState_ == STREAM_STATE_STARTING && noStreamTimeoutMs_ > 0) {
             streamStateCv_.wait_for(lock, std::chrono::milliseconds(noStreamTimeoutMs_));
             if(streamState_ != STREAM_STATE_STARTING || recoveryEnabled_ == false) {
                 recoveryCount_ = 0;

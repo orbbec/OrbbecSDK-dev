@@ -145,6 +145,7 @@ StreamProfileList Pipeline::getEnabledStreamProfileList() {
 std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config> cfg) {
     LOG_INFO("Check and set config start!");
     std::shared_ptr<Config> config                = cfg->clone();
+    config->disableAllStream();
     const auto              enabledStreamProfiles = cfg->getEnabledStreamProfileList();
     for(auto sp: enabledStreamProfiles) {
         auto streamType = sp->getType();
@@ -256,7 +257,7 @@ void Pipeline::onFrameCallback(std::shared_ptr<const Frame> frame) {
 }
 
 void Pipeline::outputFrame(std::shared_ptr<const Frame> frame) {
-    LOG_FREQ_CALC(ERROR, 5000, "Pipeline streaming... frameset output rate={freq}fps");
+    LOG_FREQ_CALC(DEBUG, 5000, "Pipeline streaming... frameset output rate={freq}fps");
     if(streamState_ == STREAM_STATE_STREAMING) {
         if(pipelineCallback_ != nullptr) {
             pipelineCallback_(frame);

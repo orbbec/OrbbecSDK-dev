@@ -12,6 +12,7 @@ public:
     ~Config() noexcept = default;
 
     void enableStream(std::shared_ptr<const StreamProfile> prf);
+    void enableStream(OBStreamType type);
     void enableVideoStream(OBStreamType type, uint32_t width, uint32_t height, uint32_t fps, OBFormat format);
     void enableAccelStream(OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate);
     void enableGyroStream(OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate);

@@ -21,13 +21,13 @@
  *      |           |          |          |           |
  *   VideoFrame PointsFrame AccelFrame GyroFrame   FrameSet
  *        |
- *   +----+----------+---------------+----------------+
- *   |               |               |                |
- * ColorFrame    DepthFrame    DisparityFrame      IRFrame
- *                                                    |
- *                                              +-----+-----+
- *                                              |           |
- *                                         IRLeftFrame  IRRightFrame
+ *   +----+----------+-------------------+
+ *   |               |                   |
+ * ColorFrame    DepthFrame           IRFrame
+ *                                       |
+ *                                 +-----+-----+
+ *                                 |           |
+ *                            IRLeftFrame  IRRightFrame
  */
 
 namespace ob {
@@ -271,10 +271,7 @@ public:
         ob_error *error   = nullptr;
         auto      profile = ob_frame_get_stream_profile(impl_, &error);
         Error::handle(&error);
-
-        // TODO： Implement this function
-        throw std::runtime_error("not implemented");
-        return nullptr;
+        return std::make_shared<StreamProfile>(profile);
     }
 
     /**
@@ -287,9 +284,7 @@ public:
         auto      sensor = ob_frame_get_sensor(impl_, &error);
         Error::handle(&error);
 
-        // TODO： Implement this function
-        throw std::runtime_error("not implemented");
-        return nullptr;
+        return std::make_shared<Sensor>(sensor);
     }
 
     /**
@@ -302,9 +297,7 @@ public:
         auto      device = ob_frame_get_device(impl_, &error);
         Error::handle(&error);
 
-        // TODO： Implement this function
-        throw std::runtime_error("not implemented");
-        return nullptr;
+        return std::make_shared<Device>(device);
     }
 
     /**
@@ -330,7 +323,7 @@ public:
      * @tparam T The given type.
      * @return bool The result.
      */
-    template <typename T> bool is();
+    template <typename T> bool is() const;
 
     /**
      * @brief Convert the frame object to a target type.
@@ -348,6 +341,24 @@ public:
         Error::handle(&error);
 
         return std::make_shared<T>(impl_);
+    }
+
+    /**
+     * @brief Convert the frame object to a target type.
+     *
+     * @tparam T The target type.
+     * @return std::shared_ptr<T> The result. If it cannot be converted, an exception will be thrown.
+     */
+    template <typename T> std::shared_ptr<const T> as() const{
+        if(!is<const T>()) {
+            throw std::runtime_error("unsupported operation, object's type is not require type");
+        }
+
+        ob_error *error = nullptr;
+        ob_frame_add_ref(impl_, &error);
+        Error::handle(&error);
+
+        return std::make_shared<const T>(impl_);
     }
 };
 
@@ -464,29 +475,6 @@ public:
 
         return scale;
     }
-};
-
-/**
- * @brief Define the DisparityFrame class, which inherits from the VideoFrame class
- */
-class DisparityFrame : public VideoFrame {
-private:
-    /**
-     * @brief Construct a new DisparityFrame object with a given pointer to the internal frame object.
-     *
-     * @attention After calling this constructor,the frame object will own the internal frame object,and the internal frame object will be deleted when the
-     * frame object is destroyed.
-     * @attention The internal frame object should not be deleted by the caller.
-     * @attention Please use the FrameFactory to create a Frame object.
-     *
-     * @param impl The pointer to the internal frame object.
-     *
-     */
-    explicit DisparityFrame(const ob_frame *impl) : VideoFrame(impl){};
-    friend class FrameFactory;
-
-public:
-    ~DisparityFrame() noexcept override = default;
 };
 
 /**
@@ -636,7 +624,7 @@ class FrameSet : public Frame {
 public:
     explicit FrameSet(const ob_frame *impl) : Frame(impl){};
 
-    ~FrameSet() noexcept override;
+    ~FrameSet() noexcept override = default;
 
     /**
      * @brief Get the number of frames in the FrameSet
@@ -647,7 +635,6 @@ public:
         ob_error *error = nullptr;
         auto      count = ob_frameset_get_frame_count(impl_, &error);
         Error::handle(&error);
-
         return count;
     }
 
@@ -660,8 +647,10 @@ public:
     std::shared_ptr<const Frame> getFrame(OBFrameType frameType) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame(impl_, frameType, &error);
+        if(!frame){
+            return nullptr;
+        }
         Error::handle(&error);
-
         return std::make_shared<Frame>(frame);
     }
 
@@ -671,11 +660,13 @@ public:
      * @param index The index of the frame
      * @return std::shared_ptr<Frame> The frame at the specified index
      */
-    std::shared_ptr<const Frame> getFrame(int index) const {
+    std::shared_ptr<const Frame> getFrameByIndex(int index) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame_by_index(impl_, index, &error);
+        if(!frame){
+            return nullptr;
+        }
         Error::handle(&error);
-
         return std::make_shared<Frame>(frame);
     }
 
@@ -828,14 +819,12 @@ private:
 };
 
 // Define the is() template function for the Frame class
-template <typename T> bool Frame::is() {
+template <typename T> bool Frame::is() const {
     switch(this->getType()) {
     case OB_FRAME_IR_LEFT:   // Follow
     case OB_FRAME_IR_RIGHT:  // Follow
     case OB_FRAME_IR:
         return (typeid(T) == typeid(IRFrame) || typeid(T) == typeid(VideoFrame));
-    case OB_FRAME_DISPARITY:
-        return (typeid(T) == typeid(DisparityFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_DEPTH:
         return (typeid(T) == typeid(DepthFrame) || typeid(T) == typeid(VideoFrame));
     case OB_FRAME_COLOR:

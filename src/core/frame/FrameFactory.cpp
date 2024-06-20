@@ -24,17 +24,42 @@ std::shared_ptr<Frame> FrameFactory::createFrame(OBFrameType frameType, OBFormat
 }
 
 std::shared_ptr<Frame> FrameFactory::cloneFrame(std::shared_ptr<const Frame> frame, bool copyData) {
-    auto newFrame = createFrame(frame->getType(), frame->getFormat(), frame->getDataSize());
-    if(copyData) {
-        newFrame->updateData(frame->getData(), frame->getDataSize());
-        if(newFrame->is<VideoFrame>()) {
-            auto vf    = frame->as<VideoFrame>();
-            auto newVf = newFrame->as<VideoFrame>();
-            newVf->updateMetadata(vf->getMetadata(), vf->getMetadataSize());
+    if(frame->is<FrameSet>()) {
+        auto newFrameSet = createFrameSet();
+        auto frameSet    = frame->as<FrameSet>();
+        auto frameCount  = frameSet->getFrameCount();
+        for(uint32_t i = 0; i < frameCount; i++) {
+            std::shared_ptr<const Frame> oldFrame = frameSet->getFrame(i);
+            if(copyData) {
+                auto newFrame = createFrameFromStreamProfile(oldFrame->getStreamProfile());
+                newFrame->updateData(oldFrame->getData(), oldFrame->getDataSize());
+                if(newFrame->is<VideoFrame>()) {
+                    auto vf    = oldFrame->as<VideoFrame>();
+                    auto newVf = newFrame->as<VideoFrame>();
+                    newVf->updateMetadata(vf->getMetadata(), vf->getMetadataSize());
+                }
+                newFrame->copyInfo(oldFrame);
+                newFrameSet->pushFrame(std::move(newFrame));
+            }
+            else {
+                newFrameSet->pushFrame(std::move(oldFrame));
+            }
         }
+        return newFrameSet;
     }
-    newFrame->copyInfo(frame);
-    return newFrame;
+    else {
+        auto newFrame = createFrameFromStreamProfile(frame->getStreamProfile());
+        if(copyData) {
+            newFrame->updateData(frame->getData(), frame->getDataSize());
+            if(newFrame->is<VideoFrame>()) {
+                auto vf    = frame->as<VideoFrame>();
+                auto newVf = newFrame->as<VideoFrame>();
+                newVf->updateMetadata(vf->getMetadata(), vf->getMetadataSize());
+            }
+        }
+        newFrame->copyInfo(frame);
+        return newFrame;
+    } 
 }
 
 std::shared_ptr<Frame> FrameFactory::createVideoFrame(OBFrameType frameType, OBFormat frameFormat, uint32_t width, uint32_t height, uint32_t strideBytes) {
@@ -74,7 +99,6 @@ std::shared_ptr<Frame> FrameFactory::createFrameFromUserBuffer(OBFrameType frame
     case OB_FRAME_IR_RIGHT:
     case OB_FRAME_IR:
     case OB_FRAME_COLOR:
-    case OB_FRAME_DISPARITY:
         return createVideoFrameFromUserBuffer(frameType, format, 0, 0, 0, buffer, bufferSize, bufferReclaimFunc);
     case OB_FRAME_ACCEL:
         frame = std::make_shared<AccelFrame>(buffer, bufferSize, bufferReclaimFunc);
@@ -100,9 +124,6 @@ std::shared_ptr<Frame> FrameFactory::createVideoFrameFromUserBuffer(OBFrameType 
     switch(frameType) {
     case OB_FRAME_VIDEO:
         frame = std::make_shared<VideoFrame>(buffer, bufferSize, frameType, bufferReclaimFunc);
-        break;
-    case OB_FRAME_DISPARITY:
-        frame = std::make_shared<DisparityFrame>(buffer, bufferSize, bufferReclaimFunc);
         break;
     case OB_FRAME_DEPTH:
         frame = std::make_shared<DepthFrame>(buffer, bufferSize, bufferReclaimFunc);
@@ -169,4 +190,5 @@ std::shared_ptr<FrameSet> FrameFactory::createFrameSet() {
 
     return frameSet;
 }
+
 }  // namespace libobsensor

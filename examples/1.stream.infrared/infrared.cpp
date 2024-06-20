@@ -1,9 +1,14 @@
+#include <openobsdk/ObSensor.hpp>
+
 #include "window.hpp"
 
-#include "openobsdk/hpp/Pipeline.hpp"
-#include "openobsdk/hpp/Error.hpp"
+std::map<OBSensorType, ob_stream_type> sensorStreamMap = {
+    {OB_SENSOR_IR, OB_STREAM_IR},
+    {OB_SENSOR_IR_LEFT, OB_STREAM_IR_LEFT},
+    {OB_SENSOR_IR_RIGHT, OB_STREAM_IR_RIGHT}
+};
 
-int main(int argc, char **argv) try {
+int main() try {
     // Create a pipeline with default device.
     ob::Pipeline pipe;
     // Get the device from pipeline.
@@ -13,65 +18,39 @@ int main(int argc, char **argv) try {
     // Create a config for pipeline.
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
-    // Distinguish between single IR and double IR.
-    bool isDoubleIR = true;
-    for(int index = 0; index < sensorList->count(); index++) {
-        // Get the sensor type.
-        auto sensorType = sensorList->type(index);
-        if(sensorType == OB_SENSOR_IR) {
-            isDoubleIR = false;
+    for(uint32_t index = 0; index < sensorList->count(); index++) {
+        // Query all supported infrared sensor typ.e and enable the infrared stream.
+        // For dual infrared device, enable the left and right infrared streams.
+        // For single infraed d, enable the infrared stream.
+        OBSensorType sensorType = sensorList->type(index);
+        if(sensorType == OB_SENSOR_IR || sensorType == OB_SENSOR_IR_LEFT || sensorType == OB_SENSOR_IR_RIGHT) {
+            // Enable the stream with specified requirements.
+            config->enableVideoStream(sensorStreamMap[sensorType], OB_WIDTH_ANY, OB_HEIGHT_ANY, 30, OB_FORMAT_ANY);
         }
     }
 
-    if(!isDoubleIR){
-        // Enable the infrared stream.
-        config->enableVideoStream(OB_STREAM_IR, OB_WIDTH_ANY, OB_HEIGHT_ANY, 30, OB_FORMAT_Y8);
-        // Start the pipeline with config
-        pipe.start(config);
+    pipe.start(config);
 
-        // Create a window for rendering and set the resolution of the window
-        Window app("InfraredViewer", 1280, 720);
-        while(app) {
-            // Wait for up to 100ms for a frameset in blocking mode.
-            auto frameSet = pipe.waitForFrames(100);
-            if(frameSet == nullptr) {
-                continue;
-            }
-
-            // Render a set of frame in the window, only the infrared frame is rendered here.
-            // If the open stream type is not OB_SENSOR_IR, use the getFrame interface to get the frame.
-            app.addToRender(frameSet->irFrame());
+    // Create a window for rendering and set the resolution of the window
+    Window app("InfraredViewer", 1280, 720, RENDER_ONE_ROW);
+    while(app) {
+        // Wait for up to 100ms for a frameset in blocking mode.
+        auto frameSet = pipe.waitForFrames(100);
+        if(frameSet == nullptr) {
+            continue;
         }
-    }else{
-        // Enable the left and right infrared streams.
-        config->enableVideoStream(OB_STREAM_IR_LEFT, OB_WIDTH_ANY, OB_HEIGHT_ANY, 30, OB_FORMAT_Y8);
-        config->enableVideoStream(OB_STREAM_IR_RIGHT, OB_WIDTH_ANY, OB_HEIGHT_ANY, 30, OB_FORMAT_Y8);
 
-        // Start the pipeline with config
-        pipe.start(config);
-
-        // Create a window for rendering and set the resolution of the window
-        Window app("IR_left_and_right", 1280, 360, RENDER_ONE_ROW);
-        while(app) {
-            // Wait for up to 100ms for a frameset in blocking mode.
-            auto frameSet = pipe.waitForFrames(100);
-            if(frameSet == nullptr) {
-                continue;
+        std::vector<std::shared_ptr<const ob::Frame>> frames;
+        for(uint32_t index = 0; index < frameSet->getFrameCount(); index++){
+            auto frame = frameSet->getFrame(index);
+            if(frame != nullptr){
+                frames.push_back(frame);
             }
-
-            // Render a set of frame in the window, only the infrared frame is rendered here.
-            // If the open stream type is not OB_SENSOR_IR, use the getFrame interface to get the frame.
-            auto leftFrame  = frameSet->getFrame(OB_FRAME_IR_LEFT);
-            auto rightFrame = frameSet->getFrame(OB_FRAME_IR_RIGHT);
-
-            if(leftFrame == nullptr || rightFrame == nullptr) {
-                std::cout << "left ir frame or right ir frame is null. left frame: " << leftFrame << ", rightFrame: " << rightFrame << std::endl;
-                continue;
-            }
-
-            // Render a set of frame in the window, only the infrared frame is rendered here, but it must also be passed in as an array.
-            app.addToRender({ leftFrame, rightFrame });
         }
+
+        // Render a set of frame in the window, only the infrared frame is rendered here.
+        // If the open stream type is not OB_SENSOR_IR, use the getFrame interface to get the frame.
+        app.addToRender(frames);
     }
 
     // Stop the pipeline, no frame data will be generated
@@ -79,6 +58,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

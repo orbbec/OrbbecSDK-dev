@@ -1,7 +1,7 @@
 #include "window.hpp"
 
-#include "openobsdk/hpp/Pipeline.hpp"
-#include "openobsdk/hpp/Error.hpp"
+#include <openobsdk/ObSensor.h>
+
 #include <mutex>
 #include <thread>
 
@@ -26,7 +26,7 @@ OBStreamType SensorTypeToStreamType(OBSensorType sensorType) {
     }
 }
 
-int main(int argc, char **argv) try {
+int main(void) try {
 
     // Create a pipeline with default device.
     ob::Pipeline pipe;
@@ -35,10 +35,10 @@ int main(int argc, char **argv) try {
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
     // Enumerate and config all sensors.
-    auto device     = pipe.getDevice();
+    auto device = pipe.getDevice();
     // Get sensor list from device.
     auto sensorList = device->getSensorList();
-    for(int i = 0; i < sensorList->count(); i++) {
+    for(int i = 0; i < static_cast<int>(sensorList->count()); i++) {
         // Get sensor type.
         auto sensorType = sensorList->type(i);
         if(sensorType == OB_SENSOR_GYRO || sensorType == OB_SENSOR_ACCEL) {
@@ -52,11 +52,11 @@ int main(int argc, char **argv) try {
     std::mutex                                        frameMutex;
     std::map<OBFrameType, std::shared_ptr<ob::Frame>> frameMap;
     pipe.start(config, [&](std::shared_ptr<ob::FrameSet> frameset) {
-        auto count = frameset->frameCount();
+        int count = frameset->getFrameCount();
         for(int i = 0; i < count; i++) {
-            auto                         frame = frameset->getFrame(i);
+            auto frame = std::const_pointer_cast<ob::Frame>(frameset->getFrame(i));
             std::unique_lock<std::mutex> lk(frameMutex);
-            frameMap[frame->type()] = frame;
+            frameMap[frame->getType()] = frame;
         }
     });
 
@@ -70,11 +70,11 @@ int main(int argc, char **argv) try {
         imuConfig->enableGyroStream();
         imuConfig->enableAccelStream();
         imuPipeline->start(imuConfig, [&](std::shared_ptr<ob::FrameSet> frameset) {
-            auto count = frameset->frameCount();
+            int count = frameset->getFrameCount();
             for(int i = 0; i < count; i++) {
-                auto                         frame = frameset->getFrame(i);
+                auto frame = std::const_pointer_cast<ob::Frame>(frameset->getFrame(i));
                 std::unique_lock<std::mutex> lk(imuFrameMutex);
-                imuFrameMap[frame->type()] = frame;
+                imuFrameMap[frame->getType()] = frame;
             }
         });
     }
@@ -86,7 +86,7 @@ int main(int argc, char **argv) try {
     // Create a window for rendering and set the resolution of the window
     Window app("MultiStream", 1280, 720, RENDER_GRID);
     while(app) {
-        std::vector<std::shared_ptr<ob::Frame>> framesForRender;
+        std::vector<std::shared_ptr<const ob::Frame>> framesForRender;
         {
             std::unique_lock<std::mutex> lock(frameMutex);
             for(auto &frame: frameMap) {
@@ -112,6 +112,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

@@ -46,7 +46,7 @@ public:
     ObLibuvcDevicePort(std::shared_ptr<UsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~ObLibuvcDevicePort() noexcept override;
 
-    StreamProfileListUnsafe getStreamProfileList() override;
+    StreamProfileList       getStreamProfileList() override;
     void                    startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
     void                    stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void                    stopAllStream() override;

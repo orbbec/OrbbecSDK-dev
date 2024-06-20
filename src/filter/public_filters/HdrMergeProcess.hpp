@@ -19,7 +19,7 @@ private:
     std::shared_ptr<Frame> mergingAlgorithm(std::shared_ptr<const Frame> first_f, std::shared_ptr<const Frame> second_f, const bool use_ir);
 
 protected:
-    std::map<uint64_t, std::shared_ptr<const Frame>> frames_;
+    std::map<uint64_t, std::shared_ptr<Frame>> frames_;
     std::shared_ptr<Frame>                depth_merged_frame_;
 
 };

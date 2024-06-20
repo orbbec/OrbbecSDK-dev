@@ -50,13 +50,78 @@ public:
     }
 
     /**
+     * @brief enable a stream with a specific type
+     *
+     * @param streamType The stream type to be enabled
+     */
+    void enableStream(OBStreamType streamType) {
+        ob_error *error = nullptr;
+        ob_config_enable_stream(impl_, streamType, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
      * @brief Enable a stream to be used in the pipeline
      *
      * @param streamProfile The stream configuration to be enabled
      */
     void enableStream(std::shared_ptr<StreamProfile> streamProfile) {
         ob_error *error = nullptr;
-        ob_config_enable_stream(impl_, streamProfile->getImpl(), &error);
+        auto      c_stream_profile = streamProfile->getImpl();
+        ob_config_enable_stream_with_stream_profile(impl_, c_stream_profile, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
+     * @brief Enable a video stream to be used in the pipeline.
+     *
+     * This function allows users to enable a video stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default resolution settings.
+     * Users who wish to set custom resolutions should refer to the product manual, as available resolutions vary by camera model.
+     *
+     * @param type The video stream type.
+     * @param width The video stream width (default is OB_WIDTH_ANY, which selects the default resolution).
+     * @param height The video stream height (default is OB_HEIGHT_ANY, which selects the default resolution).
+     * @param fps The video stream frame rate (default is OB_FPS_ANY, which selects the default frame rate).
+     * @param format The video stream format (default is OB_FORMAT_ANY, which selects the default format).
+     */
+    void enableVideoStream(OBStreamType stream_type, uint32_t width = OB_WIDTH_ANY, uint32_t height = OB_HEIGHT_ANY, uint32_t fps = OB_FPS_ANY,
+                           OBFormat format = OB_FORMAT_ANY) {
+        ob_error *error = nullptr;
+        ob_config_enable_video_stream(impl_, stream_type, width, height, fps, format, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
+     * @brief Enable an accelerometer stream to be used in the pipeline.
+     *
+     * This function allows users to enable an accelerometer stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default settings.
+     * Users who wish to set custom full-scale ranges or sample rates should refer to the product manual, as available settings vary by device model.
+     *
+     * @param fullScaleRange The full-scale range of the accelerometer (default is OB_ACCEL_FULL_SCALE_RANGE_ANY, which selects the default range).
+     * @param sampleRate The sample rate of the accelerometer (default is OB_ACCEL_SAMPLE_RATE_ANY, which selects the default rate).
+     */
+    void enableAccelStream(ob_accel_full_scale_range fullScaleRange = OB_ACCEL_FULL_SCALE_RANGE_ANY,
+                           ob_accel_sample_rate      sampleRate     = OB_ACCEL_SAMPLE_RATE_ANY) {
+        ob_error *error = nullptr;
+        ob_config_enable_accel_stream(impl_, fullScaleRange, sampleRate, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
+     * @brief Enable a gyroscope stream to be used in the pipeline.
+     *
+     * This function allows users to enable a gyroscope stream with customizable parameters.
+     * If no parameters are specified, the stream will be enabled with default settings.
+     * Users who wish to set custom full-scale ranges or sample rates should refer to the product manual, as available settings vary by device model.
+     *
+     * @param fullScaleRange The full-scale range of the gyroscope (default is OB_GYRO_FULL_SCALE_RANGE_ANY, which selects the default range).
+     * @param sampleRate The sample rate of the gyroscope (default is OB_GYRO_SAMPLE_RATE_ANY, which selects the default rate).
+     */
+    void enableGyroStream(ob_gyro_full_scale_range fullScaleRange = OB_GYRO_FULL_SCALE_RANGE_ANY, ob_gyro_sample_rate sampleRate = OB_GYRO_SAMPLE_RATE_ANY) {
+        ob_error *error = nullptr;
+        ob_config_enable_gyro_stream(impl_, fullScaleRange, sampleRate, &error);
         Error::handle(&error, false);
     }
 
@@ -132,7 +197,7 @@ typedef std::function<void(std::shared_ptr<FrameSet> frame)> FrameSetCallback;
 
 class Pipeline {
 private:
-    ob_pipeline_t   *impl_;
+    ob_pipeline_t *  impl_;
     FrameSetCallback callback_;
 
 public:
@@ -172,9 +237,10 @@ public:
      *
      * @param config The parameter configuration of the pipeline
      */
-    void start(std::shared_ptr<Config> config) {
-        ob_error *error = nullptr;
-        ob_pipeline_start_with_config(impl_, config->getImpl(), &error);
+    void start(std::shared_ptr<Config> config = nullptr) {
+        ob_error *   error       = nullptr;
+        ob_config_t *config_impl = config == nullptr ? nullptr : config->getImpl();
+        ob_pipeline_start_with_config(impl_, config_impl, &error);
         Error::handle(&error, false);
     }
 
@@ -224,9 +290,12 @@ public:
      * @param timeout_ms The waiting timeout in milliseconds
      * @return std::shared_ptr<FrameSet> The waiting frameset data
      */
-    std::shared_ptr<FrameSet> waitForFrames(uint32_t timeout_ms) {
+    std::shared_ptr<FrameSet> waitForFrames(uint32_t timeout_ms = 100) {
         ob_error *error    = nullptr;
         auto      frameSet = ob_pipeline_wait_for_frameset(impl_, timeout_ms, &error);
+        if(frameSet == nullptr) {
+            return nullptr;
+        }
         Error::handle(&error, false);
         return std::make_shared<FrameSet>(frameSet);
     }

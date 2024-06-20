@@ -111,6 +111,15 @@ OB_EXPORT ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, 
                                                       void *buffer_destroy_context, ob_error **error);
 
 /**
+ * @brief Copy the information of one frame from another frame.
+ *
+ * @param[in] srcframe Original frame object to increase the reference count.
+ * @param[in] dstframe Destination frame object to increase the reference count.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_frame_copy_info(const ob_frame *srcframe, ob_frame *dstframe, ob_error **error);
+
+/**
  * @brief Create an empty frameset object.
  * @brief A frameset object is a special type of frame object that can be used to store multiple frames.
  *
@@ -475,17 +484,6 @@ OB_EXPORT float ob_gyro_frame_get_temperature(const ob_frame *frame, ob_error **
  * @return uint32_t return the number of frames
  */
 OB_EXPORT uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error);
-
-/**
- * @brief Get the disparity frame from the frameset.
- *
- * @attention The frame returned by this function should call @ref ob_delete_frame() to decrease the reference count when it is no longer needed.
- *
- * @param[in] frameset Frameset object.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- * @return ob_frame* Returen the disparity frame.
- */
-OB_EXPORT const ob_frame *ob_frameset_get_disparity_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the depth frame from the frameset.

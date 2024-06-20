@@ -3,7 +3,7 @@
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
 #include "pipeline/Pipeline.hpp"
-#include "config/Config.hpp"
+#include "pipeline/Config.hpp"
 #include "context/Context.hpp"
 
 #ifdef __cplusplus
@@ -137,7 +137,7 @@ ob_stream_profile_list *ob_get_d2c_depth_profile_list(ob_pipeline *pipeline, ob_
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, pipeline)
 
 ob_config *ob_create_config(ob_error **error) BEGIN_API_CALL {
-    auto config = new ob_config();
+    auto config    = new ob_config();
     config->config = std::make_shared<libobsensor::Config>();
     return config;
 }
@@ -149,12 +149,35 @@ void ob_delete_config(ob_config *config, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(config)
 
-void ob_config_enable_stream(ob_config *config, ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
+void ob_config_enable_stream_with_stream_profile(ob_config *config, const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(config);
     VALIDATE_NOT_NULL(profile);
     config->config->enableStream(profile->profile);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(config, profile)
+
+void ob_config_enable_stream(ob_config *config, ob_stream_type stream_type, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(config);
+    config->config->enableStream(stream_type);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(config, stream_type)
+
+void ob_config_enable_video_stream(ob_config *config, ob_stream_type stream_type, uint32_t width, uint32_t height, uint32_t fps, ob_format format,
+                                   ob_error **error) BEGIN_API_CALL {
+    config->config->enableVideoStream(stream_type, width, height, fps, format);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(config, stream_type, width, height, fps, format)
+
+void ob_config_enable_accel_stream(ob_config *config, ob_accel_full_scale_range full_scale_range, ob_accel_sample_rate sample_rate,
+                                   ob_error **error) BEGIN_API_CALL {
+    config->config->enableAccelStream(full_scale_range, sample_rate);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(config, full_scale_range, sample_rate)
+void ob_config_enable_gyro_stream(ob_config *config, ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,
+                                  ob_error **error) BEGIN_API_CALL {
+    config->config->enableGyroStream(full_scale_range, sample_rate);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(config, full_scale_range, sample_rate)
 
 ob_stream_profile_list *ob_config_get_enabled_stream_profile_list(ob_config *config, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(config);

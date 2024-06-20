@@ -13,4 +13,6 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/G330MetadataParser.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330timestampCalculator.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330timestampCalculator.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330AlgParamManager.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330AlgParamManager.hpp
 )

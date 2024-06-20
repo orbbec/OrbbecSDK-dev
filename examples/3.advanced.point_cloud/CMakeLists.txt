@@ -6,7 +6,7 @@ project(ob_point_cloud)
 add_executable(ob_point_cloud point_cloud.cpp)
 
 set_property(TARGET ob_point_cloud PROPERTY CXX_STANDARD 11)
-target_link_libraries(ob_point_cloud OrbbecSDK)
+target_link_libraries(ob_point_cloud ob::openobsdk ob::examples::common)
 
 set_target_properties(ob_point_cloud PROPERTIES FOLDER "Examples")
 

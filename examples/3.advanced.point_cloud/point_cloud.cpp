@@ -1,7 +1,8 @@
-#include "openobsdk/ObSensor.hpp"
-// #include "opencv2/opencv.hpp"
+#include <openobsdk/ObSensor.hpp>
+
 #include <fstream>
 #include <iostream>
+
 #include "utils.hpp"
 
 #define KEY_ESC 27
@@ -10,7 +11,7 @@
 
 // Save point cloud data to ply
 void savePointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) {
-    int   pointsSize = frame->dataSize() / sizeof(OBPoint);
+    int   pointsSize = frame->getDataSize() / sizeof(OBPoint);
     FILE *fp         = fopen(fileName.c_str(), "wb+");
     fprintf(fp, "ply\n");
     fprintf(fp, "format ascii 1.0\n");
@@ -20,7 +21,7 @@ void savePointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) {
     fprintf(fp, "property float z\n");
     fprintf(fp, "end_header\n");
 
-    OBPoint *point = (OBPoint *)frame->data();
+    OBPoint *point = (OBPoint *)frame->getData();
     for(int i = 0; i < pointsSize; i++) {
         fprintf(fp, "%.3f %.3f %.3f\n", point->x, point->y, point->z);
         point++;
@@ -32,7 +33,7 @@ void savePointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) {
 
 // Save colored point cloud data to ply
 void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) {
-    int   pointsSize = frame->dataSize() / sizeof(OBColorPoint);
+    int   pointsSize = frame->getDataSize() / sizeof(OBColorPoint);
     FILE *fp         = fopen(fileName.c_str(), "wb+");
     fprintf(fp, "ply\n");
     fprintf(fp, "format ascii 1.0\n");
@@ -45,7 +46,7 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) 
     fprintf(fp, "property uchar blue\n");
     fprintf(fp, "end_header\n");
 
-    OBColorPoint *point = (OBColorPoint *)frame->data();
+    OBColorPoint *point = (OBColorPoint *)frame->getData();
     for(int i = 0; i < pointsSize; i++) {
         fprintf(fp, "%.3f %.3f %.3f %d %d %d\n", point->x, point->y, point->z, (int)point->r, (int)point->g, (int)point->b);
         point++;
@@ -160,10 +161,10 @@ int main(int argc, char **argv) try {
                 while(count++ < 10) {
                     // Wait for a frame of data, the timeout is 100ms
                     auto frameset = pipeline.waitForFrames(100);
-                    if(frameset != nullptr && frameset->depthFrame() != nullptr && frameset->colorFrame() != nullptr) {
+                    if(frameset != nullptr && frameset->getFrame(OB_FRAME_COLOR)->as<ob::ColorFrame>() != nullptr && frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>() != nullptr) {
                         // point position value multiply depth value scale to convert uint to millimeter (for some devices, the default depth value uint is not
                         // millimeter)
-                        auto depthValueScale = frameset->depthFrame()->getValueScale();
+                        auto depthValueScale = frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>()->getValueScale();
                         pointCloud.setPositionDataScaled(depthValueScale);
                         try {
                             // Generate a colored point cloud and save it
@@ -189,10 +190,10 @@ int main(int argc, char **argv) try {
                 while(count++ < 10) {
                     // Wait for up to 100ms for a frameset in blocking mode.
                     auto frameset = pipeline.waitForFrames(100);
-                    if(frameset != nullptr && frameset->depthFrame() != nullptr) {
+                    if(frameset != nullptr && frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>() != nullptr) {
                         // point position value multiply depth value scale to convert uint to millimeter (for some devices, the default depth value uint is not
                         // millimeter)
-                        auto depthValueScale = frameset->depthFrame()->getValueScale();
+                        auto depthValueScale = frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>()->getValueScale();
                         pointCloud.setPositionDataScaled(depthValueScale);
                         try {
                             // generate point cloud and save
@@ -217,6 +218,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

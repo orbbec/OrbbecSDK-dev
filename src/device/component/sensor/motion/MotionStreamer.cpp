@@ -9,14 +9,27 @@
 namespace libobsensor {
 MotionStreamer::MotionStreamer(const std::shared_ptr<IDataStreamPort> &backend, const std::shared_ptr<IFilter> &dataPhaser)
     : backend_(backend), dataPhaser_(dataPhaser), running_(false) {
-    dataPhaser_->setCallback([this](std::shared_ptr<Frame> frame) {
+    dataPhaser_->setCallback([this](std::shared_ptr<const Frame> frame) {
+        if(!frame){
+            return;
+        }
+        
         std::lock_guard<std::mutex> lock(mtx_);
-        auto                        format = frame->getFormat();
         for(auto &callback: callbacks_) {
+            auto callbackFrame = frame;
+            auto format = frame->getFormat();
+            if(frame->is<FrameSet>()){
+                auto frameSet = frame->as<FrameSet>();
+                callbackFrame = frameSet->getFrame(utils::mapStreamTypeToFrameType(callback.first->getType()));
+                if(callbackFrame){
+                    format = callbackFrame->getFormat();
+                }
+            }
+
             if(format != callback.first->getFormat()) {
                 continue;
             }
-            callback.second(frame);
+            callback.second(callbackFrame);
         }
     });
 }
@@ -86,13 +99,13 @@ void MotionStreamer::praseIMUData(std::shared_ptr<Frame> frame){
 
     int      offset     = sizeof(OBImuOriginData);
     uint8_t *imuOrgData = (uint8_t *)data + sizeof(OBImuHeader);
-    OBAccelFullScaleRange accelFullScaleRange = OB_ACCEL_FS_UNKNOW;
-    OBGyroFullScaleRange  gyroFullScaleRange  = OB_GYRO_FS_UNKNOW;
+    std::shared_ptr<const AccelStreamProfile> accelStreamProfile;
+    std::shared_ptr<const GyroStreamProfile> gyroStreamProfile;
     for(const auto &iter :callbacks_){
         if(iter.first->is<libobsensor::AccelStreamProfile>()){
-            accelFullScaleRange = iter.first->as<libobsensor::AccelStreamProfile>()->getFullScaleRange();
+            accelStreamProfile = iter.first->as<libobsensor::AccelStreamProfile>();
         }else if (iter.first->is<libobsensor::GyroStreamProfile>()){
-            gyroFullScaleRange = iter.first->as<libobsensor::GyroStreamProfile>()->getFullScaleRange();            
+            gyroStreamProfile = iter.first->as<libobsensor::GyroStreamProfile>();            
         }
     }
 
@@ -102,37 +115,52 @@ void MotionStreamer::praseIMUData(std::shared_ptr<Frame> frame){
             LOG_WARN_INTVL("acquire frame set failed, drop imu package!");
             return;
         }
-        auto accelFrame = std::const_pointer_cast<Frame>(frameSet->getFrame(OB_FRAME_ACCEL));
-        auto gyroFrame = std::const_pointer_cast<Frame>(frameSet->getFrame(OB_FRAME_GYRO));
         auto nowTimeUs = utils::getNowTimesUs();
+
+        std::shared_ptr<Frame> accelFrame,gyroFrame;
+        if(accelStreamProfile){
+            accelFrame = FrameFactory::createFrameFromStreamProfile(accelStreamProfile);
+        }
+
+        if(gyroStreamProfile){
+            gyroFrame = FrameFactory::createFrameFromStreamProfile(gyroStreamProfile);
+        }
+
         OBImuOriginData *imuData = (OBImuOriginData *)((uint8_t *)imuOrgData + groupIndex * offset);
 
-        uint64_t timestamp = ((uint64_t)imuData->timestamp[0] | ((uint64_t)imuData->timestamp[1] << 32));
-        // accelFrame->setNumber((uint32_t)frameIndex_++);
-        accelFrame->setTimeStampUsec(timestamp);
-        gyroFrame->setTimeStampUsec(timestamp);
-        // backend_.frameTimestampConverter->convert(timestamp, frame);
-        accelFrame->setSystemTimeStampUsec(nowTimeUs);
-        gyroFrame->setSystemTimeStampUsec(nowTimeUs);
-
-        if(accelFullScaleRange != OB_ACCEL_FS_UNKNOW){
+        if(accelFrame && accelStreamProfile && accelStreamProfile->getFullScaleRange() != OB_ACCEL_FS_UNKNOWN){
             OBAccelFrameData *accelFrameData    = (OBAccelFrameData *)accelFrame->getData();
             float             accelData[3] = { 
-                IMUCorrecter::calculateAccelGravity(static_cast<int16_t>(imuData->accelX),static_cast<uint8_t>(accelFullScaleRange)), 
-                IMUCorrecter::calculateAccelGravity(static_cast<int16_t>(imuData->accelY),static_cast<uint8_t>(accelFullScaleRange)), 
-                IMUCorrecter::calculateAccelGravity(static_cast<int16_t>(imuData->accelZ),static_cast<uint8_t>(accelFullScaleRange)) };
+                IMUCorrecter::calculateAccelGravity(static_cast<int16_t>(imuData->accelX),static_cast<uint8_t>(accelStreamProfile->getFullScaleRange())), 
+                IMUCorrecter::calculateAccelGravity(static_cast<int16_t>(imuData->accelY),static_cast<uint8_t>(accelStreamProfile->getFullScaleRange())), 
+                IMUCorrecter::calculateAccelGravity(static_cast<int16_t>(imuData->accelZ),static_cast<uint8_t>(accelStreamProfile->getFullScaleRange())) };
             memcpy(accelFrameData->accelData, accelData, sizeof(float) * 3);
             accelFrameData->temp = imuData->temperature;
         }
 
-        if(gyroFullScaleRange != OB_GYRO_FS_UNKNOW){    
+        if(gyroFrame && gyroStreamProfile && gyroStreamProfile->getFullScaleRange() != OB_GYRO_FS_UNKNOWN){    
             OBGyroFrameData *gyroFrameData = (OBGyroFrameData *)gyroFrame->getData();
             float             gyroData[3] = { 
-                IMUCorrecter::calculateGyroDPS(static_cast<int16_t>(imuData->gyroX),static_cast<uint8_t>(gyroFullScaleRange)), 
-                IMUCorrecter::calculateGyroDPS(static_cast<int16_t>(imuData->gyroY),static_cast<uint8_t>(gyroFullScaleRange)), 
-                IMUCorrecter::calculateGyroDPS(static_cast<int16_t>(imuData->gyroZ),static_cast<uint8_t>(gyroFullScaleRange)) };
+                IMUCorrecter::calculateGyroDPS(static_cast<int16_t>(imuData->gyroX),static_cast<uint8_t>(gyroStreamProfile->getFullScaleRange())), 
+                IMUCorrecter::calculateGyroDPS(static_cast<int16_t>(imuData->gyroY),static_cast<uint8_t>(gyroStreamProfile->getFullScaleRange())), 
+                IMUCorrecter::calculateGyroDPS(static_cast<int16_t>(imuData->gyroZ),static_cast<uint8_t>(gyroStreamProfile->getFullScaleRange())) };
             memcpy(gyroFrameData->gyroData, gyroData, sizeof(float) * 3);
             gyroFrameData->temp = imuData->temperature;
+        }
+
+        uint64_t timestamp = ((uint64_t)imuData->timestamp[0] | ((uint64_t)imuData->timestamp[1] << 32));
+        if(accelFrame){
+            // accelFrame->setNumber((uint32_t)frameIndex_++);
+            accelFrame->setTimeStampUsec(timestamp);
+            accelFrame->setSystemTimeStampUsec(nowTimeUs);
+            frameSet->pushFrame(accelFrame);
+        }
+
+        if(gyroFrame){
+            // gyroFrame->setNumber((uint32_t)frameIndex_++);
+            gyroFrame->setTimeStampUsec(timestamp);
+            gyroFrame->setSystemTimeStampUsec(nowTimeUs);
+            frameSet->pushFrame(gyroFrame);
         }
 
         dataPhaser_->pushFrame(frameSet);

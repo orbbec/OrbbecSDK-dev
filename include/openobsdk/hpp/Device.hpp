@@ -8,22 +8,28 @@
 
 #include "openobsdk/h/Property.h"
 #include "openobsdk/h/Device.h"
+#include "openobsdk/h/Advanced.h"
 #include "openobsdk/hpp/Filter.hpp"
 #include "openobsdk/hpp/Sensor.hpp"
 #include "Error.hpp"
 #include <memory>
 #include <string>
 #include <vector>
+#include <thread>
+#include <chrono>
 
 namespace ob {
 
 class DeviceInfo;
 class SensorList;
 class DevicePresetList;
+class OBDepthWorkModeList;
 
 class Device {
 protected:
-    ob_device_t *impl_ = nullptr;
+    ob_device_t               *impl_ = nullptr;
+    DeviceStateChangedCallback device_state_change_callback_;
+    DeviceUpgradeCallback      device_upgrade_callback_;
 
 public:
     /**
@@ -295,9 +301,17 @@ public:
      * @param async    Whether to execute asynchronously
      */
     void deviceUpgrade(const char *filePath, DeviceUpgradeCallback callback, bool async = true) {
-        ob_error *error = nullptr;
-        ob_device_update_firmware(impl_, filePath, callback, async, &error);
+        ob_error *error          = nullptr;
+        device_upgrade_callback_ = callback;
+        ob_device_update_firmware(impl_, filePath, &Device::UpgradeCallback, async, this, &error);
         Error::handle(&error);
+    }
+
+    static void UpgradeCallback(ob_fw_update_state state, const char *message, uint8_t percent, void *userData) {
+        auto device = static_cast<Device *>(userData);
+        if(device->device_upgrade_callback_) {
+            device->device_upgrade_callback_(state, message, percent);
+        }
     }
 
     /**
@@ -310,26 +324,11 @@ public:
      * @param async    Whether to execute asynchronously
      */
     void deviceUpgradeFromData(const char *fileData, uint32_t fileSize, DeviceUpgradeCallback callback, bool async = true) {
-        ob_error *error = nullptr;
-        ob_device_update_firmware_from_data(impl_, fileData, fileSize, callback, async, &error);
+        ob_error *error          = nullptr;
+        device_upgrade_callback_ = callback;
+        ob_device_upgrade_firmware_from_data(impl_, fileData, fileSize, &Device::UpgradeCallback, async, this, &error);
         Error::handle(&error);
     }
-
-    /**
-     * @brief Send files to the specified path on the device side [Asynchronouscallback]
-     *
-     * @param filePath Original file path
-     * @param dstPath  Accept the save path on the device side
-     * @param callback File transfer callback
-     * @param async    Whether to execute asynchronously
-     */
-    void sendFile(const char *filePath, const char *dstPath, SendFileCallback callback, bool async = true);
-
-    /**
-     * @brief Get the current state
-     * @return OBDeviceState device state information
-     */
-    OBDeviceState getDeviceState();
 
     /**
      * @brief Set the device state changed callbacks
@@ -337,66 +336,75 @@ public:
      * @param callback The callback function that is triggered when the device status changes (for example, the frame rate is automatically reduced or the
      * stream is closed due to high temperature, etc.)
      */
-    void setDeviceStateChangedCallback(DeviceStateChangedCallback callback);
+    void setDeviceStateChangedCallback(DeviceStateChangedCallback callback) {
+        ob_error *error               = nullptr;
+        device_state_change_callback_ = callback;
+        ob_device_set_state_changed_callback(impl_, &Device::deviceStateChangedCallback, this, &error);
+        Error::handle(&error);
+    }
 
-    /**
-     * @brief Verify device authorization code
-     *
-     * @param authCode Authorization code
-     * @return bool whether the activation is successful
-     */
-    bool activateAuthorization(const char *authCode);
-
-    /**
-     * @brief Write authorization code
-     * @param[in] authCodeStr  Authorization code
-     */
-    void writeAuthorizationCode(const char *authCodeStr);
-
-    /**
-     * @brief Get the original parameter list of camera calibration saved in the device.
-     *
-     * @attention The parameters in the list do not correspond to the current open-current configuration. You need to select the parameters according to the
-     * actual situation, and may need to do scaling, mirroring and other processing. Non-professional users are recommended to use the
-     * Pipeline::getCameraParam() interface.
-     *
-     * @return std::shared_ptr<CameraParamList> camera parameter list
-     */
-    std::shared_ptr<CameraParamList> getCalibrationCameraParamList();
+    static void deviceStateChangedCallback(OBDeviceState state, const char *message, void *userData) {
+        auto device = static_cast<Device *>(userData);
+        device->device_state_change_callback_(state, message);
+    }
 
     /**
      * @brief Get current depth work mode
      *
      * @return ob_depth_work_mode Current depth work mode
      */
-    OBDepthWorkMode getCurrentDepthWorkMode();
+    OBDepthWorkMode getCurrentDepthWorkMode() {
+        ob_error *error = nullptr;
+        auto      mode  = ob_device_get_current_depth_work_mode(impl_, &error);
+        Error::handle(&error);
+        return mode;
+    }
 
     /**
      * @brief Switch depth work mode by OBDepthWorkMode. Prefer invoke switchDepthWorkMode(const char *modeName) to switch depth mode
      *        when known the complete name of depth work mode.
      * @param[in] workMode Depth work mode come from ob_depth_work_mode_list which return by ob_device_get_depth_work_mode_list
      */
-    OBStatus switchDepthWorkMode(const OBDepthWorkMode &workMode);
+    OBStatus switchDepthWorkMode(const OBDepthWorkMode &workMode) {
+        ob_error *error  = nullptr;
+        auto      status = ob_device_switch_depth_work_mode(impl_, &workMode, &error);
+        Error::handle(&error);
+        return status;
+    }
 
     /**
      * @brief Switch depth work mode by work mode name.
      *
      * @param[in] modeName Depth work mode name which equals to OBDepthWorkMode.name
      */
-    OBStatus switchDepthWorkMode(const char *modeName);
+    OBStatus switchDepthWorkMode(const char *modeName) {
+        ob_error *error  = nullptr;
+        auto      status = ob_device_switch_depth_work_mode_by_name(impl_, modeName, &error);
+        Error::handle(&error);
+        return status;
+    }
 
     /**
      * @brief Request support depth work mode list
      * @return OBDepthWorkModeList list of ob_depth_work_mode
      */
-    std::shared_ptr<OBDepthWorkModeList> getDepthWorkModeList();
+    std::shared_ptr<OBDepthWorkModeList> getDepthWorkModeList() {
+        ob_error *error = nullptr;
+        auto      list  = ob_device_get_depth_work_mode_list(impl_, &error);
+        Error::handle(&error);
+        return std::make_shared<OBDepthWorkModeList>(list);
+    }
 
     /**
      * @brief Device restart
      * @attention The device will be disconnected and reconnected. After the device is disconnected, the access to the Device object interface may be abnormal.
      *   Please delete the object directly and obtain it again after the device is reconnected.
      */
-    void reboot();
+    void reboot() {
+        ob_error *error = nullptr;
+        ob_device_reboot(impl_, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Device restart delay mode
@@ -406,7 +414,13 @@ public:
      *
      * @param[in] delayMs Time unit：ms。delayMs == 0：No delay；delayMs > 0, Delay millisecond connect to host device after reboot
      */
-    void reboot(uint32_t delayMs);
+    void reboot(uint32_t delayMs) {
+        ob_error *error = nullptr;
+        // FIXME:
+        std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
+        ob_device_reboot(impl_, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Get the supported multi device sync mode bitmap of the device.
@@ -423,21 +437,35 @@ public:
      * ```
      * @return uint16_t return the supported multi device sync mode bitmap of the device.
      */
-    uint16_t getSupportedMultiDeviceSyncModeBitmap();
+    uint16_t getSupportedMultiDeviceSyncModeBitmap() {
+        ob_error *error = nullptr;
+        auto      mode  = ob_device_get_supported_multi_device_sync_mode_bitmap(impl_, &error);
+        Error::handle(&error);
+        return mode;
+    }
 
     /**
      * @brief set the multi device sync configuration of the device.
      *
      * @param[in] config The multi device sync configuration.
      */
-    void setMultiDeviceSyncConfig(const OBMultiDeviceSyncConfig &config);
+    void setMultiDeviceSyncConfig(const OBMultiDeviceSyncConfig &config) {
+        ob_error *error = nullptr;
+        ob_device_set_multi_device_sync_config(impl_, &config, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief get the multi device sync configuration of the device.
      *
      * @return OBMultiDeviceSyncConfig return the multi device sync configuration of the device.
      */
-    OBMultiDeviceSyncConfig getMultiDeviceSyncConfig();
+    OBMultiDeviceSyncConfig getMultiDeviceSyncConfig() {
+        ob_error *error  = nullptr;
+        auto      config = ob_device_get_multi_device_sync_config(impl_, &error);
+        Error::handle(&error);
+        return config;
+    }
 
     /**
      * @brief send the capture command to the device.
@@ -450,19 +478,32 @@ public:
      * this function should not be too high, please refer to the product manual for the specific supported frequency.
      * @attention If the device is not in the @ref OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING mode, device will ignore the capture command.
      */
-    void triggerCapture();
+    void triggerCapture() {
+        ob_error *error = nullptr;
+        ob_device_trigger_capture(impl_, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief set the timestamp reset configuration of the device.
      */
-    void setTimestampResetConfig(const OBDeviceTimestampResetConfig &config);
+    void setTimestampResetConfig(const OBDeviceTimestampResetConfig &config) {
+        ob_error *error = nullptr;
+        ob_device_set_timestamp_reset_config(impl_, &config, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief get the timestamp reset configuration of the device.
      *
      * @return OBDeviceTimestampResetConfig return the timestamp reset configuration of the device.
      */
-    OBDeviceTimestampResetConfig getTimestampResetConfig();
+    OBDeviceTimestampResetConfig getTimestampResetConfig() {
+        ob_error *error  = nullptr;
+        auto      config = ob_device_get_timestamp_reset_config(impl_, &error);
+        Error::handle(&error);
+        return config;
+    }
 
     /**
      * @brief send the timestamp reset command to the device.
@@ -475,7 +516,11 @@ public:
      * @attention Due to the timer of device is not high-accuracy, the timestamp of the continuous frames output by the stream will drift after a long time.
      * User can call this function periodically to reset the timer to avoid the timestamp drift, the recommended interval time is 60 minutes.
      */
-    void timestampReset();
+    void timestampReset() {
+        ob_error *error = nullptr;
+        ob_device_timestamp_reset(impl_, &error);
+        Error::handle(&error);
+    }
 
     /**
      *  @brief Alias for @ref timestampReset since it is more accurate.
@@ -493,25 +538,23 @@ public:
      * User can call this function periodically to synchronize the timer to avoid the timestamp drift, the recommended interval time is 60 minutes.
      *
      */
-    void timerSyncWithHost();
-
-    /**
-     * @brief Load depth filter config from file.
-     * @param filePath Path of the config file.
-     */
-    void loadDepthFilterConfig(const char *filePath);
-
-    /**
-     * @brief Reset depth filter config to device default define.
-     */
-    void resetDefaultDepthFilterConfig();
+    void timerSyncWithHost() {
+        ob_error *error = nullptr;
+        ob_device_timer_sync_with_host(impl_, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Get current preset name
      * @brief The preset mean a set of parameters or configurations that can be applied to the device to achieve a specific effect or function.
      * @return const char* return the current preset name, it should be one of the preset names returned by @ref getAvailablePresetList.
      */
-    const char *getCurrentPresetName();
+    const char *getCurrentPresetName() {
+        ob_error   *error = nullptr;
+        const char *name  = ob_device_get_current_preset_name(impl_, &error);
+        Error::handle(&error);
+        return name;
+    }
 
     /**
      * @brief load the preset according to the preset name.
@@ -519,7 +562,11 @@ public:
      * settings to update the user program temporarily.
      * @param presetName The preset name to set. The name should be one of the preset names returned by @ref getAvailablePresetList.
      */
-    void loadPreset(const char *presetName);
+    void loadPreset(const char *presetName) {
+        ob_error *error = nullptr;
+        ob_device_load_preset(impl_, presetName, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Get available preset list
@@ -528,7 +575,12 @@ public:
      *
      * @return DevicePresetList return the available preset list.
      */
-    std::shared_ptr<DevicePresetList> getAvailablePresetList();
+    std::shared_ptr<DevicePresetList> getAvailablePresetList() {
+        ob_error *error = nullptr;
+        auto      list  = ob_device_get_available_preset_list(impl_, &error);
+        Error::handle(&error);
+        return std::make_shared<DevicePresetList>(list);
+    }
 
     /**
      * @brief Load custom preset from file.
@@ -540,20 +592,11 @@ public:
      *
      * @param filePath The path of the custom preset file.
      */
-    void loadPresetFromJsonFile(const char *filePath);
-
-    /**
-     * @brief Load custom preset from data.
-     * @brief After loading the custom preset, the settings in the custom preset will set to the device immediately.
-     * @brief After loading the custom preset, the available preset list will be appended with the custom preset and named as the @ref presetName.
-     *
-     * @attention The user should ensure that the custom preset data is adapted to the device and the settings in the data are valid.
-     * @attention It is recommended to re-read the device settings to update the user program temporarily after successfully loading the custom preset.
-     *
-     * @param data The custom preset data.
-     * @param size The size of the custom preset data.
-     */
-    void loadPresetFromJsonData(const char *presetName, const uint8_t *data, uint32_t size);
+    void loadPresetFromJsonFile(const char *filePath) {
+        ob_error *error = nullptr;
+        ob_device_load_preset_from_json_file(impl_, filePath, &error);
+        Error::handle(&error);
+    }
 
     /**
      * @brief Export current device settings as a preset json file.
@@ -562,20 +605,11 @@ public:
      *
      * @param filePath The path of the preset file to be exported.
      */
-    void exportSettingsAsPresetJsonFile(const char *filePath);
-
-    /**
-     * @brief Export current device settings as a preset json data.
-     * @brief After exporting the preset, a new preset named as the @ref presetName will be added to the available preset list.
-     *
-     * @attention The memory of the data is allocated by the SDK, and will automatically be released by the SDK.
-     * @attention The memory of the data will be reused by the SDK on the next call, so the user should copy the data to a new buffer if it needs to be
-     * preserved.
-     *
-     * @param[out] data return the preset json data.
-     * @param[out] dataSize return the size of the preset json data.
-     */
-    void exportSettingsAsPresetJsonData(const char *presetName, const uint8_t **data, uint32_t *dataSize);
+    void exportSettingsAsPresetJsonFile(const char *filePath) {
+        ob_error *error = nullptr;
+        ob_device_export_current_settings_as_preset_json_file(impl_, filePath, &error);
+        Error::handle(&error);
+    }
 };
 
 /**
@@ -762,14 +796,23 @@ private:
 
 public:
     explicit DeviceList(ob_device_list_t *impl) : impl_(impl) {}
-    ~DeviceList() noexcept {}
+    ~DeviceList() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_device_list(impl_, &error);
+        Error::handle(&error, false);
+    }
 
     /**
      * @brief Get the number of devices in the list
      *
      * @return uint32_t the number of devices in the list
      */
-    uint32_t deviceCount();
+    uint32_t deviceCount() {
+        ob_error *error = nullptr;
+        auto      count = ob_device_list_get_device_count(impl_, &error);
+        Error::handle(&error);
+        return count;
+    }
 
     /**
      * @brief Get the PID of the device at the specified index
@@ -777,7 +820,12 @@ public:
      * @param index the index of the device
      * @return int the PID of the device
      */
-    int pid(uint32_t index);
+    int pid(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      pid   = ob_device_list_get_device_pid(impl_, index, &error);
+        Error::handle(&error);
+        return pid;
+    }
 
     /**
      * @brief Get the VID of the device at the specified index
@@ -785,7 +833,12 @@ public:
      * @param index the index of the device
      * @return int the VID of the device
      */
-    int vid(uint32_t index);
+    int vid(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      vid   = ob_device_list_get_device_vid(impl_, index, &error);
+        Error::handle(&error);
+        return vid;
+    }
 
     /**
      * @brief Get the UID of the device at the specified index
@@ -793,7 +846,12 @@ public:
      * @param index the index of the device
      * @return const char* the UID of the device
      */
-    const char *uid(uint32_t index);
+    const char *uid(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      uid   = ob_device_list_get_device_uid(impl_, index, &error);
+        Error::handle(&error);
+        return uid;
+    }
 
     /**
      * @brief Get the serial number of the device at the specified index
@@ -801,7 +859,28 @@ public:
      * @param index the index of the device
      * @return const char* the serial number of the device
      */
-    const char *serialNumber(uint32_t index);
+    const char *serialNumber(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      sn    = ob_device_list_get_device_serial_number(impl_, index, &error);
+        Error::handle(&error);
+        return sn;
+    }
+
+    /**
+     * @brief Get the name of the device at the specified index in the device list.
+     *
+     * This function retrieves the name of the device at the given index in the device list.
+     * If an error occurs during the operation, it will be handled by the Error::handle function.
+     *
+     * @param index The index of the device in the device list.
+     * @return const char* The name of the device at the specified index.
+     */
+    const char *name(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      name  = ob_device_list_get_device_name(impl_, index, &error);
+        Error::handle(&error);
+        return name;
+    }
 
     /**
      * @brief Get device connection type
@@ -809,7 +888,12 @@ public:
      * @param index device index
      * @return const char* returns connection type，currently supports："USB", "USB1.0", "USB1.1", "USB2.0", "USB2.1", "USB3.0", "USB3.1", "USB3.2", "Ethernet"
      */
-    const char *connectionType(uint32_t index);
+    const char *connectionType(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      type  = ob_device_list_get_device_connection_type(impl_, index, &error);
+        Error::handle(&error);
+        return type;
+    }
 
     /**
      * @brief get the ip address of the device at the specified index
@@ -819,7 +903,12 @@ public:
      * @param index the index of the device
      * @return const char* the ip address of the device
      */
-    const char *ipAddress(uint32_t index);
+    const char *ipAddress(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      ip    = ob_device_list_get_device_ip_address(impl_, index, &error);
+        Error::handle(&error);
+        return ip;
+    }
 
     /**
      * @brief Get the device object at the specified index
@@ -829,7 +918,12 @@ public:
      * @param index the index of the device to create
      * @return std::shared_ptr<Device> the device object
      */
-    std::shared_ptr<Device> getDevice(uint32_t index);
+    std::shared_ptr<Device> getDevice(uint32_t index) {
+        ob_error *error  = nullptr;
+        auto      device = ob_device_list_get_device(impl_, index, &error);
+        Error::handle(&error);
+        return std::make_shared<Device>(device);
+    }
 
     /**
      * @brief Get the device object with the specified serial number
@@ -839,7 +933,12 @@ public:
      * @param serialNumber the serial number of the device to create
      * @return std::shared_ptr<Device> the device object
      */
-    std::shared_ptr<Device> getDeviceBySN(const char *serialNumber);
+    std::shared_ptr<Device> getDeviceBySN(const char *serialNumber) {
+        ob_error *error  = nullptr;
+        auto      device = ob_device_list_get_device_by_serial_number(impl_, serialNumber, &error);
+        Error::handle(&error);
+        return std::make_shared<Device>(device);
+    }
 
     /**
      * @brief Get the specified device object from the device list by uid
@@ -852,53 +951,37 @@ public:
      * @param uid The uid of the device to be created
      * @return std::shared_ptr<Device> returns the device object
      */
-    std::shared_ptr<Device> getDeviceByUid(const char *uid);
+    std::shared_ptr<Device> getDeviceByUid(const char *uid) {
+        ob_error *error  = nullptr;
+        auto      device = ob_device_list_get_device_by_uid(impl_, uid, &error);
+        Error::handle(&error);
+        return std::make_shared<Device>(device);
+    }
 };
 
-/**
- * @brief Class representing a list of camera parameters
- */
-class CameraParamList {
-private:
-    ob_camera_param_list_t *impl_ = nullptr;
-
-public:
-    CameraParamList(std::unique_ptr<CameraParamListImpl> impl);
-    ~CameraParamList() noexcept;
-
-    /**
-     * @brief Get the number of camera parameter groups
-     *
-     * @return uint32_t the number of camera parameter groups
-     */
-    uint32_t count();
-
-    /**
-     * @brief Get the camera parameters for the specified index
-     *
-     * @param index the index of the parameter group
-     * @return OBCameraParam the corresponding group parameters
-     */
-    OBCameraParam getCameraParam(uint32_t index);
-};
-
-/**
- * @brief Class representing a list of OBDepthWorkMode
- */
 class OBDepthWorkModeList {
 private:
     ob_depth_work_mode_list_t *impl_ = nullptr;
 
 public:
-    OBDepthWorkModeList(std::unique_ptr<OBDepthWorkModeListImpl> impl_);
-    ~OBDepthWorkModeList();
+    explicit OBDepthWorkModeList(ob_depth_work_mode_list_t *impl) : impl_(impl) {}
+    ~OBDepthWorkModeList() {
+        ob_error *error = nullptr;
+        ob_delete_depth_work_mode_list(impl_, &error);
+        Error::handle(&error, false);
+    }
 
     /**
      * @brief Get the number of OBDepthWorkMode objects in the list
      *
      * @return uint32_t the number of OBDepthWorkMode objects in the list
      */
-    uint32_t count();
+    uint32_t count() {
+        ob_error *error = nullptr;
+        auto      count = ob_depth_work_mode_list_count(impl_, &error);
+        Error::handle(&error);
+        return count;
+    }
 
     /**
      * @brief Get the OBDepthWorkMode object at the specified index
@@ -906,15 +989,12 @@ public:
      * @param index the index of the target OBDepthWorkMode object
      * @return OBDepthWorkMode the OBDepthWorkMode object at the specified index
      */
-    OBDepthWorkMode getOBDepthWorkMode(uint32_t index);
-
-    /**
-     * @brief Get the name of the depth work mode at the specified index
-     *
-     * @param index the index of the depth work mode
-     * @return const char* the name of the depth work mode
-     */
-    const char *getName(uint32_t index);
+    OBDepthWorkMode getOBDepthWorkMode(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      mode  = ob_depth_work_mode_list_get_item(impl_, index, &error);
+        Error::handle(&error);
+        return mode;
+    }
 
     /**
      * @brief Get the OBDepthWorkMode object at the specified index
@@ -922,7 +1002,9 @@ public:
      * @param index the index of the target OBDepthWorkMode object
      * @return OBDepthWorkMode the OBDepthWorkMode object at the specified index
      */
-    OBDepthWorkMode operator[](uint32_t index);
+    OBDepthWorkMode operator[](uint32_t index) {
+        return getOBDepthWorkMode(index);
+    }
 };
 
 /**
@@ -934,15 +1016,24 @@ private:
     ob_device_preset_list_t *impl_ = nullptr;
 
 public:
-    DevicePresetList(std::unique_ptr<DevicePresetListImpl> impl);
-    ~DevicePresetList() noexcept;
+    explicit DevicePresetList(ob_device_preset_list_t *impl) : impl_(impl) {}
+    ~DevicePresetList() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_preset_list(impl_, &error);
+        Error::handle(&error, false);
+    }
 
     /**
      * @brief Get the number of device presets in the list
      *
      * @return uint32_t the number of device presets in the list
      */
-    uint32_t count();
+    uint32_t count() {
+        ob_error *error = nullptr;
+        auto      count = ob_device_preset_list_count(impl_, &error);
+        Error::handle(&error);
+        return count;
+    }
 
     /**
      * @brief Get the name of the device preset at the specified index
@@ -950,14 +1041,24 @@ public:
      * @param index the index of the device preset
      * @return const char* the name of the device preset
      */
-    const char *getName(uint32_t index);
+    const char *getName(uint32_t index) {
+        ob_error   *error = nullptr;
+        const char *name  = ob_device_preset_list_get_name(impl_, index, &error);
+        Error::handle(&error);
+        return name;
+    }
 
     /**
      * @breif check if the preset list contains the special name preset.
      * @param name The name of the preset
      * @return bool Returns true if the special name is found in the preset list, otherwise returns false.
      */
-    bool hasPreset(const char *name);
+    bool hasPreset(const char *name) {
+        ob_error *error  = nullptr;
+        auto      result = ob_device_preset_list_has_preset(impl_, name, &error);
+        Error::handle(&error);
+        return result;
+    }
 };
 
 }  // namespace ob

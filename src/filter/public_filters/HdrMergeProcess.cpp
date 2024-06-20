@@ -190,13 +190,13 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
     }
 
     // 1.get depth frame,check the depth frame exists
-    auto                        outFrame   = FrameFactory::cloneFrame(frame);
     std::shared_ptr<const DepthFrame> depthFrame = nullptr;
-    if(outFrame->is<FrameSet>()) {
-        depthFrame = outFrame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
+    std::shared_ptr<Frame>            outFrame   = FrameFactory::cloneFrame(frame);
+    if(frame->is<FrameSet>()) {
+        depthFrame = frame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
     }
     else {
-        depthFrame = outFrame->as<DepthFrame>();
+        depthFrame = frame->as<DepthFrame>();
     }
 
     if(!depthFrame) {

@@ -1,8 +1,9 @@
+#include <openobsdk/ObSensor.hpp>
+
 #include "window.hpp"
 
 #include <iostream>
-#include "openobsdk/hpp/Pipeline.hpp"
-#include "openobsdk/hpp/Error.hpp"
+
 
 const char* sensorTypes[] =  {
     "OB_SENSOR_UNKNOWN",
@@ -75,7 +76,7 @@ void enumerateSensors(std::shared_ptr<ob::Device> device){
     while(true){
         // Get the list of sensors.
         auto sensorList = device->getSensorList();
-        for(int index = 0; index < sensorList->count(); index++) {
+        for(uint32_t index = 0; index < sensorList->count(); index++) {
             // Get the sensor type.
             auto sensorType = sensorList->type(index);
             std::cout << index << "." <<"sensor type:" << sensorTypes[sensorType] << std::endl;
@@ -93,9 +94,7 @@ void enumerateSensors(std::shared_ptr<ob::Device> device){
     }
 }
 
-int main(int argc, char **argv) try {
-    // Set the log level to error.
-    ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_ERROR);
+int main(void) try {
 
     // Create a Context.
     ob::Context context;
@@ -132,6 +131,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

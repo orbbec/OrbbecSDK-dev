@@ -5,6 +5,7 @@
 #include "sensor/SensorBase.hpp"
 #include "IFrame.hpp"
 #include "IFilter.hpp"
+#include "frameprocessor/FrameProcessor.hpp"
 
 #include <map>
 
@@ -33,23 +34,31 @@ public:
     void start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) override;
     void stop() override;
 
-    StreamProfileList getStreamProfileList() const override;
+    virtual void updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs);
 
-    void updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs);
     void setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container);
     void setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator);
+    void setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcessor);
+
+protected:
+    virtual void onBackendFrameCallback(std::shared_ptr<Frame> frame);
+    virtual void outputFrame(std::shared_ptr<Frame> frame);
+
+protected:
+    typedef std::pair<std::shared_ptr<const StreamProfile>, std::vector<FormatFilterConfig>::const_iterator> StreamProfileBackendMapValue;
+    std::map<std::shared_ptr<const StreamProfile>, StreamProfileBackendMapValue>                             streamProfileBackendMap_;
 
 private:
     std::vector<FormatFilterConfig>                 formatFilterConfigs_;
     std::vector<FormatFilterConfig>::const_iterator currentFormatFilterConfig_;
     std::shared_ptr<const StreamProfile>            currentBackendStreamProfile_;
-    StreamProfileList                               filteredStreamProfileList_;
+    StreamProfileList                               backendStreamProfileList_;
 
-    typedef std::pair<std::shared_ptr<const StreamProfile>, std::vector<FormatFilterConfig>::const_iterator> StreamProfileFilterConfigMapValue;
-    std::map<std::shared_ptr<const StreamProfile>, StreamProfileFilterConfigMapValue>                        streamProfileFilterConfigMap_;
 
     std::shared_ptr<IFrameMetadataParserContainer> frameMetadataParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     frameTimestampCalculator_;
+
+    std::shared_ptr<FrameProcessor> frameProcessor_;
 };
 
 }  // namespace libobsensor

@@ -1,10 +1,10 @@
+#include <openobsdk/ObSensor.h>
+
 #include "window.hpp"
 
 #include <iostream>
-#include "openobsdk/hpp/Pipeline.hpp"
-#include "openobsdk/hpp/Error.hpp"
 
-int main(int argc, char **argv) try {
+int main() try {
     // Create a pipeline with default device.
     ob::Pipeline pipe;
     // Get the device.
@@ -14,7 +14,7 @@ int main(int argc, char **argv) try {
     std::cout << "Available Presets:" << std::endl;
     for(uint32_t index = 0; index < presetLists->count(); index++) {
         // Print available preset name.
-        std::cout << " - " <<index << "." << presetLists->getName(index) << std::endl;
+        std::cout << " - " << index << "." << presetLists->getName(index) << std::endl;
     }
 
     // Print current preset name.
@@ -36,6 +36,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

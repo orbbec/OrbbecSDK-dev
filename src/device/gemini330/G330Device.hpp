@@ -3,6 +3,8 @@
 #include "IDeviceEnumerator.hpp"
 
 #include "timestamp/GlobalTimestampFitter.hpp"
+#include "frameprocessor/FrameProcessor.hpp"
+#include "G330AlgParamManager.hpp"
 
 #include <map>
 #include <memory>
@@ -17,11 +19,11 @@ public:
     std::shared_ptr<const DeviceInfo> getInfo() const override;
     const std::string                &getExtensionInfo(const std::string &infoKey) override;
 
-    ResourcePtr<IPropertyAccessor> getPropertyAccessor() override;
+    DeviceResourcePtr<IPropertyAccessor> getPropertyAccessor() override;
 
     std::vector<OBSensorType>             getSensorTypeList() const override;
     std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) override;
-    ResourcePtr<ISensor>                  getSensor(OBSensorType type) override;
+    DeviceResourcePtr<ISensor>            getSensor(OBSensorType type) override;
 
     void enableHeadBeat(bool enable) override;
 
@@ -41,9 +43,9 @@ private:
     void initProperties();
     void initFrameMetadataParserContainer();
 
-    ResourceLock tryLockResource();
+    DeviceResourceLock tryLockResource();
 
-    std::shared_ptr<IFilter> getSpecifyFilter(const std::string &name,bool createIfNotExist = true);
+    std::shared_ptr<IFilter> getSpecifyFilter(const std::string &name, OBSensorType type, bool createIfNotExist = true);
 
 private:
     const std::shared_ptr<const IDeviceEnumInfo> enumInfo_;
@@ -57,10 +59,13 @@ private:
     std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
     // std::shared_ptr<IFrameTimestampCalculator>     imuFrameTimestampCalculator_;
+    std::shared_ptr<G330AlgParamManager>           algParamManager_;
 
     std::recursive_timed_mutex componentLock_;
 
-    std::vector<std::shared_ptr<IFilter>> filters_;
+    std::map<OBSensorType, std::shared_ptr<IFilter>> filters_;
+
+    std::shared_ptr<FrameProcessorFactory> frameProcessorFactory_ = nullptr;
 };
 /* #endregion ------------G330Device declare end---------------- */
 

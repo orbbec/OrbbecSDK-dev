@@ -14,6 +14,7 @@
 #include "Frame.hpp"
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace ob {
 
@@ -82,11 +83,19 @@ public:
      * @brief Request recommended filters
      * @return OBFilterList list of frame processing block
      */
-    std::shared_ptr<OBFilterList> getRecommendedFilters() {
+    std::vector<std::shared_ptr<Filter>> getRecommendedFilters() {
         ob_error *error = nullptr;
         auto      list  = ob_sensor_get_recommended_filter_list(impl_, &error);
         Error::handle(&error);
-        return std::make_shared<OBFilterList>(list);
+        auto filter_count = ob_filter_list_get_count(list, &error);
+
+        std::vector<std::shared_ptr<Filter>> filters;
+        for(uint32_t i = 0; i < filter_count; i++) {
+            auto filterImpl = ob_filter_list_get_filter(list, i, &error);
+            Error::handle(&error);
+            filters.push_back(std::make_shared<Filter>(filterImpl));
+        }
+        return filters;
     }
 
     /**

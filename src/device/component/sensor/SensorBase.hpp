@@ -18,18 +18,19 @@ public:
     SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
     ~SensorBase() noexcept override;
 
-    OBSensorType             getSensorType() const override;
-    std::shared_ptr<IDevice> getOwner() const override;
+    OBSensorType                 getSensorType() const override;
+    std::shared_ptr<IDevice>     getOwner() const override;
+    std::shared_ptr<ISourcePort> getBackend() const;
 
     OBStreamState getStreamState() const override;
     bool          isStreamActivated() const override;
     void          setStreamStateChangedCallback(StreamStateChangedCallback callback) override;
 
     StreamProfileList                    getStreamProfileList() const override;
+    void                                 updateDefaultStreamProfile(const std::shared_ptr<const StreamProfile> &profile) override;
     std::shared_ptr<const StreamProfile> getActivatedStreamProfile() const override;
-    FrameCallback                        getFrameCallback() const override;
 
-    std::shared_ptr<ISourcePort> getBackend() const;
+    FrameCallback getFrameCallback() const override;
 
     // when start Stream fails or interrupts, try to recover by restarting the stream; If Timeout<0, never timeout. if Timeout=0, use default timeout.
     void enableStreamRecovery(bool enable, uint32_t maxRecoveryCount = DefaultMaxRecoveryCount, int noStreamTimeoutMs = DefaultNoStreamTimeoutMs,
@@ -47,7 +48,7 @@ protected:
     std::weak_ptr<IDevice>       owner_;
     std::shared_ptr<ISourcePort> backend_;
 
-    StreamProfileListUnsafe streamProfileList_;
+    StreamProfileList streamProfileList_;
 
     std::shared_ptr<const StreamProfile> activatedStreamProfile_;
     FrameCallback                        frameCallback_;

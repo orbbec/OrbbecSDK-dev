@@ -45,6 +45,10 @@ typedef struct ob_device_preset_list_t   ob_device_preset_list;
 #define OB_FORMAT_ANY OB_FORMAT_UNKNOWN
 #define OB_PROFILE_DEFAULT 0
 #define OB_DEFAULT_STRIDE_BYTES 0
+#define OB_ACCEL_FULL_SCALE_RANGE_ANY OB_ACCEL_FS_UNKNOWN
+#define OB_ACCEL_SAMPLE_RATE_ANY OB_SAMPLE_RATE_UNKNOWN
+#define OB_GYRO_FULL_SCALE_RANGE_ANY OB_GYRO_FS_UNKNOWN
+#define OB_GYRO_SAMPLE_RATE_ANY OB_SAMPLE_RATE_UNKNOWN
 
 /**
  * @brief send data or receive data return status type
@@ -135,11 +139,7 @@ typedef enum {
     OB_SENSOR_IR_LEFT   = 6, /**< left IR for stereo camera*/
     OB_SENSOR_IR_RIGHT  = 7, /**< Right IR for stereo camera*/
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
-    OB_SENSOR_DISPARITY = 9, /**< Disparity */
     OB_SENSOR_COUNT,         /**The total number of sensor types, is not a valid sensor type */
-    OB_SENSOR_SYNTHETIC, /**< Synthetic sensor, used inside the SDK to handle multi sensor streams on one class/object, not a valid sensor type for external use
-                          */
-
 } OBSensorType,
     ob_sensor_type;
 
@@ -157,7 +157,6 @@ typedef enum {
     OB_STREAM_IR_LEFT   = 6,  /**< Left IR stream for stereo camera */
     OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream for stereo camera */
     OB_STREAM_RAW_PHASE = 8,  /**< RawPhase Stream */
-    OB_STREAM_DISPARITY = 9,  /**< Disparity Stream*/
     OB_STREAM_COUNT,          /**< The total number of stream type,is not a valid stream type */
 } OBStreamType,
     ob_stream_type;
@@ -178,7 +177,6 @@ typedef enum {
     OB_FRAME_IR_LEFT   = 8,  /**< Left IR frame for stereo camera */
     OB_FRAME_IR_RIGHT  = 9,  /**< Right IR frame for stereo camera */
     OB_FRAME_RAW_PHASE = 10, /**< Raw Phase frame*/
-    OB_FRAME_DISPARITY = 11, /**< Disparity frame*/
     OB_FRAME_COUNT,          /**< The total number of frame types, is not a valid frame type */
 } OBFrameType,
     ob_frame_type;
@@ -356,6 +354,18 @@ typedef struct {
     bool def;   ///< Default value
 } OBBoolPropertyRange, ob_bool_property_range;
 
+/** \brief Distortion model: defines how pixel coordinates should be mapped to sensor coordinates. */
+typedef enum {
+    OB_DISTORTION_NONE,                   /**< Rectilinear images. No distortion compensation required. */
+    OB_DISTORTION_MODIFIED_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except that tangential distortion is applied to radially distorted points
+                                           */
+    OB_DISTORTION_INVERSE_BROWN_CONRADY,  /**< Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it */
+    OB_DISTORTION_BROWN_CONRADY,          /**< Unmodified Brown-Conrady distortion model */
+    OB_DISTORTION_BROWN_CONRADY_K6,       /**< Unmodified Brown-Conrady distortion model with k6 supported */
+    OB_DISTORTION_KANNALA_BRANDT4,        /**< Kannala-Brandt distortion model */
+} OBCameraDistortionModel,
+    ob_camera_distortion_model;
+
 /**
  * @brief Structure for camera intrinsic parameters
  */
@@ -393,15 +403,6 @@ typedef struct {
     double tempSlope[9];          ///< linear temperature drift coefficient
 } OBGyroIntrinsic, ob_gyro_intrinsic;
 
-/** \brief Distortion model: defines how pixel coordinates should be mapped to sensor coordinates. */
-typedef enum {
-    OB_DISTORTION_NONE,                   /**< Rectilinear images. No distortion compensation required. */
-    OB_DISTORTION_MODIFIED_BROWN_CONRADY, /**< Equivalent to Brown-Conrady distortion, except that tangential distortion is applied to radially distorted points
-                                           */
-    OB_DISTORTION_INVERSE_BROWN_CONRADY,  /**< Equivalent to Brown-Conrady distortion, except undistorts image instead of distorting it */
-    OB_DISTORTION_BROWN_CONRADY,          /**< Unmodified Brown-Conrady distortion model */
-} OBCameraDistortionModel, ob_camera_distortion_model;
-
 /**
  * @brief Structure for distortion parameters
  */
@@ -414,21 +415,8 @@ typedef struct {
     float k6;  ///< Radial distortion factor 6
     float p1;  ///< Tangential distortion factor 1
     float p2;  ///< Tangential distortion factor 2
-    ob_camera_distortion_model distoMode;
+    OBCameraDistortionModel model;
 } OBCameraDistortion, ob_camera_distortion;
-
-/** \brief Video stream intrinsics. */
-typedef struct {
-    int                     width;  /**< Width of the image in pixels */
-    int                     height; /**< Height of the image in pixels */
-    float                   ppx;    /**< Horizontal coordinate of the principal point of the image, as a pixel offset from the left edge */
-    float                   ppy;    /**< Vertical coordinate of the principal point of the image, as a pixel offset from the top edge */
-    float                   fx;     /**< Focal length of the image plane, as a multiple of pixel width */
-    float                   fy;     /**< Focal length of the image plane, as a multiple of pixel height */
-    OBCameraDistortionModel model;  /**< Distortion model of the image */
-    float coeffs[5]; /**< Distortion coefficients. Order for Brown-Conrady: [k1, k2, p1, p2, k3]. Order for F-Theta Fish-eye: [k1, k2, k3, k4, 0]. Other models
-                        are subject to their own interpretations */
-} OBCameraAlignIntrinsic, ob_camera_align_intrinsic;
 
 /**
  * @brief Structure for rotation/transformation
@@ -449,18 +437,6 @@ typedef struct {
     OBD2CTransform     transform;        ///< Rotation/transformation matrix
     bool               isMirrored;       ///< Whether the image frame corresponding to this group of parameters is mirrored
 } OBCameraParam, ob_camera_param;
-
-/**
- * @brief Camera parameters
- */
-typedef struct {
-    OBCameraIntrinsic  depthIntrinsic;   ///< Depth camera internal parameters
-    OBCameraIntrinsic  rgbIntrinsic;     ///< Color camera internal parameters
-    OBCameraDistortion depthDistortion;  ///< Depth camera distortion parameters
-
-    OBCameraDistortion rgbDistortion;  ///< Distortion parameters for color camera
-    OBD2CTransform     transform;      ///< Rotation/transformation matrix
-} OBCameraParam_V0, ob_camera_param_v0;
 
 /**
  * @brief calibration parameters
@@ -564,6 +540,7 @@ typedef enum {
  * @brief Enumeration of IMU sample rate values (gyroscope or accelerometer)
  */
 typedef enum {
+    OB_SAMPLE_RATE_UNKNOWN   = 0,
     OB_SAMPLE_RATE_1_5625_HZ = 1, /**< 1.5625Hz */
     OB_SAMPLE_RATE_3_125_HZ,      /**< 3.125Hz */
     OB_SAMPLE_RATE_6_25_HZ,       /**< 6.25Hz */
@@ -586,7 +563,7 @@ typedef enum {
  * @brief Enumeration of gyroscope ranges
  */
 typedef enum {
-    OB_GYRO_FS_UNKNOW = -1,
+    OB_GYRO_FS_UNKNOWN = -1,
     OB_GYRO_FS_16dps = 1, /**< 16 degrees per second */
     OB_GYRO_FS_31dps,     /**< 31 degrees per second */
     OB_GYRO_FS_62dps,     /**< 62 degrees per second */
@@ -602,7 +579,7 @@ typedef enum {
  * @brief Enumeration of accelerometer ranges
  */
 typedef enum {
-    OB_ACCEL_FS_UNKNOW = -1,
+    OB_ACCEL_FS_UNKNOWN = -1,
     OB_ACCEL_FS_2g = 1, /**< 1x the acceleration of gravity */
     OB_ACCEL_FS_4g,     /**< 4x the acceleration of gravity */
     OB_ACCEL_FS_8g,     /**< 8x the acceleration of gravity */
@@ -712,7 +689,7 @@ typedef enum {
     ob_depth_precision_level, OB_DEPTH_PRECISION_LEVEL;
 
 /**
- * @brief disparity to depth param
+ * @brief disparity parameters for disparity based camera
  *
  */
 typedef struct {
@@ -728,8 +705,8 @@ typedef struct {
     int32_t invalidDisp;   // invalid disparity，usually is 0，dual IR add a auxiliary value.
     int32_t dispIntPlace;  // disp integer digits，default is 8，Gemini2 XL is 10
     uint8_t isDualCamera;  // 0 monocular camera，1 dual camera
+} OBDisparityParam, ob_disparity_param;
 
-} OBDisparityProcessParam, ob_disparity_process_param;
 /**
  * @brief Enumeration for TOF filter scene ranges
  */

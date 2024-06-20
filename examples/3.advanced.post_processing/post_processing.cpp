@@ -1,9 +1,8 @@
 #include "window.hpp"
 
-#include "openobsdk/hpp/Pipeline.hpp"
-#include "openobsdk/hpp/Error.hpp"
+#include <openobsdk/ObSensor.h>
 
-int main(int argc, char **argv) try {
+int main() try {
     // Create a pipeline with default device
     ob::Pipeline pipe;
 
@@ -29,7 +28,7 @@ int main(int argc, char **argv) try {
 
     std::shared_ptr<ob::DecimationFilter> decFilter;
     for(int i = 0; i < obFilterList->count(); i++) {
-        auto filter =obFilterList->getFilter(i);
+        auto filter = obFilterList->getFilter(i);
         std::cout << "Depth recommended post processor filter type: " << filter->type() << std::endl;
         if(filter->is<ob::DecimationFilter>()) {
             decFilter = filter->as<ob::DecimationFilter>();
@@ -53,7 +52,7 @@ int main(int argc, char **argv) try {
             continue;
         }
 
-        auto depthFrame = frameSet->depthFrame();
+        auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>();
         if(depthFrame) {
             for(int i = 0; i < obFilterList->count(); i++) {
                 auto filter = obFilterList->getFilter(i);
@@ -65,11 +64,11 @@ int main(int argc, char **argv) try {
         }
 
         // for Y16 format depth frame, print the distance of the center pixel every 30 frames
-        if(depthFrame->index() % 30 == 0 && depthFrame->format() == OB_FORMAT_Y16) {
-            uint32_t  width  = depthFrame->width();
-            uint32_t  height = depthFrame->height();
+        if(depthFrame->getIndex() % 30 == 0 && depthFrame->getFormat() == OB_FORMAT_Y16) {
+            uint32_t  width  = depthFrame->getWidth();
+            uint32_t  height = depthFrame->getHeight();
             float     scale  = depthFrame->getValueScale();
-            uint16_t *data   = (uint16_t *)depthFrame->data();
+            uint16_t *data   = (uint16_t *)depthFrame->getData();
 
             // pixel value multiplied by scale is the actual distance value in millimeters
             float centerDistance = data[width * height / 2 + width / 2] * scale;
@@ -79,12 +78,12 @@ int main(int argc, char **argv) try {
         }
 
         if(resizeWindow) {
-            app.resize(depthFrame->width(), depthFrame->height());
+            app.resize(depthFrame->getWidth(), depthFrame->getHeight());
             resizeWindow = false;
         }
 
         // Render frame in the window
-       app.addToRender(depthFrame);
+        app.addToRender(depthFrame);
     }
 
     // Stop the pipeline
@@ -93,6 +92,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

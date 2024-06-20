@@ -11,7 +11,6 @@ namespace libobsensor {
 class Logger;
 class StreamIntrinsicsManager;
 class StreamExtrinsicsManager;
-class StreamDisparityParamManager;
 
 class StreamProfileBackendLifeSpan {
 public:
@@ -22,7 +21,6 @@ private:
     std::shared_ptr<Logger>                      logger_;
     std::shared_ptr<StreamIntrinsicsManager>     intrinsicsManager_;
     std::shared_ptr<StreamExtrinsicsManager>     extrinsicsManager_;
-    std::shared_ptr<StreamDisparityParamManager> disparityParamManager_;
 };
 
 class StreamProfile : public std::enable_shared_from_this<StreamProfile>, private StreamProfileBackendLifeSpan {
@@ -45,25 +43,34 @@ public:
     void        bindExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile, const OBExtrinsic &extrinsic);
     void        bindSameExtrinsicTo(std::shared_ptr<const StreamProfile> targetStreamProfile);
 
-    virtual std::shared_ptr<StreamProfile> clone() const = 0;
-    virtual std::shared_ptr<StreamProfile> clone(OBFormat newFromat) const;
+    virtual std::shared_ptr<StreamProfile> clone() const;
+    virtual std::shared_ptr<StreamProfile> clone(OBFormat newFormat) const;
 
-    template <typename T> bool               is() const;
+    template <typename T> bool               is() const {
+        return std::dynamic_pointer_cast<const T>(shared_from_this()) != nullptr;
+    }
+
+    template <typename T> bool               is() {
+        return std::dynamic_pointer_cast<T>(shared_from_this()) != nullptr;
+    }
+
     template <typename T> std::shared_ptr<T> as() {
-        if(!is<T>())
+        if(!is<T>()) {
             throw unsupported_operation_exception("unsupported operation, object's type is not require type");
+        }
 
         return std::dynamic_pointer_cast<T>(shared_from_this());
     }
 
     template <typename T> std::shared_ptr<const T> as() const {
-        if(!is<T>())
+        if(!is<const T>()) {
             throw unsupported_operation_exception("unsupported operation, object's type is not require type");
+        }
 
         return std::dynamic_pointer_cast<const T>(shared_from_this());
     }
 
-    virtual std::ostream &operator<<(std::ostream &os) const = 0;
+    virtual std::ostream &operator<<(std::ostream &os) const;
 
 protected:
     std::weak_ptr<LazySensor> owner_;
@@ -113,13 +120,15 @@ protected:
     uint32_t fps_;
 };
 
-class DisparityStreamProfile : public VideoStreamProfile {
+class DisparityBasedStreamProfile : public VideoStreamProfile {
 public:
-    DisparityStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
-    ~DisparityStreamProfile() noexcept override = default;
+    DisparityBasedStreamProfile(std::shared_ptr<LazySensor> owner, OBStreamType type, OBFormat format, uint32_t width, uint32_t height, uint32_t fps);
+    ~DisparityBasedStreamProfile() noexcept override = default;
 
-    OBDisparityProcessParam getDisparityProcessParam() const;
-    void                    bindDisparityProcessParam(const OBDisparityProcessParam &param);
+    OBDisparityParam getDisparityParam() const;
+    void             bindDisparityParam(const OBDisparityParam &param);
+
+    std::shared_ptr<StreamProfile> clone() const override;
 };
 
 class AccelStreamProfile : public StreamProfile {
@@ -157,28 +166,6 @@ protected:
 };
 
 std::ostream &operator<<(std::ostream &os, const std::shared_ptr<const StreamProfile> &streamProfile);
-
-template <typename T> bool StreamProfile::is() const {
-    switch(type_) {
-    case OB_STREAM_VIDEO:
-    case OB_STREAM_IR:
-    case OB_STREAM_IR_LEFT:
-    case OB_STREAM_IR_RIGHT:
-    case OB_STREAM_COLOR:
-    case OB_STREAM_DEPTH:
-    case OB_STREAM_RAW_PHASE:
-        return typeid(T) == typeid(VideoStreamProfile);
-    case OB_STREAM_ACCEL:
-        return typeid(T) == typeid(AccelStreamProfile);
-    case OB_STREAM_GYRO:
-        return typeid(T) == typeid(GyroStreamProfile);
-    case OB_STREAM_DISPARITY:
-        return typeid(T) == typeid(DisparityStreamProfile);
-    default:
-        break;
-    }
-    return false;
-}
 
 std::vector<std::shared_ptr<const VideoStreamProfile>> matchVideoStreamProfile(const StreamProfileList &profileList, uint32_t width, uint32_t height,
                                                                                uint32_t fps, OBFormat format);

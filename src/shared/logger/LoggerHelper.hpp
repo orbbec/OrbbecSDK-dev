@@ -14,7 +14,7 @@ struct ObLogRecord {
     do {                                                                                                                                   \
         static std::map<std::string, std::shared_ptr<ObLogRecord>> logIntvlRecordMap_;                                                     \
         static std::mutex                                          mtx;                                                                    \
-        std::unique_lock<std::mutex>                               lock(mtx);                                                              \
+        std::unique_lock<std::mutex>                               logLock(mtx);                                                           \
         auto                                                       iter = logIntvlRecordMap_.find(LOG_FREQ_CALC_OBJECT_TAG);               \
         uint64_t now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count(); \
         if(iter == logIntvlRecordMap_.end()) {                                                                                             \

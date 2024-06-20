@@ -22,32 +22,14 @@
 
 namespace libobsensor {
 namespace utils {
+
+bool fileExists(const char *file) {
 #ifdef WIN32
-// static std::string wideCharToUTF8(const WCHAR *s) {
-//     auto len = WideCharToMultiByte(CP_UTF8, 0, s, -1, nullptr, 0, nullptr, nullptr);
-//     if(len <= 0) {
-//         return "";
-//     }
-//     std::shared_ptr<char> buffer(new char[len + 1]{}, std::default_delete<char[]>());
-//     len = WideCharToMultiByte(CP_UTF8, 0, s, -1, buffer.get(), len + 1, nullptr, nullptr);
-//     return std::string(buffer.get());
-// }
-
-// static std::shared_ptr<WCHAR> utf8ToWideChar(const char *szMultiByteText) {
-//     int nChCount = MultiByteToWideChar(CP_UTF8, 0, szMultiByteText, -1, NULL, 0);
-//     if(nChCount <= 0) {
-//         return nullptr;
-//     }
-//     std::shared_ptr<WCHAR> wideCharText(new WCHAR[nChCount + 1]{}, std::default_delete<WCHAR[]>());
-//     MultiByteToWideChar(CP_UTF8, 0, szMultiByteText, -1, wideCharText.get(), (nChCount + 1) * sizeof(WCHAR));
-
-//     return wideCharText;
-// }
-
-// static std::shared_ptr<WCHAR> utf8ToWideChar(const std::string &str) {
-//     return utf8ToWideChar(str.c_str());
-// }
+    return (_access(file, 0) == 0);
+#else
+    return (access(file, 0) == 0);
 #endif
+}
 
 bool checkDir(const char *dir) {
 #ifdef WIN32

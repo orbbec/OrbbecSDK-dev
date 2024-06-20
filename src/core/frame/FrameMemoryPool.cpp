@@ -33,7 +33,7 @@ FrameMemoryPool::~FrameMemoryPool() noexcept {
 std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(OBFrameType type, size_t frameBufferSize) {
     std::unique_lock<std::mutex> lock(bufMgrMapMutex_);
     FrameBufferManagerInfo       info = { type, frameBufferSize };
-    
+
     auto iter = bufMgrMap_.find(info);
     if(iter != bufMgrMap_.end()) {
         return iter->second;
@@ -42,10 +42,6 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
 
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {
-    case OB_FRAME_DISPARITY:
-        frameBufMgr = std::shared_ptr<FrameBufferManager<DisparityFrame>>(new FrameBufferManager<DisparityFrame>(frameBufferSize));
-        LOG_DEBUG("DisparityFrame bufferManager created!");
-        break;
     case OB_FRAME_DEPTH:
         frameBufMgr = std::shared_ptr<FrameBufferManager<DepthFrame>>(new FrameBufferManager<DepthFrame>(frameBufferSize));
         LOG_DEBUG("DepthFrame bufferManager created!");
@@ -83,9 +79,14 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
         LOG_DEBUG("Frameset bufferManager created!");
         break;
     default:
-        std::ostringstream oss_msg;
-        oss_msg << "Unsupported Frame Type to create buffer manager! frameType: " << type;
-        throw unsupported_operation_exception(oss_msg.str());
+        if(frameBufferSize != 0){
+            frameBufMgr = std::shared_ptr<FrameBufferManager<Frame>>(new FrameBufferManager<Frame>(frameBufferSize));
+            LOG_DEBUG("Frame bufferManager created!");
+        }else{
+            std::ostringstream oss_msg;
+            oss_msg << "Unsupported Frame Type to create buffer manager! frameType: " << type;
+            throw unsupported_operation_exception(oss_msg.str());
+        }
         break;
     }
 

@@ -3,6 +3,8 @@
 #include "InternalTypes.hpp"
 #include "DevicePids.hpp"
 
+#include "envconfig/EnvConfig.hpp"
+#include "stream/StreamProfileFactory.hpp"
 #include "property/VendorPropertyPort.hpp"
 #include "property/UvcPropertyPort.hpp"
 #include "property/FilterPropertyPort.hpp"
@@ -49,6 +51,10 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
         deviceInfo_->vid_                 = enumInfo_->getVid();
         deviceInfo_->uid_                 = enumInfo_->getUid();
         deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
+
+        if(deviceInfo_->name_.find("Orbbec") == std::string::npos) {
+            deviceInfo_->name_ = "Orbbec " + deviceInfo_->name_;
+        }
     }
 
     DeviceResourceGetter<IPropertyAccessor> propertyAccessorGetter([this]() {
@@ -309,10 +315,12 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
     if(iter == sensors_.end()) {
         throw invalid_value_exception("Sensor not supported!");
     }
-
     if(iter->second.sensor) {
         return DeviceResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
     }
+
+    auto envConfig       = EnvConfig::getInstance();
+    auto deviceConfigKey = std::string("Device.") + deviceInfo_->name_;
 
     // create
     if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
@@ -320,7 +328,7 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
         std::shared_ptr<MotionStreamer> motionStreamer     = nullptr;
         auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter");
         if(imuCorrecterFilter) {
-            //TODO change set param way
+            // TODO change set param way
             auto imuCorrectionParams = algParamManager_->getIMUCalibrationParam();
             std::dynamic_pointer_cast<IMUCorrecter>(imuCorrecterFilter)->setIMUCalibrationParam(imuCorrectionParams);
             motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, imuCorrecterFilter);  // todo: add data phaser
@@ -387,6 +395,11 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType type) {
             // todo: implement this
             videoSensor->setFrameMetadataParserContainer(colorMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+        }
+
+        auto defaultStreamProfile = StreamProfileFactory::getDefaultStreamProfileFormEnvConfig(deviceInfo_->name_, type);
+        if(defaultStreamProfile) {
+            videoSensor->updateDefaultStreamProfile(defaultStreamProfile);
         }
 
         // frame preprocessor

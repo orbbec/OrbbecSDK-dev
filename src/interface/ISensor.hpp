@@ -28,9 +28,10 @@ public:
     virtual void start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) = 0;
     virtual void stop()                                                                 = 0;
 
-    virtual StreamProfileList                    getStreamProfileList() const      = 0;
-    virtual std::shared_ptr<const StreamProfile> getActivatedStreamProfile() const = 0;
-    virtual FrameCallback                        getFrameCallback() const          = 0;
+    virtual StreamProfileList                    getStreamProfileList() const                                               = 0;
+    virtual void                                 updateDefaultStreamProfile(const std::shared_ptr<const StreamProfile> &sp) = 0;
+    virtual std::shared_ptr<const StreamProfile> getActivatedStreamProfile() const                                          = 0;
+    virtual FrameCallback                        getFrameCallback() const                                                   = 0;
 
     virtual OBStreamState getStreamState() const    = 0;
     virtual bool          isStreamActivated() const = 0;
@@ -62,7 +63,7 @@ struct ob_sensor_t {
 
 struct ob_sensor_list_t {
     std::shared_ptr<libobsensor::IDevice> device;
-    std::vector<OBSensorType> sensorTypes;
+    std::vector<OBSensorType>             sensorTypes;
 };
 
 #ifdef __cplusplus

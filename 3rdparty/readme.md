@@ -13,3 +13,4 @@ The libraries included in this folder are:
 | libyuv         | An open source project that includes YUV scaling and conversion functionality | BSD-3-Clause | <https://chromium.googlesource.com/libyuv/libyuv> |
 | live555        | A library for streaming media over the network                                |              |                                                   |
 | tinyxml2       | A simple, small, efficient, C++ XML parser                                    |              |                                                   |
+| cmrc           | A Resource Compiler in a Single CMake Script                                  | MIT          | <https://github.com/vector-of-bool/cmrc>                  |

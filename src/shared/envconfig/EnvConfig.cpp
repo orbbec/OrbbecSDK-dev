@@ -18,7 +18,12 @@ std::shared_ptr<EnvConfig> EnvConfig::getInstance(const std::string &configFileP
     return ctxInstance;
 }
 
+#ifdef __ANDROID__
+constexpr const char *defaultConfigFile = "/sdcard/orbbec/OrbbecSDKConfig.xml";
+#else
 constexpr const char *defaultConfigFile = "./OrbbecSDKConfig.xml";
+#endif
+
 EnvConfig::EnvConfig(const std::string &configFile) {
     // add external config file
     auto extConfigFile = configFile;
@@ -30,7 +35,7 @@ EnvConfig::EnvConfig(const std::string &configFile) {
         xmlReaders_.push_back(xmlReader);
     }
 
-    // add default config file (resource)
+    // add default config file (binary resource compiled into the library via [cmrc](https://github.com/vector-of-bool/cmrc))
     auto fs           = cmrc::ob::get_filesystem();
     auto def_xml      = fs.open("config/OrbbecSDKConfig.xml");
     auto defXmlReader = std::make_shared<XmlReader>(def_xml.begin(), def_xml.size());

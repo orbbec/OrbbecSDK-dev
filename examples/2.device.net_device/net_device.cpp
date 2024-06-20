@@ -1,7 +1,6 @@
 ﻿#include "window.hpp"
 
-#include "libobsensor/ObSensor.hpp"
-#include "libobsensor/hpp/Error.hpp"
+#include <openobsdk/ObSensor.hpp>
 
 #include <thread>
 #include <mutex>
@@ -12,7 +11,7 @@
 std::shared_ptr<ob::FrameSet> currentFrameSet;
 std::mutex                    frameSetMutex;
 
-int main(int argc, char **argv) try {
+int main(void) try {
     // Create a Context
     ob::Context ctx;
 
@@ -69,12 +68,12 @@ int main(int argc, char **argv) try {
             auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR);
             auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH);
             if(colorFrame && depthFrame) {
-                if(colorFrame->format() == OB_FORMAT_H264 || colorFrame->format() == OB_FORMAT_H265) {
+                if(colorFrame->getFormat() == OB_FORMAT_H264 || colorFrame->getFormat() == OB_FORMAT_H265) {
                     // For H264 and H265 format image frames, users can refer to FFmpeg and other decoding libraries and their routines to complete decoding and
                     // rendering display. This example is to keep the project and code concise, so it will not be shown.
-                    if(colorFrame->index() % 30 == 0) {
+                    if(colorFrame->getIndex() % 30 == 0) {
                         // Print the Color data frame information every 30 frames
-                        std::cout << "Color Frame: index=" << colorFrame->index() << ", timestamp=" << colorFrame->timeStamp();
+                        std::cout << "Color Frame: index=" << colorFrame->getIndex() << ", timestamp=" << colorFrame->getTimeStampUs();
                     }
                     app.addToRender(depthFrame);
                 }
@@ -93,6 +92,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

@@ -13,7 +13,7 @@ int main(void) try {
     pipe.start();
 
     // Create a window for rendering, and set the size of the window.
-    Window app("MultiStream", 1280, 360, RENDER_ONE_ROW);
+    Window app("MultiStream", 1280, 720, RENDER_ONE_ROW);
 
     while(app) {
         // Wait for frameSet from the pipeline.
@@ -23,14 +23,19 @@ int main(void) try {
         }
 
         // Get the depth from the frameSet.
-        auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>();
+        auto dFrame = frameSet->getFrame(OB_FRAME_DEPTH);
         // Get the color from the frameSet.
-        auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR)->as<ob::ColorFrame>();
+        auto cFrame = frameSet->getFrame(OB_FRAME_COLOR);
+        if(dFrame && cFrame) {
+            auto depthFrame = dFrame->as<ob::DepthFrame>();
+            auto colorFrame = cFrame->as<ob::ColorFrame>();
 
-        if((depthFrame != nullptr) && (colorFrame != nullptr)){
-            // Render frame in the window.
-            app.addToRender({colorFrame, depthFrame});
+            if((depthFrame != nullptr) && (colorFrame != nullptr)){
+                // Render frame in the window.
+                app.addToRender({colorFrame, depthFrame});
+            }
         }
+
     }
 
     // Stop the Pipeline, no frame data will be generated

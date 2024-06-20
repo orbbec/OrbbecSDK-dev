@@ -10,6 +10,17 @@
 extern "C" {
 #endif
 
+//uint32_t ob_device_get_supported_property_count(ob_device *device, ob_error **error){
+//    VALIDATE_NOT_NULL(device);
+//    auto accessor = device->device->getPropertyAccessor();
+//    accessor->getProperties();
+//}
+//
+//ob_property_item ob_device_get_supported_property_item(ob_device *device, uint32_t index, ob_error **error){
+//    VALIDATE_NOT_NULL(device);
+//    auto accessor = device->device->getPropertyAccessor();
+//}
+
 void ob_delete_device_list(ob_device_list *list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     delete list;

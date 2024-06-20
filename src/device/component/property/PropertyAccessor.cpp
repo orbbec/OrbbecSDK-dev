@@ -90,6 +90,11 @@ void PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *va
     LOG_DEBUG("Property {} get as {}|{}", propId, value->intValue, value->floatValue);
 }
 
+// std::vector<OBPropertyItem> PropertyAccessor::getProperties(PropertyAccessType accessType) const{
+//     std::unique_lock<std::mutex> lock(mutex_);
+//     return properties_;
+// }
+
 void PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {

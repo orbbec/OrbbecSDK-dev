@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-#include <openobsdk/ObSensor.h>
+#include <openobsdk/ObSensor.hpp>
 
 int main(int argc, char **argv) try {
     // Create a pipeline with default device
@@ -62,7 +62,7 @@ int main(int argc, char **argv) try {
             continue;
         }
 
-        auto depthFrame = frameSet->depthFrame();
+        auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>();
         if(depthFrame == nullptr) {
             continue;
         }
@@ -93,6 +93,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

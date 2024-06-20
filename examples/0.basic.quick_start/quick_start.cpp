@@ -4,7 +4,7 @@
 
 // #include "utils.hpp"
 
-int main(int argc, char **argv) try {
+int main(void) try {
 
     // Create a pipeline.
     ob::Pipeline pipe;
@@ -23,9 +23,9 @@ int main(int argc, char **argv) try {
         }
 
         // Get the depth from the frameSet.
-        auto depthFrame = frameSet->depthFrame();
+        auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>();
         // Get the color from the frameSet.
-        auto colorFrame = frameSet->colorFrame();
+        auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR)->as<ob::ColorFrame>();
 
         if((depthFrame != nullptr) && (colorFrame != nullptr)){
             // Render frame in the window.
@@ -39,6 +39,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

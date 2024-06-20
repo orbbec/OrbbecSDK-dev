@@ -23,6 +23,7 @@ public:
     void registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr, std::shared_ptr<IPropertyPort> port) override;
     void aliasProperty(uint32_t aliasId, uint32_t propertyId) override;
 
+    // std::map<uint32_t, PropertyItem> PropertyAccessor::getProperties(PropertyAccessType accessType) const override;
     bool checkProperty(uint32_t propertyId, OBPermissionType permission, PropertyAccessType accessType) const override;
 
     void                        setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType) override;

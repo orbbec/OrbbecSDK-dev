@@ -6,8 +6,7 @@
 #include <iomanip>
 #include <vector>
 #include <sstream>
-#include "libobsensor/ObSensor.hpp"
-#include "libobsensor/hpp/Error.hpp"
+#include <openobsdk/ObSensor.hpp>
 
 std::shared_ptr<ob::Device> selectDevice(std::shared_ptr<ob::DeviceList> deviceList);
 std::vector<OBPropertyItem> getPropertyList(std::shared_ptr<ob::Device> device);
@@ -17,7 +16,7 @@ void                        setPropertyValue(std::shared_ptr<ob::Device> device,
 void                        getPropertyValue(std::shared_ptr<ob::Device> device, OBPropertyItem item);
 std::string                 permissionTypeToString(OBPermissionType permission);
 
-int main(int argc, char **argv) try {
+int main(void) try {
     // Create a Context.
     ob::Context context;
 
@@ -79,7 +78,7 @@ int main(int argc, char **argv) try {
                     std::cout << "Property control usage: [property index] [set] [property value] or [property index] [get]" << std::endl;
                     continue;
                 }
-                int size     = propertyList.size();
+                int size     = static_cast<int>(propertyList.size());
                 int selectId = std::atoi(controlVec.at(0).c_str());
                 if(selectId >= size) {
                     std::cout << "Your selection is out of range, please reselect: " << std::endl;
@@ -109,7 +108,7 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -232,7 +231,7 @@ void setPropertyValue(std::shared_ptr<ob::Device> device, OBPropertyItem propert
             std::cout << "property name:" << propertyItem.name << ",set int value:" << int_value << std::endl;
             break;
         case OB_FLOAT_PROPERTY:
-            float_value = std::atof(strValue.c_str());
+            float_value = static_cast<float>(std::atof(strValue.c_str())) ;
             try {
                 device->setFloatProperty(propertyItem.id, float_value);
             }

@@ -185,7 +185,7 @@ typedef std::function<void(std::shared_ptr<FrameSet> frame)> FrameSetCallback;
 
 class Pipeline {
 private:
-    ob_pipeline_t   *impl_;
+    ob_pipeline_t *  impl_;
     FrameSetCallback callback_;
 
 public:
@@ -225,9 +225,10 @@ public:
      *
      * @param config The parameter configuration of the pipeline
      */
-    void start(std::shared_ptr<Config> config) {
-        ob_error *error = nullptr;
-        ob_pipeline_start_with_config(impl_, config->getImpl(), &error);
+    void start(std::shared_ptr<Config> config = nullptr) {
+        ob_error *   error       = nullptr;
+        ob_config_t *config_impl = config == nullptr ? nullptr : config->getImpl();
+        ob_pipeline_start_with_config(impl_, config_impl, &error);
         Error::handle(&error, false);
     }
 

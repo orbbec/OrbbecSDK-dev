@@ -341,16 +341,17 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
 
         for(int i = 0; i < depthFilterList.size(); i++) {
             auto filter = depthFilterList[i];
-            if(filter != noiseFilter && filter != dtFilter) {
+            if(filter != dtFilter) {
                 filter->enable(false);
             }
-            filter->enable(false);
         }
         return depthFilterList;
     }
     else if(type == OB_SENSOR_COLOR) {
         std::vector<std::shared_ptr<IFilter>> colorFilterList;
-        colorFilterList.push_back(getSpecifyFilter("DecimationFilter"));
+        auto decFilter = getSpecifyFilter("DecimationFilter");
+        decFilter->enable(false);
+        colorFilterList.push_back(decFilter);
         return colorFilterList;
     }
 

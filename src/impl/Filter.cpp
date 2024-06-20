@@ -16,6 +16,12 @@ ob_filter *ob_create_filter(const char *name, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, name)
 
+const char *ob_filter_get_name(ob_filter *filter, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    return filter->filter->getName().c_str();
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, filter)
+
 const char *ob_filter_get_vendor_specific_code(const char *name, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(name);
     auto filterFactory        = libobsensor::FilterFactory::getInstance();
@@ -78,7 +84,7 @@ bool ob_filter_is_enabled(ob_filter *filter, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, filter)
 
-OB_EXPORT ob_frame *ob_filter_process(ob_filter *filter, const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_filter_process(ob_filter *filter, const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
     VALIDATE_NOT_NULL(frame);
     auto result      = filter->filter->process(frame->frame);

@@ -159,13 +159,13 @@ OB_EXPORT ob_config *ob_create_config(ob_error **error);
 OB_EXPORT void ob_delete_config(ob_config *config, ob_error **error);
 
 /**
- * @brief Enable a stream accroding to the stream profile
+ * @brief Enable a stream according to the stream profile
  *
  * @param[in] config The pipeline configuration
  * @param[in] profile The stream profile to be enabled
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-OB_EXPORT void ob_config_enable_stream_with_stream_profile(ob_config *config, ob_stream_profile *profile, ob_error **error);
+OB_EXPORT void ob_config_enable_stream_with_stream_profile(ob_config *config, const ob_stream_profile *profile, ob_error **error);
 
 /**
  * @brief Enable a stream with default profile

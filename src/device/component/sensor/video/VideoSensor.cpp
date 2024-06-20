@@ -1,6 +1,7 @@
 #include "VideoSensor.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
+#include "logger/LoggerHelper.hpp"
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
 #include "frame/Frame.hpp"
@@ -14,8 +15,8 @@ VideoSensor::VideoSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sen
         throw invalid_value_exception("Backend is not a valid IVideoStreamPort");
     }
 
-    auto lazySelf             = std::make_shared<LazySensor>(owner, sensorType_);
-    auto streamType           = utils::mapSensorTypeToStreamType(sensorType_);
+    auto lazySelf   = std::make_shared<LazySensor>(owner, sensorType_);
+    auto streamType = utils::mapSensorTypeToStreamType(sensorType_);
 
     auto backendSpList = vsPort->getStreamProfileList();
     for(auto &backendSp: backendSpList) {
@@ -106,9 +107,10 @@ void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
         if(currentFormatFilterConfig_->converter) {
             frame = currentFormatFilterConfig_->converter->process(frame);
         }
-        frame->setStreamProfile(activatedStreamProfile_);
     }
+    frame->setStreamProfile(activatedStreamProfile_);
     outputFrame(frame);
+    LOG_FREQ_CALC(INFO, 5000, "{} Streaming... frameRate={freq}fps", sensorType_);
 }
 
 void VideoSensor::outputFrame(std::shared_ptr<Frame> frame) {
@@ -122,7 +124,7 @@ void VideoSensor::stop() {
     updateStreamState(STREAM_STATE_STOPPING);
 
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
-    vsPort->stopStream(activatedStreamProfile_);
+    vsPort->stopStream(currentBackendStreamProfile_);
 
     activatedStreamProfile_.reset();
     frameCallback_ = nullptr;

@@ -25,6 +25,8 @@ add_subdirectory(1.stream.depth)
 add_subdirectory(1.stream.imu)
 add_subdirectory(1.stream.infrared)
 add_subdirectory(1.stream.multi_streams)
+add_subdirectory(3.advanced.align)
+
 # add_subdirectory(3.advanced.hdr)
 # add_subdirectory(3.advanced.point_cloud)
 add_subdirectory(3.advanced.post_processing)

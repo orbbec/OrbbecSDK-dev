@@ -47,9 +47,6 @@ std::shared_ptr<VideoStreamProfile> createVideoStreamProfile(std::shared_ptr<Laz
     else {
         vsp = std::make_shared<VideoStreamProfile>(owner, type, format, width, height, fps);
     }
-
-    vsp->bindIntrinsic({ 0 });
-    vsp->bindDistortion({ 0 });
     return vsp;
 }
 
@@ -77,7 +74,6 @@ std::shared_ptr<AccelStreamProfile> createAccelStreamProfile(OBAccelFullScaleRan
 std::shared_ptr<AccelStreamProfile> createAccelStreamProfile(std::shared_ptr<LazySensor> owner, OBAccelFullScaleRange fullScaleRange,
                                                              OBAccelSampleRate sampleRate) {
     auto asp = std::make_shared<AccelStreamProfile>(owner, fullScaleRange, sampleRate);
-    asp->bindIntrinsic({ 0 });
     return asp;
 }
 
@@ -88,7 +84,6 @@ std::shared_ptr<GyroStreamProfile> createGyroStreamProfile(OBGyroFullScaleRange 
 std::shared_ptr<GyroStreamProfile> createGyroStreamProfile(std::shared_ptr<LazySensor> owner, OBGyroFullScaleRange fullScaleRange,
                                                            OBGyroSampleRate sampleRate) {
     auto gsp = std::make_shared<GyroStreamProfile>(owner, fullScaleRange, sampleRate);
-    gsp->bindIntrinsic({ 0 });
     return gsp;
 }
 

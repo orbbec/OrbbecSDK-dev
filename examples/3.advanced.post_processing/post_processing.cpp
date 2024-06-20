@@ -17,6 +17,8 @@ int main() try {
     catch(ob::Error &e) {
         // If the specified format is not found, search for the default profile to open the stream
         depthProfile = std::const_pointer_cast<ob::StreamProfile>(profiles->getProfile(OB_PROFILE_DEFAULT))->as<ob::VideoStreamProfile>();
+        std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
+                  << std::endl;
     }
 
     // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled
@@ -27,7 +29,7 @@ int main() try {
     auto obFilterList = pipe.getDevice()->getSensor(OB_SENSOR_DEPTH)->getRecommendedFilters();
 
     std::shared_ptr<ob::DecimationFilter> decFilter;
-    for(int i = 0; i < obFilterList->count(); i++) {
+    for(uint32_t i = 0; i < obFilterList->count(); i++) {
         auto filter = obFilterList->getFilter(i);
         std::cout << "Depth recommended post processor filter type: " << filter->type() << std::endl;
         if(filter->is<ob::DecimationFilter>()) {
@@ -54,7 +56,7 @@ int main() try {
 
         auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>();
         if(depthFrame) {
-            for(int i = 0; i < obFilterList->count(); i++) {
+            for(uint32_t i = 0; i < obFilterList->count(); i++) {
                 auto filter = obFilterList->getFilter(i);
                 if(filter->isEnabled()) {
                     auto newFrame = filter->process(depthFrame);

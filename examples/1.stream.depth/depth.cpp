@@ -42,8 +42,6 @@ int main(void) try {
             // attention: if the distance is 0, it means that the depth camera cannot detect the object (may be out of detection range).
             // std::cout << "Facing an object " << centerDistance << " mm away. " << std::endl;
         }
-        // auto aa = std::dynamic_pointer_cast<const 
-        // >(depthFrame);
 
         // Render frame in the window
         app.addToRender(depthFrame);

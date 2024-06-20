@@ -64,7 +64,7 @@ void enumerate_stream_info(ob_sensor *sensor, ob_error **error){
 
     for(uint32_t index=0; index < stream_profile_count; index++){
         // Get stream profile.
-        ob_stream_profile *stream_profile = ob_stream_profile_list_get_profile(stream_profile_list, index, error);
+        const ob_stream_profile *stream_profile = ob_stream_profile_list_get_profile(stream_profile_list, index, error);
         // Print video stream profile information.
         if(sensor_type == OB_SENSOR_IR || sensor_type == OB_SENSOR_COLOR || sensor_type == OB_SENSOR_DEPTH || sensor_type == OB_SENSOR_IR_LEFT || sensor_type == OB_SENSOR_IR_RIGHT){
             ob_format stream_format    = ob_stream_profile_get_format(stream_profile, error);
@@ -118,7 +118,7 @@ void enumerate_sensor_info(ob_sensor_list * sensor_list, ob_error **error){
         scanf("%c", &sensor_selected);
         getchar();
         if(sensor_selected == 'q' || sensor_selected == 'Q'){
-            return -1;
+            return;
         }
         enumerate_stream_info(ob_sensor_list_get_sensor(sensor_list, sensor_selected-'0', error), error);
     }

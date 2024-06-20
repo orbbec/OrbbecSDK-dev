@@ -13,7 +13,7 @@ int main(void) try {
     pipe.start();
 
     // Create a window for rendering, and set the size of the window.
-    Window app("MultiStream", 1280, 360, RENDER_ONE_ROW);
+    Window app("MultiStream", 1280, 720, RENDER_ONE_ROW);
 
     while(app) {
         // Wait for frameSet from the pipeline.

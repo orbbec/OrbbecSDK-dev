@@ -47,7 +47,7 @@ protected:
 protected:
     typedef std::pair<std::shared_ptr<const StreamProfile>, std::vector<FormatFilterConfig>::const_iterator> StreamProfileBackendMapValue;
     std::map<std::shared_ptr<const StreamProfile>, StreamProfileBackendMapValue>                             streamProfileBackendMap_;
-    
+
 private:
     std::vector<FormatFilterConfig>                 formatFilterConfigs_;
     std::vector<FormatFilterConfig>::const_iterator currentFormatFilterConfig_;

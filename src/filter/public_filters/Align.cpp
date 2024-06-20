@@ -7,8 +7,7 @@
 namespace libobsensor {
 
 Align::Align(const std::string &name) : FilterBase(name), align_to_stream_(OB_STREAM_COLOR) {
-    if(!pImpl)
-        pImpl = new AlignImpl();
+    pImpl = new AlignImpl();
     memset(&from_intrin_, 0, sizeof(OBCameraIntrinsic));
     memset(&from_disto_, 0, sizeof(OBCameraDistortion));
     memset(&to_intrin_, 0, sizeof(OBCameraIntrinsic));
@@ -89,8 +88,8 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
     // prepare "other" data buffer to vector of Frame
     std::vector<std::shared_ptr<const Frame>> other_frames;
     if(align_to_stream_ == OB_STREAM_DEPTH) {  // other to depth
-        uint32_t frameCouint = frames->getFrameCount();
-        for(uint32_t i = 0; i < frameCouint; i++) {
+        uint32_t frameCount = frames->getFrameCount();
+        for(uint32_t i = 0; i < frameCount; i++) {
             std::shared_ptr<const Frame> item = frames->getFrame(i);
             if((item->getType() != OB_STREAM_DEPTH) && item->is<VideoFrame>()) {
                 other_frames.push_back(item);
@@ -98,10 +97,10 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
         }
     }
     else {
-        uint32_t frameCouint = frames->getFrameCount();
-        for(uint32_t i = 0; i < frameCouint; i++) {
+        uint32_t frameCount = frames->getFrameCount();
+        for(uint32_t i = 0; i < frameCount; i++) {
             std::shared_ptr<const Frame> item = frames->getFrame(i);
-            if((item->getType() != align_to_stream_)) {
+            if((item->getType() == align_to_stream_)) {
                 other_frames.push_back(item);
             }
         }

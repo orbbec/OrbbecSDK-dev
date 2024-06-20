@@ -12,8 +12,7 @@
 
 #include "window.hpp"
 
-#include "libobsensor/hpp/Pipeline.hpp"
-#include "libobsensor/hpp/Error.hpp"
+#include "openobsdk/OBSensor.hpp"
 #include <mutex>
 #include <thread>
 
@@ -64,43 +63,26 @@ void keyEventProcess(Window &app, ob::Pipeline &pipe, std::shared_ptr<ob::Config
     }
 }
 
-int main(int argc, char **argv) try {
+int main(void) try {
     // Create a pipeline with default device
     ob::Pipeline pipe;
 
     // Configure which streams to enable or disable for the Pipeline by creating a Config
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
-    // Get all stream profiles of the color camera, including stream resolution, frame rate, and frame format
-    auto colorProfiles = pipe.getStreamProfileList(OB_SENSOR_COLOR);
-    // Get the default color profile
-    auto colorProfile = colorProfiles->getProfile(OB_PROFILE_DEFAULT);
-    // Enable the color stream in the config
-    config->enableStream(colorProfile);
-
-    // Get all stream profiles of the depth camera, including stream resolution, frame rate, and frame format
-    auto depthProfiles = pipe.getStreamProfileList(OB_SENSOR_DEPTH);
-    // Get the default depth profile
-    auto depthProfile = depthProfiles->getProfile(OB_PROFILE_DEFAULT);
-    // Enable the depth stream in the config
-    config->enableStream(depthProfile);
+    config->enableStream(OB_STREAM_DEPTH);
+    config->enableStream(OB_STREAM_COLOR);
 
     /* Config depth align to color or color align to depth.
     OBStreamType align_to_stream = OB_STREAM_DEPTH; */
-    OBStreamType align_to_stream = OB_STREAM_COLOR;
-    ob::Align    align(align_to_stream);
+    // OBStreamType align_to_stream = OB_STREAM_COLOR;
+    auto align = ob::FilterFactory::createFilter("Align");
 
     // Start the pipeline with config
-    try {
-        pipe.start(config);
-    }
-    catch(ob::Error &e) {
-        std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
-    }
+    pipe.start(config);
 
     // Create a window for rendering and set the resolution of the window
-    auto colorVideoProfile = colorProfile->as<ob::VideoStreamProfile>();
-    Window app("AlignViewer", colorVideoProfile->width(), colorVideoProfile->height(), RENDER_OVERLAY);
+    Window app("AlignViewer", 1280, 720, RENDER_OVERLAY);
 
     while(app) {
         keyEventProcess(app, pipe, config);
@@ -109,26 +91,18 @@ int main(int argc, char **argv) try {
         if(frameSet == nullptr) {
             continue;
         }
-
-        auto colorFrame = frameSet->colorFrame();
-        auto depthFrame = frameSet->depthFrame();
-
-        if(colorFrame != nullptr && depthFrame != nullptr) {
-            auto newFrame    = align.process(frameSet);
-            auto newFrameSet = newFrame->as<ob::FrameSet>();
-            colorFrame       = newFrameSet->colorFrame();
-            depthFrame       = newFrameSet->depthFrame();
-
-            app.addToRender({ colorFrame, depthFrame });
-        }
+        auto newFrame    = align->process(frameSet);
+        auto newFrameSet = newFrame->as<ob::FrameSet>();
+        auto colorFrame  = newFrameSet->getFrame(OB_FRAME_COLOR);
+        auto depthFrame  = newFrameSet->getFrame(OB_FRAME_DEPTH);
+        app.addToRender({ colorFrame, depthFrame });
     }
-
     // Stop the Pipeline, no frame data will be generated
     pipe.stop();
 
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

@@ -50,13 +50,25 @@ public:
     }
 
     /**
+     * @brief enable a stream with a specific type
+     *
+     * @param streamType The stream type to be enabled
+     */
+    void enableStream(OBStreamType streamType) {
+        ob_error *error = nullptr;
+        ob_config_enable_stream(impl_, streamType, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
      * @brief Enable a stream to be used in the pipeline
      *
      * @param streamProfile The stream configuration to be enabled
      */
     void enableStream(std::shared_ptr<StreamProfile> streamProfile) {
         ob_error *error = nullptr;
-        ob_config_enable_stream(impl_, streamProfile->type(), &error);
+        auto      c_stream_profile = streamProfile->getImpl();
+        ob_config_enable_stream_with_stream_profile(impl_, c_stream_profile, &error);
         Error::handle(&error, false);
     }
 
@@ -73,7 +85,7 @@ public:
      * @param fps The video stream frame rate (default is OB_FPS_ANY, which selects the default frame rate).
      * @param format The video stream format (default is OB_FORMAT_ANY, which selects the default format).
      */
-    void enableVideoStream(ob_stream_type stream_type, int width = OB_WIDTH_ANY, int height = OB_HEIGHT_ANY, int fps = OB_FPS_ANY,
+    void enableVideoStream(OBStreamType stream_type, uint32_t width = OB_WIDTH_ANY, uint32_t height = OB_HEIGHT_ANY, uint32_t fps = OB_FPS_ANY,
                            OBFormat format = OB_FORMAT_ANY) {
         ob_error *error = nullptr;
         ob_config_enable_video_stream(impl_, stream_type, width, height, fps, format, &error);

@@ -1,6 +1,7 @@
 #include "VideoSensor.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
+#include "logger/LoggerHelper.hpp"
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
 #include "frame/Frame.hpp"
@@ -57,6 +58,10 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
 }
 
 void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
+    if(streamState_ != STREAM_STATE_STREAMING && streamState_ != STREAM_STATE_STARTING) {
+        // todo: why callback is called after stop()?
+        return;  // ignore frame if not streaming
+    }
     auto vsp              = currentBackendStreamProfile_->as<VideoStreamProfile>();
     auto maxFrameDataSize = vsp->getMaxFrameDataSize();
 
@@ -106,9 +111,10 @@ void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
         if(currentFormatFilterConfig_->converter) {
             frame = currentFormatFilterConfig_->converter->process(frame);
         }
-        frame->setStreamProfile(activatedStreamProfile_);
     }
+    frame->setStreamProfile(activatedStreamProfile_);
     outputFrame(frame);
+    LOG_FREQ_CALC(INFO, 5000, "{} Streaming... frameRate={freq}fps", sensorType_);
 }
 
 void VideoSensor::outputFrame(std::shared_ptr<Frame> frame) {

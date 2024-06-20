@@ -299,7 +299,61 @@ std::vector<OBSensorType> G330Device::getSensorTypeList() const {
 }
 
 std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessingFilters(OBSensorType type) {
-    utils::unusedVar(type);
+    if(type == OB_SENSOR_DEPTH) {
+        std::vector<std::shared_ptr<IFilter>> depthFilterList;
+        depthFilterList.push_back(getSpecifyFilter("DecimationFilter"));
+        depthFilterList.push_back(getSpecifyFilter("HdrMerge"));
+        depthFilterList.push_back(getSpecifyFilter("SequenceIdFilter"));
+        depthFilterList.push_back(getSpecifyFilter("PixelValueCutOff"));
+
+        auto noiseFilter = getSpecifyFilter("NoiseRemovalFilter");
+        if(noiseFilter) {
+            std::vector<std::string> params = { "80", "256", "848", "480" };
+            noiseFilter->updateConfig(params);
+            depthFilterList.push_back(noiseFilter);
+        }
+
+        auto spatFilter = getSpecifyFilter("SpatialAdvancedFilter");
+        if(spatFilter) {
+            // magnitude, alpha, disp_diff, radius
+            std::vector<std::string> params = { "1", "0.5", "160", "1" };
+            spatFilter->updateConfig(params);
+            depthFilterList.push_back(spatFilter);
+        }
+
+        auto tempFilter = getSpecifyFilter("TemporalFilter");
+        if(tempFilter) {
+            // diff_scale, weight
+            std::vector<std::string> params = { "0.1", "0.4" };
+            tempFilter->updateConfig(params);
+            depthFilterList.push_back(tempFilter);
+        }
+
+        auto hfFilter = getSpecifyFilter("HoleFillingFilter");
+        if(hfFilter) {
+            depthFilterList.push_back(hfFilter);
+        }
+
+        auto dtFilter = getSpecifyFilter("DisparityTransform");
+        if(dtFilter) {
+            depthFilterList.push_back(dtFilter);
+        }
+
+        for(int i = 0; i < depthFilterList.size(); i++) {
+            auto filter = depthFilterList[i];
+            if(filter != noiseFilter && filter != dtFilter) {
+                filter->enable(false);
+            }
+            filter->enable(false);
+        }
+        return depthFilterList;
+    }
+    else if(type == OB_SENSOR_COLOR) {
+        std::vector<std::shared_ptr<IFilter>> colorFilterList;
+        colorFilterList.push_back(getSpecifyFilter("DecimationFilter"));
+        return colorFilterList;
+    }
+
     return {};
 }
 

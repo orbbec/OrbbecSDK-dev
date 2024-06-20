@@ -6,9 +6,9 @@
 
 #define ESC 27
 std::mutex printerMutex;
-int main(int argc, char **argv) try {
+int main() try {
     // Print the SDK version number, the SDK version number is divided into major version number, minor version number and revision number.
-    std::cout << "SDK version: " << ob::Version::getMajor() << "." << ob::Version::getMinor() << "." << ob::Version::getPatch() << std::endl;
+    // std::cout << "SDK version: " << ob::Version::getMajor() << "." << ob::Version::getMinor() << "." << ob::Version::getPatch() << std::endl;
 
     // Create a Context.
     ob::Context ctx;
@@ -35,14 +35,14 @@ int main(int argc, char **argv) try {
             auto profile = profiles->getProfile(OB_PROFILE_DEFAULT);
             gyroSensor->start(profile, [](std::shared_ptr<ob::Frame> frame) {
                 std::unique_lock<std::mutex> lk(printerMutex);
-                auto                         timeStamp = frame->timeStamp();
-                auto                         index     = frame->index();
+                auto                         timeStamp = frame->getTimeStampUs();
+                auto                         index     = frame->getIndex();
                 auto                         gyroFrame = frame->as<ob::GyroFrame>();
                 if(gyroFrame != nullptr && (index % 50) == 2) {  //( timeStamp % 500 ) < 2: Reduce printing frequency.
-                    auto value = gyroFrame->value();
+                    auto value = gyroFrame->getValue();
                     std::cout << "Gyro Frame: \n\r{\n\r"
                               << "  tsp = " << timeStamp << "\n\r"
-                              << "  temperature = " << gyroFrame->temperature() << "\n\r"
+                              << "  temperature = " << gyroFrame->getTemperature() << "\n\r"
                               << "  gyro.x = " << value.x << " rad/s"
                               << "\n\r"
                               << "  gyro.y = " << value.y << " rad/s"
@@ -58,6 +58,8 @@ int main(int argc, char **argv) try {
         }
     }
     catch(ob::Error &e) {
+        std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
+                  << std::endl;
         std::cerr << "current device is not support imu!" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -71,14 +73,14 @@ int main(int argc, char **argv) try {
         auto profile = profiles->getProfile(OB_PROFILE_DEFAULT);
         accelSensor->start(profile, [](std::shared_ptr<ob::Frame> frame) {
             std::unique_lock<std::mutex> lk(printerMutex);
-            auto                         timeStamp  = frame->timeStamp();
-            auto                         index      = frame->index();
+            auto                         timeStamp  = frame->getTimeStampUs();
+            auto                         index      = frame->getIndex();
             auto                         accelFrame = frame->as<ob::AccelFrame>();
             if(accelFrame != nullptr && (index % 50) == 0) {
-                auto value = accelFrame->value();
+                auto value = accelFrame->getValue();
                 std::cout << "Accel Frame: \n\r{\n\r"
                           << "  tsp = " << timeStamp << "\n\r"
-                          << "  temperature = " << accelFrame->temperature() << "\n\r"
+                          << "  temperature = " << accelFrame->getTemperature() << "\n\r"
                           << "  accel.x = " << value.x << " m/s^2"
                           << "\n\r"
                           << "  accel.y = " << value.y << " m/s^2"
@@ -97,7 +99,7 @@ int main(int argc, char **argv) try {
 
     while(true) {
         // Get the value of the pressed key, if it is the ESC key, exit the program.
-        int key = getch();
+        int key = _getch();
         if(key == ESC)
             break;
     }
@@ -114,6 +116,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

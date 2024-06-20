@@ -51,8 +51,13 @@ HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 
 void ob_pipeline_start_with_config(ob_pipeline *pipeline, ob_config *config, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
-    VALIDATE_NOT_NULL(config);
-    pipeline->pipeline->start(config->config);
+    if (!config) {
+        ob_pipeline_start(pipeline, error);
+    }
+    else {
+        VALIDATE_NOT_NULL(config);
+        pipeline->pipeline->start(config->config);
+    }
 }
 HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 

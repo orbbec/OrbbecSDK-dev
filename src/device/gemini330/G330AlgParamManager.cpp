@@ -357,9 +357,9 @@ void G330AlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const Stream
             OBCameraDistortion distortion = { 0 };
             OBCameraParam      param      = { 0 };
             auto               vsp        = sp->as<VideoStreamProfile>();
-            // if(!findBestMatchedCameraParam(calibrationCameraParamList_, vsp, param)) {
-            //     throw libobsensor::unsupported_operation_exception("Can not find matched camera param!");
-            // }
+            if(!findBestMatchedCameraParam(calibrationCameraParamList_, vsp, param)) {
+                throw libobsensor::unsupported_operation_exception("Can not find matched camera param!");
+            }
             switch(sp->getType()) {
             case OB_STREAM_COLOR:
                 intrinsic  = param.rgbIntrinsic;

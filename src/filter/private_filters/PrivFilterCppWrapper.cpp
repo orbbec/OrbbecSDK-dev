@@ -10,7 +10,10 @@ PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, std::s
         LOG_WARN("Private filter {} get config schema failed: {}", name_, error->message);
         delete error;
     }
-    configSchema_ = desc;
+        
+    if(desc != nullptr){
+        configSchema_ = desc;
+    }
 }
 
 PrivFilterCppWrapper::~PrivFilterCppWrapper() noexcept {

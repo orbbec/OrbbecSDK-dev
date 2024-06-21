@@ -6,15 +6,17 @@ int main() try {
     // Create a pipeline with default device
     ob::Pipeline pipe;
 
+    // Get the device and sensor, and get the list of recommended filters for the sensor
     auto device     = pipe.getDevice();
     auto sensor     = device->getSensor(OB_SENSOR_DEPTH);
     auto filterList = sensor->getRecommendedFilters();
 
+    // Print the list of recommended filters
     for(auto &filter: filterList) {
         std::cout << "\t - " << filter->getName() << ": " << filter->isEnabled() << std::endl;
     }
 
-    // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled
+    // Create a config with depth stream enabled
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
     config->enableStream(OB_STREAM_DEPTH);
 
@@ -25,19 +27,23 @@ int main() try {
     Window app("PostProcessing", 640, 480);
 
     while(app) {
-        // Wait for up to 100ms for a frameset in blocking mode.
-        auto frameSet = pipe.waitForFrames(100);
+        // Wait for up to 1000ms for a frameset in blocking mode.
+        auto frameSet = pipe.waitForFrames(1000);
         if(frameSet == nullptr) {
             continue;
         }
 
+        // Get the depth frame from the frameset
         auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH);
         if(!depthFrame) {
             continue;
         }
 
+        // Apply the recommended filters to the depth frame
         for(auto &filter: filterList) {
-            depthFrame = filter->process(depthFrame);
+            if(filter->isEnabled()) {  // Only apply enabled filters
+                depthFrame = filter->process(depthFrame);
+            }
         }
 
         // Render frame in the window

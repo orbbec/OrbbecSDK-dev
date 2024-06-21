@@ -549,7 +549,7 @@ OB_EXPORT const ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_fra
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the frame at the specified index, or nullptr if it does not exist.
  */
-OB_EXPORT const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, int index, ob_error **error);
+OB_EXPORT const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, uint32_t index, ob_error **error);
 
 /**
  * @brief Add a frame of the specified type to the frameset.

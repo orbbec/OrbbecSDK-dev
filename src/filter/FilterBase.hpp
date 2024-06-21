@@ -42,12 +42,4 @@ protected:
     std::shared_ptr<FrameQueue<const Frame>> srcFrameQueue_;
 };
 
-class IFormatConverter : public FilterBase {
-public:
-    IFormatConverter(const std::string &name) : FilterBase(name) {}
-    virtual ~IFormatConverter() noexcept = default;
-
-    virtual void setConversion(OBFormat srcFormat, OBFormat dstFormat) = 0;
-};
-
 }  // namespace libobsensor

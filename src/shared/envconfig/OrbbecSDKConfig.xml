@@ -1400,7 +1400,7 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -1408,8 +1408,8 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -1417,7 +1417,7 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
+            </RightIR>
             <!--Configurations in different camera depth modes -->
             <!--Deep working mode: Unbinned Dense Default -->
             <UnbinnedDenseDefault>
@@ -1471,7 +1471,7 @@
 					<FPS>30</FPS>
 					<Format>MJPG</Format>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1479,8 +1479,8 @@
 					<!--The frame rate of the resolution enabled by default, int type-->
 					<FPS>30</FPS>
 					<Format>Y10</Format>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1488,7 +1488,7 @@
 					<!--The frame rate of the resolution enabled by default, int type-->
 					<FPS>30</FPS>
 					<Format>Y10</Format>
-				</IR_RIGHT>
+				</RightIR>
 
 			</FactoryCalibration>
 			<In-sceneCalibration>
@@ -1501,7 +1501,7 @@
 					<FPS>30</FPS>
 					<Format>MJPG</Format>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1509,8 +1509,8 @@
 					<!--The frame rate of the resolution enabled by default, int type-->
 					<FPS>30</FPS>
 					<Format>Y8</Format>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1518,7 +1518,7 @@
 					<!--The frame rate of the resolution enabled by default, int type-->
 					<FPS>30</FPS>
 					<Format>Y8</Format>
-				</IR_RIGHT>
+				</RightIR>
 			</In-sceneCalibration>
         </OrbbecGemini2>
 
@@ -1566,7 +1566,7 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -1574,8 +1574,8 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -1583,7 +1583,7 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
+            </RightIR>
 
 			<!--Configurations in different camera depth modes-->
 			<HighAccuracyMode>
@@ -1616,7 +1616,7 @@
 					<FPS>30</FPS>
 					<Format>MJPG</Format>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1624,8 +1624,8 @@
 					<!--The frame rate of the resolution enabled by default, int type-->
 					<FPS>30</FPS>
 					<Format>Y10</Format>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1633,7 +1633,7 @@
 					<!--The frame rate of the resolution enabled by default, int type-->
 					<FPS>30</FPS>
 					<Format>Y10</Format>
-				</IR_RIGHT>
+				</RightIR>
 
 			</FactoryCalibration>
 			<In-sceneCalibration>
@@ -1646,7 +1646,7 @@
 					<FPS>30</FPS>
 					<Format>MJPG</Format>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1654,8 +1654,8 @@
 					<!--The frame rate of the resolution enabled by default, int type-->
 					<FPS>30</FPS>
 					<Format>Y8</Format>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1663,7 +1663,7 @@
 					<!--The frame rate of the resolution enabled by default, int type-->
 					<FPS>30</FPS>
 					<Format>Y8</Format>
-				</IR_RIGHT>
+				</RightIR>
 			</In-sceneCalibration>
         </DaBaiDCL>
         <!--OrbbecGemini2L config-->
@@ -1712,7 +1712,7 @@
                 <!--Number of retries for open stream failures, 0 means no retries-->
 				<StreamFailedRetry>0</StreamFailedRetry>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -1722,8 +1722,8 @@
                 <Format>Y8</Format>
                 <!--Number of retries for open stream failures, 0 means no retries-->
 				<StreamFailedRetry>0</StreamFailedRetry>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -1733,7 +1733,7 @@
                 <Format>Y8</Format>
                 <!--Number of retries for open stream failures, 0 means no retries-->
 				<StreamFailedRetry>0</StreamFailedRetry>
-            </IR_RIGHT>
+            </RightIR>
 
 			<!--Configurations in different camera depth modes-->
 			<BinnedSparseDefault>
@@ -1772,7 +1772,7 @@
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1782,8 +1782,8 @@
 					<Format>Y10</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1793,7 +1793,7 @@
 					<Format>Y10</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
-				</IR_RIGHT>
+				</RightIR>
 
 			</FactoryCalibration>
 			<In-sceneCalibration>
@@ -1808,7 +1808,7 @@
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1818,8 +1818,8 @@
 					<Format>Y8</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
 					<!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
 					<!--High resolution is enabled by default, int type-->
@@ -1829,7 +1829,7 @@
 					<Format>Y8</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
-				</IR_RIGHT>
+				</RightIR>
 			</In-sceneCalibration>
         </OrbbecGemini2L>
         <!--Astra2 config-->
@@ -1950,7 +1950,7 @@
                 <!--Number of retries for open stream failures, 0 means no retries-->
 				<StreamFailedRetry>0</StreamFailedRetry>
             </Color>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -1960,8 +1960,8 @@
                 <Format>Y8</Format>
                 <!--Number of retries for open stream failures, 0 means no retries-->
 				<StreamFailedRetry>0</StreamFailedRetry>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -1971,7 +1971,7 @@
                 <Format>Y8</Format>
                 <!--Number of retries for open stream failures, 0 means no retries-->
 				<StreamFailedRetry>0</StreamFailedRetry>
-            </IR_RIGHT>
+            </RightIR>
 
 			<!--Configurations in different camera depth modes-->
 			<BinnedSparseStereoImaging>
@@ -1986,7 +1986,7 @@
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
 				</Color>
-                <IR_LEFT>
+                <LeftIR>
                     <!--The resolution width is enabled by default, int type-->
                     <Width>640</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -1996,8 +1996,8 @@
                     <Format>Y8</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
                     <StreamFailedRetry>0</StreamFailedRetry>
-                </IR_LEFT>
-                <IR_RIGHT>
+                </LeftIR>
+                <RightIR>
                     <!--The resolution width is enabled by default, int type-->
                     <Width>640</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2007,7 +2007,7 @@
                     <Format>Y8</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
                     <StreamFailedRetry>0</StreamFailedRetry>
-                </IR_RIGHT>
+                </RightIR>
 			</BinnedSparseStereoImaging>
 			<FactoryCalibration>
 			    <Color>
@@ -2021,7 +2021,7 @@
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
                     <!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2031,8 +2031,8 @@
 					<Format>Y10</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
                     <!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2042,7 +2042,7 @@
 					<Format>Y10</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
-				</IR_RIGHT>
+				</RightIR>
 
 			</FactoryCalibration>
 			<In-sceneCalibration>
@@ -2057,7 +2057,7 @@
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
                     <!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2067,8 +2067,8 @@
 					<Format>Y8</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
                     <!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2078,7 +2078,7 @@
 					<Format>Y8</Format>
                     <!--Number of retries for open stream failures, 0 means no retries-->
 				    <StreamFailedRetry>0</StreamFailedRetry>
-				</IR_RIGHT>
+				</RightIR>
 			</In-sceneCalibration>
         </OrbbecGemini2VL>
         <!-- Gemini2XL config -->
@@ -2118,7 +2118,7 @@
 				<!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
 				<MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
             </Color>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2132,8 +2132,8 @@
 				<StreamInterruptedRestart>5</StreamInterruptedRestart>
 				<!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
 				<MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2147,7 +2147,7 @@
 				<StreamInterruptedRestart>5</StreamInterruptedRestart>
 				<!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
 				<MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
-            </IR_RIGHT>
+            </RightIR>
             <Accel>
 				<!--The number of data stream restarts due to abnormal interruption, 0 means no restart-->
 				<StreamInterruptedRestart>5</StreamInterruptedRestart>
@@ -2193,7 +2193,7 @@
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
 				</Depth>
-                <IR_LEFT>
+                <LeftIR>
                     <!--The resolution width is enabled by default, int type-->
                     <Width>640</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2207,8 +2207,8 @@
                     <StreamInterruptedRestart>5</StreamInterruptedRestart>
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
-                </IR_LEFT>
-                <IR_RIGHT>
+                </LeftIR>
+                <RightIR>
                     <!--The resolution width is enabled by default, int type-->
                     <Width>640</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2222,7 +2222,7 @@
                     <StreamInterruptedRestart>5</StreamInterruptedRestart>
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
-                </IR_RIGHT>
+                </RightIR>
 			</BinnedSparseDefault>
 			<FactoryCalibration>
 			    <Color>
@@ -2240,7 +2240,7 @@
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
                     <!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2254,8 +2254,8 @@
                     <StreamInterruptedRestart>5</StreamInterruptedRestart>
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
                     <!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2269,7 +2269,7 @@
                     <StreamInterruptedRestart>5</StreamInterruptedRestart>
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
-				</IR_RIGHT>
+				</RightIR>
 			</FactoryCalibration>
 			<In-sceneCalibration>
 			    <Color>
@@ -2287,7 +2287,7 @@
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
 				</Color>
-				<IR_LEFT>
+				<LeftIR>
                     <!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2301,8 +2301,8 @@
                     <StreamInterruptedRestart>5</StreamInterruptedRestart>
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
-				</IR_LEFT>
-				<IR_RIGHT>
+				</LeftIR>
+				<RightIR>
                     <!--The resolution width is enabled by default, int type-->
 					<Width>1280</Width>
                     <!--High resolution is enabled by default, int type-->
@@ -2316,7 +2316,7 @@
                     <StreamInterruptedRestart>5</StreamInterruptedRestart>
 				    <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
-				</IR_RIGHT>
+				</RightIR>
 			</In-sceneCalibration>
         </OrbbecGemini2XL>
 
@@ -2366,7 +2366,7 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2374,8 +2374,8 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2383,7 +2383,7 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
+            </RightIR>
         </OrbbecGemini335>
 		   <!--Gemini2RL config-->
         <OrbbecGemini335L>
@@ -2431,7 +2431,7 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2439,8 +2439,8 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2448,7 +2448,7 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
+            </RightIR>
         </OrbbecGemini335L>
         <!--Gemini 336 config-->
         <OrbbecGemini336>
@@ -2496,7 +2496,7 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2504,8 +2504,8 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2513,7 +2513,7 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
+            </RightIR>
         </OrbbecGemini336>
 		<!--Gemini 336L config-->
         <OrbbecGemini336L>
@@ -2561,7 +2561,7 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2569,8 +2569,8 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2578,7 +2578,7 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
+            </RightIR>
         </OrbbecGemini336L>
         <!--Gemini 215 config-->
         <OrbbecGemini215>
@@ -2618,7 +2618,7 @@
                 <FPS>15</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2626,8 +2626,8 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>15</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2640,7 +2640,7 @@
 				<Format>Y8</Format>
 				</profile>
 				</ProfileFilter>
-            </IR_RIGHT>
+            </RightIR>
         </OrbbecGemini215>
         <!--Gemini 210 config-->
         <OrbbecGemini210>
@@ -2680,7 +2680,7 @@
                 <FPS>15</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2688,8 +2688,8 @@
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>15</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>1280</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -2702,7 +2702,7 @@
 				<Format>Y8</Format>
 				</profile>
 				</ProfileFilter>
-            </IR_RIGHT>
+            </RightIR>
         </OrbbecGemini210>
     </Device>
 </Config>

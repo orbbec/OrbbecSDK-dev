@@ -50,11 +50,11 @@ int main(void) try {
 
     // Start the pipeline with config
     std::mutex                                        frameMutex;
-    std::map<OBFrameType, std::shared_ptr<ob::Frame>> frameMap;
+    std::map<OBFrameType, std::shared_ptr<const ob::Frame>> frameMap;
     pipe.start(config, [&](std::shared_ptr<ob::FrameSet> frameset) {
-        int count = frameset->getFrameCount();
-        for(int i = 0; i < count; i++) {
-            auto frame = std::const_pointer_cast<ob::Frame>(frameset->getFrame(i));
+        uint32_t count = frameset->getFrameCount();
+        for(uint32_t i = 0; i < count; i++) {
+            auto                         frame = frameset->getFrameByIndex(i);
             std::unique_lock<std::mutex> lk(frameMutex);
             frameMap[frame->getType()] = frame;
         }
@@ -64,15 +64,15 @@ int main(void) try {
     auto                                              dev         = pipe.getDevice();
     auto                                              imuPipeline = std::make_shared<ob::Pipeline>(dev);
     std::mutex                                        imuFrameMutex;
-    std::map<OBFrameType, std::shared_ptr<ob::Frame>> imuFrameMap;
+    std::map<OBFrameType, std::shared_ptr<const ob::Frame>> imuFrameMap;
     try {
         std::shared_ptr<ob::Config> imuConfig = std::make_shared<ob::Config>();
         imuConfig->enableGyroStream();
         imuConfig->enableAccelStream();
         imuPipeline->start(imuConfig, [&](std::shared_ptr<ob::FrameSet> frameset) {
-            int count = frameset->getFrameCount();
-            for(int i = 0; i < count; i++) {
-                auto frame = std::const_pointer_cast<ob::Frame>(frameset->getFrame(i));
+            uint32_t count = frameset->getFrameCount();
+            for(uint32_t i = 0; i < count; i++) {
+                const auto                   frame = frameset->getFrameByIndex(i);
                 std::unique_lock<std::mutex> lk(imuFrameMutex);
                 imuFrameMap[frame->getType()] = frame;
             }

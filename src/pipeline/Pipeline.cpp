@@ -143,7 +143,7 @@ StreamProfileList Pipeline::getEnabledStreamProfileList() {
 }
 
 std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config> cfg) {
-    LOG_INFO("Check and set config start!");
+    LOG_DEBUG("Check and set config start!");
     std::shared_ptr<Config> config                = cfg->clone();
     config->disableAllStream();
     const auto              enabledStreamProfiles = cfg->getEnabledStreamProfileList();
@@ -192,10 +192,9 @@ void Pipeline::start(std::shared_ptr<const Config> cfg) {
     }
     else {
         LOG_DEBUG("start pipeline with default config");
-        // loadDefaultConfig();  // todo: implement this function
         auto defConfig = std::make_shared<Config>();
-        defConfig->enableVideoStream(OB_STREAM_COLOR, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_ANY);
-        defConfig->enableVideoStream(OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_ANY);
+        defConfig->enableStream(OB_STREAM_COLOR);
+        defConfig->enableStream(OB_STREAM_DEPTH);
         config_ = checkAndSetConfig(defConfig);
     }
 

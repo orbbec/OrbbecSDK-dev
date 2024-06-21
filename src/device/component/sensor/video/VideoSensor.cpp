@@ -5,6 +5,7 @@
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
 #include "frame/Frame.hpp"
+#include "filter/public_filters/FormatConverterProcess.hpp"
 
 namespace libobsensor {
 
@@ -31,7 +32,7 @@ VideoSensor::VideoSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sen
         sp->bindOwner(lazySelf);
         sp->setType(streamType);
         streamProfileList_.push_back(sp);
-        streamProfileBackendMap_[sp] = { backendSp, formatFilterConfigs_.end() };
+        streamProfileBackendMap_[sp] = { backendSp, nullptr };
     }
 }
 
@@ -48,8 +49,11 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     currentBackendStreamProfile_ = backendIter->second.first;
     currentFormatFilterConfig_   = backendIter->second.second;
 
-    if(currentFormatFilterConfig_ != formatFilterConfigs_.end() && currentFormatFilterConfig_->converter) {
-        currentFormatFilterConfig_->converter->setConversion(currentFormatFilterConfig_->srcFormat, currentFormatFilterConfig_->dstFormat);
+    if(currentFormatFilterConfig_ && currentFormatFilterConfig_->converter) {
+        auto formatConverter = std::dynamic_pointer_cast<FormatConverter>(currentFormatFilterConfig_->converter);
+        if(formatConverter) {
+            formatConverter->setConversion(currentFormatFilterConfig_->srcFormat, currentFormatFilterConfig_->dstFormat);
+        }
         currentFormatFilterConfig_->converter->setCallback(callback);
     }
 
@@ -103,9 +107,11 @@ void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
         frameTimestampCalculator_->calculate(frame);
     }
 
-    if(currentFormatFilterConfig_ != formatFilterConfigs_.end()) {
-        if(currentFormatFilterConfig_->converter) {
-            frame = currentFormatFilterConfig_->converter->process(frame);
+    if(currentFormatFilterConfig_ && currentFormatFilterConfig_->converter) {
+        frame = currentFormatFilterConfig_->converter->process(frame);
+        if(!frame) {
+            LOG_WARN_INTVL("This frame will be dropped because format converter process failure! @{}", sensorType_);
+            return;
         }
     }
     frame->setStreamProfile(activatedStreamProfile_);
@@ -141,42 +147,45 @@ void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig>
     auto lazySelf   = std::make_shared<LazySensor>(owner_, sensorType_);
     auto streamType = utils::mapSensorTypeToStreamType(sensorType_);
     for(const auto &backendSp: backendStreamProfileList_) {
-        auto format = backendSp->getFormat();
-        auto iter   = std::find_if(formatFilterConfigs_.begin(), formatFilterConfigs_.end(),
-                                   [format](const FormatFilterConfig &config) { return config.srcFormat == format; });
-        if(iter == formatFilterConfigs_.end()) {
+        auto format   = backendSp->getFormat();
+        bool filtered = false;
+        std::for_each(formatFilterConfigs_.begin(), formatFilterConfigs_.end(), [&](const FormatFilterConfig &config) {
+            if(config.srcFormat != format) {
+                return;
+            }
+
+            if(config.policy == FormatFilterPolicy::REMOVE) {
+                filtered = true;
+                return;
+            }
+
+            // FormatFilterPolicy is ADD or REPLACE, add a new stream profile with the new format
+            auto sp = backendSp->clone();
+            sp->setFormat(config.dstFormat);
+            sp->bindOwner(lazySelf);
+            sp->setType(streamType);
+            streamProfileList_.push_back(sp);
+            streamProfileBackendMap_[sp] = { backendSp, &config };
+
+            filtered |= (config.policy != FormatFilterPolicy::ADD);  // if policy is REPLACE, filter out the original stream profile
+        });
+
+        if(!filtered) {  // if no filter applied, add the original stream profile
             auto sp = backendSp->clone();
             sp->bindOwner(lazySelf);
             sp->setType(streamType);
             streamProfileList_.push_back(sp);
-            streamProfileBackendMap_[sp] = { backendSp, formatFilterConfigs_.end() };
+            streamProfileBackendMap_[sp] = { backendSp, nullptr };
             continue;
         }
-
-        if(iter->policy == FormatFilterPolicy::REMOVE) {
-            continue;
-        }
-        else if(iter->policy == FormatFilterPolicy::ADD) {
-            auto sp = backendSp->clone();
-            sp->bindOwner(lazySelf);
-            sp->setType(streamType);
-            streamProfileList_.push_back(sp);
-            streamProfileBackendMap_[sp] = { backendSp, formatFilterConfigs_.end() };
-        }
-
-        // FormatFilterPolicy：ADD or REPLACE
-        auto sp = backendSp->clone();
-        sp->setFormat(iter->dstFormat);
-        sp->bindOwner(lazySelf);
-        sp->setType(streamType);
-        streamProfileList_.push_back(sp);
-        streamProfileBackendMap_[sp] = { backendSp, iter };
     }
 
-    LOG_DEBUG(" filtered stream profile list size={} @{}", streamProfileList_.size(), sensorType_);
+#ifdef _DEBUG
+    LOG_TRACE(" filtered stream profile list size={} @{}", streamProfileList_.size(), sensorType_);
     for(auto &sp: streamProfileList_) {
-        LOG_DEBUG(" - {}", sp);
+        LOG_TRACE(" - {}", sp);
     }
+#endif
 }
 
 void VideoSensor::setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container) {

@@ -472,7 +472,7 @@ const ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type fr
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, int index, ob_error **error) BEGIN_API_CALL {
+const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");

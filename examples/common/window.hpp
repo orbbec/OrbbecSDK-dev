@@ -329,10 +329,10 @@ private:
             putTextWithBackground("IR", cv::Point(8, 16));
         }
         else if(frame->getType() == OB_FRAME_IR_LEFT) {
-            putTextWithBackground("IR_LEFT", cv::Point(8, 16));
+            putTextWithBackground("LeftIR", cv::Point(8, 16));
         }
         else if(frame->getType() == OB_FRAME_IR_RIGHT) {
-            putTextWithBackground("IR_RIGHT", cv::Point(8, 16));
+            putTextWithBackground("RightIR", cv::Point(8, 16));
         }
 
         // Timestamp information with background

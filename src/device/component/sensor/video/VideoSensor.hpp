@@ -5,7 +5,6 @@
 #include "sensor/SensorBase.hpp"
 #include "IFrame.hpp"
 #include "IFilter.hpp"
-#include "filter/FilterBase.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
 
 #include <map>
@@ -23,7 +22,7 @@ struct FormatFilterConfig {
     FormatFilterPolicy                policy;
     OBFormat                          srcFormat;
     OBFormat                          dstFormat;
-    std::shared_ptr<IFormatConverter> converter;
+    std::shared_ptr<IFilter>          converter;
 };
 
 class VideoSensor : public SensorBase {
@@ -46,15 +45,14 @@ protected:
     virtual void outputFrame(std::shared_ptr<Frame> frame);
 
 protected:
-    typedef std::pair<std::shared_ptr<const StreamProfile>, std::vector<FormatFilterConfig>::const_iterator> StreamProfileBackendMapValue;
-    std::map<std::shared_ptr<const StreamProfile>, StreamProfileBackendMapValue>                             streamProfileBackendMap_;
+    typedef std::pair<std::shared_ptr<const StreamProfile>, const FormatFilterConfig *> StreamProfileBackendMapValue;
+    std::map<std::shared_ptr<const StreamProfile>, StreamProfileBackendMapValue>        streamProfileBackendMap_;
 
 private:
-    std::vector<FormatFilterConfig>                 formatFilterConfigs_;
-    std::vector<FormatFilterConfig>::const_iterator currentFormatFilterConfig_;
-    std::shared_ptr<const StreamProfile>            currentBackendStreamProfile_;
-    StreamProfileList                               backendStreamProfileList_;
-
+    std::vector<FormatFilterConfig>      formatFilterConfigs_;
+    const FormatFilterConfig            *currentFormatFilterConfig_;
+    std::shared_ptr<const StreamProfile> currentBackendStreamProfile_;
+    StreamProfileList                    backendStreamProfileList_;
 
     std::shared_ptr<IFrameMetadataParserContainer> frameMetadataParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     frameTimestampCalculator_;

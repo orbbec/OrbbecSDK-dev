@@ -35,4 +35,4 @@ std::ostream &operator<<(std::ostream &os, const OBStreamType &type);
 std::ostream &operator<<(std::ostream &os, const OBSensorType &type);
 std::ostream &operator<<(std::ostream &os, const OBIMUSampleRate &rate);  // also for accel
 std::ostream &operator<<(std::ostream &os, const OBGyroFullScaleRange &range);
-std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &params);
+std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &range);

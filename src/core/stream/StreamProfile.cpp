@@ -78,7 +78,7 @@ OBExtrinsic StreamProfile::getExtrinsicTo(std::shared_ptr<const StreamProfile> t
 }
 
 std::ostream &StreamProfile::operator<<(std::ostream &os) const {
-    os << "StreamProfile{" << "type: " << type_ << ", format: " << format_ << "}";
+    os << "{" << "type: " << type_ << ", format: " << format_ << "}";
     return os;
 }
 
@@ -184,7 +184,7 @@ bool VideoStreamProfile::operator==(const VideoStreamProfile &other) const {
 }
 
 std::ostream &VideoStreamProfile::operator<<(std::ostream &os) const {
-    os << "VideoStreamProfile{" << "type: " << type_ << ", format: " << format_ << ", width: " << width_ << ", height: " << height_ << ", fps: " << fps_ << "}";
+    os << "{" << "type: " << type_ << ", format: " << format_ << ", width: " << width_ << ", height: " << height_ << ", fps: " << fps_ << "}";
     return os;
 }
 
@@ -216,7 +216,7 @@ std::shared_ptr<StreamProfile> AccelStreamProfile::clone() const {
 }
 
 std::ostream &AccelStreamProfile::operator<<(std::ostream &os) const {
-    os << "AccelStreamProfile{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
+    os << "{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
     return os;
 }
 
@@ -253,7 +253,7 @@ std::shared_ptr<StreamProfile> GyroStreamProfile::clone() const {
 }
 
 std::ostream &GyroStreamProfile::operator<<(std::ostream &os) const {
-    os << "GyroStreamProfile{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
+    os << "{" << "type: " << type_ << ", format: " << format_ << ", fullScaleRange: " << fullScaleRange_ << ", sampleRate: " << sampleRate_ << "}";
     return os;
 }
 
@@ -269,8 +269,8 @@ std::vector<std::shared_ptr<const VideoStreamProfile>> matchVideoStreamProfile(c
             auto videoProfile = profile->as<VideoStreamProfile>();
 
             // Get the profile that matches the user's items of interest
-            if((width == 0 || videoProfile->getWidth() == width) && (height == 0 || videoProfile->getHeight() == height)
-               && (format == OB_FORMAT_UNKNOWN || videoProfile->getFormat() == format) && (fps == 0 || videoProfile->getFps() == fps)) {
+            if((width == OB_WIDTH_ANY || videoProfile->getWidth() == width) && (height == OB_HEIGHT_ANY || videoProfile->getHeight() == height)
+               && (format == OB_FORMAT_ANY || videoProfile->getFormat() == format) && (fps == OB_FPS_ANY || videoProfile->getFps() == fps)) {
                 matchProfileList.push_back(videoProfile);
             }
         }
@@ -286,8 +286,8 @@ std::vector<std::shared_ptr<const AccelStreamProfile>> matchAccelStreamProfile(c
             auto AccelProfile = profile->as<AccelStreamProfile>();
 
             // Get the profile that matches the user's items of interest
-            if((fullScaleRange == 0 || AccelProfile->getFullScaleRange() == fullScaleRange)
-               && (sampleRate == 0 || AccelProfile->getSampleRate() == sampleRate)) {
+            if((fullScaleRange == OB_ACCEL_FULL_SCALE_RANGE_ANY || AccelProfile->getFullScaleRange() == fullScaleRange)
+               && (sampleRate == OB_ACCEL_SAMPLE_RATE_ANY || AccelProfile->getSampleRate() == sampleRate)) {
                 matchProfileList.push_back(AccelProfile);
             }
         }
@@ -303,7 +303,8 @@ std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(con
             auto GyroProfile = profile->as<GyroStreamProfile>();
 
             // Get the profile that matches the user's items of interest
-            if((fullScaleRange == 0 || GyroProfile->getFullScaleRange() == fullScaleRange) && (sampleRate == 0 || GyroProfile->getSampleRate() == sampleRate)) {
+            if((fullScaleRange == OB_GYRO_FULL_SCALE_RANGE_ANY || GyroProfile->getFullScaleRange() == fullScaleRange)
+               && (sampleRate == OB_GYRO_SAMPLE_RATE_ANY || GyroProfile->getSampleRate() == sampleRate)) {
                 matchProfileList.push_back(GyroProfile);
             }
         }

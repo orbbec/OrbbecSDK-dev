@@ -119,12 +119,12 @@ Log 主要设置Log等级、设置Log输出到控制台的等级、输出到File
             <IR>
                 <UseDefaultStreamProfile>true</UseDefaultStreamProfile>
             </IR>
-            <IR_LEFT>
+            <LeftIR>
                 <UseDefaultStreamProfile>true</UseDefaultStreamProfile>
-            </IR_LEFT>
-            <IR_RIGHT>
+            </LeftIR>
+            <RightIR>
                 <UseDefaultStreamProfile>true</UseDefaultStreamProfile>
-            </IR_RIGHT>
+            </RightIR>
 ```
 2、Pipeline 可以设置D2C，如硬件D2C和软件D2C，有些设备不支持硬件D2C，如：Femto Bolt。如果要使用多种不同类型的设备，建议在用户代码中通过设备类型，进行设置。
 ```cpp
@@ -183,7 +183,7 @@ Log 主要设置Log等级、设置Log输出到控制台的等级、输出到File
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -191,8 +191,8 @@ Log 主要设置Log等级、设置Log输出到控制台的等级、输出到File
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -200,8 +200,8 @@ Log 主要设置Log等级、设置Log输出到控制台的等级、输出到File
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
-        </OrbbecGemini335>     
+            </RightIR>
+        </OrbbecGemini335>
     </Device>
 ```
 
@@ -215,4 +215,4 @@ Log 主要设置Log等级、设置Log输出到控制台的等级、输出到File
         <LinuxUVCBackend>LibUVC</LinuxUVCBackend>
 ```
 
-3、设置分辨率、帧率、数据格式。 
+3、设置分辨率、帧率、数据格式。

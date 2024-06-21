@@ -9,7 +9,7 @@
 
 namespace libobsensor {
 
-FormatConverter::FormatConverter(const std::string &name) : IFormatConverter(name) {}
+FormatConverter::FormatConverter(const std::string &name) : FilterBase(name) {}
 FormatConverter::~FormatConverter() noexcept {}
 
 void FormatConverter::updateConfig(std::vector<std::string> &params) {

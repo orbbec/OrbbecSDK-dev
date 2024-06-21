@@ -4,7 +4,7 @@
 
 namespace libobsensor {
 
-class FormatConverter : public IFormatConverter {
+class FormatConverter : public FilterBase {
 public:
     FormatConverter(const std::string &name);
     virtual ~FormatConverter() noexcept;
@@ -12,7 +12,7 @@ public:
     void               updateConfig(std::vector<std::string> &params) override;
     const std::string &getConfigSchema() const override;
 
-    void setConversion(OBFormat srcFormat, OBFormat dstFormat) override;
+    void setConversion(OBFormat srcFormat, OBFormat dstFormat);
 
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;

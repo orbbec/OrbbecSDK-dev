@@ -30,12 +30,12 @@ private:
 
     std::shared_ptr<dylib> dylib_;
 
-    FrameProcessorContext context_;
+    std::shared_ptr<FrameProcessorContext> context_;
 };
 
 class FrameProcessor final{
 public:
-    FrameProcessor(FrameProcessorContext *context,OBSensorType sensorType);
+    FrameProcessor(std::shared_ptr<FrameProcessorContext> context,OBSensorType sensorType);
 
     ~FrameProcessor() noexcept;
 
@@ -46,7 +46,7 @@ public:
     void updateConfig(std::vector<std::string> &params);
 
 private:    
-    FrameProcessorContext *context_;
+    std::shared_ptr<FrameProcessorContext> context_;
 
     OBSensorType sensorType_;
 

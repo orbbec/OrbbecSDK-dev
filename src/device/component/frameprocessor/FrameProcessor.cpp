@@ -8,24 +8,34 @@ FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device){
     try{
         dylib_ = std::make_shared<dylib>(moduleLoadPath_.c_str(),"ob_frame_processor");
     }catch(...){
-
+        return;
     }
+
+    context_ = std::shared_ptr<FrameProcessorContext>(new FrameProcessorContext(),[dylib = dylib_](FrameProcessorContext *context){
+        if(context && context->destroy_context){
+            ob_error *error = nullptr;
+            context->destroy_context(context->context, &error);
+            if(error){
+                delete error;
+            }
+        }
+    });
 
     if(dylib_){
-        context_.create_context         = dylib_->get_function<ob_frame_processor_context*(ob_device *,ob_error **)>("ob_create_frame_processor_context");
-        context_.create_processor       = dylib_->get_function<ob_frame_processor*(ob_frame_processor_context *,ob_sensor_type type,ob_error **)>("ob_create_frame_processor");
-        context_.get_config_schema = dylib_->get_function<const char *(ob_frame_processor *,ob_error **)>("ob_frame_processor_get_config_schema");
-        context_.update_config = dylib_->get_function<void(ob_frame_processor *,size_t, const char **,ob_error **)>("ob_frame_processor_update_config");
-        context_.process_frame = dylib_->get_function<ob_frame*(ob_frame_processor *,ob_frame *,ob_error **)>("ob_frame_processor_process_frame");
-        context_.destroy_processor = dylib_->get_function<void(ob_frame_processor *,ob_error **)>("ob_destroy_frame_processor");
-        context_.destroy_context = dylib_->get_function<void(ob_frame_processor_context *,ob_error **)>("ob_destroy_frame_processor_context");
+        context_->create_context         = dylib_->get_function<ob_frame_processor_context*(ob_device *,ob_error **)>("ob_create_frame_processor_context");
+        context_->create_processor       = dylib_->get_function<ob_frame_processor*(ob_frame_processor_context *,ob_sensor_type type,ob_error **)>("ob_create_frame_processor");
+        context_->get_config_schema = dylib_->get_function<const char *(ob_frame_processor *,ob_error **)>("ob_frame_processor_get_config_schema");
+        context_->update_config = dylib_->get_function<void(ob_frame_processor *,size_t, const char **,ob_error **)>("ob_frame_processor_update_config");
+        context_->process_frame = dylib_->get_function<ob_frame*(ob_frame_processor *,ob_frame *,ob_error **)>("ob_frame_processor_process_frame");
+        context_->destroy_processor = dylib_->get_function<void(ob_frame_processor *,ob_error **)>("ob_destroy_frame_processor");
+        context_->destroy_context = dylib_->get_function<void(ob_frame_processor_context *,ob_error **)>("ob_destroy_frame_processor_context");
     }
 
-    if(context_.create_context && !context_.context){
+    if(context_->create_context && !context_->context){
         ob_device cDevice;
         cDevice.device = device;
         ob_error *error = nullptr;
-        context_.context = context_.create_context(&cDevice,&error);
+        context_->context = context_->create_context(&cDevice,&error);
         if(error){
             //TODO
             throw std::runtime_error("create frame processor context failed");
@@ -34,25 +44,17 @@ FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device){
 }
 
 FrameProcessorFactory::~FrameProcessorFactory() noexcept{
-    if(context_.destroy_context){
-        ob_error *error = nullptr;
-        context_.destroy_context(context_.context, &error);
-        if(error){
-            //TODO
-            delete error;
-        }
-    }
 }
 
 std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSensorType sensorType){
-    if(!context_.context || context_.create_processor == nullptr){
+    if(!context_->context || context_->create_processor == nullptr){
         return nullptr;
     }
-    return std::make_shared<FrameProcessor>(&context_,sensorType);
+    return std::make_shared<FrameProcessor>(context_,sensorType);
 }
 
 
-FrameProcessor::FrameProcessor(FrameProcessorContext *context,OBSensorType sensorType) : context_(context),sensorType_(sensorType){
+FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context,OBSensorType sensorType) : context_(context),sensorType_(sensorType){
     if(context_->context && context_->create_processor){
         ob_error *error = nullptr;
         privateProcessor_ = context_->create_processor(context_->context,sensorType,&error);

@@ -117,12 +117,12 @@ Based on the device's timestamp and considering data transmission delays, the ti
             <IR>
                 <UseDefaultStreamProfile>true</UseDefaultStreamProfile>
             </IR>
-            <IR_LEFT>
+            <LeftIR>
                 <UseDefaultStreamProfile>true</UseDefaultStreamProfile>
-            </IR_LEFT>
-            <IR_RIGHT>
+            </LeftIR>
+            <RightIR>
                 <UseDefaultStreamProfile>true</UseDefaultStreamProfile>
-            </IR_RIGHT>
+            </RightIR>
 ```
 2. Pipeline can set D2C, such as hardware D2C and software D2C. Some devices do not support hardware D2C, such as Femto Bolt. If you need to use various different types of devices, it is recommended to set this in the user code based on the device type.
 ```cpp
@@ -182,7 +182,7 @@ Based on the device's timestamp and considering data transmission delays, the ti
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-			<IR_LEFT>
+			<LeftIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -190,8 +190,8 @@ Based on the device's timestamp and considering data transmission delays, the ti
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-			<IR_RIGHT>
+            </LeftIR>
+			<RightIR>
                 <!--The resolution width is enabled by default, int type-->
                 <Width>848</Width>
                 <!--High resolution is enabled by default, int type-->
@@ -199,8 +199,8 @@ Based on the device's timestamp and considering data transmission delays, the ti
                 <!--The frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
-        </OrbbecGemini335>     
+            </RightIR>
+        </OrbbecGemini335>
     </Device>
 ```
 

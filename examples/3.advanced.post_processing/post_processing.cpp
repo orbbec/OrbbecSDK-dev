@@ -12,6 +12,7 @@ int main() try {
     auto filterList = sensor->getRecommendedFilters();
 
     // Print the list of recommended filters
+    std::cout << filterList.size() << " post processing filters recommended:" << std::endl;
     for(auto &filter: filterList) {
         std::cout << "\t - " << filter->getName() << ": " << filter->isEnabled() << std::endl;
     }

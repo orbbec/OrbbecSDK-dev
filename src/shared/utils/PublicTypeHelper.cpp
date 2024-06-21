@@ -254,8 +254,8 @@ float mapIMUSampleRateToValue(OBIMUSampleRate rate) {
 }
 
 const std::map<OBSensorType, std::string> SENSOR_STR_MAP = {
-    { OB_SENSOR_IR, "IR" },           { OB_SENSOR_COLOR, "Color" },     { OB_SENSOR_DEPTH, "Depth" },       { OB_SENSOR_ACCEL, "Accel" },
-    { OB_SENSOR_GYRO, "Gyro" },       { OB_SENSOR_IR_LEFT, "IR_LEFT" }, { OB_SENSOR_IR_RIGHT, "IR_RIGHT" }, { OB_SENSOR_RAW_PHASE, "RAW_PHASE" },
+    { OB_SENSOR_IR, "IR" },           { OB_SENSOR_COLOR, "Color" },    { OB_SENSOR_DEPTH, "Depth" },      { OB_SENSOR_ACCEL, "Accel" },
+    { OB_SENSOR_GYRO, "Gyro" },       { OB_SENSOR_IR_LEFT, "LeftIR" }, { OB_SENSOR_IR_RIGHT, "RightIR" }, { OB_SENSOR_RAW_PHASE, "RAW_PHASE" },
     { OB_SENSOR_UNKNOWN, "Unknown" },
 };
 
@@ -267,14 +267,25 @@ const std::string &getSensorName(OBSensorType type) {
     return it->second;
 }
 
-const std::map<std::string, OBFormat> STR_FORMAT_MAP = {
-    { "YUYV", OB_FORMAT_YUYV },       { "YUY2", OB_FORMAT_YUY2 }, { "UYVY", OB_FORMAT_UYVY }, { "NV12", OB_FORMAT_NV12 },     { "NV21", OB_FORMAT_NV21 },
-    { "MJPG", OB_FORMAT_MJPG },       { "H264", OB_FORMAT_H264 }, { "H265", OB_FORMAT_H265 }, { "Y16", OB_FORMAT_Y16 },       { "Y8", OB_FORMAT_Y8 },
-    { "Y10", OB_FORMAT_Y10 },         { "Y11", OB_FORMAT_Y11 },   { "Y12", OB_FORMAT_Y12 },   { "Y14", OB_FORMAT_Y14 },       { "HEVC", OB_FORMAT_HEVC },
-    { "I420", OB_FORMAT_I420 },       { "RGB", OB_FORMAT_RGB },   { "RGB", OB_FORMAT_RGB },   { "RGB888", OB_FORMAT_RGB888 }, { "BGR", OB_FORMAT_BGR },
-    { "BGRA", OB_FORMAT_BGRA },       { "RLE", OB_FORMAT_RLE },   { "RVL", OB_FORMAT_RVL },   { "Z16", OB_FORMAT_Z16 },       { "YV12", OB_FORMAT_YV12 },
-    { "BA81", OB_FORMAT_BA81 },       { "RGBA", OB_FORMAT_RGBA }, { "BYR2", OB_FORMAT_BYR2 }, { "RAW16", OB_FORMAT_RW16 },    { "DISP16", OB_FORMAT_DISP16 },
-    { "UNKNOWN", OB_FORMAT_UNKNOWN },
+const std::map<std::string, OBFormat> STR_FORMAT_MAP = {  //
+    { "YUYV", OB_FORMAT_YUYV },      { "YUY2", OB_FORMAT_YUYV },
+    { "UYVY", OB_FORMAT_UYVY },      { "NV12", OB_FORMAT_NV12 },
+    { "NV21", OB_FORMAT_NV21 },      { "MJPG", OB_FORMAT_MJPG },
+    { "H264", OB_FORMAT_H264 },      { "H265", OB_FORMAT_H265 },
+    { "Y16", OB_FORMAT_Y16 },        { "Y8", OB_FORMAT_Y8 },
+    { "Y10", OB_FORMAT_Y10 },        { "Y11", OB_FORMAT_Y11 },
+    { "Y12", OB_FORMAT_Y12 },        { "GRAY", OB_FORMAT_GRAY },
+    { "HEVC", OB_FORMAT_HEVC },      { "I420", OB_FORMAT_I420 },
+    { "ACCEL", OB_FORMAT_ACCEL },    { "GYRO", OB_FORMAT_GYRO },
+    { "POINT", OB_FORMAT_POINT },    { "RGB_POINT", OB_FORMAT_RGB_POINT },
+    { "RLE", OB_FORMAT_RLE },        { "RGB", OB_FORMAT_RGB },
+    { "BGR", OB_FORMAT_BGR },        { "Y14", OB_FORMAT_Y14 },
+    { "BGRA", OB_FORMAT_BGRA },      { "COMPRESSED", OB_FORMAT_COMPRESSED },
+    { "RVL", OB_FORMAT_RVL },        { "Z16", OB_FORMAT_Z16 },
+    { "YV12", OB_FORMAT_YV12 },      { "BA81", OB_FORMAT_BA81 },
+    { "RGBA", OB_FORMAT_RGBA },      { "BYR2", OB_FORMAT_BYR2 },
+    { "RW16", OB_FORMAT_RW16 },      { "DISP16", OB_FORMAT_DISP16 },
+    { "Unknown", OB_FORMAT_UNKNOWN }
 };
 
 const OBFormat strToOBFormat(const std::string &str) {
@@ -359,10 +370,10 @@ std::ostream &operator<<(std::ostream &os, const OBStreamType &type) {
         os << "Gyro";
         break;
     case OB_STREAM_IR_LEFT:
-        os << "IR_LEFT";
+        os << "LeftIR";
         break;
     case OB_STREAM_IR_RIGHT:
-        os << "IR_RIGHT";
+        os << "RightIR";
         break;
     case OB_STREAM_RAW_PHASE:
         os << "RawPhase";
@@ -466,8 +477,8 @@ std::ostream &operator<<(std::ostream &os, const OBGyroFullScaleRange &range) {
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &params) {
-    switch(params) {
+std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &range) {
+    switch(range) {
     case OB_ACCEL_FS_2g:
         os << "2g";
         break;

@@ -8,7 +8,6 @@
 #include "IStreamProfile.hpp"
 #include "openobsdk/h/ObTypes.h"
 
-
 namespace libobsensor {
 
 typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
@@ -32,13 +31,6 @@ public:
     // Asynchronous
     virtual void pushFrame(std::shared_ptr<const Frame> frame) = 0;
     virtual void setCallback(FilterCallback cb)                = 0;
-};
-
-class IFormatConverter : virtual public IFilter {
-public:
-    virtual ~IFormatConverter() noexcept = default;
-
-    virtual void setConversion(OBFormat srcFormat, OBFormat dstFormat) = 0;
 };
 
 class IFilterCreator {

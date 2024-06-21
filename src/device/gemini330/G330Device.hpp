@@ -49,17 +49,17 @@ private:
 
 private:
     const std::shared_ptr<const IDeviceEnumInfo> enumInfo_;
-    std::shared_ptr<DeviceInfo>                 deviceInfo_;
-    std::map<std::string, std::string>          extensionInfo_;
-    std::shared_ptr<IPropertyAccessor>          propertyAccessor_;
-    std::map<OBSensorType, SensorEntry>         sensors_;
+    std::shared_ptr<DeviceInfo>                  deviceInfo_;
+    std::map<std::string, std::string>           extensionInfo_;
+    std::shared_ptr<IPropertyAccessor>           propertyAccessor_;
+    std::map<OBSensorType, SensorEntry>          sensors_;
 
     std::shared_ptr<GlobalTimestampFitter>         globalTimestampFitter_;
     std::shared_ptr<IFrameMetadataParserContainer> colorMdParserContainer_;
     std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
     // std::shared_ptr<IFrameTimestampCalculator>     imuFrameTimestampCalculator_;
-    std::shared_ptr<G330AlgParamManager>           algParamManager_;
+    std::shared_ptr<G330AlgParamManager> algParamManager_;
 
     std::recursive_timed_mutex componentLock_;
 

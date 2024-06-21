@@ -660,7 +660,7 @@ public:
      * @param index The index of the frame
      * @return std::shared_ptr<Frame> The frame at the specified index
      */
-    std::shared_ptr<const Frame> getFrameByIndex(int index) const {
+    std::shared_ptr<const Frame> getFrameByIndex(uint32_t index) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame_by_index(impl_, index, &error);
         if(!frame){

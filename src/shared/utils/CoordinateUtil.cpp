@@ -47,7 +47,8 @@ static bool undistortIterativeUnproject(const OBCameraIntrinsic intrinsic, const
     double bestErr = 99999;
     int valid          = 1;
 
-    if(disto.distoMode == OB_DISTORTION_BROWN_CONRADY) {
+    // if(disto.model == OB_DISTORTION_BROWN_CONRADY) {
+    {
 
         for(int i = 0; i < 20; i++) {
             // Iterate to remove distortion
@@ -151,7 +152,7 @@ static void project3dPointToPixelWithDistortion(const OBCameraIntrinsic intrinsi
     double xd = x, yd = y;
     //if k1 >0, we need to take image distortion into accout when projecting onto an image
     if(fabsf(distortion.k1) > EPS || fabsf(distortion.k2) > EPS) {
-        if(distortion.distoMode == OB_DISTORTION_BROWN_CONRADY){
+        if(distortion.model == OB_DISTORTION_BROWN_CONRADY){
             double a1, a2, a3, cdist;
             double r2, r4, r6;
             r2    = x * x + y * y;
@@ -530,7 +531,7 @@ bool CoordinateUtil::transformationInitAddDistortionUVTables(const OBCameraIntri
                 double x = ((double)col - intrinsic.cx) / intrinsic.fx;
 
                 double xd = x, yd = y;
-                if(distortion.distoMode == OB_DISTORTION_BROWN_CONRADY) {
+                if(distortion.model == OB_DISTORTION_BROWN_CONRADY) {
                      // Add distortion, only supports Brown model, k2, k3, k6 model, KB is not supported
                      // double a1, a2, a3, cdist, icdist2;
                      double a1, a2, a3, cdist;

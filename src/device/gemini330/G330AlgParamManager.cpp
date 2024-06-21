@@ -85,6 +85,10 @@ void G330AlgParamManager::fetchParams() {
             param.transform           = cameraParam.transform;
             param.isMirrored          = false;
             calibrationCameraParamList_.emplace_back(param);
+
+            std::stringstream ss;
+            ss << param;
+            LOG_DEBUG("-{}", ss.str());
         }
     }
     catch(const std::exception &e) {

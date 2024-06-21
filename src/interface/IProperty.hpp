@@ -4,6 +4,7 @@
 #include "openobsdk/h/ObTypes.h"
 #include "exception/ObException.hpp"
 #include "property/HostProtocol.hpp"
+#include "openobsdk/h/Property.h"
 
 namespace libobsensor {
 typedef union {
@@ -69,7 +70,7 @@ public:
     virtual void aliasProperty(uint32_t aliasId, uint32_t propertyId)                                                                                  = 0;
 
     virtual bool checkProperty(uint32_t propertyId, OBPermissionType permission, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) const = 0;
-    // virtual std::map<uint32_t, PropertyItem> PropertyAccessor::getProperties(PropertyAccessType accessType) const = 0;
+    // virtual std::vector<PropertyItem> PropertyAccessor::getProperties(PropertyAccessType accessType) const                                   = 0;
 
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType = PROP_ACCESS_INTERNAL)  = 0;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
@@ -85,6 +86,10 @@ public:
                                                                   PropertyAccessType accessType = PROP_ACCESS_INTERNAL)                   = 0;
     virtual const std::vector<uint8_t> &getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion,
                                                                       PropertyAccessType accessType = PROP_ACCESS_INTERNAL)               = 0;
+
+    virtual int            getSupportedPropertyCount()                                                                             = 0;
+    virtual OBPropertyItem getSupportedPropertyItem(uint32_t i)                                                                = 0;
+    virtual bool           isPropertySupported(uint32_t propertId, OBPermissionType permissionType, PropertyAccessType accessType) = 0;
 
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type

@@ -247,13 +247,24 @@ public:
      *
      * @return The number of supported properties
      */
-    std::vector<OBPropertyItem> getSupportedPropertyList() {
-        //     ob_error *error = nullptr;
-        //     auto      count = ob_device_get_supported_property_count(impl_, &error);
-        //     Error::handle(&error);
-        //     return count;
-        // TODO: implement this function
-        return {};
+    int getSupportedPropertyCount() {
+        ob_error *error = nullptr;
+        auto      count = ob_device_get_supported_property_count(impl_, &error);
+        Error::handle(&error);
+        return count;
+    }
+
+    /**
+     * @brief Get the supported properties of the device
+     *
+     * @param index The index of the property
+     * @return The type of supported property
+     */
+    OBPropertyItem getSupportedProperty(uint32_t index) {
+        ob_error *error = nullptr;
+        auto      item  = ob_device_get_supported_property_item(impl_, index, &error);
+        Error::handle(&error);
+        return item;
     }
 
     /**

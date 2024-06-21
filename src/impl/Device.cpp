@@ -5,6 +5,7 @@
 #include "IDeviceEnumerator.hpp"
 #include "IProperty.hpp"
 #include "IDevice.hpp"
+#include "device/component/property/PropertyAccessor.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,7 +49,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, list, index)
 
 const char *ob_device_list_get_device_uid(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_UNSIGNED_INDEX(index, list->list.size() -1);
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size() - 1);
     auto &info = list->list[index];
     return info->getUid().c_str();
 }
@@ -217,28 +218,44 @@ HANDLE_EXCEPTIONS_AND_RETURN(ob_bool_property_range(), device, property_id)
 
 void ob_device_set_structured_data(ob_device *device, ob_property_id property_id, const uint8_t *data, uint32_t data_size, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
+    auto                 accessor = device->device->getPropertyAccessor();
     std::vector<uint8_t> dataVec(data, data + data_size);
     accessor->setStructureData(property_id, dataVec, libobsensor::PROP_ACCESS_USER);
-
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
 
-void ob_device_get_structured_data(ob_device *device, ob_property_id property_id, const uint8_t *data, uint32_t *data_size, ob_error **error) BEGIN_API_CALL{
+void ob_device_get_structured_data(ob_device *device, ob_property_id property_id, const uint8_t *data, uint32_t *data_size, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto  accessor     = device->device->getPropertyAccessor();
     auto &firmwareData = accessor->getStructureData(property_id, libobsensor::PROP_ACCESS_USER);
 
-    data               = firmwareData.data();
-    *data_size         = static_cast<uint32_t>(firmwareData.size());
+    data       = firmwareData.data();
+    *data_size = static_cast<uint32_t>(firmwareData.size());
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
 
-// todo: implement below:
-//  uint32_t         ob_device_get_supported_property_count(ob_device *device, ob_error **error);
-//  ob_property_item ob_device_get_supported_property_item(ob_device *device, uint32_t index, ob_error **error);
-//  bool             ob_device_is_property_supported(ob_device *device, ob_property_id property_id, ob_permission_type permission, ob_error **error);
+uint32_t ob_device_get_supported_property_count(ob_device *device, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    auto accessor = device->device->getPropertyAccessor();
+    return accessor->getSupportedPropertyCount();
+}
+HANDLE_EXCEPTIONS_AND_RETURN(0, device)
 
+ob_property_item ob_device_get_supported_property_item(ob_device *device, uint32_t index, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    auto accessor = device->device->getPropertyAccessor();
+    return accessor->getSupportedPropertyItem(index);
+}
+HANDLE_EXCEPTIONS_AND_RETURN(ob_property_item(), device, index)
+
+bool ob_device_is_property_supported(ob_device *device, ob_property_id property_id, ob_permission_type permission, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    auto accessor = device->device->getPropertyAccessor();
+    return accessor->isPropertySupported(property_id, permission, libobsensor::PROP_ACCESS_USER);
+}
+HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission);
+
+// todo: implement below:
 // bool ob_device_is_global_timestamp_supported(ob_device *device, ob_error **error);
 
 // void ob_device_update_firmware(ob_device *device, const char *path, ob_device_fw_update_callback callback, bool async, void *user_data, ob_error **error);
@@ -248,7 +265,7 @@ HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
 // void            ob_device_set_state_changed_callback(ob_device *device, ob_device_state_callback callback, void *user_data, ob_error **error);
 // void            ob_device_reboot(ob_device *device, ob_error **error);
 
-ob_device_info *ob_device_get_device_info(ob_device *device, ob_error **error) BEGIN_API_CALL{
+ob_device_info *ob_device_get_device_info(ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto info  = device->device->getInfo();
     auto impl  = new ob_device_info();

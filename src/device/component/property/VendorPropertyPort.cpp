@@ -189,8 +189,8 @@ const std::vector<uint8_t> &VendorPropertyPort::getStructureDataProtoV1_1(uint32
 const std::vector<uint8_t> &VendorPropertyPort::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
     constexpr uint32_t transPacketSize = 3 * DATA_PAGE_SIZE;
 
-    std::lock_guard<std::mutex>       lock(mutex_);
-    uint32_t                          dataSize = 0;
+    std::lock_guard<std::mutex> lock(mutex_);
+    uint32_t                    dataSize = 0;
     clearBuffers();
     auto     req          = protocol::initStartGetStructureDataList(sendData_.data(), propertyId);
     uint16_t respDataSize = 64;
@@ -236,4 +236,6 @@ void VendorPropertyPort::clearBuffers() {
     memset(recvData_.data(), 0, recvData_.size());
     memset(sendData_.data(), 0, sendData_.size());
 }
+
+
 }  // namespace libobsensor

@@ -178,6 +178,7 @@ void ob_config_enable_accel_stream(ob_config *config, ob_accel_full_scale_range 
     config->config->enableAccelStream(full_scale_range, sample_rate);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(config, full_scale_range, sample_rate)
+
 void ob_config_enable_gyro_stream(ob_config *config, ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,
                                   ob_error **error) BEGIN_API_CALL {
     config->config->enableGyroStream(full_scale_range, sample_rate);

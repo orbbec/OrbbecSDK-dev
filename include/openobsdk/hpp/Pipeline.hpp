@@ -31,7 +31,7 @@ public:
     Config() {
         ob_error *error = nullptr;
         impl_           = ob_create_config(&error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     explicit Config(ob_config_t *impl) : impl_(impl) {}
@@ -57,7 +57,7 @@ public:
     void enableStream(OBStreamType streamType) {
         ob_error *error = nullptr;
         ob_config_enable_stream(impl_, streamType, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -69,7 +69,7 @@ public:
         ob_error *error = nullptr;
         auto      c_stream_profile = streamProfile->getImpl();
         ob_config_enable_stream_with_stream_profile(impl_, c_stream_profile, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -89,7 +89,7 @@ public:
                            OBFormat format = OB_FORMAT_ANY) {
         ob_error *error = nullptr;
         ob_config_enable_video_stream(impl_, stream_type, width, height, fps, format, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -106,7 +106,7 @@ public:
                            ob_accel_sample_rate      sampleRate     = OB_ACCEL_SAMPLE_RATE_ANY) {
         ob_error *error = nullptr;
         ob_config_enable_accel_stream(impl_, fullScaleRange, sampleRate, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -122,7 +122,7 @@ public:
     void enableGyroStream(ob_gyro_full_scale_range fullScaleRange = OB_GYRO_FULL_SCALE_RANGE_ANY, ob_gyro_sample_rate sampleRate = OB_GYRO_SAMPLE_RATE_ANY) {
         ob_error *error = nullptr;
         ob_config_enable_gyro_stream(impl_, fullScaleRange, sampleRate, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -133,7 +133,7 @@ public:
     void disableStream(OBStreamType streamType) {
         ob_error *error = nullptr;
         ob_config_disable_stream(impl_, streamType, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -142,7 +142,7 @@ public:
     void disableAllStream() {
         ob_error *error = nullptr;
         ob_config_disable_all_stream(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -153,7 +153,7 @@ public:
     std::shared_ptr<StreamProfileList> getEnabledStreamProfileList() {
         ob_error *error = nullptr;
         auto      list  = ob_config_get_enabled_stream_profile_list(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<StreamProfileList>(list);
     }
 
@@ -165,7 +165,7 @@ public:
     void setAlignMode(OBAlignMode mode) {
         ob_error *error = nullptr;
         ob_config_set_align_mode(impl_, mode, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -176,7 +176,7 @@ public:
     void setDepthScaleRequire(bool enable) {
         ob_error *error = nullptr;
         ob_config_set_depth_scale_after_align_require(impl_, enable, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -189,7 +189,7 @@ public:
     void setFrameAggregateOutputMode(OBFrameAggregateOutputMode mode) {
         ob_error *error = nullptr;
         ob_config_set_frame_aggregate_output_mode(impl_, mode, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 };
 
@@ -209,7 +209,7 @@ public:
     Pipeline() {
         ob_error *error = nullptr;
         impl_           = ob_create_pipeline(&error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -220,7 +220,7 @@ public:
     explicit Pipeline(std::shared_ptr<Device> device) {
         ob_error *error = nullptr;
         impl_           = ob_create_pipeline_with_device(device->getImpl(), &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -241,7 +241,7 @@ public:
         ob_error *   error       = nullptr;
         ob_config_t *config_impl = config == nullptr ? nullptr : config->getImpl();
         ob_pipeline_start_with_config(impl_, config_impl, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -254,7 +254,7 @@ public:
         callback_       = callback;
         ob_error *error = nullptr;
         ob_pipeline_start_with_callback(impl_, config->getImpl(), &Pipeline::frameSetCallback, this, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     static void frameSetCallback(ob_frame_t *frameSet, void *userData) {
@@ -268,7 +268,7 @@ public:
     void stop() {
         ob_error *error = nullptr;
         ob_pipeline_stop(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -280,7 +280,7 @@ public:
     std::shared_ptr<Config> getConfig() {
         ob_error *error  = nullptr;
         auto      config = ob_pipeline_get_config(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<Config>(config);
     }
 
@@ -296,7 +296,7 @@ public:
         if(frameSet == nullptr) {
             return nullptr;
         }
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<FrameSet>(frameSet);
     }
 
@@ -308,7 +308,7 @@ public:
     std::shared_ptr<Device> getDevice() {
         ob_error *error  = nullptr;
         auto      device = ob_pipeline_get_device(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<Device>(device);
     }
 
@@ -321,7 +321,7 @@ public:
     std::shared_ptr<StreamProfileList> getStreamProfileList(OBSensorType sensorType) {
         ob_error *error = nullptr;
         auto      list  = ob_pipeline_get_stream_profile_list(impl_, sensorType, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<StreamProfileList>(list);
     }
 
@@ -331,7 +331,7 @@ public:
     void enableFrameSync() {
         ob_error *error = nullptr;
         ob_pipeline_enable_frame_sync(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 
     /**
@@ -340,7 +340,7 @@ public:
     void disableFrameSync() {
         ob_error *error = nullptr;
         ob_pipeline_disable_frame_sync(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
     }
 };
 

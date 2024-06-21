@@ -40,7 +40,7 @@ public:
         if(this != &sensor) {
             ob_error *error = nullptr;
             ob_delete_sensor(impl_, &error);
-            Error::handle(&error, false);
+            Error::handle(&error);
             impl_        = sensor.impl_;
             sensor.impl_ = nullptr;
         }

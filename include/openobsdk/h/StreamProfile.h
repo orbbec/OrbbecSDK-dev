@@ -52,8 +52,16 @@ OB_EXPORT ob_stream_profile* ob_create_accel_stream_profile(ob_accel_full_scale_
  */
 OB_EXPORT ob_stream_profile* ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,ob_error **error);
 
-
-OB_EXPORT ob_stream_profile* ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error);
+/**
+ * @brief Clone the stream profile object as a new format object
+ *
+ * @param[in] profile Stream profile object
+ * @param[in] new_format New format
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ *
+ * @return ob_stream_profile* return the new stream profile object with the new format
+ */
+OB_EXPORT ob_stream_profile *ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error);
 
 /**
  * @brief Delete the stream configuration.

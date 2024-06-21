@@ -37,7 +37,7 @@ public:
     Filter(ob_filter *impl) : impl_(impl) {
         ob_error *error = nullptr;
         name_           = ob_filter_get_name(impl_, &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
     }
 
     virtual ~Filter() noexcept {
@@ -64,7 +64,7 @@ public:
     virtual void reset() {
         ob_error *error = nullptr;
         ob_filter_reset(impl_, &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
     }
 
     /**
@@ -73,7 +73,7 @@ public:
     virtual void enable(bool enable) {
         ob_error *error = nullptr;
         ob_filter_enable(impl_, enable, &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
     }
 
     /**
@@ -82,7 +82,7 @@ public:
     virtual bool isEnabled() {
         ob_error *error  = nullptr;
         bool      enable = ob_filter_is_enabled(impl_, &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
         return enable;
     }
 
@@ -95,7 +95,7 @@ public:
     virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) {
         ob_error *error  = nullptr;
         auto      result = ob_filter_process(impl_, frame->getImpl(), &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
         return std::make_shared<Frame>(result);
     }
 
@@ -107,7 +107,7 @@ public:
     virtual void pushFrame(std::shared_ptr<Frame> frame) {
         ob_error *error = nullptr;
         ob_filter_push_frame(impl_, frame->getImpl(), &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
     }
 
     /**
@@ -119,7 +119,7 @@ public:
         callback_       = callback;
         ob_error *error = nullptr;
         ob_filter_set_callback(impl_, &Filter::filterCallback, this, &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
     }
 
 private:
@@ -140,7 +140,7 @@ public:
     static std::shared_ptr<Filter> createFilter(const std::string &name) {
         ob_error *error = nullptr;
         auto      impl  = ob_create_filter(name.c_str(), &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
         return std::make_shared<Filter>(impl);
     }
 
@@ -155,7 +155,7 @@ public:
     static std::shared_ptr<Filter> createPrivateFilter(const std::string &name, const std::string &activationKey) {
         ob_error *error = nullptr;
         auto      impl  = ob_create_private_filter(name.c_str(), activationKey.c_str(), &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
         return std::make_shared<Filter>(impl);
     }
 
@@ -169,7 +169,7 @@ public:
     static std::string getFilterVendorSpecificCode(const std::string &name) {
         ob_error *error = nullptr;
         auto      code  = ob_filter_get_vendor_specific_code(name.c_str(), &error);
-        Error::handle(&error, true);
+        Error::handle(&error);
         return code;
     }
 };

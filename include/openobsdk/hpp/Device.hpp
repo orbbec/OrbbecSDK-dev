@@ -45,7 +45,7 @@ public:
         if(this != &other) {
             ob_error *error = nullptr;
             ob_delete_device(impl_, &error);
-            Error::handle(&error, false);
+            Error::handle(&error);
             impl_       = other.impl_;
             other.impl_ = nullptr;
         }
@@ -247,7 +247,7 @@ public:
      *
      * @return The number of supported properties
      */
-    uint32_t getSupportedPropertyCount() {
+    std::vector<OBPropertyItem> getSupportedPropertyCount() {
         ob_error *error = nullptr;
         auto      count = ob_device_get_supported_property_count(impl_, &error);
         Error::handle(&error);

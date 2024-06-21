@@ -19,9 +19,15 @@ const std::string &FilterBase::getName() const {
 }
 
 std::shared_ptr<Frame> FilterBase::process(std::shared_ptr<const Frame> frame) {
-    if(!enabled_) {
-        return FrameFactory::cloneFrame(frame);
+    if(!frame) {
+        LOG_WARN("Filter {}: empty frame received, return nullptr", name_);
+        return nullptr;
     }
+
+    if(!enabled_) {
+        return FrameFactory::cloneFrame(frame, true);
+    }
+
     std::unique_lock<std::mutex> lock(mutex_);
     return processFunc(frame);
 }
@@ -40,7 +46,7 @@ void FilterBase::pushFrame(std::shared_ptr<const Frame> frame) {
                 })
             }
             else {
-                rstFrame = FrameFactory::cloneFrame(frameToProcess);
+                rstFrame = FrameFactory::cloneFrame(frameToProcess, true);
             }
             std::unique_lock<std::mutex> lock(callbackMutex_);
             if(callback_) {

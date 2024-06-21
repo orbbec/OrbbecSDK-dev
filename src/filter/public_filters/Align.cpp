@@ -58,9 +58,9 @@ void Align::reset() {
 
 std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
     std::lock_guard<std::recursive_mutex> lock(alignMutex_);
-    if(!frame || !frame->is<FrameSet>()) {
+    if(!frame->is<FrameSet>()) {
         LOG_WARN("Invalid frame!");
-        return FrameFactory::cloneFrame(frame);
+        return FrameFactory::cloneFrame(frame, true);
     }
 
     auto newFrame = FrameFactory::cloneFrame(frame);

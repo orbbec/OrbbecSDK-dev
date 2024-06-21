@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <stdlib.h>
 
 #include <openobsdk/ObSensor.h>
@@ -19,9 +19,16 @@ void check_ob_error(ob_error **err) {
     *err = NULL;
 }
 
-int main(int argc, char **args) {
+int main(void) {
     // Used to return SDK interface error information.
     ob_error    *error    = NULL;
+
+
+    ob_config *config = ob_create_config(&error);
+    check_ob_error(&error);
+
+    ob_config_enable_stream(config, OB_STREAM_DEPTH, &error);
+    check_ob_error(&error);
 
     // pipeline, used to open the depth stream after connecting the device.
     ob_pipeline *pipeline = ob_create_pipeline(&error);
@@ -29,16 +36,17 @@ int main(int argc, char **args) {
 
     // Start Pipeline.
     ob_pipeline_start(pipeline, &error);
+    ob_pipeline_start_with_config(pipeline, config, &error);
     check_ob_error(&error);
 
     // Wait in a loop, exit after the window receives the "esc" key
     while(true) {
 
-        if(kbhit() && getch() == ESC) {
+        if(_kbhit() && _getch() == ESC) {
             break;
         }
         // Wait for up to 100ms for a frameset in blocking mode.
-        ob_frame *frameset = ob_pipeline_wait_for_frameset(pipeline, 100, &error);
+        const ob_frame *frameset = ob_pipeline_wait_for_frameset(pipeline, 100, &error);
         check_ob_error(&error);
 
         if(frameset == NULL) {
@@ -46,11 +54,11 @@ int main(int argc, char **args) {
         }
 
         // Get the depth frame from frameset。
-        ob_frame *depth_frame = ob_frameset_get_depth_frame(frameset, &error);
+        const ob_frame *depth_frame = ob_frameset_get_depth_frame(frameset, &error);
         check_ob_error(&error);
         if(depth_frame != NULL) {
             // Get index from depth frame.
-            uint32_t index = ob_frame_get_index(depth_frame, &error);
+            uint64_t index = ob_frame_get_index(depth_frame, &error);
             check_ob_error(&error);
             // Get format from depth frame.
             ob_format format = ob_frame_get_format(depth_frame, &error);

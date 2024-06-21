@@ -30,13 +30,12 @@ typedef struct ob_stream_profile_t       ob_stream_profile;
 typedef struct ob_stream_profile_list_t  ob_stream_profile_list;
 typedef struct ob_frame_t                ob_frame;
 typedef struct ob_filter_t               ob_filter;
+typedef struct ob_filter_list_t          ob_filter_list;
 typedef struct ob_pipeline_t             ob_pipeline;
 typedef struct ob_config_t               ob_config;
 typedef struct ob_recorder_t             ob_recorder;
 typedef struct ob_playback_t             ob_playback;
 typedef struct ob_depth_work_mode_list_t ob_depth_work_mode_list;
-typedef struct ob_filter_list_t          ob_filter_list;
-typedef struct ob_filters_t              ob_filters;
 typedef struct ob_device_preset_list_t   ob_device_preset_list;
 
 #define OB_WIDTH_ANY 0

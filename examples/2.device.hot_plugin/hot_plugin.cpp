@@ -1,5 +1,7 @@
-#include "libobsensor/ObSensor.hpp"
+#include <openobsdk/ObSensor.hpp>
+
 #include "utils.hpp"
+
 #include <iostream>
 #include <thread>
 #include <map>
@@ -40,7 +42,7 @@ void rebootDevices();
 void startStream(std::shared_ptr<PipelineHolder> holder);
 void stopStream(std::shared_ptr<PipelineHolder> holder);
 
-int main(int argc, char **argv) try {
+int main(void) try {
 
     // create context
     ob::Context ctx;
@@ -55,8 +57,8 @@ int main(int argc, char **argv) try {
     handleDeviceConnected(ctx.queryDeviceList());
 
     while(true) {
-        if(kbhit()) {
-            int key = getch();
+        if(_kbhit()) {
+            int key = _getch();
 
             // Press the esc key to exit
             if(key == ESC) {
@@ -85,7 +87,7 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -143,8 +145,8 @@ void rebootDevices() {
             itr->second->pipeline->getDevice()->reboot();
         }
         catch(ob::Error &e) {
-            std::cerr << "Reboot device failed. function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage()
-                      << "\ntype:" << e.getExceptionType() << std::endl;
+            std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
+                      << std::endl;
         }
     }
 }
@@ -154,7 +156,7 @@ void startStream(std::shared_ptr<PipelineHolder> holder) {
     std::string                     deviceSN = std::string(holder->deviceInfo->serialNumber());
     ob::FrameSetCallback            callback = [deviceSN, printInfo](std::shared_ptr<ob::FrameSet> frameSet) {
         // Get the depth data frame
-        auto depthFrame = frameSet->depthFrame();
+        auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>();
         if(depthFrame) {
             printInfo->depthCount++;
             if(printInfo->depthCount == 15) {
@@ -164,11 +166,11 @@ void startStream(std::shared_ptr<PipelineHolder> holder) {
         }
 
         // Get the ir data frame
-        auto irFrame = frameSet->irFrame();
+        auto irFrame = frameSet->getFrame(OB_FRAME_COLOR)->as<ob::IRFrame>();
         if(irFrame) {
             printInfo->irCount++;
             if(printInfo->irCount == 15) {
-                std::cout << "=====IR Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<ob::VideoFrame>(irFrame)
+                std::cout << "=====IR Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<const ob::VideoFrame>(irFrame)
                           << std::endl;
                 printInfo->irCount = 0;
             }
@@ -179,7 +181,7 @@ void startStream(std::shared_ptr<PipelineHolder> holder) {
         if(irLeftFrame) {
             printInfo->irLeftCount++;
             if(printInfo->irLeftCount == 15) {
-                std::cout << "=====IR Left Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<ob::VideoFrame>(irLeftFrame)
+                std::cout << "=====IR Left Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<const ob::VideoFrame>(irLeftFrame)
                           << std::endl;
                 printInfo->irLeftCount = 0;
             }
@@ -190,18 +192,18 @@ void startStream(std::shared_ptr<PipelineHolder> holder) {
         if(irRightFrame) {
             printInfo->irRightCount++;
             if(printInfo->irRightCount == 15) {
-                std::cout << "=====IR Right Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<ob::VideoFrame>(irRightFrame)
+                std::cout << "=====IR Right Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<const ob::VideoFrame>(irRightFrame)
                           << std::endl;
                 printInfo->irRightCount = 0;
             }
         }
 
         // Get the color data frame
-        auto colorFrame = frameSet->colorFrame();
+        auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR)->as<ob::ColorFrame>();
         if(colorFrame) {
             printInfo->colorCount++;
             if(printInfo->colorCount == 15) {
-                std::cout << "=====Color Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<ob::VideoFrame>(colorFrame)
+                std::cout << "=====Color Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<const ob::VideoFrame>(colorFrame)
                           << std::endl;
                 printInfo->colorCount = 0;
             }
@@ -231,8 +233,8 @@ void stopStream(std::shared_ptr<PipelineHolder> holder) {
         holder->pipeline->stop();
     }
     catch(ob::Error &e) {
-        std::cerr << "stopStream failed., function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage()
-                  << "\ntype:" << e.getExceptionType() << std::endl;
+        std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
+                  << std::endl;
     }
 }
 
@@ -272,18 +274,18 @@ std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::DeviceInfo> devic
 }
 
 std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::DepthFrame> frame) {
-    uint16_t *data       = (uint16_t *)frame->data();
-    auto      width      = frame->width();
-    auto      height     = frame->height();
+    uint16_t *data       = (uint16_t *)frame->getData();
+    auto      width      = frame->getWidth();
+    auto      height     = frame->getHeight();
     auto      scale      = frame->getValueScale();
     uint16_t  pixelValue = *(data + width * height / 2 + width / 2);
-    os << "FrameType: " << frame->type() << ", index: " << frame->index() << ", width: " << width << ", height: " << height << ", format: " << frame->format()
-       << ", timeStampUs: " << frame->timeStampUs() << "us, centerDepth: " << (float)pixelValue * scale << "mm";
+    os << "FrameType: " << frame->getType() << ", index: " << frame->getIndex() << ", width: " << width << ", height: " << height << ", format: " << frame->getFormat()
+       << ", timeStampUs: " << frame->getTimeStampUs() << "us, centerDepth: " << (float)pixelValue * scale << "mm";
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::VideoFrame> frame) {
-    os << "FrameType: " << frame->type() << ", index: " << frame->index() << ", width: " << frame->width() << ", height: " << frame->height()
-       << ", format: " << frame->format() << ", timeStampUs: " << frame->timeStampUs() << "us";
+    os << "FrameType: " << frame->getType() << ", index: " << frame->getIndex() << ", width: " << frame->getWidth() << ", height: " << frame->getHeight()
+       << ", format: " << frame->getFormat() << ", timeStampUs: " << frame->getTimeStampUs() << "us";
     return os;
 }

@@ -45,7 +45,7 @@ public:
         if(this != &other) {
             ob_error *error = nullptr;
             ob_delete_device(impl_, &error);
-            Error::handle(&error, false);
+            Error::handle(&error);
             impl_       = other.impl_;
             other.impl_ = nullptr;
         }
@@ -247,24 +247,13 @@ public:
      *
      * @return The number of supported properties
      */
-    uint32_t getSupportedPropertyCount() {
-        ob_error *error = nullptr;
-        auto      count = ob_device_get_supported_property_count(impl_, &error);
-        Error::handle(&error);
-        return count;
-    }
-
-    /**
-     * @brief Get the supported properties of the device
-     *
-     * @param index The index of the property
-     * @return The type of supported property
-     */
-    OBPropertyItem getSupportedProperty(uint32_t index) {
-        ob_error *error = nullptr;
-        auto      item  = ob_device_get_supported_property_item(impl_, index, &error);
-        Error::handle(&error);
-        return item;
+    std::vector<OBPropertyItem> getSupportedPropertyList() {
+        //     ob_error *error = nullptr;
+        //     auto      count = ob_device_get_supported_property_count(impl_, &error);
+        //     Error::handle(&error);
+        //     return count;
+        // TODO: implement this function
+        return {};
     }
 
     /**

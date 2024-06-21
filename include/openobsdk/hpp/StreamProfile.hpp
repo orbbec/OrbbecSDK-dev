@@ -27,7 +27,7 @@ public:
         if(this != &streamProfile) {
             ob_error *error = nullptr;
             ob_delete_stream_profile(impl_, &error);
-            Error::handle(&error, false);
+            Error::handle(&error);
             impl_               = streamProfile.impl_;
             streamProfile.impl_ = nullptr;
         }
@@ -38,7 +38,7 @@ public:
         if(impl_) {
             ob_error *error = nullptr;
             ob_delete_stream_profile(impl_, &error);
-            Error::handle(&error, false);
+            Error::handle(&error);
         }
     }
 
@@ -54,7 +54,7 @@ public:
     OBFormat format() const {
         ob_error *error  = nullptr;
         auto      format = ob_stream_profile_get_format(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return format;
     }
 
@@ -66,7 +66,7 @@ public:
     OBStreamType type() const {
         ob_error *error = nullptr;
         auto      type  = ob_stream_profile_get_type(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return type;
     }
 
@@ -78,7 +78,7 @@ public:
     OBExtrinsic getExtrinsicTo(std::shared_ptr<StreamProfile> target) const {
         ob_error *error     = nullptr;
         auto      extrinsic = ob_stream_profile_get_extrinsic_to(impl_, const_cast<ob_stream_profile_t *>(target->getImpl()), &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return extrinsic;
     }
 
@@ -136,7 +136,7 @@ public:
     uint32_t fps() const {
         ob_error *error = nullptr;
         auto      fps   = ob_video_stream_profile_get_fps(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return fps;
     }
 
@@ -148,7 +148,7 @@ public:
     uint32_t width() const {
         ob_error *error = nullptr;
         auto      width = ob_video_stream_profile_get_width(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return width;
     }
 
@@ -160,7 +160,7 @@ public:
     uint32_t height() const {
         ob_error *error  = nullptr;
         auto      height = ob_video_stream_profile_get_height(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return height;
     }
 
@@ -172,7 +172,7 @@ public:
     OBCameraIntrinsic getIntrinsic() const {
         ob_error *error     = nullptr;
         auto      intrinsic = ob_video_stream_get_intrinsic(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return intrinsic;
     }
 
@@ -185,7 +185,7 @@ public:
     OBCameraDistortion getDistortion() const {
         ob_error *error      = nullptr;
         auto      distortion = ob_video_stream_get_distortion(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return distortion;
     }
 };
@@ -207,7 +207,7 @@ public:
     OBAccelFullScaleRange fullScaleRange() const {
         ob_error *error          = nullptr;
         auto      fullScaleRange = ob_accel_stream_profile_get_full_scale_range(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return fullScaleRange;
     }
 
@@ -219,7 +219,7 @@ public:
     OBAccelSampleRate sampleRate() const {
         ob_error *error      = nullptr;
         auto      sampleRate = ob_accel_stream_profile_get_sample_rate(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return sampleRate;
     }
 
@@ -231,7 +231,7 @@ public:
     OBAccelIntrinsic getIntrinsic() const {
         ob_error *error     = nullptr;
         auto      intrinsic = ob_accel_stream_profile_get_intrinsic(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return intrinsic;
     }
 };
@@ -253,7 +253,7 @@ public:
     OBGyroFullScaleRange fullScaleRange() const {
         ob_error *error          = nullptr;
         auto      fullScaleRange = ob_gyro_stream_profile_get_full_scale_range(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return fullScaleRange;
     }
 
@@ -265,7 +265,7 @@ public:
     OBGyroSampleRate sampleRate() const {
         ob_error *error      = nullptr;
         auto      sampleRate = ob_gyro_stream_profile_get_sample_rate(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return sampleRate;
     }
 
@@ -277,7 +277,7 @@ public:
     OBGyroIntrinsic getIntrinsic() const {
         ob_error *error     = nullptr;
         auto      intrinsic = ob_gyro_stream_get_intrinsic(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return intrinsic;
     }
 };
@@ -322,7 +322,7 @@ public:
     uint32_t count() const {
         ob_error *error = nullptr;
         auto      count = ob_stream_profile_list_count(impl_, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return count;
     }
 
@@ -335,7 +335,7 @@ public:
     std::shared_ptr<StreamProfile> getProfile(uint32_t index) const {
         ob_error *error   = nullptr;
         auto      profile = ob_stream_profile_list_get_profile(impl_, index, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<StreamProfile>(profile);
     }
 
@@ -353,7 +353,7 @@ public:
                                                               int fps = OB_FPS_ANY) const {
         ob_error *error   = nullptr;
         auto      profile = ob_stream_profile_list_get_video_stream_profile(impl_, width, height, format, fps, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<VideoStreamProfile>(profile);
     }
 
@@ -367,7 +367,7 @@ public:
     std::shared_ptr<AccelStreamProfile> getAccelStreamProfile(OBAccelFullScaleRange fullScaleRange, OBAccelSampleRate sampleRate) const {
         ob_error *error   = nullptr;
         auto      profile = ob_stream_profile_list_get_accel_stream_profile(impl_, fullScaleRange, sampleRate, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<AccelStreamProfile>(profile);
     }
 
@@ -381,7 +381,7 @@ public:
     std::shared_ptr<GyroStreamProfile> getGyroStreamProfile(OBGyroFullScaleRange fullScaleRange, OBGyroSampleRate sampleRate) const {
         ob_error *error   = nullptr;
         auto      profile = ob_stream_profile_list_get_gyro_stream_profile(impl_, fullScaleRange, sampleRate, &error);
-        Error::handle(&error, false);
+        Error::handle(&error);
         return std::make_shared<GyroStreamProfile>(profile);
     }
 };

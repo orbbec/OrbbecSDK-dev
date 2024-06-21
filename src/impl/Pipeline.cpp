@@ -51,8 +51,13 @@ HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 
 void ob_pipeline_start_with_config(ob_pipeline *pipeline, ob_config *config, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
-    VALIDATE_NOT_NULL(config);
-    pipeline->pipeline->start(config->config);
+    if (!config) {
+        ob_pipeline_start(pipeline, error);
+    }
+    else {
+        VALIDATE_NOT_NULL(config);
+        pipeline->pipeline->start(config->config);
+    }
 }
 HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 
@@ -173,6 +178,7 @@ void ob_config_enable_accel_stream(ob_config *config, ob_accel_full_scale_range 
     config->config->enableAccelStream(full_scale_range, sample_rate);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(config, full_scale_range, sample_rate)
+
 void ob_config_enable_gyro_stream(ob_config *config, ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,
                                   ob_error **error) BEGIN_API_CALL {
     config->config->enableGyroStream(full_scale_range, sample_rate);

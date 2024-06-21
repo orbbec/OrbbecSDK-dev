@@ -11,6 +11,18 @@ extern "C" {
 #include "ObTypes.h"
 
 /**
+ * @brief Create a new error object.
+ *
+ * @param status The error status.
+ * @param message The error message.
+ * @param function The name of the API function that caused the error.
+ * @param args The error parameters.
+ * @param exception_type The type of exception that caused the error.
+ * @return ob_error* The new error object.
+ */
+OB_EXPORT ob_error *ob_create_error(ob_status status, const char *message, const char *function, const char *args, ob_exception_type exception_type);
+
+/**
  * @brief Get the error status.
  *
  * @param[in] error The error object.

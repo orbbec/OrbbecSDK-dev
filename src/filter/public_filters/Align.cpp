@@ -121,6 +121,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
             aligned_frame = FrameFactory::createVideoFrame(from->getType(), from->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
             if(aligned_frame) {
                 aligned_frame->copyInfo(from);
+                auto intrinsic = alignProfile->getIntrinsic();
                 aligned_frame->setStreamProfile(alignProfile);
                 alignFrames(aligned_frame, from, depth);
                 frames->pushFrame(std::move(aligned_frame));
@@ -133,10 +134,13 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
         auto original_profile = depth->getStreamProfile()->as<VideoStreamProfile>();
         auto to_profile       = to->getStreamProfile()->as<VideoStreamProfile>();
         auto alignProfile     = createAlignedProfile(original_profile, to_profile);
+        auto originalIntrinsic = original_profile->getIntrinsic();
+        auto toIntrinsic = to_profile->getIntrinsic();
 
         aligned_frame = FrameFactory::createVideoFrame(depth->getType(), depth->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
         if(aligned_frame) {
             aligned_frame->copyInfo(depth);
+            auto intrinsic = alignProfile->getIntrinsic();
             aligned_frame->setStreamProfile(alignProfile);
             alignFrames(aligned_frame, depth, to);
             frames->pushFrame(std::move(aligned_frame));
@@ -208,6 +212,8 @@ std::shared_ptr<VideoStreamProfile> Align::createAlignedProfile(std::shared_ptr<
         aligned_profile->setWidth(to_profile->getWidth());
         aligned_profile->setHeight(to_profile->getHeight());
         aligned_profile->bindIntrinsic(to_profile->getIntrinsic());
+        auto alignIntrin = aligned_profile->getIntrinsic();
+        auto toIntrin    = to_profile->getIntrinsic();
         /// TODO(timon): extrinsic of aligned should be ones and zeros
         aligned_profile->bindSameExtrinsicTo(to_profile);
         target_stream_profile_ = aligned_profile;

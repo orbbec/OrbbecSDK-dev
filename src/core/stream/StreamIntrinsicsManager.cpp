@@ -37,6 +37,14 @@ void StreamIntrinsicsManager::registerVideoStreamIntrinsics(const std::shared_pt
             it++;
         }
     }
+
+    for(auto &pair: videoStreamIntrinsicsMap_) {
+        if(pair.first.lock() == profile) {
+            pair.second = intrinsics;
+            return;
+        }
+    }
+    
     videoStreamIntrinsicsMap_.insert({ std::weak_ptr<const StreamProfile>(profile), intrinsics });
 }
 

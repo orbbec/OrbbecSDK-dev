@@ -358,7 +358,8 @@ void G330AlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const Stream
             OBCameraParam      param      = { 0 };
             auto               vsp        = sp->as<VideoStreamProfile>();
             if(!findBestMatchedCameraParam(calibrationCameraParamList_, vsp, param)) {
-                throw libobsensor::unsupported_operation_exception("Can not find matched camera param!");
+                // throw libobsensor::unsupported_operation_exception("Can not find matched camera param!");
+                continue;
             }
             switch(sp->getType()) {
             case OB_STREAM_COLOR:

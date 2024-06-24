@@ -11,7 +11,7 @@ namespace libobsensor {
     }
 
 
-const std::map<OBPropertyID, OBPropertyBaseInfo> OBPropertyBaseInfoMap = {
+const std::map<uint32_t, OBPropertyBaseInfo> OBPropertyBaseInfoMap = {
     PROP_INFO_PAIR(OB_PROP_LDP_BOOL, OB_BOOL_PROPERTY),
     PROP_INFO_PAIR(OB_PROP_LASER_BOOL, OB_BOOL_PROPERTY),
     PROP_INFO_PAIR(OB_PROP_LASER_PULSE_WIDTH_INT, OB_INT_PROPERTY), 

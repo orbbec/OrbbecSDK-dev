@@ -9,6 +9,6 @@ struct OBPropertyBaseInfo {
     const char    *name;
 };
 
-extern const std::map<OBPropertyID, OBPropertyBaseInfo> OBPropertyBaseInfoMap;
+extern const std::map<uint32_t, OBPropertyBaseInfo> OBPropertyBaseInfoMap;
 
 }  // namespace libobsensor

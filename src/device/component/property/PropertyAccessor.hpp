@@ -39,19 +39,18 @@ public:
     const std::vector<uint8_t> &getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion,
                                                               PropertyAccessType accessType = PROP_ACCESS_INTERNAL) override;
 
-    OBPropertyItem getSupportedPropertyItem(uint32_t index) override;
-
-    std::vector<OBPropertyItem> getProperties() const;
-    int                         getSupportedPropertyCount() override;
-    bool isPropertySupported(uint32_t propertId, OBPermissionType permissionType, PropertyAccessType accessType) override;
+    const std::vector<OBPropertyItem> &getAvailableProperties(PropertyAccessType accessType) override;
+    bool                               isPropertySupported(uint32_t propertId, OBPermissionType permissionType, PropertyAccessType accessType) override;
 
 private:
     std::mutex                       mutex_;
     std::map<uint32_t, PropertyItem> properties_;
-    std::vector<OBPropertyItem>      propertiesVec_;
+    std::vector<OBPropertyItem>      userPropertiesVec_;
+    std::vector<OBPropertyItem>      innerPropertiesVec_;
 
 private:
     void appendToPropertyMap(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms);
+    void addProperty(std::vector<OBPropertyItem> &vec, int propertyId, const char* propName, OBPropertyType propType, OBPermissionType perms);
 };
 
 }  // namespace libobsensor

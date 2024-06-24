@@ -237,14 +237,15 @@ HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
 uint32_t ob_device_get_supported_property_count(ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto accessor = device->device->getPropertyAccessor();
-    return accessor->getSupportedPropertyCount();
+    return static_cast<int>(accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER).size());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, device)
 
 ob_property_item ob_device_get_supported_property_item(ob_device *device, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto accessor = device->device->getPropertyAccessor();
-    return accessor->getSupportedPropertyItem(index);
+    auto propertyVec=accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER);
+    return accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER).at(index);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_property_item(), device, index)
 

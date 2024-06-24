@@ -87,9 +87,10 @@ public:
     virtual const std::vector<uint8_t> &getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion,
                                                                       PropertyAccessType accessType = PROP_ACCESS_INTERNAL)               = 0;
 
-    virtual int            getSupportedPropertyCount()                                                                             = 0;
-    virtual OBPropertyItem getSupportedPropertyItem(uint32_t i)                                                                = 0;
-    virtual bool           isPropertySupported(uint32_t propertId, OBPermissionType permissionType, PropertyAccessType accessType) = 0;
+    // virtual int            getSupportedPropertyCount()                                                                             = 0;
+    // virtual OBPropertyItem getSupportedPropertyItem(uint32_t i)                                                                = 0;
+    virtual const std::vector<OBPropertyItem> &getAvailableProperties(PropertyAccessType accessType)                                                   = 0;
+    virtual bool                               isPropertySupported(uint32_t propertId, OBPermissionType permissionType, PropertyAccessType accessType) = 0;
 
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type

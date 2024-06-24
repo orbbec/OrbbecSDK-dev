@@ -35,9 +35,17 @@ void PropertyAccessor::registerProperty(uint32_t propertyId, const std::string &
     registerProperty(propertyId, userPerms, intPerms, port);
 }
 
+void PropertyAccessor::addProperty(std::vector<OBPropertyItem> &vec, int propertyId, const char *propName, OBPropertyType propType, OBPermissionType perms) {
+    OBPropertyItem propertyItem;
+    propertyItem.id         = static_cast<OBPropertyID>(propertyId);
+    propertyItem.name       = propName;
+    propertyItem.type       = propType;
+    propertyItem.permission = perms;
+    vec.push_back(propertyItem);
+}
+
 void PropertyAccessor::appendToPropertyMap(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms) {
 
-    OBPermissionType permission;
     for(auto &item: OBPropertyBaseInfoMap) {
         auto infoIter = OBPropertyBaseInfoMap.find(item.first);
         if(infoIter == OBPropertyBaseInfoMap.end()) {
@@ -45,14 +53,14 @@ void PropertyAccessor::appendToPropertyMap(uint32_t propertyId, OBPermissionType
             msg += std::to_string(item.first);
             throw not_implemented_exception(msg);
         }
-        if(static_cast<OBPropertyID>(propertyId) == item.first) {
-            permission = (OBPermissionType)(userPerms | intPerms);
-            OBPropertyItem propertyItem;
-            propertyItem.id         = static_cast<OBPropertyID>(propertyId);
-            propertyItem.name       = infoIter->second.name;
-            propertyItem.type       = infoIter->second.type;
-            propertyItem.permission = permission;
-            propertiesVec_.push_back(propertyItem);
+        if(propertyId == item.first) {
+            if(userPerms & 0x3) {
+                addProperty(userPropertiesVec_, propertyId, infoIter->second.name, infoIter->second.type, userPerms);
+            }
+
+            if(intPerms & 0x3) {
+                addProperty(innerPropertiesVec_, propertyId, infoIter->second.name, infoIter->second.type, intPerms);
+            }
             break;
         }
     }
@@ -267,19 +275,17 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint
     return dataList;
 }
 
-std::vector<OBPropertyItem> PropertyAccessor::getProperties() const {
-    return propertiesVec_;
-}
-
-int PropertyAccessor::getSupportedPropertyCount() {
-    return static_cast<int>(propertiesVec_.size());
-}
-
-OBPropertyItem PropertyAccessor::getSupportedPropertyItem(uint32_t index) {
-    if(index >= propertiesVec_.size()) {
-        throw libobsensor::invalid_value_exception(std::string("Invalid property index! index: ") + std::to_string(index));
+const std::vector<OBPropertyItem> &PropertyAccessor::getAvailableProperties(PropertyAccessType accessType) {
+    static std::vector<OBPropertyItem> retVec;
+    if(accessType == PROP_ACCESS_USER) {
+        return userPropertiesVec_;
     }
-    return propertiesVec_.at(index);
+    else if(accessType == PROP_ACCESS_INTERNAL) {
+        return innerPropertiesVec_;
+    }
+    else {
+        return retVec;
+    }
 }
 
 bool PropertyAccessor::isPropertySupported(uint32_t propertId, OBPermissionType permissionType, PropertyAccessType accessType) {

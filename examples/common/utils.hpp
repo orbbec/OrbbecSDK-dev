@@ -52,6 +52,37 @@ int kbhit(void) {
     }
     return 0;
 }
+
+#include <sys/time.h>
+long long get_current_timestamp_ms() {
+    struct timeval te;
+    gettimeofday(&te, NULL);                                          // 获取当前时间
+    long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;  // 计算毫秒
+    return milliseconds;
+}
 #else
 #include <conio.h>
+#include <windows.h>
+long long get_current_timestamp_ms() {
+    FILETIME      ft;
+    LARGE_INTEGER li;
+    GetSystemTimeAsFileTime(&ft);
+    li.LowPart             = ft.dwLowDateTime;
+    li.HighPart            = ft.dwHighDateTime;
+    long long milliseconds = li.QuadPart / 10000LL;
+    return milliseconds;
+}
 #endif
+
+#define ESC 27
+
+// helper function to check for errors and exit if there is one.
+#define CHECK_OB_ERROR_EXIT(error)                                \
+    if(*error) {                                                  \
+        const char *error_message = ob_error_get_message(*error); \
+        fprintf(stderr, "Error: %s\n", error_message);            \
+        ob_delete_error(*error);                                  \
+        *error = NULL;                                            \
+        exit(-1);                                                 \
+    }                                                             \
+    *error = NULL;

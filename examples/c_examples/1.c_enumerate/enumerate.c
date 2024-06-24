@@ -194,12 +194,10 @@ void print_device_info(ob_device *device, int index) {
     printf("  %d - device name: %s, device pid: %d, device sn: %s, connection type: %s\n", index, dev_name, dev_pid, dev_sn, conn_type);
 }
 
-int main() {
-    ob_error *error = NULL;
+int main(){
 
-    // Set logger severity.
-    ob_set_logger_severity(OB_LOG_SEVERITY_ERROR, &error);
-    check_ob_error(&error);
+    // Used to return SDK interface error information.
+    ob_error    *error = NULL;
 
     // Get OpenOrbbecSDK version.
     int major_version = ob_get_major_version();

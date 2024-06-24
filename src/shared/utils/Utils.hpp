@@ -36,7 +36,6 @@ void unusedVar(T& var){
     (void)var;
 }
 
-
 template <class T> bool contains(const T &first, const T &second) {
     return *first == *second;
 }

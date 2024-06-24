@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "IFrame.hpp"
 #include "IStreamProfile.hpp"
 

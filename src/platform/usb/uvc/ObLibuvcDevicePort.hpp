@@ -1,7 +1,7 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 #pragma once
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 
 #include "UvcTypes.hpp"
 #include "UvcDevicePort.hpp"

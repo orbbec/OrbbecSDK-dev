@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "openobsdk/h/Frame.h"
+#include "libobsensor/h/Frame.h"
 
 typedef struct ob_priv_filter_t ob_priv_filter;
 typedef struct ob_priv_filter_context_t ob_priv_filter_context;

@@ -1,6 +1,6 @@
 #pragma once
-#include "openobsdk/h/Device.h"
-#include "openobsdk/h/Error.h"
+#include "libobsensor/h/Device.h"
+#include "libobsensor/h/Error.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -237,10 +237,10 @@ SetStructureDataReq *initSetStructureDataReq(uint8_t *dataBuf, uint32_t property
 GetPropertyReq      *initGetCmdVersionReq(uint8_t *dataBuf, uint32_t propertyId);
 
 GetStructureDataReqV1_1 *initGetStructureDataReqV1_1(uint8_t *dataBuf, uint32_t propertyId);
-GetStructureDataReqV1_1 *initGetStructureDataListReqV1_1(uint8_t *dataBuf, uint32_t propertyId);
+SetStructureDataReqV1_1 *initSetStructureDataReqV1_1(uint8_t *dataBuf, uint32_t propertyId, uint16_t cmdVer, const uint8_t *data, uint16_t dataSize);
 
 StartGetStructureDataListReq  *initStartGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId);
-GetStructureDataListReq       *initReadStructureDataList(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t dataSize);
+GetStructureDataListReq       *initGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t dataSize);
 FinishGetStructureDataListReq *initFinishGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId);
 GetPropertyReq                *initGetRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t cmd);
 ReadRawData                   *initReadRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t size);
@@ -249,6 +249,7 @@ GetPropertyResp               *parseGetPropertyResp(uint8_t *dataBuf, uint16_t d
 SetPropertyResp               *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
 GetStructureDataResp          *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
 GetStructureDataRespV1_1      *parseGetStructureDataRespV1_1(uint8_t *dataBuf, uint16_t dataSize);
+SetStructureDataRespV1_1      *parseSetStructureDataRespV1_1(uint8_t *dataBuf, uint16_t dataSize);
 int16_t                        getStructureDataSize(const GetStructureDataResp *resp);
 SetStructureDataResp          *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
 GetCmdVerDataResp             *parseGetCmdVerDataResp(uint8_t *dataBuf, uint16_t dataSize);

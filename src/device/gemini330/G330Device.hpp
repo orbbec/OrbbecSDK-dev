@@ -5,6 +5,8 @@
 #include "timestamp/GlobalTimestampFitter.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
 #include "G330AlgParamManager.hpp"
+#include "G330PresetManager.hpp"
+#include "G330DepthAlgModeManager.hpp"
 
 #include <map>
 #include <memory>
@@ -20,6 +22,7 @@ public:
     const std::string                &getExtensionInfo(const std::string &infoKey) override;
 
     DeviceResourcePtr<IPropertyAccessor> getPropertyAccessor() override;
+    std::shared_ptr<IPresetManager>      getPresetManager() const override;
 
     std::vector<OBSensorType>             getSensorTypeList() const override;
     std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) override;
@@ -59,7 +62,10 @@ private:
     std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
     // std::shared_ptr<IFrameTimestampCalculator>     imuFrameTimestampCalculator_;
-    std::shared_ptr<G330AlgParamManager> algParamManager_;
+
+    std::shared_ptr<G330AlgParamManager>     algParamManager_;
+    std::shared_ptr<G330PresetManager>       presetManager_;
+    std::shared_ptr<G330DepthAlgModeManager> depthAlgModeManager_;
 
     std::recursive_timed_mutex componentLock_;
 

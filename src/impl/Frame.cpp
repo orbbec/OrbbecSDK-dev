@@ -1,5 +1,5 @@
 #include "ImplTypes.hpp"
-#include "openobsdk/h/Frame.h"
+#include "libobsensor/h/Frame.h"
 #include "exception/ObException.hpp"
 #include "frame/FrameFactory.hpp"
 #include "ISensor.hpp"

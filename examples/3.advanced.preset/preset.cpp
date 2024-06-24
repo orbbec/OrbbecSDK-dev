@@ -1,14 +1,13 @@
-#include <openobsdk/ObSensor.h>
-
-#include "window.hpp"
-
+#include <libobsensor/ObSensor.hpp>
 #include <iostream>
 
 int main() try {
     // Create a pipeline with default device.
     ob::Pipeline pipe;
-    // Get the device.
+
+    // Get the device from the pipeline.
     std::shared_ptr<ob::Device> device = pipe.getDevice();
+
     // Get preset list from device.
     std::shared_ptr<ob::DevicePresetList> presetLists = device->getAvailablePresetList();
     std::cout << "Available Presets:" << std::endl;
@@ -21,13 +20,16 @@ int main() try {
     std::cout << "Current PresetName: " << device->getCurrentPresetName() << std::endl;
 
     std::cout << "Enter index of preset to load: ";
+
     // Select preset to load.
     int loadIndex;
     std::cin >> loadIndex;
     auto presetName = presetLists->getName(loadIndex);
+
     // Load preset.
     device->loadPreset(presetName);
 
+    // Print current preset name.
     std::cout << "Current PresetName: " << device->getCurrentPresetName() << std::endl;
 
     // Stop Pipeline.

@@ -2,7 +2,7 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 
 namespace libobsensor {
 
@@ -29,7 +29,7 @@ std::shared_ptr<Frame> DU08mmTo1mmConverter::processFunc(std::shared_ptr<const F
         LOG_WARN_INTVL("The Frame processed by DU08mmTo1mmConverter cannot be FrameSet!");
         return newFrame;
     }
-    
+
     auto outFrame = newFrame->as<VideoFrame>();
     if(outFrame->getWidth() * outFrame->getHeight() == outFrame->getDataSize()) {
         for(size_t i = 0; i < outFrame->getDataSize(); i++) {

@@ -1,5 +1,5 @@
 #pragma once
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 
 #include "frame/Frame.hpp"
 #include "stream/StreamProfile.hpp"

@@ -1,6 +1,6 @@
 #include "ImplTypes.hpp"
-#include "openobsdk/h/StreamProfile.h"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/StreamProfile.h"
+#include "libobsensor/h/ObTypes.h"
 #include "exception/ObException.hpp"
 #include "context/Context.hpp"
 #include "stream/StreamProfile.hpp"

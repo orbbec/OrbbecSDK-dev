@@ -307,9 +307,9 @@ void Pipeline::stopStream() {
 
 void Pipeline::stop() {
     LOG_INFO("Try to stop pipeline!");
-    streamState_ = STREAM_STATE_STOPPING;
-    BEGIN_TRY_EXECUTE({ stopStream(); })
-    CATCH_EXCEPTION_AND_LOG(WARN, "Exception occurred when stop stream!")
+    if(streamState_ != STREAM_STATE_STOPED) {
+        stopStream();
+    }
 
     if(config_ && (config_->isStreamEnabled(OB_STREAM_DEPTH) || config_->isStreamEnabled(OB_STREAM_COLOR))) {
         resetAlignMode();

@@ -1,7 +1,7 @@
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 #pragma once
 
-#include <openobsdk/ObSensor.hpp>
+#include <libobsensor/ObSensor.hpp>
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <thread>

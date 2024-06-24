@@ -1,8 +1,9 @@
 #pragma once
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "IProperty.hpp"
 #include "ISensor.hpp"
 #include "IFilter.hpp"
+#include "IPresetManager.hpp"
 
 namespace libobsensor {
 
@@ -79,7 +80,8 @@ public:
     virtual std::shared_ptr<const DeviceInfo> getInfo() const                              = 0;
     virtual const std::string                &getExtensionInfo(const std::string &infoKey) = 0;
 
-    virtual DeviceResourcePtr<IPropertyAccessor> getPropertyAccessor() = 0;
+    virtual DeviceResourcePtr<IPropertyAccessor> getPropertyAccessor()    = 0;
+    virtual std::shared_ptr<IPresetManager>      getPresetManager() const = 0;
 
     virtual std::vector<OBSensorType>             getSensorTypeList() const                                 = 0;
     virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) = 0;

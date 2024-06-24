@@ -19,6 +19,10 @@ add_subdirectory(component)
 # devices support:
 add_subdirectory(gemini330) # Gemini 330 series
 
+#dependecies:
+add_subdirectory(${OB_3RDPARTY_DIR}/jsoncpp jsoncpp)
+target_link_libraries(${OB_TARGET_DEVICE} PUBLIC jsoncpp::jsoncpp)
+
 add_library(ob::device ALIAS ${OB_TARGET_DEVICE})
 ob_source_group(ob::device)
 set_target_properties(${OB_TARGET_DEVICE} PROPERTIES FOLDER "modules")

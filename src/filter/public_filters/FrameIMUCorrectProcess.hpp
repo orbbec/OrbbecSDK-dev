@@ -1,6 +1,6 @@
 #pragma once
 #include "FilterBase.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "imu_calibration_params.h"
 #include "imu_calibration_params_parser.h"
 #include <Eigen/Core>
@@ -17,13 +17,13 @@ public:
     static float calculateGyroDPS(int16_t gyroValue, uint8_t gyroFSR);
 
     static float calculateRegisterTemperature(int16_t tempValue);
-    
+
 public:
     IMUCorrecter(const std::string &name);
 
     // Config
     virtual void               updateConfig(std::vector<std::string> &params) override;
-    
+
     virtual const std::string &getConfigSchema() const override;
 
     void setAccelScaleRange(int scaleRange) {
@@ -42,12 +42,12 @@ private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
     Eigen::Vector3d correctAccel(const Eigen::Vector3d& accelVec, IMUCalibrateParams *params);
-    
+
     Eigen::Vector3d correctGyro(const Eigen::Vector3d& gyroVec, IMUCalibrateParams *params);
 
 protected:
     IMUCalibrateParams param_;
-    
+
     int accelScaleRange_;
 
     int gyroScaleRange_;

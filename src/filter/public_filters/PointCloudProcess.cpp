@@ -2,7 +2,7 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "utils/CoordinateUtil.hpp"
 #include "utils/Utils.hpp"
 
@@ -121,13 +121,13 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
     return pointFrame;
 }
 
-std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<const Frame> frame) {    
+std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<const Frame> frame) {
     if(!frame->is<FrameSet>()) {
         LOG_ERROR_INTVL("Input frame is not a frameset, can not convert to pointcloud!");
         return nullptr;
     }
 
-    auto frameSet = frame->as<FrameSet>();
+    auto frameSet   = frame->as<FrameSet>();
     auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH);
     auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR);
 
@@ -136,13 +136,12 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
         return nullptr;
     }
 
-   
     auto depthVideoFrame = depthFrame->as<VideoFrame>();
     auto colorVideoFrame = colorFrame->as<VideoFrame>();
     auto depthVideoStreamProfile = depthVideoFrame->getStreamProfile()->as<VideoStreamProfile>();
     auto colorVideoStreamProfile = colorVideoFrame->getStreamProfile()->as<VideoStreamProfile>();
     OBPointCloudDistortionType distortionType = getDistortionType(colorVideoStreamProfile->getDistortion(), depthVideoStreamProfile->getDistortion());
-    
+
     //How C2D can recognize
     uint32_t dstHeight       = depthVideoFrame->getHeight();
     uint32_t dstWidth        = depthVideoFrame->getWidth();
@@ -251,7 +250,6 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     pointFrame->as<PointsFrame>()->setCoordinateValueScale(depthValueScale / positionDataScale_);
     return pointFrame;
 }
-
 
 std::shared_ptr<Frame> PointCloudFilter::processFunc(std::shared_ptr<const Frame> frame) {
     if(!frame) {

@@ -35,7 +35,7 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
-#include <openobsdk/h/ObTypes.h>
+#include <libobsensor/h/ObTypes.h>
 #include "utils/PublicTypeHelper.hpp"
 
 namespace libobsensor {

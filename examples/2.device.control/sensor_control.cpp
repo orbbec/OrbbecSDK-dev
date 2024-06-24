@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <vector>
 #include <sstream>
-#include <openobsdk/ObSensor.hpp>
+#include <libobsensor/ObSensor.hpp>
 
 std::shared_ptr<ob::Device> selectDevice(std::shared_ptr<ob::DeviceList> deviceList);
 std::vector<OBPropertyItem> getPropertyList(std::shared_ptr<ob::Device> device);

@@ -6,7 +6,7 @@
 
 #include "IFrame.hpp"
 #include "IStreamProfile.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 
 namespace libobsensor {
 

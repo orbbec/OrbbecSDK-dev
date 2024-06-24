@@ -1,4 +1,4 @@
-#include <openobsdk/ObSensor.hpp>
+#include <libobsensor/ObSensor.hpp>
 
 #include "window.hpp"
 

@@ -3,7 +3,7 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 
 namespace libobsensor {
 

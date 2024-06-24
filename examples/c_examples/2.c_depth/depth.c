@@ -1,7 +1,7 @@
 ﻿#include <stdio.h>
 #include <stdlib.h>
 
-#include <openobsdk/ObSensor.h>
+#include <libobsensor/ObSensor.h>
 
 #include "utils.hpp"
 #define ESC 27

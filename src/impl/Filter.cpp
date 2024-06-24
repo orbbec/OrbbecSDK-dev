@@ -1,6 +1,6 @@
 #include "ImplTypes.hpp"
 #include "filter/FilterFactory.hpp"
-#include "openobsdk/h/Filter.h"
+#include "libobsensor/h/Filter.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,7 +1,7 @@
 ﻿#include <stdlib.h>
 #include <stdio.h>
 
-#include <openobsdk/ObSensor.h>
+#include <libobsensor/ObSensor.h>
 #include <stdio.h>
 #include "utils.hpp"
 

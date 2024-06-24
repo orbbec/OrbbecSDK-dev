@@ -14,6 +14,10 @@ void PropertyAccessor::registerProperty(uint32_t propertyId, OBPermissionType us
     appendToPropertyMap(propertyId, userPerms, intPerms);
 }
 
+void PropertyAccessor::registerAccessCallback(PropertyAccessCallback callback) {
+    accessCallbacks_.push_back(callback);
+}
+
 void PropertyAccessor::registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr,
                                         std::shared_ptr<IPropertyPort> port) {
     auto strToPermission = [](const std::string &str) {
@@ -73,17 +77,28 @@ void PropertyAccessor::aliasProperty(uint32_t aliasId, uint32_t propertyId) {
     properties_[aliasId] = it->second;
 }
 
-bool PropertyAccessor::checkProperty(uint32_t propertyId, OBPermissionType permission, PropertyAccessType accessType) const {
+bool PropertyAccessor::checkProperty(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const {
     auto it = properties_.find(propertyId);
     if(it == properties_.end()) {
         return false;
     }
 
+    OBPermissionType permission = OB_PERMISSION_DENY;
     if(accessType == PROP_ACCESS_USER) {
-        return it->second.userPermission & permission || permission == OB_PERMISSION_ANY;
+        permission = it->second.userPermission;
     }
     else if(accessType == PROP_ACCESS_INTERNAL) {
-        return it->second.InternalPermission & permission || permission == OB_PERMISSION_ANY;
+        permission = it->second.InternalPermission;
+    }
+
+    if(operationType == PROP_OP_READ) {
+        return permission & OB_PERMISSION_READ;
+    }
+    else if(operationType == PROP_OP_WRITE) {
+        return permission & OB_PERMISSION_WRITE;
+    }
+    else if(operationType == PROP_OP_READ_WRITE) {
+        return permission == OB_PERMISSION_READ_WRITE;
     }
 
     return false;
@@ -91,7 +106,7 @@ bool PropertyAccessor::checkProperty(uint32_t propertyId, OBPermissionType permi
 
 void PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_WRITE, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
     }
 
@@ -103,12 +118,17 @@ void PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue val
     }
 
     port->setPropertyValue(propId, value);
+    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(), [&](PropertyAccessCallback callback) {
+        auto data = reinterpret_cast<uint8_t *>(&value);
+        callback(propertyId, data, sizeof(OBPropertyValue), PROP_OP_WRITE);
+    });
+
     LOG_DEBUG("Property {} set to {}|{}", propId, value.intValue, value.floatValue);
 }
 
 void PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -120,6 +140,10 @@ void PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *va
     }
 
     port->getPropertyValue(propId, value);
+    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(), [&](PropertyAccessCallback callback) {
+        auto data = reinterpret_cast<uint8_t *>(value);
+        callback(propertyId, data, sizeof(OBPropertyValue), PROP_OP_READ);
+    });
     LOG_DEBUG("Property {} get as {}|{}", propId, value->intValue, value->floatValue);
 }
 
@@ -130,7 +154,7 @@ void PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *va
 
 void PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -148,7 +172,7 @@ void PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *ra
 
 void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_WRITE, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
     }
 
@@ -163,12 +187,14 @@ void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<u
         throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data setting");
     }
     extensionPort->setStructureData(propId, data);
+    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
+                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_WRITE); });
     LOG_DEBUG("Property {} set structure data successfully", propId);
 }
 
 const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -184,13 +210,15 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t property
         throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data getting");
     }
     const auto &data = extensionPort->getStructureData(propId);
+    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
+                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_READ); });
     LOG_DEBUG("Property {} get structure data successfully, size {}", propId, data.size());
     return data;
 }
 
 void PropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -206,13 +234,13 @@ void PropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback,
     }
 
     extensionPort->getRawData(propId, callback);  // todo: add async support
-
+    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(), [&](PropertyAccessCallback callback) { callback(propertyId, nullptr, 0, PROP_OP_READ); });
     LOG_DEBUG("Property {} get raw data successfully", propId);
 }
 
 uint16_t PropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -234,7 +262,7 @@ uint16_t PropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyA
 
 const std::vector<uint8_t> &PropertyAccessor::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -249,13 +277,37 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureDataProtoV1_1(uint32_t
         throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data getting over proto v1.1");
     }
     const auto &data = extensionPort->getStructureDataProtoV1_1(propId, cmdVersion);
+    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
+                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_READ); });
     LOG_DEBUG("Property {} get structure data successfully over proto v1.1, size {}", propId, data.size());
     return data;
 }
 
+void PropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion, PropertyAccessType accessType) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if(!checkProperty(propertyId, PROP_OP_WRITE, accessType)) {
+        throw invalid_value_exception("Property not writable");
+    }
+
+    auto  it     = properties_.find(propertyId);
+    auto &port   = it->second.port;
+    auto &propId = it->second.propertyId;
+    if(propId != propertyId) {
+        LOG_DEBUG("Property {} alias to {}", propId, propertyId);
+    }
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
+    if(extensionPort == nullptr) {
+        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data setting over proto v1.1");
+    }
+    extensionPort->setStructureDataProtoV1_1(propId, data, cmdVersion);
+    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
+                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_WRITE); });
+    LOG_DEBUG("Property {} set structure data successfully over proto v1.1", propId);
+};
+
 const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, OB_PERMISSION_READ, accessType)) {
+    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -269,9 +321,11 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data list getting over proto v1.1");
     }
-    const auto &dataList = extensionPort->getStructureDataListProtoV1_1(propId, cmdVersion);
-    LOG_DEBUG("Property {} get structure data list successfully over proto v1.1, size {}", propId, dataList.size());
-    return dataList;
+    const auto &data = extensionPort->getStructureDataListProtoV1_1(propId, cmdVersion);
+    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
+                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_READ); });
+    LOG_DEBUG("Property {} get structure data list successfully over proto v1.1, size {}", propId, data.size());
+    return data;
 }
 
 const std::vector<OBPropertyItem> &PropertyAccessor::getAvailableProperties(PropertyAccessType accessType) {

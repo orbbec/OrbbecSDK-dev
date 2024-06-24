@@ -15,4 +15,8 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/G330TimestampCalculator.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330AlgParamManager.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330AlgParamManager.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330PresetManager.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330PresetManager.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330DepthAlgModeManager.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330DepthAlgModeManager.hpp
 )

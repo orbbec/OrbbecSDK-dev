@@ -1,4 +1,4 @@
-#include "openobsdk/h/Device.h"
+#include "libobsensor/h/Device.h"
 #include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 

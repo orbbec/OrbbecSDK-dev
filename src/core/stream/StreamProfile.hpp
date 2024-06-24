@@ -1,7 +1,7 @@
 #pragma once
 #include "IStreamProfile.hpp"
 #include "ISensor.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "exception/ObException.hpp"
 #include <memory>
 #include <vector>

@@ -2,7 +2,7 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 
 namespace libobsensor {
 
@@ -14,7 +14,7 @@ void SequenceIdFilter::updateConfig(std::vector<std::string> &params) {
         throw invalid_value_exception("SequenceIdFilter config error: params size not match");
     }
     try {
-        
+
         uint32_t select_sequence_id = std::stoi(params[0]);
         if (select_sequence_id >= 0 && select_sequence_id <= 2) {
             if (select_sequence_id != select_sequence_id_) {

@@ -3,7 +3,7 @@ extern "C" {
 #endif
 
 #include <string.h>
-#include "openobsdk/h/Error.h"
+#include "libobsensor/h/Error.h"
 
 ob_error *ob_create_error(ob_status status, const char *message, const char *function, const char *args, ob_exception_type exception_type) {
     ob_error *error = new ob_error;

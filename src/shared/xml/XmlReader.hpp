@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <openobsdk/h/ObTypes.h>
+#include <libobsensor/h/ObTypes.h>
 
 #include <stdarg.h>
 #include <algorithm>

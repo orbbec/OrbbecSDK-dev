@@ -3,7 +3,7 @@
 #include "IDevice.hpp"
 #include "IProperty.hpp"
 #include "InternalTypes.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "imu_calibration_params.h"
 
 #include <vector>

@@ -285,6 +285,18 @@ GetStructureDataReqV1_1 *initGetStructureDataReqV1_1(uint8_t *dataBuf, uint32_t 
     return req;
 }
 
+SetStructureDataReqV1_1 *initSetStructureDataReqV1_1(uint8_t *dataBuf, uint32_t propertyId, uint16_t cmdVer, const uint8_t *data, uint16_t dataSize) {
+    auto *req                   = reinterpret_cast<SetStructureDataReqV1_1 *>(dataBuf);
+    req->header.magic           = HP_REQUEST_MAGIC;
+    req->header.sizeInHalfWords = 2 + (dataSize + 1) / 2;
+    req->header.opcode          = OPCODE_SET_STRUCTURE_DATA_V1_1;
+    req->header.requestId       = generateRequestId();
+    req->cmdVer                 = cmdVer;
+    req->propertyId             = propertyId;
+    memcpy(req->data, data, dataSize);
+    return req;
+}
+
 GetStructureDataRespV1_1 *parseGetStructureDataRespV1_1(uint8_t *dataBuf, uint16_t dataSize) {
     auto *resp = reinterpret_cast<GetStructureDataRespV1_1 *>(dataBuf);
     if(dataSize < sizeof(GetStructureDataRespV1_1)) {
@@ -293,15 +305,12 @@ GetStructureDataRespV1_1 *parseGetStructureDataRespV1_1(uint8_t *dataBuf, uint16
     return resp;
 }
 
-GetStructureDataReqV1_1 *initGetStructureDataListReqV1_1(uint8_t *dataBuf, uint32_t propertyId) {
-    auto *req                   = reinterpret_cast<GetStructureDataReqV1_1 *>(dataBuf);
-    req->header.magic           = HP_REQUEST_MAGIC;
-    req->header.sizeInHalfWords = 2;
-    req->header.opcode          = OPCODE_INIT_READ_STRUCT_DATA_LIST_V1_1;
-
-    req->header.requestId = generateRequestId();
-    req->propertyId       = propertyId;
-    return req;
+SetStructureDataRespV1_1 *parseSetStructureDataRespV1_1(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<SetStructureDataRespV1_1 *>(dataBuf);
+    if(dataSize < sizeof(SetStructureDataRespV1_1)) {
+        throw io_exception("device response with wrong data size");
+    }
+    return resp;
 }
 
 StartGetStructureDataListResp *parseStartStructureDataListResp(uint8_t *dataBuf, uint16_t dataSize) {
@@ -328,7 +337,7 @@ StartGetStructureDataListReq *initStartGetStructureDataList(uint8_t *dataBuf, ui
     return req;
 }
 
-GetStructureDataListReq *initReadStructureDataList(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t dataSize) {
+GetStructureDataListReq *initGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t dataSize) {
     auto *req                   = reinterpret_cast<GetStructureDataListReq *>(dataBuf);
     req->header.magic           = HP_REQUEST_MAGIC;
     req->header.sizeInHalfWords = 6;

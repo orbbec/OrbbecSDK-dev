@@ -26,6 +26,9 @@ uint32_t obFormatToUvcFourcc(OBFormat format);
 
 float mapIMUSampleRateToValue(OBIMUSampleRate rate);
 
+const std::string &getSensorName(OBSensorType type);
+const OBFormat     strToOBFormat(const std::string &str);
+
 }  // namespace utils
 }  // namespace libobsensor
 

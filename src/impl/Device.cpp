@@ -273,7 +273,12 @@ HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission);
 //                                           void *user_data, ob_error **error);
 // ob_device_state ob_device_get_device_state(ob_device *device, ob_error **error);
 // void            ob_device_set_state_changed_callback(ob_device *device, ob_device_state_callback callback, void *user_data, ob_error **error);
-// void            ob_device_reboot(ob_device *device, ob_error **error);
+
+void ob_device_reboot(ob_device *device, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    device->device->reboot();
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device)
 
 ob_device_info *ob_device_get_device_info(ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);

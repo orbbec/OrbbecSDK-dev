@@ -407,22 +407,6 @@ public:
     }
 
     /**
-     * @brief Device restart delay mode
-     * @attention The device will be disconnected and reconnected. After the device is disconnected, the access to the Device object interface may be abnormal.
-     *   Please delete the object directly and obtain it again after the device is reconnected.
-     * Support devices: Gemini2 L
-     *
-     * @param[in] delayMs Time unit：ms。delayMs == 0：No delay；delayMs > 0, Delay millisecond connect to host device after reboot
-     */
-    void reboot(uint32_t delayMs) {
-        ob_error *error = nullptr;
-        // FIXME:
-        std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
-        ob_device_reboot(impl_, &error);
-        Error::handle(&error);
-    }
-
-    /**
      * @brief Get the supported multi device sync mode bitmap of the device.
      * @brief For example, if the return value is 0b00001100, it means the device supports @ref OB_MULTI_DEVICE_SYNC_MODE_PRIMARY and @ref
      * OB_MULTI_DEVICE_SYNC_MODE_SECONDARY. User can check the supported mode by the code:

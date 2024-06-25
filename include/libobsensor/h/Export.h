@@ -7,7 +7,7 @@
 #  define OB_NO_EXPORT
 #else
 #  ifndef OB_EXPORT
-#    ifdef libobsensor_EXPORTS
+#    ifdef openobsdk_EXPORTS
         /* We are building this library */
 #      define OB_EXPORT __declspec(dllexport)
 #    else

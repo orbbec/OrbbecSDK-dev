@@ -6,7 +6,7 @@ project(ob_sensor_control)
 add_executable(${PROJECT_NAME} sensor_control.cpp)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
-target_link_libraries(${PROJECT_NAME} ob::libobsensor ob::examples::common )
+target_link_libraries(${PROJECT_NAME} ob::openobsdk ob::examples::common )
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "Examples")
 

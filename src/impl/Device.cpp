@@ -243,16 +243,25 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, device)
 
 ob_property_item ob_device_get_supported_property_item(ob_device *device, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    auto propertyVec=accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER);
-    return accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER).at(index);
+    auto accessor   = device->device->getPropertyAccessor();
+    auto properties = accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER);
+    VALIDATE_UNSIGNED_INDEX(index, properties.size());
+    return properties.at(index);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_property_item(), device, index)
 
 bool ob_device_is_property_supported(ob_device *device, ob_property_id property_id, ob_permission_type permission, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
+    auto operationType = libobsensor::PROP_OP_READ_WRITE;
+    if(permission == OB_PERMISSION_READ) {
+        operationType = libobsensor::PROP_OP_READ;
+    }
+    else if(permission == OB_PERMISSION_WRITE) {
+        operationType = libobsensor::PROP_OP_WRITE;
+    }
+
     auto accessor = device->device->getPropertyAccessor();
-    return accessor->checkProperty(property_id, permission, libobsensor::PROP_ACCESS_USER);
+    return accessor->checkProperty(property_id, operationType, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission);
 

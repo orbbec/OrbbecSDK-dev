@@ -4,7 +4,7 @@
 #include "libobsensor/h/ObTypes.h"
 #include "exception/ObException.hpp"
 #include "property/HostProtocol.hpp"
-#include "openobsdk/h/Property.h"
+#include "libobsensor/h/Property.h"
 
 namespace libobsensor {
 typedef union {

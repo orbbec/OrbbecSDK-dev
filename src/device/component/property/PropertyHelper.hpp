@@ -1,5 +1,5 @@
 #pragma once
-#include "openobsdk/h/Property.h"
+#include "libobsensor/h/Property.h"
 #include <map>
 #include <string>
 

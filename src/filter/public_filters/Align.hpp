@@ -9,7 +9,7 @@ namespace libobsensor {
  */
 class Align : public FilterBase {
 public:
-    Align(const std::string &name);
+    explicit Align(const std::string &name);
     virtual ~Align() noexcept;
 
     OBStreamType getAlignToStreamType() {
@@ -19,7 +19,7 @@ public:
     void               updateConfig(std::vector<std::string> &params) override;
     const std::string &getConfigSchema() const override;
 
-    virtual void reset() override;
+    void reset() override;
 
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
@@ -32,9 +32,7 @@ protected:
     std::shared_ptr<VideoStreamProfile> createAlignedProfile(std::shared_ptr<const VideoStreamProfile> original_profile,
                                                              std::shared_ptr<const VideoStreamProfile> to_profile);
 
-    virtual void resetCache(){};
-
-    
+    virtual void resetCache() {};
 
 private:
     std::pair<const VideoStreamProfile *, const VideoStreamProfile *> align_streams_;
@@ -42,7 +40,7 @@ private:
 
     OBStreamType         align_to_stream_;
     std::recursive_mutex alignMutex_;
-    AlignImpl *          pImpl;
+    AlignImpl           *pImpl;
     float                depth_unit_mm_;
     bool                 add_target_distortion_;
     bool                 gap_fill_copy_;

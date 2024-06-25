@@ -6,6 +6,12 @@
 
 namespace libobsensor {
 
+const std::map<OBStreamType, OBFrameType> streamTypeToFrameType = { { OB_STREAM_COLOR, OB_FRAME_COLOR },
+                                                                    { OB_STREAM_DEPTH, OB_FRAME_DEPTH },
+                                                                    { OB_STREAM_IR, OB_FRAME_IR },
+                                                                    { OB_STREAM_IR_LEFT, OB_FRAME_IR_LEFT },
+                                                                    { OB_STREAM_IR_RIGHT, OB_FRAME_IR_RIGHT } };
+
 Align::Align(const std::string &name) : FilterBase(name), align_to_stream_(OB_STREAM_COLOR) {
     pImpl = new AlignImpl();
     memset(&from_intrin_, 0, sizeof(OBCameraIntrinsic));
@@ -91,7 +97,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
         uint32_t frameCount = frames->getFrameCount();
         for(uint32_t i = 0; i < frameCount; i++) {
             std::shared_ptr<const Frame> item = frames->getFrame(i);
-            if((item->getType() != OB_STREAM_DEPTH) && item->is<VideoFrame>()) {
+            if((item->getType() != OB_FRAME_DEPTH) && item->is<VideoFrame>()) {
                 other_frames.push_back(item);
             }
         }
@@ -100,7 +106,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
         uint32_t frameCount = frames->getFrameCount();
         for(uint32_t i = 0; i < frameCount; i++) {
             std::shared_ptr<const Frame> item = frames->getFrame(i);
-            if((item->getType() == align_to_stream_)) {
+            if((item->getType() == streamTypeToFrameType.at(align_to_stream_))) {
                 other_frames.push_back(item);
             }
         }
@@ -121,7 +127,6 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
             aligned_frame = FrameFactory::createVideoFrame(from->getType(), from->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
             if(aligned_frame) {
                 aligned_frame->copyInfo(from);
-                auto intrinsic = alignProfile->getIntrinsic();
                 aligned_frame->setStreamProfile(alignProfile);
                 alignFrames(aligned_frame, from, depth);
                 frames->pushFrame(std::move(aligned_frame));
@@ -131,16 +136,13 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
     else {
         auto to = other_frames.front();  // depth to other
 
-        auto original_profile = depth->getStreamProfile()->as<VideoStreamProfile>();
-        auto to_profile       = to->getStreamProfile()->as<VideoStreamProfile>();
-        auto alignProfile     = createAlignedProfile(original_profile, to_profile);
-        auto originalIntrinsic = original_profile->getIntrinsic();
-        auto toIntrinsic = to_profile->getIntrinsic();
+        auto original_profile  = depth->getStreamProfile()->as<VideoStreamProfile>();
+        auto to_profile        = to->getStreamProfile()->as<VideoStreamProfile>();
+        auto alignProfile      = createAlignedProfile(original_profile, to_profile);
 
         aligned_frame = FrameFactory::createVideoFrame(depth->getType(), depth->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
         if(aligned_frame) {
             aligned_frame->copyInfo(depth);
-            auto intrinsic = alignProfile->getIntrinsic();
             aligned_frame->setStreamProfile(alignProfile);
             alignFrames(aligned_frame, depth, to);
             frames->pushFrame(std::move(aligned_frame));
@@ -212,8 +214,6 @@ std::shared_ptr<VideoStreamProfile> Align::createAlignedProfile(std::shared_ptr<
         aligned_profile->setWidth(to_profile->getWidth());
         aligned_profile->setHeight(to_profile->getHeight());
         aligned_profile->bindIntrinsic(to_profile->getIntrinsic());
-        auto alignIntrin = aligned_profile->getIntrinsic();
-        auto toIntrin    = to_profile->getIntrinsic();
         /// TODO(timon): extrinsic of aligned should be ones and zeros
         aligned_profile->bindSameExtrinsicTo(to_profile);
         target_stream_profile_ = aligned_profile;

@@ -252,7 +252,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(ob_property_item(), device, index)
 bool ob_device_is_property_supported(ob_device *device, ob_property_id property_id, ob_permission_type permission, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto accessor = device->device->getPropertyAccessor();
-    return accessor->isPropertySupported(property_id, permission, libobsensor::PROP_ACCESS_USER);
+    return accessor->checkProperty(property_id, permission, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission);
 

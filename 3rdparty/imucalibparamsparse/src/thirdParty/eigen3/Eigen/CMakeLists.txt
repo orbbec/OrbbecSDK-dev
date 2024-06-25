@@ -9,11 +9,23 @@ foreach(f ${Eigen_directory_files})
   if(NOT f MATCHES "\\.txt" AND NOT f MATCHES "${ESCAPED_CMAKE_CURRENT_SOURCE_DIR}/[.].+" AND NOT f MATCHES "${ESCAPED_CMAKE_CURRENT_SOURCE_DIR}/src")
     list(APPEND Eigen_directory_files_to_install ${f})
   endif()
-endforeach(f ${Eigen_directory_files})
+endforeach()
 
 install(FILES
-  ${Eigen_directory_files_to_install}
-  DESTINATION ${INCLUDE_INSTALL_DIR}/Eigen COMPONENT Devel
-  )
+        ${Eigen_directory_files_to_install}
+        DESTINATION ${INCLUDE_INSTALL_DIR}/Eigen COMPONENT Devel
+)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(-w)
+elseif(MSVC)
+  add_compile_options(/w)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(-Wno-error)
+elseif(MSVC)
+  add_compile_options(/WX-)
+endif()
 
 add_subdirectory(src)

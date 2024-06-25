@@ -3,7 +3,7 @@
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
 #include "frame/FrameMemoryPool.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include <libyuv.h>
 #include <turbojpeg.h>
 

@@ -18,7 +18,7 @@ XmlReader::XmlReader(const std::string& filePath) {
 
     auto rc = doc_->LoadFile(filePath.c_str());
     if(rc != 0) {
-        throw invalid_value_exception(utils::to_string() << "XmlReader::XmlReader: load file failed!, rc=" << rc);
+        throw invalid_value_exception(utils::string::to_string() << "XmlReader::XmlReader: load file failed!, rc=" << rc);
     }
 
     rootXMLElement_ = doc_->RootElement();
@@ -36,7 +36,7 @@ XmlReader::XmlReader(const char *buffer, size_t size) {
 
     auto rc = doc_->Parse(buffer, size);
     if(rc != 0) {
-        throw invalid_value_exception(utils::to_string() << "XmlReader::XmlReader: parse buffer failed!, rc=" << rc);
+        throw invalid_value_exception(utils::string::to_string() << "XmlReader::XmlReader: parse buffer failed!, rc=" << rc);
     }
 
     rootXMLElement_ = doc_->RootElement();
@@ -54,7 +54,7 @@ bool XmlReader::getTextOfLeafNode(const std::string &nodePathName, std::string &
     if(nodePathName.empty()) {
         return false;
     }
-    auto NodeList        = utils::split(nodePathName, ".");
+    auto NodeList        = utils::string::split(nodePathName, ".");
     auto rootXMLElement  = rootXMLElement_;
     auto ChildrenElement = rootXMLElement_;
     for(size_t i = 0; i < NodeList.size(); ++i) {
@@ -86,8 +86,8 @@ bool XmlReader::isNodeContained(const std::string &nodePathName) {
     if (nodePathName.empty()) {
         return false;
     }
-    auto nodeList = utils::split(nodePathName, ".");
-    if (nodeList.empty()) {
+    auto nodeList = utils::string::split(nodePathName, ".");
+    if(nodeList.empty()) {
         return false;
     }
 
@@ -107,7 +107,7 @@ bool XmlReader::getBooleanValue(const std::string &nodePathName, bool &t) {
     if(!status) {
         return false;
     }
-    status = utils::string2Boolean(text, t);
+    status = utils::string::cvt2Boolean(text, t);
     if(!status) {
         return false;
     }
@@ -120,7 +120,7 @@ bool XmlReader::getIntValue(const std::string &nodePathName, int &t) {
     if(!status) {
         return false;
     }
-    status = utils::string2Int(text, t);
+    status = utils::string::cvt2Int(text, t);
     if(!status) {
         return false;
     }
@@ -133,7 +133,7 @@ bool XmlReader::getFloatValue(const std::string &nodePathName, float &t) {
     if(!status) {
         return false;
     }
-    status = utils::string2Float(text, t);
+    status = utils::string::cvt2Float(text, t);
     if(!status) {
         return false;
     }
@@ -146,7 +146,7 @@ bool XmlReader::getDoubleValue(const std::string &nodePathName, double &t) {
     if(!status) {
         return false;
     }
-    status = utils::string2Double(text, t);
+    status = utils::string::cvt2Double(text, t);
     if(!status) {
         return false;
     }
@@ -159,7 +159,7 @@ bool XmlReader::getStringValue(const std::string &nodePathName, std::string &t) 
     if(!status) {
         return false;
     }
-    text = utils::clearHeadAndTailSpace(text);
+    text = utils::string::clearHeadAndTailSpace(text);
     if(text.empty()) {
         return false;
     }

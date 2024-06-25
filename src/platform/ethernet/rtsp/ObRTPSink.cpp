@@ -128,7 +128,7 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     // char uSecsStr[7] = { 0 };
     // sprintf(uSecsStr, "%06u", (unsigned)presentationTime.tv_usec);
 
-    // std::string logStr = utils::to_string() << "New frame received: type=" << subsession_.codecName() << ", tsp=" << (int)presentationTime.tv_sec <<
+    // std::string logStr = utils::string::to_string() << "New frame received: type=" << subsession_.codecName() << ", tsp=" << (int)presentationTime.tv_sec <<
     //"."
     //                                           << uSecsStr << ", framesize=" << frameSize << ", index=" << *(uint32_t *)frame->frameObj->frameData;
     // if(fps != 0) {

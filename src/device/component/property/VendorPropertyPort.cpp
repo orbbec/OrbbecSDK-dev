@@ -186,6 +186,16 @@ const std::vector<uint8_t> &VendorPropertyPort::getStructureDataProtoV1_1(uint32
     return outputData_;
 }
 
+void VendorPropertyPort::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    clearBuffers();
+    auto     req          = protocol::initSetStructureDataReqV1_1(sendData_.data(), propertyId, cmdVersion, data.data(), static_cast<uint16_t>(data.size()));
+    uint16_t respDataSize = 64;
+    auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    protocol::checkStatus(res);
+}
+
 const std::vector<uint8_t> &VendorPropertyPort::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
     constexpr uint32_t transPacketSize = 3 * DATA_PAGE_SIZE;
 
@@ -212,7 +222,7 @@ const std::vector<uint8_t> &VendorPropertyPort::getStructureDataListProtoV1_1(ui
             clearBuffers();  // reset request and response buffer cache
             uint32_t packetSize = std::min(transPacketSize, dataSize - packetOffset);
 
-            auto req1    = protocol::initReadStructureDataList(sendData_.data(), propertyId, packetOffset, packetSize);
+            auto req1    = protocol::initGetStructureDataList(sendData_.data(), propertyId, packetOffset, packetSize);
             respDataSize = 1024;
             port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
             res          = protocol::execute(port, sendData_.data(), sizeof(req1), recvData_.data(), &respDataSize);

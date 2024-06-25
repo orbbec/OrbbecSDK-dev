@@ -81,7 +81,7 @@ typedef enum {
 } OBDisparityPackMode;
 
 /**
- * @brief Structure for distortion parameters
+ *@brief Structure for distortion parameters
  */
 typedef struct {
     float k1;  ///< Radial distortion factor 1
@@ -102,5 +102,11 @@ typedef struct {
     OBCameraDistortion_Internal rgbDistortion;  ///< Distortion parameters for color camera
     OBD2CTransform              transform;      ///< Rotation/transformation matrix
 } OBCameraParam_Internal_V0;
+
+typedef struct {
+    uint8_t  checksum[16];  ///< The camera depth mode corresponds to the hash binary array
+    char     name[32];      ///< name
+    uint32_t optionCode;    // OBDepthModeOptionCode
+} OBDepthAlgModeChecksum;
 
 #pragma pack(pop)

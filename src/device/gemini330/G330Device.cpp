@@ -63,6 +63,8 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
         return std::move(propAccessor);
     });
     algParamManager_       = std::make_shared<G330AlgParamManager>(deviceInfo_, propertyAccessorGetter);
+    depthAlgModeManager_   = std::make_shared<G330DepthAlgModeManager>(propertyAccessorGetter);
+    presetManager_         = std::make_shared<G330PresetManager>(propertyAccessorGetter, depthAlgModeManager_);
     globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>(propertyAccessorGetter);
 
     auto iter = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo_->pid_);
@@ -191,6 +193,8 @@ void G330Device::initProperties() {
             propertyAccessor_->registerProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL, "r", "r", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_RAW_DATA_DEPTH_ALG_MODE_LIST, "", "r", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyPort);
         }
         else if(sensor.first == OB_SENSOR_ACCEL) {
             auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter", sensor.first);
@@ -295,6 +299,10 @@ const std::string &G330Device::getExtensionInfo(const std::string &infoKey) {
 DeviceResourcePtr<IPropertyAccessor> G330Device::getPropertyAccessor() {
     auto resLock = tryLockResource();
     return DeviceResourcePtr<IPropertyAccessor>(propertyAccessor_, std::move(resLock));
+}
+
+std::shared_ptr<IPresetManager> G330Device::getPresetManager() const {
+    return presetManager_;
 }
 
 std::vector<OBSensorType> G330Device::getSensorTypeList() const {

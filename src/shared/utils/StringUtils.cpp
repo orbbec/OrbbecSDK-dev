@@ -7,6 +7,7 @@
 
 namespace libobsensor {
 namespace utils {
+namespace string {
 
 std::vector<std::string> tokenize(const std::string &s, const char separator) {
 
@@ -60,7 +61,7 @@ std::string replace(const std::string &s, const std::string &src, const std::str
 }
 
 char my_tolower(char ch) {
-     return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 }
 
 std::string toLower(const std::string &s) {
@@ -70,7 +71,7 @@ std::string toLower(const std::string &s) {
 }
 
 char my_toupper(char ch) {
-     return static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+    return static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
 }
 
 std::string toUpper(const std::string &s) {
@@ -89,7 +90,7 @@ std::string clearHeadAndTailSpace(const std::string &str) {
     return temp;
 }
 
-bool string2Boolean(const std::string &string, bool &dst) {
+bool cvt2Boolean(const std::string &string, bool &dst) {
     if(!string.empty()) {
         std::string loweredCaseValue = toLower(string);
         bool        result           = false;
@@ -114,7 +115,7 @@ bool string2Boolean(const std::string &string, bool &dst) {
     return false;
 }
 
-bool string2Int(const std::string &string, int &dst) {
+bool cvt2Int(const std::string &string, int &dst) {
     std::string temp = clearHeadAndTailSpace(string);
     if(!temp.empty()) {
         if(temp.size() == 1) {
@@ -134,7 +135,7 @@ bool string2Int(const std::string &string, int &dst) {
     return false;
 }
 
-bool string2Float(const std::string &string, float &dst) {
+bool cvt2Float(const std::string &string, float &dst) {
     if(!string.empty()) {
         char *nptr;
         dst              = std::strtof(string.c_str(), &nptr);
@@ -144,7 +145,7 @@ bool string2Float(const std::string &string, float &dst) {
     return false;
 }
 
-bool string2Double(const std::string &string, double &dst) {
+bool cvt2Double(const std::string &string, double &dst) {
     if(!string.empty()) {
         char *nptr;
         dst              = std::strtod(string.c_str(), &nptr);
@@ -154,5 +155,6 @@ bool string2Double(const std::string &string, double &dst) {
     return false;
 }
 
+}  // namespace string
 }  // namespace utils
 }  // namespace libobsensor

@@ -7,6 +7,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <map>
 
 namespace libobsensor {
 
@@ -20,6 +21,10 @@ public:
     virtual void enable(bool en) override;
     virtual bool isEnabled() const override;
 
+    const std::vector<OBFilterConfigSchemaItem> &getConfigSchemaVec() override;
+    void                                         setConfigValue(const std::string &name, double value) override;
+    double                                       getConfigValue(const std::string &name) override;
+
     // Synchronize
     virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) override;
 
@@ -30,16 +35,25 @@ public:
 protected:
     virtual std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) = 0;  // Filter function function, implemented on child class
 
+private:
+    void checkAndUpdateConfig();
+
 protected:
     const std::string name_;
     std::atomic<bool> enabled_;
 
-    std::mutex mutex_;
+    std::mutex processMutex_;
 
     std::mutex     callbackMutex_;
     FilterCallback callback_;
 
     std::shared_ptr<FrameQueue<const Frame>> srcFrameQueue_;
+
+    std::mutex                            configMutex_;
+    std::atomic<bool>                     configChanged_;
+    std::map<std::string, double>         configMap_;
+    std::vector<OBFilterConfigSchemaItem> configSchemaVec_;
+    std::vector<std::vector<std::string>> configSchemaStrSplittedVec_;
 };
 
 }  // namespace libobsensor

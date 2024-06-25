@@ -107,11 +107,14 @@ void G330AlgParamManager::fetchParams() {
     std::vector<uint8_t> data;
     BEGIN_TRY_EXECUTE({
         auto propertyAccessor = propertyAccessorGetter_.get();
-        propertyAccessor->getRawData(OB_RAW_DATA_IMU_CALIB_PARAM, [&](OBDataTranState state, OBDataChunk *dataChunk) {
-            if(state == DATA_TRAN_STAT_TRANSFERRING) {
-                data.insert(data.end(), dataChunk->data, dataChunk->data + dataChunk->size);
-            }
-        });
+        propertyAccessor->getRawData(
+            OB_RAW_DATA_IMU_CALIB_PARAM,
+            [&](OBDataTranState state, OBDataChunk *dataChunk) {
+                if(state == DATA_TRAN_STAT_TRANSFERRING) {
+                    data.insert(data.end(), dataChunk->data, dataChunk->data + dataChunk->size);
+                }
+            },
+            PROP_ACCESS_INTERNAL);
     })
     CATCH_EXCEPTION_AND_EXECUTE({
         LOG_ERROR("Get imu calibration params failed!");

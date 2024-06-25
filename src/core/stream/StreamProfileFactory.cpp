@@ -93,7 +93,7 @@ std::shared_ptr<const StreamProfile> getDefaultStreamProfileFormEnvConfig(const 
         throw std::runtime_error("Default stream profile for accel/gyro is not supported");
     }
 
-    auto devName = utils::remove(deviceName, " ");
+    auto devName = utils::string::remove(deviceName, " ");
 
     auto        envConfig    = EnvConfig::getInstance();
     std::string nodePathName = "Device." + devName + ".";

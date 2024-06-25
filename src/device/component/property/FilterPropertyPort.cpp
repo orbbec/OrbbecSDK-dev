@@ -1,5 +1,5 @@
 #include "FilterPropertyPort.hpp"
-#include "openobsdk/h/Property.h"
+#include "libobsensor/h/Property.h"
 #include "shared/utils/Utils.hpp"
 
 namespace libobsensor {
@@ -16,7 +16,7 @@ void FilterPropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue v
             backend_->enable(static_cast<bool>(value.intValue));
         }
         break;
-    
+
     default:
         break;
     }
@@ -32,7 +32,7 @@ void FilterPropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *
             value->intValue = static_cast<int32_t>(backend_->isEnabled());
         }
         break;
-    
+
     default:
         break;
     }
@@ -52,7 +52,7 @@ void FilterPropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *
             range->step.intValue = 1;
         }
         break;
-    
+
     default:
         break;
     }

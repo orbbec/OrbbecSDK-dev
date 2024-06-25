@@ -1,6 +1,6 @@
 #pragma once
 
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include <iostream>
 
 namespace libobsensor {

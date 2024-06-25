@@ -1,5 +1,5 @@
 #pragma once
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 // #include "core/device/IDevice.hpp"
 // #include "core/frame/Frame.hpp"
 #include <memory>
@@ -30,7 +30,7 @@ public:
     static bool tranformationColor2dToDepth2d(const OBCameraIntrinsic colorIntrinsic, const OBCameraDistortion colorDistortion, const OBPoint2f colorPixel,
                                               uint16_t *depthMap, float depthScalemm, const OBCameraIntrinsic depthIntrinsic, const OBCameraDistortion depthDistortion,
                                               OBD2CTransform transDepthToColor, OBD2CTransform transColorToDepth, OBPoint2f *depthPixel);
-    
+
     /*static std::shared_ptr<Frame> transformationDepthFrameToColorCamera(std::shared_ptr<IDevice> device, std::shared_ptr<Frame> depthFrame,
     uint32_t targetColorCameraWidth, uint32_t targetColorCameraHeight);*/
 

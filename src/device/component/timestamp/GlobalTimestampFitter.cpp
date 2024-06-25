@@ -84,7 +84,7 @@ void GlobalTimestampFitter::fittingLoop() {
             sysTspUsec       = (sysTsp2Usec + sysTsp1Usec) / 2;
             devTime.rtt      = sysTsp2Usec - sysTsp1Usec;
             if(devTime.rtt > 10000) {
-                throw io_exception(utils::to_string() << "Get device time rtt is too large! rtt=" << devTime.rtt);
+                throw io_exception(utils::string::to_string() << "Get device time rtt is too large! rtt=" << devTime.rtt);
             }
 
             LOG_TRACE("sys={}, dev={}, rtt={}", sysTspUsec, devTime.time, devTime.rtt);

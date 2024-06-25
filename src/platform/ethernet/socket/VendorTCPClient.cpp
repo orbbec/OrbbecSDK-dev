@@ -13,7 +13,7 @@ VendorTCPClient::VendorTCPClient(std::string address, uint16_t port, uint32_t co
     WSADATA wsaData;
     int     rst = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if(rst != 0) {
-        throw libobsensor::invalid_value_exception(utils::to_string() << "Failed to load Winsock! err_code=" << GET_LAST_ERROR());
+        throw libobsensor::invalid_value_exception(utils::string::to_string() << "Failed to load Winsock! err_code=" << GET_LAST_ERROR());
     }
 #endif
 //由于切换网络配置导致的socket连接管道异常，苹果系统抛出SIGPIPE异常到应用端导致崩溃（Linux系统不会），需要过滤掉此异常
@@ -34,7 +34,7 @@ void VendorTCPClient::socketConnect() {
     int rst;
     socketFd_ = socket(AF_INET, SOCK_STREAM, 0);  // ipv4, tcp(流式传输)
     if(socketFd_ == INVALID_SOCKET) {
-        throw libobsensor::io_exception(utils::to_string() << "create socket failed! err_code=" << GET_LAST_ERROR());
+        throw libobsensor::io_exception(utils::string::to_string() << "create socket failed! err_code=" << GET_LAST_ERROR());
     }
 
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
@@ -60,8 +60,8 @@ void VendorTCPClient::socketConnect() {
     // 设为非阻塞式 handle connect超时
     rst = ioctlsocket(socketFd_, FIONBIO, &mode);
     if(rst < 0) {
-        throw libobsensor::invalid_value_exception(utils::to_string() << "VendorTCPClient: ioctlsocket to non-blocking mode failed! addr=" << address_
-                                                                        << ", port=" << port_ << ", err_code=" << GET_LAST_ERROR());
+        throw libobsensor::invalid_value_exception(utils::string::to_string() << "VendorTCPClient: ioctlsocket to non-blocking mode failed! addr=" << address_
+                                                                              << ", port=" << port_ << ", err_code=" << GET_LAST_ERROR());
     }
 
     struct sockaddr_in serverAddr;
@@ -79,8 +79,8 @@ void VendorTCPClient::socketConnect() {
 #else
         if(rst != EINPROGRESS) {  // EINPROGRESS due to non-blocking mode
 #endif
-            throw libobsensor::invalid_value_exception(utils::to_string() << "VendorTCPClient: Connect to server failed! addr=" << address_
-                                                                            << ", port=" << port_ << ", err_code=" << rst);
+            throw libobsensor::invalid_value_exception(utils::string::to_string() << "VendorTCPClient: Connect to server failed! addr=" << address_
+                                                                                  << ", port=" << port_ << ", err_code=" << rst);
         }
     }
 
@@ -110,15 +110,15 @@ void VendorTCPClient::socketConnect() {
     } while(!status && retry-- > 0);
 
     if(!status) {
-        throw libobsensor::invalid_value_exception(utils::to_string() << "VendorTCPClient: Connect to server failed! addr=" << address_ << ", port=" << port_
-                                                                        << ", err=socket is not ready & timeout");
+        throw libobsensor::invalid_value_exception(utils::string::to_string() << "VendorTCPClient: Connect to server failed! addr=" << address_
+                                                                              << ", port=" << port_ << ", err=socket is not ready & timeout");
     }
 #else
     // check if the socket is ready
     rst = select(0, NULL, &write, &err, &connTimeout);
     if(!FD_ISSET(socketFd_, &write)) {
-        throw libobsensor::invalid_value_exception(utils::to_string() << "VendorTCPClient: Connect to server failed! addr=" << address_ << ", port=" << port_
-                                                                        << ", err=socket is not ready & timeout");
+        throw libobsensor::invalid_value_exception(utils::string::to_string() << "VendorTCPClient: Connect to server failed! addr=" << address_
+                                                                              << ", port=" << port_ << ", err=socket is not ready & timeout");
     }
 #endif
 
@@ -126,8 +126,8 @@ void VendorTCPClient::socketConnect() {
     mode = 0;  // blocking mode
     rst  = ioctlsocket(socketFd_, FIONBIO, &mode);
     if(rst < 0) {
-        throw libobsensor::invalid_value_exception(utils::to_string() << "VendorTCPClient: ioctlsocket to blocking mode failed! addr=" << address_
-                                                                        << ", port=" << port_ << ", err_code=" << GET_LAST_ERROR());
+        throw libobsensor::invalid_value_exception(utils::string::to_string() << "VendorTCPClient: ioctlsocket to blocking mode failed! addr=" << address_
+                                                                              << ", port=" << port_ << ", err_code=" << GET_LAST_ERROR());
     }
     LOG_DEBUG("TCP client socket created!, addr={0}, port={1}, socket={2}", address_, port_, socketFd_);
 }
@@ -167,7 +167,7 @@ int VendorTCPClient::read(uint8_t *data, const uint32_t dataLen) {
                 return -1;
             }
             else {
-                throw libobsensor::io_exception(utils::to_string() << "VendorTCPClient read data failed! socket=" << socketFd_ << ", err_code=" << rst);
+                throw libobsensor::io_exception(utils::string::to_string() << "VendorTCPClient read data failed! socket=" << socketFd_ << ", err_code=" << rst);
             }
         }
         else {
@@ -195,7 +195,8 @@ void VendorTCPClient::write(const uint8_t *data, const uint32_t dataLen) {
                 socketReconnect();
             }
             else {
-                throw libobsensor::io_exception(utils::to_string() << "VendorTCPClient write data failed! socket=" << socketFd_ << ", err_code=" << rst);
+                throw libobsensor::io_exception(utils::string::to_string()
+                                                << "VendorTCPClient write data failed! socket=" << socketFd_ << ", err_code=" << rst);
             }
             continue;
         }

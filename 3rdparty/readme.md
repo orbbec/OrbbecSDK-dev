@@ -14,3 +14,4 @@ The libraries included in this folder are:
 | live555        | A library for streaming media over the network                                |              |                                                   |
 | tinyxml2       | A simple, small, efficient, C++ XML parser                                    |              |                                                   |
 | cmrc           | A Resource Compiler in a Single CMake Script                                  | MIT          | <https://github.com/vector-of-bool/cmrc>                  |
+|josncpp         | A C++ library for interacting with JSON.                                  | MIT          | https://github.com/open-source-parsers/jsoncpp>                     |

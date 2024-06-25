@@ -2,7 +2,7 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "utils/CameraParamProcess.hpp"
 #include <libyuv.h>
 #include <turbojpeg.h>
@@ -267,7 +267,8 @@ void FrameMirror::updateConfig(std::vector<std::string> &params) {
 }
 
 const std::string &FrameMirror::getConfigSchema() const {
-    throw unsupported_operation_exception("Frame mirror get config schema error: unsupported operation.");
+    static const std::string schema = "";  // empty schema
+    return schema;
 }
 
 std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> frame) {
@@ -377,7 +378,8 @@ void FrameFlip::updateConfig(std::vector<std::string> &params) {
 }
 
 const std::string &FrameFlip::getConfigSchema() const {
-    throw unsupported_operation_exception("Frame flip get config schema error: unsupported operation.");
+    static const std::string schema = "";  // empty schema
+    return schema;
 }
 
 std::shared_ptr<Frame> FrameFlip::processFunc(std::shared_ptr<const Frame> frame) {

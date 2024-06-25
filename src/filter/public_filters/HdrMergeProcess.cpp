@@ -2,7 +2,7 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "utils/PublicTypeHelper.hpp"
 
 namespace libobsensor {
@@ -181,7 +181,8 @@ void HdrMerge::updateConfig(std::vector<std::string> &params) {
 }
 
 const std::string &HdrMerge::getConfigSchema() const {
-    throw unsupported_operation_exception("HdrMerge get config schema error: unsupported operation.");
+    static const std::string schema = "";
+    return schema;
 }
 
 std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame) {

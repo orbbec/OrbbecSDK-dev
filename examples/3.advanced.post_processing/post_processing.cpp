@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-#include <openobsdk/ObSensor.h>
+#include <libobsensor/ObSensor.h>
 
 int main() try {
     // Create a pipeline with default device
@@ -14,7 +14,17 @@ int main() try {
     // Print the list of recommended filters
     std::cout << filterList.size() << " post processing filters recommended:" << std::endl;
     for(auto &filter: filterList) {
-        std::cout << "\t - " << filter->getName() << ": " << filter->isEnabled() << std::endl;
+        std::cout << "\t - " << filter->getName() << ": " << (filter->isEnabled() ? "enabled" : "disabled") << std::endl;
+        auto configSchemaVec = filter->getConfigSchemaVec();
+        // Print the config schema for each filter
+        for(auto &configSchema: configSchemaVec) {
+            std::cout << "\t\t - {" << configSchema.name << ", " << configSchema.type << ", " << configSchema.min << ", " << configSchema.max << ", "
+                      << configSchema.step << ", " << configSchema.def << ", " << configSchema.desc << "}" << std::endl;
+        }
+        if(filter->getName() == "DecimationFilter") {
+            filter->setConfigValue("decimate", 2.1);
+            filter->enable(true);
+        }
     }
 
     // Create a config with depth stream enabled

@@ -12,7 +12,7 @@
 
 #include "window.hpp"
 
-#include "openobsdk/OBSensor.hpp"
+#include "libobsensor/OBSensor.hpp"
 #include <mutex>
 #include <thread>
 

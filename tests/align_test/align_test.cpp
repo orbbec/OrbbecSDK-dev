@@ -1,8 +1,8 @@
 
 extern "C" {
-#include <openobsdk/h/Frame.h>
-#include <openobsdk/h/Filter.h>
-#include <openobsdk/h/Error.h>
+#include <libobsensor/h/Frame.h>
+#include <libobsensor/h/Filter.h>
+#include <libobsensor/h/Error.h>
 }
 
 #include <iostream>

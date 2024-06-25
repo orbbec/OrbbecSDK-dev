@@ -5,7 +5,7 @@
 #include <utility>
 #include <unordered_map>
 #include <memory>
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 
 namespace libobsensor {
 

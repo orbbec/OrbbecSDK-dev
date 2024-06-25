@@ -75,7 +75,7 @@ uint8_t *Frame::getDataUnsafe() const {
 
 void Frame::updateData(const uint8_t *data, size_t dataSize) {
     if(dataSize > dataBufSize_) {
-        throw memory_exception(utils::to_string() << "Update data size(" << dataSize << ") > data buffer size! (" << dataBufSize_ << ")");
+        throw memory_exception(utils::string::to_string() << "Update data size(" << dataSize << ") > data buffer size! (" << dataBufSize_ << ")");
     }
     dataSize_ = dataSize;
     memcpy(const_cast<uint8_t *>(frameData_), data, dataSize);
@@ -193,7 +193,7 @@ bool Frame::hasMetadata(OBFrameMetadataType type) const {
 
 int64_t Frame::getMetadataValue(OBFrameMetadataType type) const {
     if(!metadataPhasers_) {
-        throw unsupported_operation_exception(utils::to_string() << "Unsupported metadata type: " << type);
+        throw unsupported_operation_exception(utils::string::to_string() << "Unsupported metadata type: " << type);
     }
     auto parser = metadataPhasers_->get(type);
     return parser->getValue(metadata_, metadataSize_);

@@ -245,7 +245,7 @@ bool WmfUvcDevicePort::getPu(uint32_t propertyId, int32_t &retValue) {
         }
     }
 
-    throw std::runtime_error(utils::to_string() << "Unsupported control - " << propertyId);
+    throw std::runtime_error(utils::string::to_string() << "Unsupported control - " << propertyId);
 }
 
 bool WmfUvcDevicePort::setPu(uint32_t propertyId, int32_t tarValue) {
@@ -356,7 +356,7 @@ bool WmfUvcDevicePort::setPu(uint32_t propertyId, int32_t tarValue) {
             return true;
         }
     }
-    throw std::runtime_error(utils::to_string() << "Unsupported control - " << propertyId);
+    throw std::runtime_error(utils::string::to_string() << "Unsupported control - " << propertyId);
 }
 
 UvcControlRange WmfUvcDevicePort::getPuRange(uint32_t propertyId) {
@@ -606,7 +606,7 @@ void WmfUvcDevicePort::foreachUvcDevice(const USBDeviceInfoEnumCallback &action)
                 info.vid      = vid;
                 info.pid      = pid;
                 info.infIndex = (uint8_t)infIndex;
-                info.infUrl   = utils::toUpper(symbolicLink);
+                info.infUrl   = utils::string::toUpper(symbolicLink);
                 info.infName  = friendlyName;
                 TRY_EXECUTE({ action(info, ppDevices[i]); });
             }

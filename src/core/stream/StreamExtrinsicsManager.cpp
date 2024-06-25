@@ -176,7 +176,7 @@ OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamP
 
     std::vector<std::pair<uint64_t, OBExtrinsic>> path = { { fromId, IdentityExtrinsic } };
     if(!searchPath(path, fromId, toId)) {
-        throw invalid_value_exception(utils::to_string() << "Can not find path to calculate the extrinsics from" << fromId << "to" << toId);
+        throw invalid_value_exception(utils::string::to_string() << "Can not find path to calculate the extrinsics from" << fromId << "to" << toId);
     }
 
     LOG_TRACE("Extrinsics path:");

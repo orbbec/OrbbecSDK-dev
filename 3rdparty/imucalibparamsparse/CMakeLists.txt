@@ -10,3 +10,4 @@ set_target_properties(imu_params_parser PROPERTIES COMPILE_OPTIONS "${compile_op
 add_library(imu::imu_params_parser ALIAS imu_params_parser)
 ob_source_group(imu::imu_params_parser)
 set_target_properties(imu_params_parser PROPERTIES FOLDER "dependencies")
+set_target_properties(yaml-cpp PROPERTIES FOLDER "dependencies")

@@ -116,6 +116,7 @@ aarch64_custom_toolchain.cmake
 .aderc
 package_name.txt
 
+include/libobsensor/h/Export.h
 include/openobsdk/h/Export.h
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,c++,python,jetbrains+all,ros,ros2

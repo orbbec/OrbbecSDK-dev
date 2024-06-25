@@ -4,7 +4,7 @@
 #pragma once
 #include "WinHelpers.hpp"
 
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "ObPal.hpp"
 #include "usb/backend/Enumerator.hpp"
 #include "usb/backend/UsbTypes.hpp"

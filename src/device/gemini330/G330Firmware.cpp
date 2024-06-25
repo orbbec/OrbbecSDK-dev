@@ -10,11 +10,12 @@ namespace libobsensor {
 
 G330Firmware::G330Firmware(const uint8_t *data, size_t dataSize) {
     if(dataSize < sizeof(uint32_t)) {
-        throw libobsensor::invalid_value_exception(ObUtils::to_string() << "Parse firmware data failed:" << " invalid input data or data has been damaged");
+        throw libobsensor::invalid_value_exception(Obutils::string::to_string()
+                                                   << "Parse firmware data failed:" << " invalid input data or data has been damaged");
     }
     fileHeader_.headerSize = *(uint32_t *)data;
     if(dataSize < fileHeader_.headerSize || fileHeader_.headerSize > sizeof(G330FirmwareFileHeader)) {
-        throw libobsensor::invalid_value_exception(ObUtils::to_string()
+        throw libobsensor::invalid_value_exception(Obutils::string::to_string()
                                                    << "Parse firmware file header failed:" << " invalid input data or data has been damaged");
     }
     std::memcpy(&fileHeader_, data, fileHeader_.headerSize);
@@ -25,7 +26,7 @@ G330Firmware::G330Firmware(const uint8_t *data, size_t dataSize) {
         g330_firmware_data firmwareData;
         firmwareData.header.headerSize = *(uint32_t *)(data + offset);
         if(dataSize < offset + firmwareData.header.headerSize || firmwareData.header.headerSize > sizeof(G330FirmwareDataHeader)) {
-            throw libobsensor::invalid_value_exception(ObUtils::to_string()
+            throw libobsensor::invalid_value_exception(Obutils::string::to_string()
                                                        << "Parse firmware data header failed:" << " invalid input data or data has been damaged");
         }
         std::memcpy(&firmwareData.header, data + offset, firmwareData.header.headerSize);
@@ -39,7 +40,8 @@ G330Firmware::G330Firmware(const uint8_t *data, size_t dataSize) {
 
         offset += firmwareData.header.headerSize;
         if(dataSize < offset + firmwareData.header.dataSize) {
-            throw libobsensor::invalid_value_exception(ObUtils::to_string() << "Parse firmware data failed:" << " invalid input data or data has been damaged");
+            throw libobsensor::invalid_value_exception(Obutils::string::to_string()
+                                                       << "Parse firmware data failed:" << " invalid input data or data has been damaged");
         }
         firmwareData.data.resize(firmwareData.header.dataSize);
         std::memcpy(firmwareData.data.data(), data + offset, firmwareData.header.dataSize);
@@ -78,7 +80,7 @@ void G330Firmware::checkFirmwareData(const g330_firmware_data &firmwareData) {
         checksum += byte;
     }
     if(firmwareData.header.checksum != checksum) {
-        throw libobsensor::invalid_value_exception(ObUtils::to_string() << "Checksum mismatch: " << " invalid input file or file has been damaged");
+        throw libobsensor::invalid_value_exception(Obutils::string::to_string() << "Checksum mismatch: " << " invalid input file or file has been damaged");
     }
 }
 

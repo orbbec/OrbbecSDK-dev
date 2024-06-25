@@ -6,7 +6,7 @@ project(ob_imu)
 add_executable(ob_imu imu.cpp)
 
 set_property(TARGET ob_imu PROPERTY CXX_STANDARD 11)
-target_link_libraries(ob_imu ob::openobsdk ob::examples::common)
+target_link_libraries(ob_imu ob::libobsensor ob::examples::common)
 
 set_target_properties(ob_imu PROPERTIES FOLDER "Examples")
 

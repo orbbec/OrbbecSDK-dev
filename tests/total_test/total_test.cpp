@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <openobsdk/h/Error.h>
-#include <openobsdk/h/Context.h>
-#include <openobsdk/h/Device.h>
-#include <openobsdk/h/Sensor.h>
-#include <openobsdk/h/Frame.h>
-#include <openobsdk/h/StreamProfile.h>
+#include <libobsensor/h/Error.h>
+#include <libobsensor/h/Context.h>
+#include <libobsensor/h/Device.h>
+#include <libobsensor/h/Sensor.h>
+#include <libobsensor/h/Frame.h>
+#include <libobsensor/h/StreamProfile.h>
 
 #include <windows.h>
 

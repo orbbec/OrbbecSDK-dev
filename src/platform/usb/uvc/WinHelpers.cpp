@@ -78,7 +78,7 @@ bool check(const char *call, HRESULT hr, bool to_throw) {
         return true;
     }
 
-    std::string descr = utils::to_string() << call << " returned: " << hr_to_string(hr);
+    std::string descr = utils::string::to_string() << call << " returned: " << hr_to_string(hr);
     if(to_throw) {
         LOG_ERROR(descr);
         throw windows_pal_exception(descr);
@@ -90,12 +90,12 @@ bool check(const char *call, HRESULT hr, bool to_throw) {
 std::string win_to_utf(const WCHAR *s) {
     auto len = WideCharToMultiByte(CP_UTF8, 0, s, -1, nullptr, 0, nullptr, nullptr);
     if(len == 0)
-        throw std::runtime_error(utils::to_string() << "WideCharToMultiByte(...) returned 0 and GetLastError() is " << GetLastError());
+        throw std::runtime_error(utils::string::to_string() << "WideCharToMultiByte(...) returned 0 and GetLastError() is " << GetLastError());
 
     std::string buffer(len - 1, ' ');
     len = WideCharToMultiByte(CP_UTF8, 0, s, -1, &buffer[0], static_cast<int>(buffer.size()) + 1, nullptr, nullptr);
     if(len == 0)
-        throw std::runtime_error(utils::to_string() << "WideCharToMultiByte(...) returned 0 and GetLastError() is " << GetLastError());
+        throw std::runtime_error(utils::string::to_string() << "WideCharToMultiByte(...) returned 0 and GetLastError() is " << GetLastError());
 
     return buffer;
 }
@@ -122,7 +122,7 @@ std::vector<std::string> tokenize(std::string string, char separator) {
 // gggggggg-gggg-gggg-gggg-gggggggggggg = device interface GUID assigned in the driver or driver INF file and is used to link applications to device with
 // specific drivers loaded.
 bool parse_usb_path_multiple_interface(uint16_t &vid, uint16_t &pid, uint16_t &mi, std::string &unique_id, const std::string &path, std::string &device_guid) {
-    auto name   = utils::toLower(path);
+    auto name   = utils::string::toLower(path);
     auto tokens = tokenize(name, '#');
     if(tokens.size() < 1 || (tokens[0] != R"(\\?\usb)" && tokens[0] != R"(\\?\hid)"))
         return false;  // Not a USB device
@@ -171,7 +171,7 @@ bool parse_usb_path_multiple_interface(uint16_t &vid, uint16_t &pid, uint16_t &m
 // gggggggg-gggg-gggg-gggg-gggggggggggg = device interface GUID assigned in the driver or driver INF file and is used to link applications to device with
 // specific drivers loaded.
 bool parse_usb_path_single_interface(uint16_t &vid, uint16_t &pid, std::string &serial, const std::string &path) {
-     auto name   = utils::toLower(path);
+    auto name   = utils::string::toLower(path);
     auto tokens = tokenize(name, '#');
     if(tokens.empty() || (tokens[0] != R"(\\?\usb)" && tokens[0] != R"(\\?\hid)"))
         return false;  // Not a USB device
@@ -197,7 +197,7 @@ bool parse_usb_path_single_interface(uint16_t &vid, uint16_t &pid, std::string &
 }
 
 bool parse_usb_path_from_device_id(uint16_t &vid, uint16_t &pid, uint16_t &mi, std::string &unique_id, const std::string &device_id) {
-    auto name        = utils::toLower(device_id);
+    auto name   = utils::string::toLower(device_id);
     auto tokens = tokenize(name, '\\');
     if(tokens.size() < 1 || tokens[0] != R"(usb)")
         return false;  // Not a USB device
@@ -247,7 +247,7 @@ UvcInfo.location example :
 */
 
 bool parse_hubid_from_location(const std::string location, std::string &hubuid) {
-    auto name   = utils::toLower(location);
+    auto name   = utils::string::toLower(location);
     auto tokens = tokenize(name, '#');
     if(tokens.empty())
         return false;  // Not a USB device
@@ -474,14 +474,14 @@ bool getUsbDescriptors(uint16_t device_vid, uint16_t device_pid, const std::stri
             uint16_t    mi  = 0;
             std::string uid, devGuid;
             std::string path = win_to_utf(detail_data->DevicePath);
-            url = utils::toUpper(path);
+            url              = utils::string::toUpper(path);
 
             /* Parse the following USB path format = \?usb#vid_vvvv&pid_pppp&mi_ii#aaaaaaaaaaaaaaaa#{gggggggg-gggg-gggg-gggg-gggggggggggg} */
             parse_usb_path_multiple_interface(vid, pid, mi, uid, path, devGuid);
             if(uid.empty()) {
                 /* Parse the following USB path format = \?usb#vid_vvvv&pid_pppp#ssss#{gggggggg - gggg - gggg - gggg - gggggggggggg} */
                 parse_usb_path_single_interface(vid, pid, serial, path);
-                serial = utils::toUpper(serial);
+                serial = utils::string::toUpper(serial);
             }
 
             // get driver key for composite device

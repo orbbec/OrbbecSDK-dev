@@ -3,7 +3,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "openobsdk/h/Frame.h"
+#include "libobsensor/h/Frame.h"
 
 typedef struct ob_priv_filter_t ob_priv_filter;
 typedef struct ob_priv_filter_context_t ob_priv_filter_context;
@@ -12,7 +12,7 @@ typedef struct ob_priv_filter_context_t ob_priv_filter_context;
  * @brief Function pointer type for the get config schema function of the filter
  *
  * @brief The returned string must be a csv format string representing the configuration schema of the filter. The format of the string is:
- *  <parameter_name>, <parameter_type: int, float, bool, string>, <minimum_value>, <maximum_value>, <value_step>, <default_value>, <parameter_description>
+ *  <parameter_name>, <parameter_type: int, float, bool>, <minimum_value>, <maximum_value>, <value_step>, <default_value>, <parameter_description>
  *
  * @param[in] filter The filter object to get the configuration schema for
  * @param[out] error Pointer to an error object that will be set if an error occurs

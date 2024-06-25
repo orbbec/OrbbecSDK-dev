@@ -1,6 +1,6 @@
 #pragma once
 #include "stream/StreamProfile.hpp"
-#include <openobsdk/h/ObTypes.h>
+#include <libobsensor/h/ObTypes.h>
 #include <vector>
 #include <memory>
 

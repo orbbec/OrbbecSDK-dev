@@ -32,5 +32,5 @@ ob_source_group(ob::filter)
 set_target_properties(filter PROPERTIES FOLDER "modules")
 
 if(OB_INSTALL_FILTER_DEV_HEADERS)
-    install(FILES ${CMAKE_CURRENT_LIST_DIR}/private_filters/PrivFilterTypes.h DESTINATION include/openobsdk/h/)
+    install(FILES ${CMAKE_CURRENT_LIST_DIR}/private_filters/PrivFilterTypes.h DESTINATION include/libobsensor/h/)
 endif()

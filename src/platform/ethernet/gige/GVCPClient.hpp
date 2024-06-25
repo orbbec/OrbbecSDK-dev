@@ -1,5 +1,5 @@
 #pragma once
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "ethernet/socket/SocketTypes.hpp"
 
 #include <vector>

@@ -1,6 +1,6 @@
 #pragma once
 // #include "core/frame/process/FrameProcessingBlock.hpp"
-#include "openobsdk/h/ObTypes.h"
+#include "libobsensor/h/ObTypes.h"
 #include "frame/Frame.hpp"
 #include "pipeline/Config.hpp"
 

@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-#include <openobsdk/ObSensor.h>
+#include <libobsensor/ObSensor.h>
 
 #include <mutex>
 #include <thread>

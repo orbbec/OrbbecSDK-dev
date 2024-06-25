@@ -122,6 +122,10 @@ void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
 void VideoSensor::outputFrame(std::shared_ptr<Frame> frame) {
     if(frameProcessor_) {
         frame = frameProcessor_->process(frame);
+        if(!frame) {
+            LOG_WARN_INTVL("This frame will be dropped because frame processor process failure! @{}", sensorType_);
+            return;
+        }
     }
     frameCallback_(frame);
 }

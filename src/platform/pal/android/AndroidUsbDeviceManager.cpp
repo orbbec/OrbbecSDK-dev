@@ -142,7 +142,7 @@ std::shared_ptr<UsbDevice> AndroidUsbDeviceManager::openUsbDevice(const std::str
             return nullptr;
         }
         int uid = 0;
-        StringUtils::string2Int(devUrl, uid);
+        Stringutils::string::cvt2Int(devUrl, uid);
         jint fileDsc = env->CallIntMethod(jObjDeviceWatcher_, midOpenUsbDevice, uid);  // todo: 改为URL
         if(needDetach) {
             gJVM_->DetachCurrentThread();
@@ -192,7 +192,7 @@ void AndroidUsbDeviceManager::closeUsbDevice(const std::string &devUrl) {
             libusb_unref_device(deviceHandleIter->second.device);
             libusb_close(deviceHandleIter->second.deviceHandle);
             int uid = 0;
-            StringUtils::string2Int(devUrl, uid);
+            Stringutils::string::cvt2Int(devUrl, uid);
             env->CallVoidMethod(jObjDeviceWatcher_, midCloseUsbDevice, uid);  // todo: 改为Url
             if(needDetach) {
                 gJVM_->DetachCurrentThread();

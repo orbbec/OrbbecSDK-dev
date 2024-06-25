@@ -1,6 +1,6 @@
 #include "ImplTypes.hpp"
 #include "filter/FilterFactory.hpp"
-#include "openobsdk/h/Filter.h"
+#include "libobsensor/h/Filter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +30,7 @@ const char *ob_filter_get_vendor_specific_code(const char *name, ob_error **erro
     if(privateFilterCreator == nullptr) {
         return nullptr;
     }
-    const auto& code = privateFilterCreator->getVendorSpecificCode();
+    const auto &code = privateFilterCreator->getVendorSpecificCode();
     return code.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, name)
@@ -59,12 +59,50 @@ const char *ob_filter_get_config_schema(const ob_filter *filter, ob_error **erro
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, filter)
 
+ob_filter_config_schema_list *ob_filter_get_config_schema_list(const ob_filter *filter, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    auto &configSchemaList = filter->filter->getConfigSchemaVec();
+    auto  impl             = new ob_filter_config_schema_list();
+    impl->configSchemaList = configSchemaList;
+    return impl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, filter)
+
+uint32_t ob_filter_config_schema_list_get_count(const ob_filter_config_schema_list *config_schema_list, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(config_schema_list);
+    return static_cast<uint32_t>(config_schema_list->configSchemaList.size());
+}
+HANDLE_EXCEPTIONS_AND_RETURN(0, config_schema_list)
+
+ob_filter_config_schema_item ob_filter_config_schema_list_get_item(const ob_filter_config_schema_list *config_schema_list, uint32_t index,
+                                                                   ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(config_schema_list);
+    VALIDATE_RANGE(index, 0, config_schema_list->configSchemaList.size());
+    auto &configSchema = config_schema_list->configSchemaList.at(index);
+    return configSchema;
+}
+HANDLE_EXCEPTIONS_AND_RETURN({}, config_schema_list, index)
+
 void ob_filter_update_config(ob_filter *filter, size_t argc, const char **argv, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
     std::vector<std::string> args(argv, argv + argc);
     filter->filter->updateConfig(args);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(filter, argc, argv)
+
+double ob_filter_get_config_value(ob_filter *filter, const char *config_name, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    VALIDATE_NOT_NULL(config_name);
+    return filter->filter->getConfigValue(config_name);
+}
+HANDLE_EXCEPTIONS_AND_RETURN(0, filter, config_name)
+
+void ob_filter_set_config_value(ob_filter *filter, const char *config_name, double value, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(filter);
+    VALIDATE_NOT_NULL(config_name);
+    filter->filter->setConfigValue(config_name, value);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(filter, config_name, value)
 
 void ob_filter_reset(ob_filter *filter, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
@@ -104,7 +142,7 @@ void ob_filter_set_callback(ob_filter *filter, ob_filter_callback callback, void
 }
 HANDLE_EXCEPTIONS_NO_RETURN(filter, callback, user_data)
 
-void ob_filter_push_frame(ob_filter *filter, const ob_frame *frame, ob_error **error) BEGIN_API_CALL{
+void ob_filter_push_frame(ob_filter *filter, const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
     VALIDATE_NOT_NULL(frame);
     filter->filter->pushFrame(frame->frame);

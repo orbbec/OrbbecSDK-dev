@@ -3,7 +3,7 @@
 #include "InternalTypes.hpp"
 #include "DevicePids.hpp"
 
-#include "envconfig/EnvConfig.hpp"
+#include "environment/EnvConfig.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "property/VendorPropertyPort.hpp"
 #include "property/UvcPropertyPort.hpp"

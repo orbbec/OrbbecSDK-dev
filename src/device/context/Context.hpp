@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "logger/Logger.hpp"
-#include "envconfig/EnvConfig.hpp"
+#include "environment/EnvConfig.hpp"
 #include "devicemanager/DeviceManager.hpp"
 #include "frame/FrameMemoryPool.hpp"
 #include "stream/StreamIntrinsicsManager.hpp"

@@ -497,3 +497,24 @@ std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &range) {
     }
     return os;
 }
+
+std::ostream &operator<<(std::ostream &os, const OBCameraParam &params) {
+    os << "{\n"
+       << "depthIntrinsic:{ fx:" << params.depthIntrinsic.fx << ",fy:" << params.depthIntrinsic.fy << ",cx:" << params.depthIntrinsic.cx
+       << ",cy:" << params.depthIntrinsic.cy <<",width:"<<params.depthIntrinsic.width<<",height:"<<params.depthIntrinsic.height<< "}\n"
+       << "rgbIntrinsic:{ fx:" << params.rgbIntrinsic.fx << ",fy:" << params.rgbIntrinsic.fy << ",cx:" << params.rgbIntrinsic.cx
+       << ",cy:" << params.rgbIntrinsic.cy <<",width:"<<params.rgbIntrinsic.width<<",height:"<<params.rgbIntrinsic.height<< "}\n"
+       << "depthDistortion:{ model:" << params.depthDistortion.model << ",k1:" << params.depthDistortion.k1 << ",k2:" << params.depthDistortion.k2
+       << ",k3:" << params.depthDistortion.k3 << ",k4:" << params.depthDistortion.k4 << ",k5:" << params.depthDistortion.k5
+       << ",k6:" << params.depthDistortion.k6 << ",p1:" << params.depthDistortion.p1 << ",p2:" << params.depthDistortion.p2 << "}\n"
+       << "rgbDistortion:{ model:" << params.rgbDistortion.model << ",k1:" << params.rgbDistortion.k1 << ",k2:" << params.rgbDistortion.k2
+       << ",k3:" << params.rgbDistortion.k3 << ",k4:" << params.rgbDistortion.k4 << ",k5:" << params.rgbDistortion.k5 << ",k6:" << params.rgbDistortion.k6
+       << ",p1:" << params.rgbDistortion.p1 << ",p2:" << params.rgbDistortion.p2 << "}\n"
+       << "transform: rot:[" << params.transform.rot[0] << "," << params.transform.rot[1] << "," << params.transform.rot[2] << "," << params.transform.rot[3]
+       << "," << params.transform.rot[4] << "," << params.transform.rot[5] << "," << params.transform.rot[6] << "," << params.transform.rot[7] << ","
+       << params.transform.rot[8] << "," << params.transform.rot[9] << "],trans:" << params.transform.trans[0] << ","<< params.transform.trans[1] << ","
+       << params.transform.trans[2] << "}\n"
+       << "isMirror:" << params.isMirrored << "\n"
+       << "}";
+    return os;
+}

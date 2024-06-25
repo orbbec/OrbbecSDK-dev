@@ -3,11 +3,13 @@
 #include "IProperty.hpp"
 #include "InternalProperty.hpp"
 #include "openobsdk/h/Property.h"
+#include "PropertyHelper.hpp"
 #include <map>
 
 namespace libobsensor {
 
 class PropertyAccessor : public IPropertyAccessor {
+
     struct PropertyItem {
         uint32_t                       propertyId;
         OBPermissionType               userPermission;
@@ -23,17 +25,15 @@ public:
     void registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr, std::shared_ptr<IPropertyPort> port) override;
     void aliasProperty(uint32_t aliasId, uint32_t propertyId) override;
 
-    // std::map<uint32_t, PropertyItem> PropertyAccessor::getProperties(PropertyAccessType accessType) const override;
     bool checkProperty(uint32_t propertyId, OBPermissionType permission, PropertyAccessType accessType) const override;
+    const std::vector<OBPropertyItem> &getAvailableProperties(PropertyAccessType accessType) override;
 
     void                        setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType) override;
     void                        getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) override;
     void                        getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType) override;
     void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) override;
     const std::vector<uint8_t> &getStructureData(uint32_t propertyId, PropertyAccessType accessType) override;
-
-    void getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) override;
-
+    void                        getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) override;
     uint16_t                    getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) override;
     const std::vector<uint8_t> &getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion,
                                                           PropertyAccessType accessType = PROP_ACCESS_INTERNAL) override;
@@ -43,6 +43,11 @@ public:
 private:
     std::mutex                       mutex_;
     std::map<uint32_t, PropertyItem> properties_;
+    std::vector<OBPropertyItem>      userPropertiesVec_;
+    std::vector<OBPropertyItem>      innerPropertiesVec_;
+
+private:
+    void appendToPropertyMap(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms);
 };
 
 }  // namespace libobsensor

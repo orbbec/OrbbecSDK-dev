@@ -6,7 +6,7 @@
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
-XmlReader::XmlReader(std::string filePath) {
+XmlReader::XmlReader(const std::string& filePath) {
     doc_ = std::make_shared<XMLDocument>();
     if(!filePath.empty()) {
         throw invalid_value_exception("XmlReader::XmlReader: filePath is empty!");
@@ -83,29 +83,19 @@ bool XmlReader::getTextOfLeafNode(const std::string &nodePathName, std::string &
 }
 
 bool XmlReader::isNodeContained(const std::string &nodePathName) {
-    std::string errorMessage;
-    if(nodePathName.empty()) {
+    if (nodePathName.empty()) {
         return false;
     }
-    auto NodeList = utils::split(nodePathName, ".");
-    if(NodeList.empty()) {
+    auto nodeList = utils::split(nodePathName, ".");
+    if (nodeList.empty()) {
         return false;
     }
-    auto   rootXMLElement  = rootXMLElement_;
-    auto   ChildrenElement = rootXMLElement_;
-    size_t count           = 0;
-    for(size_t i = 0; i < NodeList.size(); ++i) {
-        XMLElement *childrenElement = nullptr;
-        childrenElement             = rootXMLElement->FirstChildElement(NodeList[i].c_str());
-        if(!childrenElement) {
+
+    XMLElement *currentElement = rootXMLElement_;
+    for (const auto &nodeName : nodeList) {
+        currentElement = currentElement->FirstChildElement(nodeName.c_str());
+        if (!currentElement) {
             return false;
-        }
-        count++;
-        if(count != NodeList.size()) {
-            rootXMLElement = childrenElement;
-        }
-        if(count == NodeList.size()) {
-            ChildrenElement = childrenElement;
         }
     }
     return true;

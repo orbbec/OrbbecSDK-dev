@@ -1148,9 +1148,6 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
     }
 
     if(out_depth) {
-#if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
-#endif
         for(int idx = 0; idx < pixnum; idx++) {
             if(65535 == out_depth[idx]) {
                 out_depth[idx] = 0;

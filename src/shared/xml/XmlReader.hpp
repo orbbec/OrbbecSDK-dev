@@ -25,7 +25,7 @@ class XMLPrinter;
 class XmlReader final {
 
 public:
-    explicit XmlReader(std::string filePath);
+    explicit XmlReader(const std::string& filePath);
     XmlReader(const char *buffer, size_t size);
 
     ~XmlReader() noexcept = default;

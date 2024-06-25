@@ -13,7 +13,7 @@ public:
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
     void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
 
-    void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data);
+    void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) override;
     const std::vector<uint8_t> &getStructureData(uint32_t propertyId) override;
 
     void getRawData(uint32_t propertyId, GetDataCallback callback) override;

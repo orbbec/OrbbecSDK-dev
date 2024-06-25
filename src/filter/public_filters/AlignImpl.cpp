@@ -9,7 +9,7 @@
 #ifdef _WIN32
 #include <xmmintrin.h>
 #include <smmintrin.h>
-#else
+#elif defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
 #include "SSE2NEON.h"
 #endif
 
@@ -76,8 +76,8 @@ static inline void removeDistortion(const OBCameraDistortion &distort_param, con
     pt_ud[1] = tmp_p_ud[1];
 }
 
-static inline void convertProjectiveToWorldDisto(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py, float &pz,
-                                                 const OBCameraDistortion &distort_param) {
+__attribute__((unused)) static inline void convertProjectiveToWorldDisto(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
+                                                                         float &pz, const OBCameraDistortion &distort_param) {
     float tx = (u - intrinsic.cx) / intrinsic.fx;
     float ty = (v - intrinsic.cy) / intrinsic.fy;
 
@@ -95,7 +95,8 @@ static inline void convertProjectiveToWorldDisto(const OBCameraIntrinsic &intrin
     pz = static_cast<float>(z);
 }
 
-static inline void convertProjectiveToWorldLinear(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py, float &pz) {
+__attribute__((unused)) static inline void convertProjectiveToWorldLinear(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
+                                                                          float &pz) {
     float tx = (u - intrinsic.cx) / intrinsic.fx;
     float ty = (v - intrinsic.cy) / intrinsic.fy;
 
@@ -137,13 +138,15 @@ void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion de
     memcpy(&rgb_intric_, &rgb_intrin, sizeof(OBCameraIntrinsic));
     memcpy(&rgb_disto_, &rgb_disto, sizeof(OBCameraDistortion));
     memcpy(&transform_, &extrin, sizeof(OBExtrinsic));
-
-    add_target_distortion = add_target_distortion;
-    depth_unit_mm_        = depth_unit_mm;
-    gap_fill_copy_        = gap_fill_copy;
+    // FIXME: why assign to itself?
+    // add_target_distortion = add_target_distortion;
+    (void)add_target_distortion;
+    depth_unit_mm_ = depth_unit_mm;
+    gap_fill_copy_ = gap_fill_copy;
     // Translation is related to depth unit.
-    for(int i = 0; i < 3; ++i)
+    for(int i = 0; i < 3; ++i) {
         scaled_trans_[i] = transform_.trans[i] / depth_unit_mm_;
+    }
 
     x_start_ = 0;
     y_start_ = 0;
@@ -174,8 +177,8 @@ void AlignImpl::prepareDepthResolution() {
         float k4 = rgb_disto_.k4, k5 = rgb_disto_.k5, k6 = rgb_disto_.k6;
 
         float pt_ud_max[2] /*, pt_d_max[2]*/;
-        pt_ud_max[0] = (w / 2 + abs(w / 2 - cx)) / fx;
-        pt_ud_max[1] = (h / 2 + abs(h / 2 - cy)) / fy;
+        pt_ud_max[0] = (w / 2 + std::abs(w / 2 - cx)) / fx;
+        pt_ud_max[1] = (h / 2 + std::abs(h / 2 - cy)) / fy;
         float r2     = powf(pt_ud_max[0], 2) + powf(pt_ud_max[1], 2);
 
         float half_r2 = 0.5f * r2;
@@ -257,6 +260,8 @@ void AlignImpl::clearMatrixCache() {
     rot_coeff_ht_y.clear();
     rot_coeff_ht_z.clear();
 }
+
+#if defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
 
 void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
                                       const float *coeff_mat_z, int *map) {
@@ -415,27 +420,27 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                     }
 
                     if(out_depth) {
-						int      pos       = v_rgb * rgb_intric_.width + u_rgb;
-						uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
-						if(out_depth[pos] > cur_depth) {
-							out_depth[pos] = cur_depth;
-						}
+                        int      pos       = v_rgb * rgb_intric_.width + u_rgb;
+                        uint16_t cur_depth = static_cast<uint16_t>(zptr[j]);
+                        if(out_depth[pos] > cur_depth) {
+                            out_depth[pos] = cur_depth;
+                        }
 
-						if(gap_fill_copy_) {
-							bool right_valid = (u_rgb + 1) < rgb_intric_.width, bottom_valid = (v_rgb + 1) < rgb_intric_.height;
-							if(right_valid) {
-								if(out_depth[pos + 1] > cur_depth)
-									out_depth[pos + 1] = cur_depth;
-							}
-							if(bottom_valid) {
-								if(out_depth[pos + rgb_intric_.width] > cur_depth)
-									out_depth[pos + rgb_intric_.width] = cur_depth;
-							}
-							if(right_valid && bottom_valid) {
-								if(out_depth[pos + rgb_intric_.width + 1] > cur_depth)
-									out_depth[pos + rgb_intric_.width + 1] = cur_depth;
-							}
-						}
+                        if(gap_fill_copy_) {
+                            bool right_valid = (u_rgb + 1) < rgb_intric_.width, bottom_valid = (v_rgb + 1) < rgb_intric_.height;
+                            if(right_valid) {
+                                if(out_depth[pos + 1] > cur_depth)
+                                    out_depth[pos + 1] = cur_depth;
+                            }
+                            if(bottom_valid) {
+                                if(out_depth[pos + rgb_intric_.width] > cur_depth)
+                                    out_depth[pos + rgb_intric_.width] = cur_depth;
+                            }
+                            if(right_valid && bottom_valid) {
+                                if(out_depth[pos + rgb_intric_.width + 1] > cur_depth)
+                                    out_depth[pos + rgb_intric_.width + 1] = cur_depth;
+                            }
+                        }
                     }
                 }
             }
@@ -1000,12 +1005,10 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
     }
 }
 
+#endif
+
 void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y, const float *coeff_mat_z,
                               int *map) {
-
-#if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
-#endif
 
     for(int v = 0; v < depth_intric_.height; v += 1) {
         float dst[3];
@@ -1049,19 +1052,19 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
             v_rgb = static_cast<int>(pixel[1]);
             if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
-				if(map)  // coordinates mapping for C2D
-				{
-					map[2 * i]     = u_rgb;
-					map[2 * i + 1] = v_rgb;
-					/// TODO(timon): filling for C2D
-				}
-            
+                if(map)  // coordinates mapping for C2D
+                {
+                    map[2 * i]     = u_rgb;
+                    map[2 * i + 1] = v_rgb;
+                    /// TODO(timon): filling for C2D
+                }
+
                 if(out_depth) {
-					int      pos       = v_rgb * rgb_intric_.width + u_rgb;
-					uint16_t cur_depth = uint16_t(dst[2]);
-					if(out_depth[pos] > cur_depth) {
-						out_depth[pos] = cur_depth;
-					}
+                    int      pos       = v_rgb * rgb_intric_.width + u_rgb;
+                    uint16_t cur_depth = uint16_t(dst[2]);
+                    if(out_depth[pos] > cur_depth) {
+                        out_depth[pos] = cur_depth;
+                    }
                     if(gap_fill_copy_) {
                         bool right_valid = (u_rgb + 1) < rgb_intric_.width, bottom_valid = (v_rgb + 1) < rgb_intric_.height;
                         if(right_valid) {
@@ -1079,7 +1082,6 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
                     }
                 }
             }
-
         }
     }
 }
@@ -1117,12 +1119,15 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
     const float *coeff_mat_z = finder_z->second;
 
     if(withSSE) {
+#if defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
+
         if(add_target_distortion_) {
             switch(rgb_disto_.model) {
             case OB_DISTORTION_BROWN_CONRADY:
                 distortedD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
                 break;
             case OB_DISTORTION_BROWN_CONRADY_K6:
+
                 BMDistortedD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
                 break;
             case OB_DISTORTION_KANNALA_BRANDT4:
@@ -1136,6 +1141,7 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
         else {
             linearD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
         }
+#endif
     }
     else {
         D2CWithoutSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
@@ -1164,7 +1170,7 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
 
     // rgb x-y coordinates for each depth pixel
     unsigned long long size     = static_cast<unsigned long long>(depth_width) * depth_height * 2;
-    int *              depth_xy = new int[size];
+    int               *depth_xy = new int[size];
     memset(depth_xy, -1, size * sizeof(int));
 
     int ret = -1;

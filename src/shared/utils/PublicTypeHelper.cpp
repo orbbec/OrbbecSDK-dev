@@ -288,7 +288,7 @@ const std::map<std::string, OBFormat> STR_FORMAT_MAP = {  //
     { "Unknown", OB_FORMAT_UNKNOWN }
 };
 
-const OBFormat strToOBFormat(const std::string &str) {
+OBFormat strToOBFormat(const std::string &str) {
     auto it = STR_FORMAT_MAP.find(str);
     if(it == STR_FORMAT_MAP.end()) {
         return OB_FORMAT_UNKNOWN;

@@ -69,7 +69,7 @@ public:
     virtual void aliasProperty(uint32_t aliasId, uint32_t propertyId)                                                                                  = 0;
 
     virtual bool checkProperty(uint32_t propertyId, OBPermissionType permission, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) const = 0;
-    //virtual std::map<uint32_t, PropertyItem> PropertyAccessor::getProperties(PropertyAccessType accessType) const = 0;
+    // virtual std::map<uint32_t, PropertyItem> PropertyAccessor::getProperties(PropertyAccessType accessType) const = 0;
 
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType = PROP_ACCESS_INTERNAL)  = 0;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) = 0;
@@ -167,6 +167,7 @@ public:
     }
 
     template <typename T, uint32_t CMD_VER> T getStructureDataProtoV1_1_T(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+        (void)accessType;
         std::vector<uint8_t> vec = getStructureDataProtoV1_1(propertyId, CMD_VER);
         T                    data;
         if(vec.size() != sizeof(T)) {

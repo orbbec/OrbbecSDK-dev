@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace libobsensor {
-constexpr OBExtrinsic IdentityExtrinsic = { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 };
+constexpr OBExtrinsic IdentityExtrinsic = { { 1, 0, 0, 0, 1, 0, 0, 0, 1 }, { 0, 0, 0 } };
 class StreamExtrinsicsManager {
 private:
     StreamExtrinsicsManager();
@@ -20,9 +20,10 @@ public:
 
     ~StreamExtrinsicsManager() noexcept;
 
-    void registerExtrinsics(const std::shared_ptr<const StreamProfile>& from, const std::shared_ptr<const StreamProfile>& to, const OBExtrinsic &extrinsics);
-    void registerSameExtrinsics(const std::shared_ptr<const StreamProfile>& from, const std::shared_ptr<const StreamProfile>& to);
+    void registerExtrinsics(const std::shared_ptr<const StreamProfile> &from, const std::shared_ptr<const StreamProfile> &to, const OBExtrinsic &extrinsics);
+    void registerSameExtrinsics(const std::shared_ptr<const StreamProfile> &from, const std::shared_ptr<const StreamProfile> &to);
 
+    // FIXME: not implemented hasExtrinsics
     bool        hasExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) const;
     OBExtrinsic getExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to);
 

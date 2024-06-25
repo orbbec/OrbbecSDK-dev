@@ -3,7 +3,7 @@
 
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
-#include "utils/utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 XmlReader::XmlReader(std::string filePath) {
@@ -57,7 +57,7 @@ bool XmlReader::getTextOfLeafNode(const std::string &nodePathName, std::string &
     auto NodeList        = utils::split(nodePathName, ".");
     auto rootXMLElement  = rootXMLElement_;
     auto ChildrenElement = rootXMLElement_;
-    for(int i = 0; i < NodeList.size(); ++i) {
+    for(size_t i = 0; i < NodeList.size(); ++i) {
         libobsensor::XMLElement *childrenElement = nullptr;
         childrenElement                          = rootXMLElement->FirstChildElement(NodeList[i].c_str());
         if(!childrenElement) {
@@ -94,7 +94,7 @@ bool XmlReader::isNodeContained(const std::string &nodePathName) {
     auto   rootXMLElement  = rootXMLElement_;
     auto   ChildrenElement = rootXMLElement_;
     size_t count           = 0;
-    for(int i = 0; i < NodeList.size(); ++i) {
+    for(size_t i = 0; i < NodeList.size(); ++i) {
         XMLElement *childrenElement = nullptr;
         childrenElement             = rootXMLElement->FirstChildElement(NodeList[i].c_str());
         if(!childrenElement) {

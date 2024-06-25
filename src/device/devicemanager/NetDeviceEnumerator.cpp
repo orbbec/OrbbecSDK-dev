@@ -151,7 +151,7 @@ void NetDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std
 std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<ObPal> obPal, std::string address, uint16_t port) {
     auto vendorPort = obPal->queryNetVendorPort(address, port);
     if(!vendorPort) {
-        throw invalid_value_exception(ObUtils::to_string() << "Could not find device, address=" << address << ", port=" << port);
+        throw invalid_value_exception(Obutils::string::to_string() << "Could not find device, address=" << address << ", port=" << port);
     }
     std::shared_ptr<IDevice> device;
     SourcePortInfoList       portInfoList   = { vendorPort };

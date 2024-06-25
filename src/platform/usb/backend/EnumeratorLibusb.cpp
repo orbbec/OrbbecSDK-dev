@@ -44,8 +44,8 @@ std::string getDeviceHubID(const std::string &devicePath) {
 // gggggggg-gggg-gggg-gggg-gggggggggggg = device interface GUID assigned in the driver or driver INF file and is used to link applications to device with
 // specific drivers loaded.
 std::string getDeviceUidByWin(const std::string &devicePath) {
-    auto name = utils::toLower(devicePath);
-    auto tokens = utils::tokenize(name, '#');
+    auto name   = utils::string::toLower(devicePath);
+    auto tokens = utils::string::tokenize(name, '#');
     if(tokens.empty() || (tokens[0] != R"(\\?\usb)" && tokens[0] != R"(\\?\hid)"))
         return "";  // Not a USB device
     if(tokens.size() < 3) {
@@ -53,7 +53,7 @@ std::string getDeviceUidByWin(const std::string &devicePath) {
         return "";
     }
 
-    auto ids = utils::tokenize(tokens[2], '&');
+    auto ids = utils::string::tokenize(tokens[2], '&');
     if(ids.empty()) {
         LOG_ERROR("malformed id string: {}", tokens[2]);
         return "";
@@ -68,15 +68,15 @@ std::string getDeviceUidByWin(const std::string &devicePath) {
 
     if(ids.size() > 2) {
         // uid = ids[1];
-        return utils::remove(tokens[2], "&");
+        return utils::string::remove(tokens[2], "&");
     }
 
     return "";
 }
 
 std::string getDeviceUidByWinDeviceID(const std::string &deviceID) {
-    auto name = utils::toLower(deviceID);
-    auto tokens = utils::tokenize(name, '\\');
+    auto name   = utils::string::toLower(deviceID);
+    auto tokens = utils::string::tokenize(name, '\\');
     if(tokens.empty() || tokens[0] != R"(usb)")
         return "";  // Not a USB device
     if(tokens.size() < 3) {
@@ -84,7 +84,7 @@ std::string getDeviceUidByWinDeviceID(const std::string &deviceID) {
         return "";
     }
 
-    auto ids = utils::tokenize(tokens[2], '&');
+    auto ids = utils::string::tokenize(tokens[2], '&');
     if(ids.empty()) {
         LOG_ERROR("malformed id string: {}", tokens[2]);
         return "";
@@ -96,8 +96,8 @@ std::string getDeviceUidByWinDeviceID(const std::string &deviceID) {
 }
 
 std::string getDeviceHubIdByWin(const std::string &devicePath) {
-   auto name = utils::toLower(devicePath);
-    auto tokens = utils::tokenize(name, '#');
+    auto name   = utils::string::toLower(devicePath);
+    auto tokens = utils::string::tokenize(name, '#');
     if(tokens.empty() || (tokens[0] != R"(\\?\usb)" && tokens[0] != R"(\\?\hid)"))
         return "";  // Not a USB device
     if(tokens.size() < 3) {
@@ -341,8 +341,8 @@ std::shared_ptr<UsbDevice> UsbEnumerator::createUsbDevice(const std::string &dev
 }
 
 bool findSN2Toupper(const std::string &src, std::string &dst) {
-    auto name = utils::toLower(src);
-    auto tokens = utils::tokenize(name, '#');
+    auto name   = utils::string::toLower(src);
+    auto tokens = utils::string::tokenize(name, '#');
     if(tokens.empty() || (tokens[0] != R"(\\?\usb)" && tokens[0] != R"(\\?\hid)"))
         return false;  // Not a USB device
     if(tokens.size() < 3) {

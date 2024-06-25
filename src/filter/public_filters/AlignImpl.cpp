@@ -76,34 +76,34 @@ static inline void removeDistortion(const OBCameraDistortion &distort_param, con
     pt_ud[1] = tmp_p_ud[1];
 }
 
-__attribute__((unused)) static inline void convertProjectiveToWorldDisto(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
-                                                                         float &pz, const OBCameraDistortion &distort_param) {
-    float tx = (u - intrinsic.cx) / intrinsic.fx;
-    float ty = (v - intrinsic.cy) / intrinsic.fy;
+// __attribute__((unused)) static inline void convertProjectiveToWorldDisto(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
+//                                                                          float &pz, const OBCameraDistortion &distort_param) {
+//     float tx = (u - intrinsic.cx) / intrinsic.fx;
+//     float ty = (v - intrinsic.cy) / intrinsic.fy;
 
-    float tx_d = tx;
-    float ty_d = ty;
-    float pUndisto[2];
-    float pdisto[2] = { tx_d, ty_d };
-    removeDistortion(distort_param, pdisto, pUndisto);
+//     float tx_d = tx;
+//     float ty_d = ty;
+//     float pUndisto[2];
+//     float pdisto[2] = { tx_d, ty_d };
+//     removeDistortion(distort_param, pdisto, pUndisto);
 
-    tx = pUndisto[0];
-    ty = pUndisto[1];
+//     tx = pUndisto[0];
+//     ty = pUndisto[1];
 
-    px = z * tx;
-    py = z * ty;
-    pz = static_cast<float>(z);
-}
+//     px = z * tx;
+//     py = z * ty;
+//     pz = static_cast<float>(z);
+// }
 
-__attribute__((unused)) static inline void convertProjectiveToWorldLinear(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
-                                                                          float &pz) {
-    float tx = (u - intrinsic.cx) / intrinsic.fx;
-    float ty = (v - intrinsic.cy) / intrinsic.fy;
+// __attribute__((unused)) static inline void convertProjectiveToWorldLinear(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
+//                                                                           float &pz) {
+//     float tx = (u - intrinsic.cx) / intrinsic.fx;
+//     float ty = (v - intrinsic.cy) / intrinsic.fy;
 
-    px = z * tx;
-    py = z * ty;
-    pz = static_cast<float>(z);
-}
+//     px = z * tx;
+//     py = z * ty;
+//     pz = static_cast<float>(z);
+// }
 
 AlignImpl::AlignImpl() : initialized_(false) {
 #ifdef _WIN32

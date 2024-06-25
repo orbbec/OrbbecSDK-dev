@@ -16,7 +16,8 @@ void DU08mmTo1mmConverter::updateConfig(std::vector<std::string> &params) {
 }
 
 const std::string &DU08mmTo1mmConverter::getConfigSchema() const {
-    throw unsupported_operation_exception("DU08mmTo1mmConverter get config schema error: unsupported operation.");
+    static const std::string schema = "";  // empty schema
+    return schema;
 }
 
 std::shared_ptr<Frame> DU08mmTo1mmConverter::processFunc(std::shared_ptr<const Frame> frame) {

@@ -184,7 +184,7 @@ void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<u
     }
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
     if(extensionPort == nullptr) {
-        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data setting");
+        throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data setting");
     }
     extensionPort->setStructureData(propId, data);
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
@@ -207,7 +207,7 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t property
 
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
     if(extensionPort == nullptr) {
-        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data getting");
+        throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data getting");
     }
     const auto &data = extensionPort->getStructureData(propId);
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
@@ -230,7 +230,7 @@ void PropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback,
     }
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
     if(extensionPort == nullptr) {
-        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support raw data getting");
+        throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support raw data getting");
     }
 
     extensionPort->getRawData(propId, callback);  // todo: add async support
@@ -252,7 +252,7 @@ uint16_t PropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyA
     }
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
     if(extensionPort == nullptr) {
-        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support cmd version getting");
+        throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support cmd version getting");
     }
 
     auto ver = extensionPort->getCmdVersionProtoV1_1(propId);
@@ -274,7 +274,7 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureDataProtoV1_1(uint32_t
     }
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
     if(extensionPort == nullptr) {
-        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data getting over proto v1.1");
+        throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data getting over proto v1.1");
     }
     const auto &data = extensionPort->getStructureDataProtoV1_1(propId, cmdVersion);
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
@@ -297,7 +297,7 @@ void PropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std:
     }
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
     if(extensionPort == nullptr) {
-        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data setting over proto v1.1");
+        throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data setting over proto v1.1");
     }
     extensionPort->setStructureDataProtoV1_1(propId, data, cmdVersion);
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
@@ -319,7 +319,7 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint
     }
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
     if(extensionPort == nullptr) {
-        throw invalid_value_exception(utils::to_string() << "Property" << propId << " does not support structure data list getting over proto v1.1");
+        throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data list getting over proto v1.1");
     }
     const auto &data = extensionPort->getStructureDataListProtoV1_1(propId, cmdVersion);
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),

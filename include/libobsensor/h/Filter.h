@@ -61,9 +61,8 @@ OB_EXPORT void ob_delete_filter(ob_filter *filter, ob_error **error);
 
 /**
  * @brief Get config schema of the filter
- *
  * @brief The returned string is a csv format string representing the configuration schema of the filter. The format of the string is:
- *  <parameter_name>, <parameter_type: int, float, bool, string>, <minimum_value>, <maximum_value>, <value_step>, <default_value>, <parameter_description>
+ *  <parameter_name>, <parameter_type: "int", "float", "bool">, <minimum_value>, <maximum_value>, <value_step>, <default_value>, <parameter_description>
  *
  * @param[in] filter The filter object to get the configuration schema for
  * @param[out] error Pointer to an error object that will be set if an error occurs
@@ -71,6 +70,16 @@ OB_EXPORT void ob_delete_filter(ob_filter *filter, ob_error **error);
  * @return A csv format string representing the configuration schema of the filter
  */
 OB_EXPORT const char *ob_filter_get_config_schema(const ob_filter *filter, ob_error **error);
+
+/**
+ * @brief Get the filter config schema list of the filter
+ * @brief The returned string is a list of ob_config_schema_item representing the configuration schema of the filter.
+ *
+ * @param filter The filter object to get the configuration schema for
+ * @param error Pointer to an error object that will be set if an error occurs
+ * @return ob_filter_config_schema_list* Return the filter config schema list of the filter
+ */
+OB_EXPORT ob_filter_config_schema_list *ob_filter_get_config_schema_list(const ob_filter *filter, ob_error **error);
 
 /**
  * @brief Update config of the filter
@@ -83,6 +92,32 @@ OB_EXPORT const char *ob_filter_get_config_schema(const ob_filter *filter, ob_er
  * @param[out] error Pointer to an error object that will be set if an error occurs
  */
 OB_EXPORT void ob_filter_update_config(ob_filter *filter, size_t argc, const char **argv, ob_error **error);
+
+/**
+ * @brief Get the filter config value by name and cast to double.
+ *
+ * @attention The returned value is cast to double, the actual type of the value depends on the filter config schema returned by @ref
+ * ob_filter_get_config_schema.
+ *
+ * @param[in] filter A filter object.
+ * @param[in] config_name config name
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ * @return double The value of the config.
+ */
+OB_EXPORT double ob_filter_get_config_value(ob_filter *filter, const char *config_name, ob_error **error);
+
+/**
+ * @brief Set the filter config value by name.
+ *
+ * @attention The pass into value type is double, witch will be cast to the actual type inside the filter. The actual type can be queried by the filter config
+ * schema returned by @ref ob_filter_get_config_schema.
+ *
+ * @param[in] filter A filter object.
+ * @param[in] config_name config name
+ * @param[in] value The value to set.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_filter_set_config_value(ob_filter *filter, const char *config_name, double value, ob_error **error);
 
 /**
  * @brief Reset the filter, clears the cache, and resets the state. If the asynchronous interface is used, the processing thread will also be stopped and the
@@ -150,20 +185,20 @@ OB_EXPORT void ob_filter_set_callback(ob_filter *filter, ob_filter_callback call
 OB_EXPORT void ob_filter_push_frame(ob_filter *filter, const ob_frame *frame, ob_error **error);
 
 /**
- * @brief Get the number of recommended filter list
+ * @brief Get the number of filter in the list
  *
- * @param filter_list Recommended filter list
- * @param error Pointer to an error object that will be set if an error occurs.
+ * @param[in] filter_list  filter list
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return uint32_t The number of list
  */
 OB_EXPORT uint32_t ob_filter_list_get_count(ob_filter_list *filter_list, ob_error **error);
 
 /**
- * @brief Get the number of recommended filter list
+ * @brief Get the filter by index
  *
- * @param filter_list Recommended filter list
- * @param index Recommended filter index
- * @param error Pointer to an error object that will be set if an error occurs.
+ * @param[in] filter_list Filter list
+ * @param[in] index  Filter index
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_filter The index of ob_filter
  */
 OB_EXPORT ob_filter *ob_filter_list_get_filter(ob_filter_list *filter_list, uint32_t index, ob_error **error);
@@ -172,9 +207,29 @@ OB_EXPORT ob_filter *ob_filter_list_get_filter(ob_filter_list *filter_list, uint
  * @brief Delete a list of ob_filter objects.
  *
  * @param[in] filter_list The list of ob_filter objects to delete.
- * @param[out] error Logs error messages.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_delete_filter_list(ob_filter_list *filter_list, ob_error **error);
+
+/**
+ * @brief Get the number of config schema items in the config schema list
+ *
+ * @param config_schema_list Filter config schema list
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return uint32_t The number of config schema items in the filter list
+ */
+OB_EXPORT uint32_t ob_filter_config_schema_list_get_count(const ob_filter_config_schema_list *config_schema_list, ob_error **error);
+
+/**
+ * @brief Get the config schema item by index
+ *
+ * @param config_schema_list Filter config schema list
+ * @param index  Config schema item index
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return ob_filter_config_schema_item* The config schema item by index
+ */
+OB_EXPORT ob_filter_config_schema_item ob_filter_config_schema_list_get_item(const ob_filter_config_schema_list *config_schema_list, uint32_t index,
+                                                                             ob_error **error);
 
 #ifdef __cplusplus
 }

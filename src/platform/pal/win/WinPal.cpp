@@ -42,7 +42,7 @@ std::vector<std::string> stringSplit(const std::string &string, char separator) 
 }
 
 bool parseSymbolicLink(const std::string &symbolicLink, uint16_t &vid, uint16_t &pid, uint16_t &mi, std::string &uid, std::string &device_guid) {
-    auto lowerStr = utils::toLower(symbolicLink);
+    auto lowerStr = utils::string::toLower(symbolicLink);
     auto tokens   = stringSplit(lowerStr, '#');
     if(tokens.empty() || (tokens[0] != R"(\\?\usb)" && tokens[0] != R"(\\?\hid)"))
         return false;  // Not a USB device
@@ -321,7 +321,7 @@ LRESULT CALLBACK WinUsbDeviceWatcher::onWinEvent(HWND hWnd, UINT message, WPARAM
             std::string symbolicLink = wideCharToUTF8(devIntf->dbcc_name);
             if(parseSymbolicLink(symbolicLink, vid, pid, mi, uid, device_guid) && vid == 0x2bc5) {
                 auto watcherExtraData = reinterpret_cast<extra_data *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
-                symbolicLink = utils::toUpper(symbolicLink);
+                symbolicLink          = utils::string::toUpper(symbolicLink);
                 if(wParam == DBT_DEVICEARRIVAL) {
                     LOG_DEBUG("Device arrival event occurred! symbolicLink={}", symbolicLink);
                     if(devIntf->dbcc_classguid != GUID_DEVINTERFACE_USB_DEVICE || PID_BOOTLOADER_UVC == pid) {

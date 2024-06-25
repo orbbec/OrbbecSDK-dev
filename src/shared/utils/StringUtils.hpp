@@ -7,6 +7,7 @@
 
 namespace libobsensor {
 namespace utils {
+namespace string {
 
 struct to_string {
     std::ostringstream            ss;
@@ -79,10 +80,10 @@ std::string              toLower(const std::string &s);
 std::string              toUpper(const std::string &s);
 
 std::string clearHeadAndTailSpace(const std::string &string);
-bool        string2Int(const std::string &string, int &dst);
-bool        string2Float(const std::string &string, float &dst);
-bool        string2Double(const std::string &string, double &dst);
-bool        string2Boolean(const std::string &string, bool &dst);
-
+bool        cvt2Int(const std::string &string, int &dst);
+bool        cvt2Float(const std::string &string, float &dst);
+bool        cvt2Double(const std::string &string, double &dst);
+bool        cvt2Boolean(const std::string &string, bool &dst);
+}  // namespace string
 }  // namespace utils
 }  // namespace libobsensor

@@ -15,6 +15,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <vector>
 
 namespace ob {
 
@@ -31,6 +32,7 @@ protected:
     ob_filter     *impl_ = nullptr;
     std::string    name_;
     FilterCallback callback_;
+    std::vector<OBFilterConfigSchemaItem> configSchemaVec_;
 
 public:
     Filter() = default;
@@ -38,6 +40,18 @@ public:
         ob_error *error = nullptr;
         name_           = ob_filter_get_name(impl_, &error);
         Error::handle(&error);
+
+        auto configSchemaList = ob_filter_get_config_schema_list(impl_, &error);
+        Error::handle(&error);
+
+        auto count = ob_filter_config_schema_list_get_count(configSchemaList, &error);
+        Error::handle(&error);
+
+        for(uint32_t i = 0; i < count; i++) {
+            auto item = ob_filter_config_schema_list_get_item(configSchemaList, i, &error);
+            Error::handle(&error);
+            configSchemaVec_.emplace_back(item);
+        }
     }
 
     virtual ~Filter() noexcept {
@@ -122,6 +136,61 @@ public:
         Error::handle(&error);
     }
 
+    /**
+     * @brief Get config schema of the filter
+     * @brief The returned string is a csv format string representing the configuration schema of the filter. The format of the string is:
+     *  <parameter_name>, <parameter_type: "int", "float", "bool">, <minimum_value>, <maximum_value>, <value_step>, <default_value>, <parameter_description>
+     *
+     * @return std::string The config schema of the filter.
+     */
+    virtual std::string getConfigSchema() {
+        ob_error *error  = nullptr;
+        auto      schema = ob_filter_get_config_schema(impl_, &error);
+        Error::handle(&error);
+        return schema;
+    }
+
+    /**
+     * @brief Get the Config Schema Vec object
+     * @brief The returned vector contains the config schema items. Each item in the vector is an @ref OBFilterConfigSchemaItem object.
+     *
+     * @return std::vector<OBFilterConfigSchemaItem> The vector of the filter config schema.
+     */
+    virtual std::vector<OBFilterConfigSchemaItem> getConfigSchemaVec() const {
+        return configSchemaVec_;
+    }
+
+    /**
+     * @brief Set the filter config value by name.
+     *
+     * @attention The pass into value type is double, witch will be cast to the actual type inside the filter. The actual type can be queried by the filter
+     * config schema returned by @ref getConfigSchemaVec.
+     *
+     * @param configName The name of the config.
+     * @param value The value of the config.
+     */
+    virtual void setConfigValue(const std::string &configName, double value) {
+        ob_error *error = nullptr;
+        ob_filter_set_config_value(impl_, configName.c_str(), value, &error);
+        Error::handle(&error);
+    }
+
+    /**
+     * @brief Get the Config Value object by name.
+     *
+     * @attention The returned value type has been casted to double inside the filter. The actual type can be queried by the filter config schema returned by
+     * @ref getConfigSchemaVec.
+     *
+     * @param configName  The name of the config.
+     * @return double The value of the config.
+     */
+    virtual double getConfigValue(const std::string &configName) {
+        ob_error *error = nullptr;
+        double    value = ob_filter_get_config_value(impl_, configName.c_str(), &error);
+        Error::handle(&error);
+        return value;
+    }
+
 private:
     static void filterCallback(ob_frame *frame, void *userData) {
         auto filter = static_cast<Filter *>(userData);
@@ -150,7 +219,6 @@ public:
      *
      * @param name The name of the filter.
      * @param activation_key The activation key of the filter.
-     *
      */
     static std::shared_ptr<Filter> createPrivateFilter(const std::string &name, const std::string &activationKey) {
         ob_error *error = nullptr;

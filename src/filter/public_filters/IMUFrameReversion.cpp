@@ -20,7 +20,8 @@ void IMUFrameReversion::updateConfig(std::vector<std::string> &params) {
 }
 
 const std::string &IMUFrameReversion::getConfigSchema() const {
-    throw unsupported_operation_exception("IMUFrameReversion get config schema error: unsupported operation.");
+    static const std::string schema = "";
+    return schema;
 }
 
 std::shared_ptr<Frame> IMUFrameReversion::processFunc(std::shared_ptr<const Frame> frame) {

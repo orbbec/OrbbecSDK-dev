@@ -81,7 +81,7 @@ void G330BootDevice::deviceUpgrade(std::string filePath, DeviceUpgradeCallback u
 
     std::ifstream file(filePath, std::ios::binary);
     if(!file.is_open()) {
-        throw libobsensor::invalid_value_exception(ObUtils::to_string() << "Failed to open file: " << filePath);
+        throw libobsensor::invalid_value_exception(Obutils::string::to_string() << "Failed to open file: " << filePath);
     }
 
     file.seekg(0, std::ios::end);
@@ -103,7 +103,7 @@ void G330BootDevice::deviceUpgrade(const char *fileData, uint32_t fileSize, Devi
     const auto &fwFileHeader = fwHandle->getFileHeader();
     if(std::string(fwFileHeader.serial) != "Gemini2R" && std::string(fwFileHeader.serial) != "G300" && std::string(fwFileHeader.serial) != "Gemini 300"
        && std::string(fwFileHeader.serial) != "Gemini 330") {
-        throw libobsensor::invalid_value_exception(ObUtils::to_string() << "Invalid firmware file with unmatched serial: " << fwFileHeader.serial);
+        throw libobsensor::invalid_value_exception(Obutils::string::to_string() << "Invalid firmware file with unmatched serial: " << fwFileHeader.serial);
     }
     const auto &firmwareDataList = fwHandle->getFirmwareDataList();
     auto        upgradeFunc      = [this, upgradeCallback, firmwareDataList]() {

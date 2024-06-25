@@ -11,6 +11,7 @@
 namespace libobsensor {
 
 typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
+
 class IFilter {
 public:
     virtual ~IFilter() noexcept = default;
@@ -18,8 +19,11 @@ public:
     virtual const std::string &getName() const = 0;
 
     // Config
-    virtual void               updateConfig(std::vector<std::string> &params) = 0;
-    virtual const std::string &getConfigSchema() const                        = 0;
+    virtual void                                         updateConfig(std::vector<std::string> &params)        = 0;
+    virtual const std::string                           &getConfigSchema() const                               = 0;
+    virtual const std::vector<OBFilterConfigSchemaItem> &getConfigSchemaVec()                                  = 0;
+    virtual void                                         setConfigValue(const std::string &name, double value) = 0;
+    virtual double                                       getConfigValue(const std::string &name)               = 0;
 
     virtual void reset()           = 0;  // Stop thread, clean memory, reset status
     virtual void enable(bool en)   = 0;
@@ -59,6 +63,10 @@ struct ob_filter_t {
 
 struct ob_filter_list_t {
     std::vector<std::shared_ptr<libobsensor::IFilter>> filterList;
+};
+
+struct ob_filter_config_schema_list_t {
+    std::vector<OBFilterConfigSchemaItem> configSchemaList;
 };
 
 #ifdef __cplusplus

@@ -19,24 +19,25 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct ob_context_t              ob_context;
-typedef struct ob_device_t               ob_device;
-typedef struct ob_device_info_t          ob_device_info;
-typedef struct ob_device_list_t          ob_device_list;
-typedef struct ob_camera_param_list_t    ob_camera_param_list;
-typedef struct ob_sensor_t               ob_sensor;
-typedef struct ob_sensor_list_t          ob_sensor_list;
-typedef struct ob_stream_profile_t       ob_stream_profile;
-typedef struct ob_stream_profile_list_t  ob_stream_profile_list;
-typedef struct ob_frame_t                ob_frame;
-typedef struct ob_filter_t               ob_filter;
-typedef struct ob_filter_list_t          ob_filter_list;
-typedef struct ob_pipeline_t             ob_pipeline;
-typedef struct ob_config_t               ob_config;
-typedef struct ob_recorder_t             ob_recorder;
-typedef struct ob_playback_t             ob_playback;
-typedef struct ob_depth_work_mode_list_t ob_depth_work_mode_list;
-typedef struct ob_device_preset_list_t   ob_device_preset_list;
+typedef struct ob_context_t                   ob_context;
+typedef struct ob_device_t                    ob_device;
+typedef struct ob_device_info_t               ob_device_info;
+typedef struct ob_device_list_t               ob_device_list;
+typedef struct ob_camera_param_list_t         ob_camera_param_list;
+typedef struct ob_sensor_t                    ob_sensor;
+typedef struct ob_sensor_list_t               ob_sensor_list;
+typedef struct ob_stream_profile_t            ob_stream_profile;
+typedef struct ob_stream_profile_list_t       ob_stream_profile_list;
+typedef struct ob_frame_t                     ob_frame;
+typedef struct ob_filter_t                    ob_filter;
+typedef struct ob_filter_list_t               ob_filter_list;
+typedef struct ob_pipeline_t                  ob_pipeline;
+typedef struct ob_config_t                    ob_config;
+typedef struct ob_recorder_t                  ob_recorder;
+typedef struct ob_playback_t                  ob_playback;
+typedef struct ob_depth_work_mode_list_t      ob_depth_work_mode_list;
+typedef struct ob_device_preset_list_t        ob_device_preset_list;
+typedef struct ob_filter_config_schema_list_t ob_filter_config_schema_list;
 
 #define OB_WIDTH_ANY 0
 #define OB_HEIGHT_ANY 0
@@ -1367,6 +1368,26 @@ typedef struct {
     int16_t x1_right;
     int16_t y1_bottom;
 } AE_ROI, ob_region_of_interest, OBRegionOfInterest;
+
+typedef enum {
+    OB_FILTER_CONFIG_VALUE_TYPE_INVALID = -1,
+    OB_FILTER_CONFIG_VALUE_TYPE_INT     = 0,
+    OB_FILTER_CONFIG_VALUE_TYPE_FLOAT   = 1,
+    OB_FILTER_CONFIG_VALUE_TYPE_BOOLEAN = 2,
+} OBFilterConfigValueType,
+    ob_filter_config_value_type;
+/**
+ * @brief  Configuration Item for the filter
+ */
+typedef struct {
+    const char             *name;  ///< Name of the configuration item
+    OBFilterConfigValueType type;  ///< Value type of the configuration item
+    double                  min;   ///< Minimum value casted to double
+    double                  max;   ///< Maximum value casted to double
+    double                  step;  ///< Step value casted to double
+    double                  def;   ///< Default value casted to double
+    const char             *desc;  ///< Description of the configuration item
+} OBFilterConfigSchemaItem, ob_filter_config_schema_item;
 
 /**
  * @brief Frame metadata types

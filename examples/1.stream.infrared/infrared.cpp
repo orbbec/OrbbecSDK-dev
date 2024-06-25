@@ -42,7 +42,7 @@ int main() try {
 
         std::vector<std::shared_ptr<const ob::Frame>> frames;
         for(uint32_t index = 0; index < frameSet->getFrameCount(); index++){
-            auto frame = frameSet->getFrame(index);
+            auto frame = frameSet->getFrameByIndex(index);
             if(frame != nullptr){
                 frames.push_back(frame);
             }

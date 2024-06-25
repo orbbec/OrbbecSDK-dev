@@ -3,6 +3,7 @@
 
 #pragma once
 #include "sensor/SensorBase.hpp"
+#include "interface/ISensorStartStrategy.hpp"
 #include "IFrame.hpp"
 #include "IFilter.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
@@ -39,6 +40,7 @@ public:
     void setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container);
     void setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator);
     void setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcessor);
+    void setSensorStartStrategy(std::shared_ptr<ISensorStartStrategy> sensorStartStrategy);
 
 protected:
     virtual void onBackendFrameCallback(std::shared_ptr<Frame> frame);
@@ -56,6 +58,7 @@ private:
 
     std::shared_ptr<IFrameMetadataParserContainer> frameMetadataParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     frameTimestampCalculator_;
+    std::shared_ptr<ISensorStartStrategy>       sensorStartStrategy_;
 
     std::shared_ptr<FrameProcessor> frameProcessor_;
 };

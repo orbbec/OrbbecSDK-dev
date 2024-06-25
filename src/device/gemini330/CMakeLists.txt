@@ -19,4 +19,6 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/G330PresetManager.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330DepthAlgModeManager.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330DepthAlgModeManager.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330SensorStartStrategy.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330SensorStartStrategy.hpp
 )

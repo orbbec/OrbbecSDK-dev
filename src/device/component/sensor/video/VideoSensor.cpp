@@ -49,6 +49,17 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     currentBackendStreamProfile_ = backendIter->second.first;
     currentFormatFilterConfig_   = backendIter->second.second;
 
+    if(sensorStartStrategy_) {
+        if(!sensorStartStrategy_->validatePresetProfile(sensorType_, sp)) {
+            throw unsupported_operation_exception("Preset is in Factory Calib mode,only support IR streams at 1280x800@Y12/Y16 and 640x400@Y12/Y16");
+        }
+
+        if(!sensorStartStrategy_->validateSensorStart(sensorType_, sp)) {
+            throw unsupported_operation_exception(
+                "The resolution or FPS of the current stream should be the same as that of the already started depth/left ir/right ir stream.");
+        }
+    }
+
     if(currentFormatFilterConfig_ && currentFormatFilterConfig_->converter) {
         auto formatConverter = std::dynamic_pointer_cast<FormatConverter>(currentFormatFilterConfig_->converter);
         if(formatConverter) {
@@ -139,6 +150,10 @@ void VideoSensor::stop() {
     activatedStreamProfile_.reset();
     frameCallback_ = nullptr;
 
+    if(sensorStartStrategy_) {
+        sensorStartStrategy_->clearValidateSensor(sensorType_);
+    }
+
     updateStreamState(STREAM_STATE_STOPED);
 }
 
@@ -211,6 +226,13 @@ void VideoSensor::setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcess
         throw wrong_api_call_sequence_exception("Can not update frame processor while streaming");
     }
     frameProcessor_ = frameProcessor;
+}
+
+void VideoSensor::setSensorStartStrategy(std::shared_ptr<ISensorStartStrategy> sensorStartStrategy) {
+    if(isStreamActivated()) {
+        throw wrong_api_call_sequence_exception("Can not update sensor start strategy while streaming");
+    }
+    sensorStartStrategy_ = sensorStartStrategy;
 }
 
 }  // namespace libobsensor

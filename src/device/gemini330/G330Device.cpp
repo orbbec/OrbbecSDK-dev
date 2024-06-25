@@ -65,6 +65,7 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
     algParamManager_       = std::make_shared<G330AlgParamManager>(deviceInfo_, propertyAccessorGetter);
     depthAlgModeManager_   = std::make_shared<G330DepthAlgModeManager>(propertyAccessorGetter);
     presetManager_         = std::make_shared<G330PresetManager>(propertyAccessorGetter, depthAlgModeManager_);
+    sensorStartStrategy_   = std::make_shared<G330SensorStartStrategy>(depthAlgModeManager_);
     globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>(propertyAccessorGetter);
 
     auto iter = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo_->pid_);
@@ -438,6 +439,7 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
 
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+            videoSensor->setSensorStartStrategy(sensorStartStrategy_);
         }
         else if(sensorType == OB_SENSOR_IR_LEFT) {
             videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
@@ -451,6 +453,7 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             });
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+            videoSensor->setSensorStartStrategy(sensorStartStrategy_);
         }
         else if(sensorType == OB_SENSOR_IR_RIGHT) {
             videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
@@ -466,6 +469,7 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             });
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+            videoSensor->setSensorStartStrategy(sensorStartStrategy_);
         }
         else if(sensorType == OB_SENSOR_COLOR) {
             videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);

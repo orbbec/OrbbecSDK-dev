@@ -7,6 +7,7 @@
 #include "G330AlgParamManager.hpp"
 #include "G330PresetManager.hpp"
 #include "G330DepthAlgModeManager.hpp"
+#include "G330SensorStartStrategy.hpp"
 
 #include <map>
 #include <memory>
@@ -61,6 +62,7 @@ private:
     std::shared_ptr<IFrameMetadataParserContainer> colorMdParserContainer_;
     std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
+    std::shared_ptr<ISensorStartStrategy>          sensorStartStrategy_;
     // std::shared_ptr<IFrameTimestampCalculator>     imuFrameTimestampCalculator_;
 
     std::shared_ptr<G330AlgParamManager>     algParamManager_;

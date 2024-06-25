@@ -52,9 +52,9 @@ void Align::updateConfig(std::vector<std::string> &params) {
 }
 
 const std::string &Align::getConfigSchema() const {
-    static const std::string schema = "AlignType, int, 1, 7, 1, 2, aligned to the type of data stream\n"
-                                      "TargetDistortion, bool, 0, 1, 1, 1, add distortion of the target stream\n"
-                                      "GapFillCopy, bool, 0, 1, 1, 1, enable gap fill";
+    static const std::string schema = "AlignType, interger, 1, 7, 1, 2, aligned to the type of data stream\n"
+                                      "TargetDistortion, boolean, 0, 1, 1, 1, add distortion of the target stream\n"
+                                      "GapFillCopy, boolean, 0, 1, 1, 1, enable gap fill";
     return schema;
 }
 

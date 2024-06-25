@@ -12,7 +12,8 @@ FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device) {
         return;
     }
 
-    context_ = std::shared_ptr<FrameProcessorContext>(new FrameProcessorContext(), [&](FrameProcessorContext *context) {
+    auto dylib = dylib_;
+    context_ = std::shared_ptr<FrameProcessorContext>(new FrameProcessorContext(), [dylib](FrameProcessorContext *context) {
         if(context && context->destroy_context) {
             ob_error *error = nullptr;
             context->destroy_context(context->context, &error);

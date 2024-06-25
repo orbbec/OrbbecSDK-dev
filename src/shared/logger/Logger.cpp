@@ -3,7 +3,7 @@
 #include "LoggerInterval.hpp"
 
 #include "exception/ObException.hpp"
-#include "envconfig/EnvConfig.hpp"
+#include "environment/EnvConfig.hpp"
 
 #include "LogCallbackSink.hpp"
 #ifdef __ANDROID__

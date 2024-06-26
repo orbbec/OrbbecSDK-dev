@@ -66,10 +66,10 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
     std::lock_guard<std::recursive_mutex> lock(alignMutex_);
     if(!frame->is<FrameSet>()) {
         LOG_WARN("Invalid frame!");
-        return FrameFactory::cloneFrame(frame, true);
+        return FrameFactory::createFrameFromOtherFrame(frame, true);
     }
 
-    auto newFrame = FrameFactory::cloneFrame(frame);
+    auto newFrame = FrameFactory::createFrameFromOtherFrame(frame);
     auto frames   = newFrame->as<FrameSet>();
     // get type of align_to_stream_
     auto existFrame = frames->getFrame(getAlignFrameType());
@@ -94,7 +94,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
     // prepare "other" data buffer to vector of Frame
     std::vector<std::shared_ptr<const Frame>> other_frames;
     if(align_to_stream_ == OB_STREAM_DEPTH) {  // other to depth
-        uint32_t frameCount = frames->getFrameCount();
+        uint32_t frameCount = frames->getCount();
         for(uint32_t i = 0; i < frameCount; i++) {
             std::shared_ptr<const Frame> item = frames->getFrame(i);
             if((item->getType() != OB_FRAME_DEPTH) && item->is<VideoFrame>()) {
@@ -103,7 +103,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
         }
     }
     else {
-        uint32_t frameCount = frames->getFrameCount();
+        uint32_t frameCount = frames->getCount();
         for(uint32_t i = 0; i < frameCount; i++) {
             std::shared_ptr<const Frame> item = frames->getFrame(i);
             if((item->getType() == streamTypeToFrameType.at(align_to_stream_))) {
@@ -126,7 +126,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
 
             aligned_frame = FrameFactory::createVideoFrame(from->getType(), from->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
             if(aligned_frame) {
-                aligned_frame->copyInfo(from);
+                aligned_frame->copyInfoFromOther(from);
                 aligned_frame->setStreamProfile(alignProfile);
                 alignFrames(aligned_frame, from, depth);
                 frames->pushFrame(std::move(aligned_frame));
@@ -142,7 +142,7 @@ std::shared_ptr<Frame> Align::processFunc(std::shared_ptr<const Frame> frame) {
 
         aligned_frame = FrameFactory::createVideoFrame(depth->getType(), depth->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
         if(aligned_frame) {
-            aligned_frame->copyInfo(depth);
+            aligned_frame->copyInfoFromOther(depth);
             aligned_frame->setStreamProfile(alignProfile);
             alignFrames(aligned_frame, depth, to);
             frames->pushFrame(std::move(aligned_frame));

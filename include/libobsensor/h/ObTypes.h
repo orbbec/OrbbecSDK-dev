@@ -1104,7 +1104,7 @@ typedef enum {
     /**
      * @brief Only FrameSet that contains all types of data frames will be output
      */
-    OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE = 0,
+    OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE = 0,
 
     /**
      * @brief Color Frame Require output mode
@@ -1122,6 +1122,7 @@ typedef enum {
     OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION,
 } OB_FRAME_AGGREGATE_OUTPUT_MODE,
     OBFrameAggregateOutputMode, ob_frame_aggregate_output_mode;
+#define OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE
 
 /**
  * @brief Enumeration of point cloud coordinate system types

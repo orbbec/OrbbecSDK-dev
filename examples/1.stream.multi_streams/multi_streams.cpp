@@ -38,9 +38,9 @@ int main(void) try {
     auto device = pipe.getDevice();
     // Get sensor list from device.
     auto sensorList = device->getSensorList();
-    for(int i = 0; i < static_cast<int>(sensorList->count()); i++) {
+    for(uint32_t i = 0; i < sensorList->getCount(); i++) {
         // Get sensor type.
-        auto sensorType = sensorList->type(i);
+        auto sensorType = sensorList->getSensorType(i);
         if(sensorType == OB_SENSOR_GYRO || sensorType == OB_SENSOR_ACCEL) {
             continue;
         }
@@ -52,7 +52,7 @@ int main(void) try {
     std::mutex                                        frameMutex;
     std::map<OBFrameType, std::shared_ptr<const ob::Frame>> frameMap;
     pipe.start(config, [&](std::shared_ptr<ob::FrameSet> frameset) {
-        uint32_t count = frameset->getFrameCount();
+        uint32_t count = frameset->getCount();
         for(uint32_t i = 0; i < count; i++) {
             auto                         frame = frameset->getFrameByIndex(i);
             std::unique_lock<std::mutex> lk(frameMutex);
@@ -70,7 +70,7 @@ int main(void) try {
         imuConfig->enableGyroStream();
         imuConfig->enableAccelStream();
         imuPipeline->start(imuConfig, [&](std::shared_ptr<ob::FrameSet> frameset) {
-            uint32_t count = frameset->getFrameCount();
+            uint32_t count = frameset->getCount();
             for(uint32_t i = 0; i < count; i++) {
                 const auto                   frame = frameset->getFrameByIndex(i);
                 std::unique_lock<std::mutex> lk(imuFrameMutex);
@@ -112,6 +112,6 @@ int main(void) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

@@ -148,7 +148,7 @@ int main(int argc, char **argv) try {
 
     int count = 0;
     while(true) {
-        auto frameset = pipeline.waitForFrames(100);
+        auto frameset = pipeline.waitForFrameset(100);
         if(kbhit()) {
             int key = getch();
             // Press the ESC key to exit
@@ -160,7 +160,7 @@ int main(int argc, char **argv) try {
                 // Limit up to 10 repetitions
                 while(count++ < 10) {
                     // Wait for a frame of data, the timeout is 100ms
-                    auto frameset = pipeline.waitForFrames(100);
+                    auto frameset = pipeline.waitForFrameset(100);
                     if(frameset != nullptr && frameset->getFrame(OB_FRAME_COLOR)->as<ob::ColorFrame>() != nullptr && frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>() != nullptr) {
                         // point position value multiply depth value scale to convert uint to millimeter (for some devices, the default depth value uint is not
                         // millimeter)
@@ -189,7 +189,7 @@ int main(int argc, char **argv) try {
                 // Limit up to 10 repetitions
                 while(count++ < 10) {
                     // Wait for up to 100ms for a frameset in blocking mode.
-                    auto frameset = pipeline.waitForFrames(100);
+                    auto frameset = pipeline.waitForFrameset(100);
                     if(frameset != nullptr && frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>() != nullptr) {
                         // point position value multiply depth value scale to convert uint to millimeter (for some devices, the default depth value uint is not
                         // millimeter)
@@ -218,6 +218,6 @@ int main(int argc, char **argv) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

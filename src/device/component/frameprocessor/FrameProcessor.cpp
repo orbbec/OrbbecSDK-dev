@@ -4,13 +4,7 @@
 
 namespace libobsensor {
 FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device) {
-    // TODO
-    try {
-        dylib_ = std::make_shared<dylib>(moduleLoadPath_.c_str(), "ob_frame_processor");
-    }
-    catch(...) {
-        return;
-    }
+    dylib_ = std::make_shared<dylib>(moduleLoadPath_.c_str(), "ob_frame_processor");
 
     auto dylib = dylib_;
     context_ = std::shared_ptr<FrameProcessorContext>(new FrameProcessorContext(), [dylib](FrameProcessorContext *context) {
@@ -47,7 +41,7 @@ FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device) {
 FrameProcessorFactory::~FrameProcessorFactory() noexcept = default;
 
 std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSensorType sensorType) {
-    if(!context_->context || context_->create_processor == nullptr) {
+    if(context_ && !context_->context || context_->create_processor == nullptr) {
         return nullptr;
     }
     return std::make_shared<FrameProcessor>(context_, sensorType);
@@ -104,12 +98,12 @@ std::shared_ptr<Frame> FrameProcessor::process(std::shared_ptr<const Frame> fram
         if(error) {
             // TODO
             delete error;
-            return FrameFactory::cloneFrame(frame, true);
+            return FrameFactory::createFrameFromOtherFrame(frame, true);
         }
         return resultFrame;
     }
 
-    return FrameFactory::cloneFrame(frame, true);
+    return FrameFactory::createFrameFromOtherFrame(frame, true);
 }
 
 const std::string &FrameProcessor::getConfigSchema() {

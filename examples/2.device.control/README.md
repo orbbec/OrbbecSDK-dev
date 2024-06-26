@@ -9,15 +9,15 @@ This example is based on the C++ low level API for demonstration
 ```cpp
     // Create a Context.
     ob::Context context;
-    
+
     // Query the list of connected devices
     auto deviceList = context.queryDeviceList();
 ```
 
 Get device and output device information
 ```cpp
-    if(deviceList->deviceCount() > 0) {
-        if(deviceList->deviceCount() <= 1) {
+    if(deviceList->getCount() > 0) {
+        if(deviceList->getCount() <= 1) {
             // If a single device is plugged in, the first one is selected by default
             device = deviceList->getDevice(0);
         }

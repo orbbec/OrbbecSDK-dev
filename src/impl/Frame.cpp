@@ -16,14 +16,14 @@ ob_frame *ob_create_frame(ob_frame_type frame_type, ob_format format, uint32_t d
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame_type, format, data_size)
 
-ob_frame *ob_clone_frame(const ob_frame *ref_frame, bool copy_data, ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(ref_frame);
-    auto innerFrame  = libobsensor::FrameFactory::cloneFrame(ref_frame->frame, copy_data);
+ob_frame *ob_create_frame_from_other_frame(const ob_frame *other_frame, bool should_copy_data, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(other_frame);
+    auto innerFrame  = libobsensor::FrameFactory::createFrameFromOtherFrame(other_frame->frame, should_copy_data);
     auto frameImpl   = new ob_frame();
     frameImpl->frame = innerFrame;
     return frameImpl;
 }
-HANDLE_EXCEPTIONS_AND_RETURN(nullptr, ref_frame, copy_data)
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, other_frame, should_copy_data)
 
 ob_frame *ob_create_frame_from_stream_profile(const ob_stream_profile *stream_profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(stream_profile);
@@ -107,12 +107,12 @@ void ob_delete_frame(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(frame)
 
-void ob_frame_copy_info(const ob_frame *srcframe, ob_frame *dstframe, ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(srcframe);
-    VALIDATE_NOT_NULL(dstframe);
-    dstframe->frame->copyInfo(srcframe->frame);
+void ob_frame_copy_info(const ob_frame *src_frame, ob_frame *dst_frame, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(src_frame);
+    VALIDATE_NOT_NULL(dst_frame);
+    dst_frame->frame->copyInfoFromOther(src_frame->frame);
 }
-HANDLE_EXCEPTIONS_NO_RETURN(srcframe, dstframe)
+HANDLE_EXCEPTIONS_NO_RETURN(src_frame, dst_frame)
 
 uint64_t ob_frame_get_index(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
@@ -162,6 +162,13 @@ uint64_t ob_frame_get_system_timestamp_us(const ob_frame *frame, ob_error **erro
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint64_t(0), frame)
 
+void ob_frame_set_timestamp_from_system_time(ob_frame *frame, uint64_t system_timestamp_us, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    auto innerFrame = frame->frame;
+    innerFrame->setSystemTimeStampUsec(system_timestamp_us);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(frame)
+
 uint64_t ob_frame_get_global_timestamp_us(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->getGlobalTimeStampUsec();
@@ -203,15 +210,9 @@ float ob_points_frame_get_coordinate_value_scale(const ob_frame *frame, ob_error
 }
 HANDLE_EXCEPTIONS_AND_RETURN(-1.0f, frame)
 
-const uint8_t *ob_frame_get_data(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint8_t *ob_frame_get_data(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return const_cast<uint8_t *>(frame->frame->getData());
-}
-HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
-
-uint8_t *ob_frame_get_data_unsafe(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(frame);
-    return frame->frame->getDataUnsafe();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
@@ -229,7 +230,7 @@ uint32_t ob_frame_get_data_size(const ob_frame *frame, ob_error **error) BEGIN_A
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frame)
 
-const uint8_t *ob_frame_get_metadata(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+uint8_t *ob_frame_get_metadata(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return const_cast<uint8_t *>(frame->frame->getMetadata());
 }
@@ -393,11 +394,11 @@ uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error)
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
     }
-    return frameset->frame->as<libobsensor::FrameSet>()->getFrameCount();
+    return frameset->frame->as<libobsensor::FrameSet>()->getCount();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frameset)
 
-const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -407,12 +408,12 @@ const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error *
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame);  // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-const ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -422,12 +423,12 @@ const ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error *
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame);  // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-const ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -437,12 +438,12 @@ const ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **er
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame);  // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-const ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -452,12 +453,12 @@ const ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error 
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it;
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame);  // todo: it's not safe to cast const to non-const, fix it;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-const ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type frame_type, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type frame_type, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -467,12 +468,12 @@ const ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type fr
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame);  // todo: it's not safe to cast const to non-const, fix it
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)
 
-const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, uint32_t index, ob_error **error) BEGIN_API_CALL {
+ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");
@@ -482,7 +483,7 @@ const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, uint32_
         return nullptr;
     }
     auto impl   = new ob_frame();
-    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame); // todo: it's not safe to cast const to non-const, fix it
+    impl->frame = std::const_pointer_cast<libobsensor::Frame>(innerFrame);  // todo: it's not safe to cast const to non-const, fix it
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frameset)

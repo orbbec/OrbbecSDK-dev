@@ -26,7 +26,7 @@ std::shared_ptr<Frame> FilterBase::process(std::shared_ptr<const Frame> frame) {
     }
 
     if(!enabled_) {
-        return FrameFactory::cloneFrame(frame, true);
+        return FrameFactory::createFrameFromOtherFrame(frame, true);
     }
 
     checkAndUpdateConfig();
@@ -49,7 +49,7 @@ void FilterBase::pushFrame(std::shared_ptr<const Frame> frame) {
                 })
             }
             else {
-                rstFrame = FrameFactory::cloneFrame(frameToProcess, true);
+                rstFrame = FrameFactory::createFrameFromOtherFrame(frameToProcess, true);
             }
             std::unique_lock<std::mutex> lock(callbackMutex_);
             if(callback_) {

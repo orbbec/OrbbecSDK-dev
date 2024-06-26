@@ -21,14 +21,14 @@ int main(void) try {
 
     while(app) {
         // Wait for up to 100ms for a frameset in blocking mode.
-        auto frameSet = pipe.waitForFrames(100);
+        auto frameSet = pipe.waitForFrameset(100);
         if(frameSet == nullptr) {
             continue;
         }
         // Get the depth frame from frameset.
-        auto dFrame = frameSet->getFrame(OB_FRAME_DEPTH);
-        if (dFrame) {
-            auto depthFrame = dFrame->as<ob::DepthFrame>();
+        auto frame = frameSet->getFrame(OB_FRAME_DEPTH);
+        if(frame) {
+            auto depthFrame = frame->as<ob::DepthFrame>();
             // for Y16 format depth frame, print the distance of the center pixel every 30 frames.
             if(depthFrame->getIndex() % 30 == 0 && depthFrame->getFormat() == OB_FORMAT_Y16) {
                 uint32_t  width  = depthFrame->getWidth();
@@ -47,7 +47,6 @@ int main(void) try {
             // Render frame in the window
             app.addToRender(depthFrame);
         }
-
     }
 
     // Stop the pipeline
@@ -56,6 +55,6 @@ int main(void) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

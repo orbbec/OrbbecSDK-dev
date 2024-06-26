@@ -49,22 +49,23 @@ void enumerateStreamProfiles(std::shared_ptr<ob::Sensor> sensor){
     // Get the list of stream profiles.
     auto streamProfileList = sensor->getStreamProfileList();
     // Get the sensor type.
-    auto sensorType = sensor->type();
-    for(uint32_t index=0; index < streamProfileList->count(); index++){
+    auto sensorType = sensor->getType();
+    for(uint32_t index = 0; index < streamProfileList->getCount(); index++) {
         // Get the stream profile.
         auto profile = streamProfileList->getProfile(index);
         if(sensorType == OB_SENSOR_IR || sensorType == OB_SENSOR_COLOR || sensorType == OB_SENSOR_DEPTH || sensorType == OB_SENSOR_IR_LEFT || sensorType == OB_SENSOR_IR_RIGHT){
             // Get the video profile.
             auto videoProfile = profile->as<ob::VideoStreamProfile>();
-            std::cout << index << "." << "format: " << streamTypes[profile->format()] << " " << "revolution: " <<videoProfile->width() << "*" << videoProfile->height() << " " << "fps: "<< videoProfile->fps() << std::endl;
+            std::cout << index << "." << "format: " << streamTypes[profile->getFormat()] << " " << "revolution: " << videoProfile->getWidth() << "*"
+                      << videoProfile->getHeight() << " " << "fps: " << videoProfile->getFps() << std::endl;
         }else if(sensorType == OB_SENSOR_ACCEL){
             //Get the acc profile.
             auto accProfile = profile->as<ob::AccelStreamProfile>();
-            std::cout << "acc rate: " << rateTypes[accProfile->sampleRate()] << std::endl;
+            std::cout << "acc rate: " << rateTypes[accProfile->getSampleRate()] << std::endl;
         }else if(sensorType == OB_SENSOR_GYRO){
             //Get the gyro profile.
             auto gyroProfile = profile->as<ob::GyroStreamProfile>();
-            std::cout << "gyro rate: " << rateTypes[gyroProfile->sampleRate()] << std::endl;
+            std::cout << "gyro rate: " << rateTypes[gyroProfile->getSampleRate()] << std::endl;
         }else{
             break;
         }
@@ -76,9 +77,9 @@ void enumerateSensors(std::shared_ptr<ob::Device> device){
     while(true){
         // Get the list of sensors.
         auto sensorList = device->getSensorList();
-        for(uint32_t index = 0; index < sensorList->count(); index++) {
+        for(uint32_t index = 0; index < sensorList->getCount(); index++) {
             // Get the sensor type.
-            auto sensorType = sensorList->type(index);
+            auto sensorType = sensorList->getSensorType(index);
             std::cout << index << "." <<"sensor type:" << sensorTypes[sensorType] << std::endl;
         }
 
@@ -103,15 +104,16 @@ int main(void) try {
         // Query the list of connected devices
         auto deviceList = context.queryDeviceList();
 
-        if(deviceList->deviceCount() < 1){
+        if(deviceList->getCount() < 1) {
             std::cout << "Not found device !" << std::endl;
             return -1;
         }
 
         std::cout << "enumerated devices: " << std::endl;
-        for(uint32_t index=0; index < deviceList->deviceCount(); index++){
+        for(uint32_t index = 0; index < deviceList->getCount(); index++) {
             auto deviceInfo = deviceList->getDevice(index)->getDeviceInfo();
-            std::cout << " - " << index << ". name: " << deviceInfo->name() << " pid: " << deviceInfo->pid() << " SN: " << deviceInfo->serialNumber() << std::endl;
+            std::cout << " - " << index << ". name: " << deviceInfo->getName() << " pid: " << deviceInfo->getPid() << " SN: " << deviceInfo->getSerialNumber()
+                      << std::endl;
         }
 
         std::cout << "enumerate sensors of device (input device index or \'q\' to exit program):" << std::endl;
@@ -131,6 +133,6 @@ int main(void) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

@@ -497,11 +497,13 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         // frame preprocessor
         std::shared_ptr<FrameProcessor> frameProcessor = nullptr;
         if(!frameProcessorFactory_) {
-            frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this());
+            TRY_EXECUTE(frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this()));
         }
-        frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
-        if(frameProcessor) {
-            videoSensor->setFrameProcessor(frameProcessor);
+        if(frameProcessorFactory_) {
+            frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
+            if(frameProcessor) {
+                videoSensor->setFrameProcessor(frameProcessor);
+            }
         }
 
         iter->second.sensor = videoSensor;  // store
@@ -547,19 +549,18 @@ void G330Device::deactivate() {
     // todo: implement this
 }
 
-void G330Device::updateFirmware(const char *data, uint32_t dataSize, DeviceFwUpdateCallback updateCallback, bool async) {
+void G330Device::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) {
     // todo: implement this
-    utils::unusedVar(data);
-    utils::unusedVar(dataSize);
+    utils::unusedVar(firmware);
     utils::unusedVar(updateCallback);
     utils::unusedVar(async);
+    throw not_implemented_exception("Not implemented!");
 }
 
 const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uint8_t> &data) {
     // todo: implement this
     utils::unusedVar(data);
-    static std::vector<uint8_t> emptyData;
-    return emptyData;
+    throw not_implemented_exception("Not implemented!");
 }
 
 std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, OBSensorType type, bool createIfNotExist) {

@@ -255,7 +255,7 @@ const std::vector<UsbDeviceInfo> &UsbEnumerator::queryDevicesInfo() {
     std::unique_lock<std::recursive_mutex> lock(usbCtxMutex_);
     usbCtx_->refreshDeviceList();
 
-    for(size_t idx = 0; idx < usbCtx_->deviceCount(); ++idx) {
+    for(size_t idx = 0; idx < usbCtx_->getCount(); ++idx) {
         auto device = usbCtx_->getDevice(static_cast<uint8_t>(idx));
         if(device == nullptr)
             continue;
@@ -314,7 +314,7 @@ const std::vector<UsbDeviceInfo> &UsbEnumerator::queryDevicesInfo() {
 std::shared_ptr<UsbDevice> UsbEnumerator::createUsbDevice(const std::string &devUrl, const uint8_t retry) {
     std::unique_lock<std::recursive_mutex> lock(usbCtxMutex_);
 
-    for(size_t idx = 0; idx < usbCtx_->deviceCount(); ++idx) {
+    for(size_t idx = 0; idx < usbCtx_->getCount(); ++idx) {
         auto device = usbCtx_->getDevice(static_cast<uint8_t>(idx));
 
         if(device == nullptr || getDevicePath(device) != devUrl)
@@ -364,7 +364,7 @@ bool findSN2Toupper(const std::string &src, std::string &dst) {
 bool UsbEnumerator::getStringDesc(UsbDeviceInfo &info) {
     std::unique_lock<std::recursive_mutex> lock(usbCtxMutex_);
 
-    for(size_t idx = 0; idx < usbCtx_->deviceCount(); ++idx) {
+    for(size_t idx = 0; idx < usbCtx_->getCount(); ++idx) {
         auto device  = usbCtx_->getDevice(static_cast<uint8_t>(idx));
         auto devPath = getDevicePath(device);
         if(device == nullptr || devPath != info.url)

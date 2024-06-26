@@ -53,7 +53,6 @@ public:
     void           setNumber(const uint64_t number);
     size_t         getDataSize() const;
     const uint8_t *getData() const;
-    uint8_t       *getDataUnsafe() const;  // use with caution, data may be changed while other threads are using it
     void           updateData(const uint8_t *data, size_t dataSize);
     uint64_t       getTimeStampUsec() const;
     void           setTimeStampUsec(uint64_t ts);
@@ -77,15 +76,15 @@ public:
     void                                 setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile);
     OBFormat                             getFormat() const;  // get from stream profile
 
-    virtual void copyInfo(std::shared_ptr<const Frame> sourceFrame);
+    virtual void copyInfoFromOther(std::shared_ptr<const Frame> otherFrame);
 
     template <typename T> bool               is() const{
         return std::dynamic_pointer_cast<const T>(shared_from_this()) != nullptr;
     }
 
-    template <typename T> bool               is(){
-        return std::dynamic_pointer_cast<T>(shared_from_this()) != nullptr;
-    }
+    // template <typename T> bool               is(){
+    //     return std::dynamic_pointer_cast<T>(shared_from_this()) != nullptr;
+    // }
 
     template <typename T> std::shared_ptr<T> as() {
         if(!is<T>()) {
@@ -138,7 +137,7 @@ public:
     uint8_t getPixelAvailableBitSize() const;
     void    setPixelAvailableBitSize(uint8_t bitSize);
 
-    virtual void copyInfo(std::shared_ptr<const Frame> sourceFrame) override;
+    virtual void copyInfoFromOther(std::shared_ptr<const Frame> sourceFrame) override;
 
 protected:
     uint8_t  availableBitSize_;  // available bit size of each pixel
@@ -157,7 +156,7 @@ public:
     void  setValueScale(float valueScale);
     float getValueScale() const;
 
-    virtual void copyInfo(std::shared_ptr<const Frame> sourceFrame) override;
+    virtual void copyInfoFromOther(std::shared_ptr<const Frame> sourceFrame) override;
 
 private:
     float valueScale_;
@@ -224,7 +223,7 @@ public:
     FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
     ~FrameSet() noexcept;
 
-    uint32_t getFrameCount() const;
+    uint32_t getCount() const;
 
     std::shared_ptr<const Frame> getFrame(OBFrameType frameType) const;
     std::shared_ptr<const Frame> getFrame(int index) const;

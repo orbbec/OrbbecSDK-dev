@@ -17,13 +17,13 @@ void ob_delete_device_list(ob_device_list *list, ob_error **error) BEGIN_API_CAL
 }
 HANDLE_EXCEPTIONS_NO_RETURN(list)
 
-uint32_t ob_device_list_get_device_count(ob_device_list *list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_device_list_get_device_count(const ob_device_list *list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     return static_cast<uint32_t>(list->list.size());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, list)
 
-const char *ob_device_list_get_device_name(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_list_get_device_name(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
@@ -31,7 +31,7 @@ const char *ob_device_list_get_device_name(ob_device_list *list, uint32_t index,
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
-int ob_device_list_get_device_pid(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+int ob_device_list_get_device_pid(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
@@ -39,7 +39,7 @@ int ob_device_list_get_device_pid(ob_device_list *list, uint32_t index, ob_error
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, list, index)
 
-int ob_device_list_get_device_vid(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+int ob_device_list_get_device_vid(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
@@ -47,7 +47,7 @@ int ob_device_list_get_device_vid(ob_device_list *list, uint32_t index, ob_error
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, list, index)
 
-const char *ob_device_list_get_device_uid(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_list_get_device_uid(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size() - 1);
     auto &info = list->list[index];
@@ -55,7 +55,7 @@ const char *ob_device_list_get_device_uid(ob_device_list *list, uint32_t index, 
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
-const char *ob_device_list_get_device_serial_number(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_list_get_device_serial_number(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
@@ -63,7 +63,7 @@ const char *ob_device_list_get_device_serial_number(ob_device_list *list, uint32
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
-const char *ob_device_list_get_device_connection_type(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_list_get_device_connection_type(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
@@ -71,7 +71,7 @@ const char *ob_device_list_get_device_connection_type(ob_device_list *list, uint
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
-const char *ob_device_list_get_device_ip_address(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_list_get_device_ip_address(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     // auto &info = list->list[index];
@@ -79,7 +79,7 @@ const char *ob_device_list_get_device_ip_address(ob_device_list *list, uint32_t 
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
-ob_device *ob_device_list_get_device(ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+ob_device *ob_device_list_get_device(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info   = list->list[index];
@@ -91,7 +91,7 @@ ob_device *ob_device_list_get_device(ob_device_list *list, uint32_t index, ob_er
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
-ob_device *ob_device_list_get_device_by_serial_number(ob_device_list *list, const char *serial_number, ob_error **error) BEGIN_API_CALL {
+ob_device *ob_device_list_get_device_by_serial_number(const ob_device_list *list, const char *serial_number, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_NOT_NULL(serial_number);
     for(auto &info: list->list) {
@@ -106,7 +106,7 @@ ob_device *ob_device_list_get_device_by_serial_number(ob_device_list *list, cons
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, serial_number)
 
-ob_device *ob_device_list_get_device_by_uid(ob_device_list *list, const char *uid, ob_error **error) BEGIN_API_CALL {
+ob_device *ob_device_list_get_device_by_uid(const ob_device_list *list, const char *uid, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_NOT_NULL(uid);
     for(auto &info: list->list) {
@@ -127,7 +127,7 @@ void ob_delete_device(ob_device *device, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device)
 
-ob_sensor_list *ob_device_get_sensor_list(ob_device *device, ob_error **error) BEGIN_API_CALL {
+ob_sensor_list *ob_device_get_sensor_list(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto impl         = new ob_sensor_list();
     impl->device      = device->device;
@@ -234,14 +234,14 @@ void ob_device_get_structured_data(ob_device *device, ob_property_id property_id
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
 
-uint32_t ob_device_get_supported_property_count(ob_device *device, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_device_get_supported_property_count(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto accessor = device->device->getPropertyAccessor();
     return static_cast<int>(accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER).size());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, device)
 
-ob_property_item ob_device_get_supported_property_item(ob_device *device, uint32_t index, ob_error **error) BEGIN_API_CALL {
+ob_property_item ob_device_get_supported_property_item(const ob_device *device, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto accessor   = device->device->getPropertyAccessor();
     auto properties = accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER);
@@ -250,7 +250,7 @@ ob_property_item ob_device_get_supported_property_item(ob_device *device, uint32
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_property_item(), device, index)
 
-bool ob_device_is_property_supported(ob_device *device, ob_property_id property_id, ob_permission_type permission, ob_error **error) BEGIN_API_CALL {
+bool ob_device_is_property_supported(const ob_device *device, ob_property_id property_id, ob_permission_type permission, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto operationType = libobsensor::PROP_OP_READ_WRITE;
     if(permission == OB_PERMISSION_READ) {
@@ -268,9 +268,37 @@ HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission);
 // todo: implement below:
 // bool ob_device_is_global_timestamp_supported(ob_device *device, ob_error **error);
 
-// void ob_device_update_firmware(ob_device *device, const char *path, ob_device_fw_update_callback callback, bool async, void *user_data, ob_error **error);
-// void ob_device_upgrade_firmware_from_data(ob_device *device, const char *data, uint32_t data_size, ob_device_fw_update_callback callback, bool async,
-//                                           void *user_data, ob_error **error);
+void ob_device_update_firmware(ob_device *device, const char *path, ob_device_fw_update_callback callback, bool async, void *user_data,
+                               ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    VALIDATE_NOT_NULL(path);
+    VALIDATE_NOT_NULL(callback);
+    auto data = libobsensor::utils::readFile(path);
+
+    device->device->updateFirmware(
+        data,
+        [callback, user_data](ob_fw_update_state status, const char *message, uint8_t percent) {  //
+            callback(status, message, percent, user_data);
+        },
+        async);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device, path, callback, async, user_data)
+
+void ob_device_update_firmware_from_data(ob_device *device, const uint8_t *data, uint32_t data_size, ob_device_fw_update_callback callback, bool async,
+                                         void *user_data, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    VALIDATE_NOT_NULL(data);
+    VALIDATE_NOT_NULL(callback);
+    auto dataVec = std::vector<uint8_t>(data, data + data_size);
+    device->device->updateFirmware(
+        dataVec,
+        [callback, user_data](ob_fw_update_state status, const char *message, uint8_t percent) {  //
+            callback(status, message, percent, user_data);
+        },
+        async);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device, data, data_size, callback, async, user_data)
+
 // ob_device_state ob_device_get_device_state(ob_device *device, ob_error **error);
 // void            ob_device_set_state_changed_callback(ob_device *device, ob_device_state_callback callback, void *user_data, ob_error **error);
 
@@ -280,7 +308,7 @@ void ob_device_reboot(ob_device *device, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device)
 
-ob_device_info *ob_device_get_device_info(ob_device *device, ob_error **error) BEGIN_API_CALL {
+ob_device_info *ob_device_get_device_info(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto info  = device->device->getInfo();
     auto impl  = new ob_device_info();
@@ -295,55 +323,55 @@ void ob_delete_device_info(ob_device_info *info, ob_error **error) BEGIN_API_CAL
 }
 HANDLE_EXCEPTIONS_NO_RETURN(info)
 
-const char *ob_device_info_get_name(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_name(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->name_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-int ob_device_info_get_pid(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+int ob_device_info_get_pid(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->pid_;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, info)
 
-int ob_device_info_get_vid(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+int ob_device_info_get_vid(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->vid_;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, info)
 
-const char *ob_device_info_get_uid(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_uid(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->uid_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-const char *ob_device_info_get_serial_number(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_serial_number(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->deviceSn_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-const char *ob_device_info_get_firmware_version(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_firmware_version(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->fwVersion_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-const char *ob_device_info_get_hardware_version(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_hardware_version(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->hwVersion_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-const char *ob_device_info_get_connection_type(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_connection_type(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->connectionType_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-const char *ob_device_info_get_ip_address(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_ip_address(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     // return info->info->ipAddress_.c_str();
     // todo: implement this
@@ -351,25 +379,25 @@ const char *ob_device_info_get_ip_address(ob_device_info *info, ob_error **error
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-const char *ob_device_info_get_supported_min_sdk_version(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_supported_min_sdk_version(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->supportedSdkVersion_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-const char *ob_device_info_get_asicName(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_asicName(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return info->info->asicName_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-ob_device_type ob_device_info_get_device_type(ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+ob_device_type ob_device_info_get_device_type(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     return static_cast<ob_device_type>(info->info->type_);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_DEVICE_TYPE_UNKNOWN, info)
 
-const char *ob_device_info_get_extension_info(ob_device_info *info, const char *info_key, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_extension_info(const ob_device_info *info, const char *info_key, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     VALIDATE_NOT_NULL(info_key);
     // auto iter = info->info->extensionInfo_.find(info_key);

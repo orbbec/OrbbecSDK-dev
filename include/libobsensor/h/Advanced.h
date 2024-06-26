@@ -12,7 +12,7 @@ extern "C" {
  *
  * @return ob_depth_work_mode The current depth work mode.
  */
-OB_EXPORT ob_depth_work_mode ob_device_get_current_depth_work_mode(ob_device *device, ob_error **error);
+OB_EXPORT ob_depth_work_mode ob_device_get_current_depth_work_mode(const ob_device *device, ob_error **error);
 
 /**
  * @brief Switch the depth work mode by ob_depth_work_mode.
@@ -45,7 +45,7 @@ OB_EXPORT ob_status ob_device_switch_depth_work_mode_by_name(ob_device *device, 
  *
  * @return ob_depth_work_mode_list The list of ob_depth_work_mode.
  */
-OB_EXPORT ob_depth_work_mode_list *ob_device_get_depth_work_mode_list(ob_device *device, ob_error **error);
+OB_EXPORT ob_depth_work_mode_list *ob_device_get_depth_work_mode_list(const ob_device *device, ob_error **error);
 
 /**
  * \if English
@@ -55,7 +55,7 @@ OB_EXPORT ob_depth_work_mode_list *ob_device_get_depth_work_mode_list(ob_device 
  * @return The total number contained in ob_depth_work_mode_list
  *
  */
-OB_EXPORT uint32_t ob_depth_work_mode_list_count(ob_depth_work_mode_list *work_mode_list, ob_error **error);
+OB_EXPORT uint32_t ob_depth_work_mode_list_count(const ob_depth_work_mode_list *work_mode_list, ob_error **error);
 
 /**
  * @brief Get the index target of ob_depth_work_mode from work_mode_list
@@ -66,7 +66,7 @@ OB_EXPORT uint32_t ob_depth_work_mode_list_count(ob_depth_work_mode_list *work_m
  * @return ob_depth_work_mode
  *
  */
-OB_EXPORT ob_depth_work_mode ob_depth_work_mode_list_get_item(ob_depth_work_mode_list *work_mode_list, uint32_t index, ob_error **error);
+OB_EXPORT ob_depth_work_mode ob_depth_work_mode_list_get_item(const ob_depth_work_mode_list *work_mode_list, uint32_t index, ob_error **error);
 
 /**
  * @brief Free the resources of ob_depth_work_mode_list
@@ -85,7 +85,7 @@ OB_EXPORT void ob_delete_depth_work_mode_list(ob_depth_work_mode_list *work_mode
  * @param error  Pointer to an error object that will be set if an error occurs.
  * @return  The current preset name, it should be one of the preset names returned by @ref ob_device_get_available_preset_list.
  */
-OB_EXPORT const char *ob_device_get_current_preset_name(ob_device *device, ob_error **error);
+OB_EXPORT const char *ob_device_get_current_preset_name(const ob_device *device, ob_error **error);
 
 /**
  * @brief Get the available preset list.
@@ -127,7 +127,7 @@ OB_EXPORT void ob_device_export_current_settings_as_preset_json_file(ob_device *
  * @param error  Pointer to an error object that will be set if an error occurs.
  * @return  The available preset list.
  */
-OB_EXPORT ob_device_preset_list *ob_device_get_available_preset_list(ob_device *device, ob_error **error);
+OB_EXPORT ob_device_preset_list *ob_device_get_available_preset_list(const ob_device *device, ob_error **error);
 
 /**
  * @brief Delete the available preset list.
@@ -144,7 +144,7 @@ OB_EXPORT void ob_delete_preset_list(ob_device_preset_list *preset_list, ob_erro
  * @param error  Pointer to an error object that will be set if an error occurs.
  * @return  The number of preset in the preset list.
  */
-OB_EXPORT uint32_t ob_device_preset_list_count(ob_device_preset_list *preset_list, ob_error **error);
+OB_EXPORT uint32_t ob_device_preset_list_count(const ob_device_preset_list *preset_list, ob_error **error);
 
 /**
  * @brief Get the name of the preset in the preset list.
@@ -154,7 +154,7 @@ OB_EXPORT uint32_t ob_device_preset_list_count(ob_device_preset_list *preset_lis
  * @param error  Pointer to an error object that will be set if an error occurs.
  * @return  The name of the preset in the preset list.
  */
-OB_EXPORT const char *ob_device_preset_list_get_name(ob_device_preset_list *preset_list, uint32_t index, ob_error **error);
+OB_EXPORT const char *ob_device_preset_list_get_name(const ob_device_preset_list *preset_list, uint32_t index, ob_error **error);
 
 /**
  * @brief Check if the preset list has the preset.
@@ -164,7 +164,7 @@ OB_EXPORT const char *ob_device_preset_list_get_name(ob_device_preset_list *pres
  * @param error  Pointer to an error object that will be set if an error occurs.
  * @return  Whether the preset list has the preset. If true, the preset list has the preset. If false, the preset list does not have the preset.
  */
-OB_EXPORT bool ob_device_preset_list_has_preset(ob_device_preset_list *preset_list, const char *preset_name, ob_error **error);
+OB_EXPORT bool ob_device_preset_list_has_preset(const ob_device_preset_list *preset_list, const char *preset_name, ob_error **error);
 
 #ifdef __cplusplus
 }

@@ -96,7 +96,7 @@ public:
     virtual void reboot()     = 0;
     virtual void deactivate() = 0;
 
-    virtual void updateFirmware(const char *data, uint32_t dataSize, DeviceFwUpdateCallback updateCallback, bool async) = 0;
+    virtual void updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) = 0;
 
     // for debug and vendor specific purpose
     virtual const std::vector<uint8_t> &sendAndReceiveData(const std::vector<uint8_t> &data) = 0;

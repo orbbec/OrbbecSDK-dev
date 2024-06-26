@@ -73,7 +73,7 @@ libusb_device *UsbContext::getDevice(uint8_t index) {
     return index < count_ ? list_[index] : NULL;
 }
 
-size_t UsbContext::deviceCount() {
+size_t UsbContext::getCount() {
     return count_;
 }
 

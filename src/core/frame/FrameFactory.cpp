@@ -23,22 +23,17 @@ std::shared_ptr<Frame> FrameFactory::createFrame(OBFrameType frameType, OBFormat
     return frame;
 }
 
-std::shared_ptr<Frame> FrameFactory::cloneFrame(std::shared_ptr<const Frame> frame, bool copyData) {
+std::shared_ptr<Frame> FrameFactory::createFrameFromOtherFrame(std::shared_ptr<const Frame> frame, bool shouldCopyData) {
     if(frame->is<FrameSet>()) {
         auto newFrameSet = createFrameSet();
         auto frameSet    = frame->as<FrameSet>();
-        auto frameCount  = frameSet->getFrameCount();
+        auto frameCount  = frameSet->getCount();
         for(uint32_t i = 0; i < frameCount; i++) {
             std::shared_ptr<const Frame> oldFrame = frameSet->getFrame(i);
-            if(copyData) {
+            if(shouldCopyData) {
                 auto newFrame = createFrameFromStreamProfile(oldFrame->getStreamProfile());
                 newFrame->updateData(oldFrame->getData(), oldFrame->getDataSize());
-                if(newFrame->is<VideoFrame>()) {
-                    auto vf    = oldFrame->as<VideoFrame>();
-                    auto newVf = newFrame->as<VideoFrame>();
-                    newVf->updateMetadata(vf->getMetadata(), vf->getMetadataSize());
-                }
-                newFrame->copyInfo(oldFrame);
+                newFrame->copyInfoFromOther(oldFrame);
                 newFrameSet->pushFrame(std::move(newFrame));
             }
             else {
@@ -49,17 +44,12 @@ std::shared_ptr<Frame> FrameFactory::cloneFrame(std::shared_ptr<const Frame> fra
     }
     else {
         auto newFrame = createFrameFromStreamProfile(frame->getStreamProfile());
-        if(copyData) {
+        if(shouldCopyData) {
             newFrame->updateData(frame->getData(), frame->getDataSize());
-            if(newFrame->is<VideoFrame>()) {
-                auto vf    = frame->as<VideoFrame>();
-                auto newVf = newFrame->as<VideoFrame>();
-                newVf->updateMetadata(vf->getMetadata(), vf->getMetadataSize());
-            }
         }
-        newFrame->copyInfo(frame);
+        newFrame->copyInfoFromOther(frame);
         return newFrame;
-    } 
+    }
 }
 
 std::shared_ptr<Frame> FrameFactory::createVideoFrame(OBFrameType frameType, OBFormat frameFormat, uint32_t width, uint32_t height, uint32_t strideBytes) {

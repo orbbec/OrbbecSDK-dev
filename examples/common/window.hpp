@@ -166,35 +166,35 @@ private:
                     auto videoFrame = frame->as<const ob::VideoFrame>();
                     switch(videoFrame->getFormat()) {
                     case OB_FORMAT_MJPG: {
-                        cv::Mat rawMat(1, videoFrame->getDataSize(), CV_8UC1, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat(1, videoFrame->getDataSize(), CV_8UC1, videoFrame->getData());
                         rstMat = cv::imdecode(rawMat, 1);
                     } break;
                     case OB_FORMAT_NV21: {
-                        cv::Mat rawMat(videoFrame->getHeight() * 3 / 2, videoFrame->getWidth(), CV_8UC1, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat(videoFrame->getHeight() * 3 / 2, videoFrame->getWidth(), CV_8UC1, videoFrame->getData());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_YUV2BGR_NV21);
                     } break;
                     case OB_FORMAT_YUYV:
                     case OB_FORMAT_YUY2: {
-                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC2, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC2, videoFrame->getData());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_YUV2BGR_YUY2);
                     } break;
                     case OB_FORMAT_RGB: {
-                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC3, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC3, videoFrame->getData());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_RGB2BGR);
                     } break;
                     case OB_FORMAT_RGBA: {
-                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getData());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_RGBA2BGRA);
                     } break;
                     case OB_FORMAT_BGRA: {
-                        rstMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getDataUnsafe());
+                        rstMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getData());
                     } break;
                     case OB_FORMAT_UYVY: {
-                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC2, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC2, videoFrame->getData());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_YUV2BGR_UYVY);
                     } break;
                     case OB_FORMAT_I420: {
-                        cv::Mat rawMat(videoFrame->getHeight() * 3 / 2, videoFrame->getWidth(), CV_8UC1, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat(videoFrame->getHeight() * 3 / 2, videoFrame->getWidth(), CV_8UC1, videoFrame->getData());
                         cv::cvtColor(rawMat, rstMat, cv::COLOR_YUV2BGR_I420);
                     } break;
                     default:
@@ -208,7 +208,7 @@ private:
                     auto videoFrame = frame->as<const ob::VideoFrame>();
                     if(videoFrame->getFormat() == OB_FORMAT_Y16 || videoFrame->getFormat() == OB_FORMAT_Z16) {
                         cv::Mat cvtMat;
-                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getData());
                         // depth frame pixel value multiply scale to get distance in millimeter
                         float scale = videoFrame->as<ob::DepthFrame>()->getValueScale();
 
@@ -225,16 +225,16 @@ private:
                     auto videoFrame = frame->as<const ob::VideoFrame>();
                     if(videoFrame->getFormat() == OB_FORMAT_Y16) {
                         cv::Mat cvtMat;
-                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getData());
                         rawMat.convertTo(cvtMat, CV_8UC1, 1.0 / 16.0f);
                         cv::cvtColor(cvtMat, rstMat, cv::COLOR_GRAY2RGB);
                     }
                     else if(videoFrame->getFormat() == OB_FORMAT_Y8) {
-                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC1, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC1, videoFrame->getData());
                         cv::cvtColor(rawMat * 2, rstMat, cv::COLOR_GRAY2RGB);
                     }
                     else if(videoFrame->getFormat() == OB_FORMAT_MJPG) {
-                        cv::Mat rawMat(1, videoFrame->getDataSize(), CV_8UC1, videoFrame->getDataUnsafe());
+                        cv::Mat rawMat(1, videoFrame->getDataSize(), CV_8UC1, videoFrame->getData());
                         rstMat = cv::imdecode(rawMat, 1);
                         cv::cvtColor(rstMat * 2, rstMat, cv::COLOR_GRAY2RGB);
                     }

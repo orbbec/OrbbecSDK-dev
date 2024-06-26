@@ -114,7 +114,7 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
                                                     coordinateSystemType_);
 
     float depthValueScale = depthFrame->as<DepthFrame>()->getValueScale();
-    pointFrame->copyInfo(depthFrame);
+    pointFrame->copyInfoFromOther(depthFrame);
     // Actual coordinate scaling = Depth scaling factor / Set coordinate scaling factor.
     pointFrame->as<PointsFrame>()->setCoordinateValueScale(depthValueScale / positionDataScale_);
 
@@ -245,7 +245,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     }
 
     float depthValueScale = depthVideoFrame->as<DepthFrame>()->getValueScale();
-    pointFrame->copyInfo(depthFrame);
+    pointFrame->copyInfoFromOther(depthFrame);
     //Actual coordinate scaling = Depth scaling factor / Set coordinate scaling factor.
     pointFrame->as<PointsFrame>()->setCoordinateValueScale(depthValueScale / positionDataScale_);
     return pointFrame;
@@ -257,7 +257,7 @@ std::shared_ptr<Frame> PointCloudFilter::processFunc(std::shared_ptr<const Frame
     }
 
     std::shared_ptr<Frame> pointsFrame = nullptr;
-    auto                   newFrame    = FrameFactory::cloneFrame(frame);
+    auto                   newFrame    = FrameFactory::createFrameFromOtherFrame(frame);
     if(pointFormat_ == OB_FORMAT_POINT) {
         pointsFrame = createDepthPointCloud(newFrame);
     }

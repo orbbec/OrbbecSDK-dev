@@ -9,7 +9,7 @@ This example is based on the C++ High Level API for demonstration
     ob::Pipeline pipe;
 ```
 
-## 2. By creating config to configure which streams to enable 
+## 2. By creating config to configure which streams to enable
 ```cpp
     // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
@@ -24,13 +24,13 @@ This example is based on the C++ High Level API for demonstration
 ## 4. Obtain Depth frame data
 Wait for a frame of data in a blocking manner which is a composite frame containing frame data for all streams enabled in the configuration, and set the waiting timeout time for the frame
 ```cpp
-    auto frameSet = pipe.waitForFrames(100);	//Set the waiting time to 100ms
+    auto frameSet = pipe.waitForFrameset(100);	//Set the waiting time to 100ms
 ```
 
 ## 5. Stop Pipeline, no more frame data will be generated
 ```cpp
     pipe.stop();
 ```
-## 6. expected Output 
+## 6. expected Output
 
 ![image](Image/DepthViewer.png)

@@ -227,7 +227,7 @@ std::shared_ptr<Frame> DecimationFilter::processFunc(std::shared_ptr<const Frame
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::cloneFrame(frame);
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
     if(outFrame->is<FrameSet>()) {
         LOG_WARN_INTVL("The Frame processed by DecimationFilter cannot be FrameSet!");
         return outFrame;
@@ -245,7 +245,7 @@ std::shared_ptr<Frame> DecimationFilter::processFunc(std::shared_ptr<const Frame
         OBFormat    frameFormat = outFrame->getFormat();
         auto        newOutFrame = FrameFactory::createFrameFromStreamProfile(target_stream_profile_);
         if(newOutFrame) {
-            newOutFrame->copyInfo(outFrame);
+            newOutFrame->copyInfoFromOther(outFrame);
             auto oldVideoFrame = outFrame->as<VideoFrame>();
             auto newViodeFrame = newOutFrame->as<VideoFrame>();
             if(outFrame->getType() == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16 || frameFormat == OB_FORMAT_DISP16)) {

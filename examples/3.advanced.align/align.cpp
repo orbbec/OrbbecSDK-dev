@@ -87,7 +87,7 @@ int main(void) try {
     while(app) {
         keyEventProcess(app, pipe, config);
 
-        auto frameSet = pipe.waitForFrames(100);
+        auto frameSet = pipe.waitForFrameset(100);
         if(frameSet == nullptr) {
             continue;
         }
@@ -103,6 +103,6 @@ int main(void) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

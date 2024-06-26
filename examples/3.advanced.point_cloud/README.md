@@ -22,13 +22,13 @@ Firstly，create two functions to save the point cloud data obtained f
         fprintf(fp, "property float y\n");
         fprintf(fp, "property float z\n");
         fprintf(fp, "end_header\n");
-    
+
         OBPoint *point = (OBPoint *)frame->data();
         for(int i = 0; i < pointsSize; i++) {
             fprintf(fp, "%.3f %.3f %.3f\n", point->x, point->y, point->z);
             point++;
         }
-    
+
         fflush(fp);
         fclose(fp);
     }
@@ -49,13 +49,13 @@ Create another function to save color point cloud data for storing co
         fprintf(fp, "property uchar green\n");
         fprintf(fp, "property uchar blue\n");
         fprintf(fp, "end_header\n");
-    
+
         OBColorPoint *point = (OBColorPoint *)frame->data();
         for(int i = 0; i < pointsSize; i++) {
             fprintf(fp, "%.3f %.3f %.3f %d %d %d\n", point->x, point->y, point->z, (int)point->r, (int)point->g, (int)point->b);
             point++;
         }
-    
+
         fflush(fp);
         fclose(fp);
     }
@@ -103,7 +103,7 @@ Set the Log level to avoid excessive Info level logs affecting the o
     else {
         depthProfileList = pipeline.getStreamProfileList(OB_SENSOR_DEPTH);
     }
-    
+
     if(depthProfileList->count() > 0) {
         std::shared_ptr<ob::StreamProfile> depthProfile;
         try {
@@ -115,7 +115,7 @@ Set the Log level to avoid excessive Info level logs affecting the o
         catch(...) {
             depthProfile = nullptr;
         }
-    
+
         if(!depthProfile) {
             // If no matching profile is found, select the default profile.
             depthProfile = depthProfileList->getProfile(OB_PROFILE_DEFAULT);
@@ -138,7 +138,7 @@ Set the Log level to avoid excessive Info level logs affecting the o
 ```cpp
     // Create a point cloud filter object (when creating a point cloud filter, device parameters are obtained within the Pipeline, so it is recommended to configure the device as much as possible before creating the filter)
     ob::PointCloudFilter pointCloud;
-    
+
     // Get camera internal parameters and input them into the point cloud filter
     auto cameraParam = pipeline.getCameraParam();
     pointCloud.setCameraParam(cameraParam);
@@ -156,7 +156,7 @@ Set some operation prompts
       // Limit up to 10 repetitions
       while(count++ < 10) {
         // Waiting for one frame of data with a timeout of 100ms
-        auto frameset = pipeline.waitForFrames(100);
+        auto frameset = pipeline.waitForFrameset(100);
         if(frameset != nullptr && frameset->depthFrame() != nullptr && frameset->colorFrame() != nullptr) {
           try {
             // Generate colored point clouds and save them
@@ -178,7 +178,7 @@ Set some operation prompts
       // Limit up to 10 repetitions
       while(count++ < 10) {
         // Waiting for one frame of data with a timeout of 100ms
-        auto frameset = pipeline.waitForFrames(100);
+        auto frameset = pipeline.waitForFrameset(100);
         if(frameset != nullptr && frameset->depthFrame() != nullptr) {
           try {
             // Generate point cloud and save

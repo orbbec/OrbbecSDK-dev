@@ -17,5 +17,4 @@
 // #include <libobsensor/hpp/RecordPlayback.hpp>
 #include <libobsensor/hpp/Sensor.hpp>
 #include <libobsensor/hpp/StreamProfile.hpp>
-#include <libobsensor/hpp/Types.hpp>
 #include <libobsensor/hpp/Version.hpp>

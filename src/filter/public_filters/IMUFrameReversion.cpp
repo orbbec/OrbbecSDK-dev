@@ -29,7 +29,7 @@ std::shared_ptr<Frame> IMUFrameReversion::processFunc(std::shared_ptr<const Fram
         return nullptr;
     }
 
-    auto newFrame = FrameFactory::cloneFrame(frame, true);
+    auto newFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
     if(!frame->is<FrameSet>()) {
         return newFrame;
     }

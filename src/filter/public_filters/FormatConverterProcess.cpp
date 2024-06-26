@@ -98,7 +98,7 @@ std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame>
         tarStreamProfile_ = videoStreamProfile->clone();
     }
 
-    tarFrame->copyInfo(frame);
+    tarFrame->copyInfoFromOther(frame);
     switch(convertType_) {
     case FORMAT_YUYV_TO_RGB:
         yuyvToRgb((uint8_t *)frame->getData(), (uint8_t *)tarFrame->getData(), w, h);

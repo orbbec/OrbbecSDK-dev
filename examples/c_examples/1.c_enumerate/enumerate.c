@@ -59,7 +59,7 @@ void enumerate_stream_info(ob_sensor *sensor) {
     check_ob_error(&error);
 
     // Get stream profile count.
-    uint32_t stream_profile_count = ob_stream_profile_list_count(stream_profile_list, &error);
+    uint32_t stream_profile_count = ob_stream_profile_list_get_count(stream_profile_list, &error);
     check_ob_error(&error);
 
     printf("Available stream profiles: \n");

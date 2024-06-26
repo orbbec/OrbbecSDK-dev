@@ -27,7 +27,7 @@ OB_EXPORT ob_filter *ob_create_filter(const char *name, ob_error **error);
  * @param error Pointer to an error object that will be set if an error occurs.
  * @return char The filter of name
  */
-OB_EXPORT const char *ob_filter_get_name(ob_filter *filter, ob_error **error);
+OB_EXPORT const char *ob_filter_get_name(const ob_filter *filter, ob_error **error);
 
 /**
  * @brief Get the vendor specific code of a filter by filter name.
@@ -104,7 +104,7 @@ OB_EXPORT void ob_filter_update_config(ob_filter *filter, size_t argc, const cha
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return double The value of the config.
  */
-OB_EXPORT double ob_filter_get_config_value(ob_filter *filter, const char *config_name, ob_error **error);
+OB_EXPORT double ob_filter_get_config_value(const ob_filter *filter, const char *config_name, ob_error **error);
 
 /**
  * @brief Set the filter config value by name.
@@ -150,7 +150,7 @@ OB_EXPORT void ob_filter_enable(ob_filter *filter, bool enable, ob_error **error
  *
  * @return The post processing filter status. True: enable; False: disable.
  */
-OB_EXPORT bool ob_filter_is_enabled(ob_filter *filter, ob_error **error);
+OB_EXPORT bool ob_filter_is_enabled(const ob_filter *filter, ob_error **error);
 
 /**
  * @brief Process the frame (synchronous interface).
@@ -175,6 +175,7 @@ OB_EXPORT void ob_filter_set_callback(ob_filter *filter, ob_filter_callback call
 
 /**
  * @brief Push the frame into the pending cache for the filter (asynchronous callback interface).
+ * @brief The frame will be processed by the filter when the processing thread is available and return a new processed frame to the callback function.
  *
  * @attention The frame object will be add reference count, so the user still need call @ref ob_delete_frame to release the frame after calling this function.
  *
@@ -191,7 +192,7 @@ OB_EXPORT void ob_filter_push_frame(ob_filter *filter, const ob_frame *frame, ob
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return uint32_t The number of list
  */
-OB_EXPORT uint32_t ob_filter_list_get_count(ob_filter_list *filter_list, ob_error **error);
+OB_EXPORT uint32_t ob_filter_list_get_count(const ob_filter_list *filter_list, ob_error **error);
 
 /**
  * @brief Get the filter by index
@@ -201,7 +202,7 @@ OB_EXPORT uint32_t ob_filter_list_get_count(ob_filter_list *filter_list, ob_erro
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_filter The index of ob_filter
  */
-OB_EXPORT ob_filter *ob_filter_list_get_filter(ob_filter_list *filter_list, uint32_t index, ob_error **error);
+OB_EXPORT ob_filter *ob_filter_list_get_filter(const ob_filter_list *filter_list, uint32_t index, ob_error **error);
 
 /**
  * @brief Delete a list of ob_filter objects.

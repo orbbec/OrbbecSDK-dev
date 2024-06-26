@@ -67,7 +67,7 @@ public:
      *
      * @return string The type of filte.
      */
-    virtual const std::string &getName() {
+    virtual const std::string &getName() const {
         return name_;
     }
 
@@ -75,7 +75,7 @@ public:
      * @brief Reset the filter, freeing the internal cache, stopping the processing thread, and clearing the pending buffer frame when asynchronous processing
      * is used.
      */
-    virtual void reset() {
+    virtual void reset() const {
         ob_error *error = nullptr;
         ob_filter_reset(impl_, &error);
         Error::handle(&error);
@@ -84,7 +84,7 @@ public:
     /**
      * @brief enable the filter
      */
-    virtual void enable(bool enable) {
+    virtual void enable(bool enable) const {
         ob_error *error = nullptr;
         ob_filter_enable(impl_, enable, &error);
         Error::handle(&error);
@@ -93,7 +93,7 @@ public:
     /**
      * @brief Return Enable State
      */
-    virtual bool isEnabled() {
+    virtual bool isEnabled() const {
         ob_error *error  = nullptr;
         bool      enable = ob_filter_is_enabled(impl_, &error);
         Error::handle(&error);
@@ -106,7 +106,7 @@ public:
      * @param frame The frame to be processed.
      * @return std::shared_ptr< Frame > The processed frame.
      */
-    virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) {
+    virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) const {
         ob_error *error  = nullptr;
         auto      result = ob_filter_process(impl_, frame->getImpl(), &error);
         Error::handle(&error);
@@ -118,7 +118,7 @@ public:
      *
      * @param frame The pending frame. The processing result is returned by the callback function.
      */
-    virtual void pushFrame(std::shared_ptr<Frame> frame) {
+    virtual void pushFrame(std::shared_ptr<Frame> frame) const {
         ob_error *error = nullptr;
         ob_filter_push_frame(impl_, frame->getImpl(), &error);
         Error::handle(&error);
@@ -143,7 +143,7 @@ public:
      *
      * @return std::string The config schema of the filter.
      */
-    virtual std::string getConfigSchema() {
+    virtual std::string getConfigSchema() const {
         ob_error *error  = nullptr;
         auto      schema = ob_filter_get_config_schema(impl_, &error);
         Error::handle(&error);
@@ -169,7 +169,7 @@ public:
      * @param configName The name of the config.
      * @param value The value of the config.
      */
-    virtual void setConfigValue(const std::string &configName, double value) {
+    virtual void setConfigValue(const std::string &configName, double value) const {
         ob_error *error = nullptr;
         ob_filter_set_config_value(impl_, configName.c_str(), value, &error);
         Error::handle(&error);
@@ -184,7 +184,7 @@ public:
      * @param configName  The name of the config.
      * @return double The value of the config.
      */
-    virtual double getConfigValue(const std::string &configName) {
+    virtual double getConfigValue(const std::string &configName) const {
         ob_error *error = nullptr;
         double    value = ob_filter_get_config_value(impl_, configName.c_str(), &error);
         Error::handle(&error);

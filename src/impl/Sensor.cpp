@@ -8,13 +8,13 @@
 extern "C" {
 #endif
 
-ob_sensor_type ob_sensor_get_type(ob_sensor *sensor, ob_error **error) BEGIN_API_CALL {
+ob_sensor_type ob_sensor_get_type(const ob_sensor *sensor, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor);
     return sensor->type;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_SENSOR_UNKNOWN, sensor)
 
-ob_stream_profile_list *ob_sensor_get_stream_profile_list(ob_sensor *sensor, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile_list *ob_sensor_get_stream_profile_list(const ob_sensor *sensor, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor);
     auto internalSensor = sensor->device->getSensor(sensor->type);
     auto spList         = internalSensor->getStreamProfileList();
@@ -25,7 +25,7 @@ ob_stream_profile_list *ob_sensor_get_stream_profile_list(ob_sensor *sensor, ob_
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, sensor)
 
-void ob_sensor_start(ob_sensor *sensor, ob_stream_profile *profile, ob_frame_callback callback, void *user_data, ob_error **error) BEGIN_API_CALL {
+void ob_sensor_start(ob_sensor *sensor, const ob_stream_profile *profile, ob_frame_callback callback, void *user_data, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor);
     VALIDATE_NOT_NULL(profile);
     VALIDATE_NOT_NULL(callback);
@@ -45,7 +45,7 @@ void ob_sensor_stop(ob_sensor *sensor, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(sensor)
 
-ob_filter_list *ob_sensor_get_recommended_filter_list(ob_sensor *sensor, ob_error **error) BEGIN_API_CALL {
+ob_filter_list *ob_sensor_get_recommended_filter_list(const ob_sensor *sensor, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor);
     auto filterList  = sensor->device->createRecommendedPostProcessingFilters(sensor->type);
     auto impl        = new ob_filter_list();
@@ -60,20 +60,20 @@ void ob_delete_sensor_list(ob_sensor_list *sensor_list, ob_error **error) BEGIN_
 }
 HANDLE_EXCEPTIONS_NO_RETURN(sensor_list)
 
-uint32_t ob_sensor_list_get_sensor_count(ob_sensor_list *sensor_list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_sensor_list_get_sensor_count(const ob_sensor_list *sensor_list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor_list);
     return static_cast<uint32_t>(sensor_list->sensorTypes.size());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, sensor_list)
 
-ob_sensor_type ob_sensor_list_get_sensor_type(ob_sensor_list *sensor_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+ob_sensor_type ob_sensor_list_get_sensor_type(const ob_sensor_list *sensor_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor_list);
     VALIDATE_UNSIGNED_INDEX(index, sensor_list->sensorTypes.size());
     return sensor_list->sensorTypes[index];
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_SENSOR_UNKNOWN, sensor_list, index)
 
-ob_sensor *ob_sensor_list_get_sensor_by_type(ob_sensor_list *sensor_list, ob_sensor_type sensorType, ob_error **error) BEGIN_API_CALL {
+ob_sensor *ob_sensor_list_get_sensor_by_type(const ob_sensor_list *sensor_list, ob_sensor_type sensorType, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor_list);
     for(auto &item: sensor_list->sensorTypes) {
         if(item == sensorType) {
@@ -87,7 +87,7 @@ ob_sensor *ob_sensor_list_get_sensor_by_type(ob_sensor_list *sensor_list, ob_sen
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, sensor_list, sensorType)
 
-ob_sensor *ob_sensor_list_get_sensor(ob_sensor_list *sensor_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+ob_sensor *ob_sensor_list_get_sensor(const ob_sensor_list *sensor_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor_list);
     VALIDATE_UNSIGNED_INDEX(index, sensor_list->sensorTypes.size());
     auto implSensor    = new ob_sensor();

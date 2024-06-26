@@ -87,14 +87,14 @@ int main(void) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }
 
 // Device connection callback
 void handleDeviceConnected(std::shared_ptr<ob::DeviceList> connectList) {
     std::lock_guard<std::recursive_mutex> lk(pipelineHolderMutex);
-    const auto                            deviceCount = connectList->deviceCount();
+    const auto                            deviceCount = connectList->getCount();
     std::cout << "Device connect, deviceCount: " << deviceCount << std::endl;
     for(uint32_t i = 0; i < deviceCount; i++) {
         auto uid = std::string(connectList->uid(i));
@@ -119,7 +119,7 @@ void handleDeviceConnected(std::shared_ptr<ob::DeviceList> connectList) {
 // Device disconnect callback
 void handleDeviceDisconnected(std::shared_ptr<ob::DeviceList> disconnectList) {
     std::lock_guard<std::recursive_mutex> lk(pipelineHolderMutex);
-    const auto                            deviceCount = disconnectList->deviceCount();
+    const auto                            deviceCount = disconnectList->getCount();
     std::cout << "Device disconnect, deviceCount: " << deviceCount << std::endl;
     for(uint32_t i = 0; i < deviceCount; i++) {
         auto uid = std::string(disconnectList->uid(i));
@@ -145,7 +145,7 @@ void rebootDevices() {
             itr->second->pipeline->getDevice()->reboot();
         }
         catch(ob::Error &e) {
-            std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
+            std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
                       << std::endl;
         }
     }
@@ -233,8 +233,7 @@ void stopStream(std::shared_ptr<PipelineHolder> holder) {
         holder->pipeline->stop();
     }
     catch(ob::Error &e) {
-        std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
-                  << std::endl;
+        std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     }
 }
 

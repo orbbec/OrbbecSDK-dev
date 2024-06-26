@@ -27,7 +27,7 @@ OB_EXPORT ob_pipeline *ob_create_pipeline(ob_error **error);
  * @param[out] error  Pointer to an error object that will be set if an error occurs.
  * @return ob_pipeline* return the pipeline object
  */
-OB_EXPORT ob_pipeline *ob_create_pipeline_with_device(ob_device *dev, ob_error **error);
+OB_EXPORT ob_pipeline *ob_create_pipeline_with_device(const ob_device *dev, ob_error **error);
 
 /**
  * @brief Delete pipeline objects
@@ -52,10 +52,13 @@ OB_EXPORT void ob_pipeline_start(ob_pipeline *pipeline, ob_error **error);
  * @param[in] config Parameters to be configured
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-OB_EXPORT void ob_pipeline_start_with_config(ob_pipeline *pipeline, ob_config *config, ob_error **error);
+OB_EXPORT void ob_pipeline_start_with_config(ob_pipeline *pipeline, const ob_config *config, ob_error **error);
 
 /**
  * @brief Start the pipeline and set the frame collection data callback
+ *
+ * @attention After start the pipeline with this interface, the frames will be output to the callback function and cannot be obtained frames by call
+ * @ob_pipeline_wait_for_frameset
  *
  * @param[in] pipeline pipeline object
  * @param[in] config  Parameters to be configured
@@ -63,7 +66,8 @@ OB_EXPORT void ob_pipeline_start_with_config(ob_pipeline *pipeline, ob_config *c
  * @param[in] user_data  Pass in any user data and get it from the callback
  * @param[out] error  Pointer to an error object that will be set if an error occurs.
  */
-OB_EXPORT void ob_pipeline_start_with_callback(ob_pipeline *pipeline, ob_config *config, ob_frameset_callback callback, void *user_data, ob_error **error);
+OB_EXPORT void ob_pipeline_start_with_callback(ob_pipeline *pipeline, const ob_config *config, ob_frameset_callback callback, void *user_data,
+                                               ob_error **error);
 
 /**
  * @brief Stop pipeline
@@ -81,7 +85,7 @@ OB_EXPORT void ob_pipeline_stop(ob_pipeline *pipeline, ob_error **error);
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_config* The configuration object
  */
-OB_EXPORT ob_config *ob_pipeline_get_config(ob_pipeline *pipeline, ob_error **error);
+OB_EXPORT ob_config *ob_pipeline_get_config(const ob_pipeline *pipeline, ob_error **error);
 
 /**
  * @brief Wait for a set of frames to be returned synchronously
@@ -100,7 +104,7 @@ OB_EXPORT ob_frame *ob_pipeline_wait_for_frameset(ob_pipeline *pipeline, uint32_
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_device* The device object
  */
-OB_EXPORT ob_device *ob_pipeline_get_device(ob_pipeline *pipeline, ob_error **error);
+OB_EXPORT ob_device *ob_pipeline_get_device(const ob_pipeline *pipeline, ob_error **error);
 
 /**
  * @brief Get the stream profile list associated with the pipeline
@@ -110,7 +114,7 @@ OB_EXPORT ob_device *ob_pipeline_get_device(ob_pipeline *pipeline, ob_error **er
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile_list* The stream profile list
  */
-OB_EXPORT ob_stream_profile_list *ob_pipeline_get_stream_profile_list(ob_pipeline *pipeline, ob_sensor_type sensorType, ob_error **error);
+OB_EXPORT ob_stream_profile_list *ob_pipeline_get_stream_profile_list(const ob_pipeline *pipeline, ob_sensor_type sensorType, ob_error **error);
 
 /**
  * @brief Enable frame synchronization
@@ -139,7 +143,7 @@ OB_EXPORT void ob_pipeline_disable_frame_sync(ob_pipeline *pipeline, ob_error **
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile_list* The list of D2C-enabled depth sensor resolutions
  */
-OB_EXPORT ob_stream_profile_list *ob_get_d2c_depth_profile_list(ob_pipeline *pipeline, ob_stream_profile *color_profile, ob_align_mode align_mode,
+OB_EXPORT ob_stream_profile_list *ob_get_d2c_depth_profile_list(const ob_pipeline *pipeline, const ob_stream_profile *color_profile, ob_align_mode align_mode,
                                                                 ob_error **error);
 
 /**
@@ -177,9 +181,9 @@ OB_EXPORT void ob_config_enable_stream(ob_config *config, ob_stream_type stream_
 OB_EXPORT void ob_config_enable_stream_with_stream_profile(ob_config *config, const ob_stream_profile *profile, ob_error **error);
 
 /**
- * @brief enable video stream with specified parameters
+ * @brief Enable video stream with specified parameters
  *
- * @attention the stream_type should be a video stream type, such as OB_STREAM_IR, OB_STREAM_COLOR, OB_STREAM_DEPTH, etc.
+ * @attention The stream_type should be a video stream type, such as OB_STREAM_IR, OB_STREAM_COLOR, OB_STREAM_DEPTH, etc.
  *
  * @param config[in] The pipeline configuration object
  * @param stream_type[in] The type of the stream to be enabled
@@ -219,7 +223,7 @@ OB_EXPORT void ob_config_enable_gyro_stream(ob_config *config, ob_gyro_full_scal
  * @param error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile_list* The enabled stream profile list, should be released by @ref ob_delete_stream_profile_list after use
  */
-OB_EXPORT ob_stream_profile_list *ob_config_get_enabled_stream_profile_list(ob_config *config, ob_error **error);
+OB_EXPORT ob_stream_profile_list *ob_config_get_enabled_stream_profile_list(const ob_config *config, ob_error **error);
 
 /**
  * @brief Disable a specific stream in the pipeline configuration
@@ -263,7 +267,7 @@ OB_EXPORT void ob_config_set_depth_scale_after_align_require(ob_config *config, 
  * can be caused by different frame rates of each stream, or by the loss of frames of one stream): drop directly or output to the user.
  *
  * @param[in] config The pipeline configuration object
- * @param[in] mode The frame aggregation output mode to be set (default mode is @ref OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE)
+ * @param[in] mode The frame aggregation output mode to be set (default mode is @ref OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION)
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 void ob_config_set_frame_aggregate_output_mode(ob_config *config, ob_frame_aggregate_output_mode mode, ob_error **error);

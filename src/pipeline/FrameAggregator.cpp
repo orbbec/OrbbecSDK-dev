@@ -229,7 +229,7 @@ void FrameAggregator::outputFrameset(std::shared_ptr<const FrameSet> frameSet) {
         else if(frameAggregateOutputMode_ == OB_FRAME_AGGREGATE_OUTPUT_COLOR_FRAME_REQUIRE && withColorFrame_) {
             FrameSetCallbackFunc_(frameSet);
         }
-        else if(frameAggregateOutputMode_ == OB_FRAME_AGGREGATE_OUTPUT_FULL_FRAME_REQUIRE && frameCnt_ == srcFrameQueueMap_.size()) {
+        else if(frameAggregateOutputMode_ == OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE && frameCnt_ == srcFrameQueueMap_.size()) {
             FrameSetCallbackFunc_(frameSet);
         }
     }

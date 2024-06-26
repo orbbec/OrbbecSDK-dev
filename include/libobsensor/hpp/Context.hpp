@@ -72,7 +72,7 @@ public:
      *
      * @return std::shared_ptr<DeviceList> A pointer to the device list class.
      */
-    std::shared_ptr<DeviceList> queryDeviceList() {
+    std::shared_ptr<DeviceList> queryDeviceList() const {
         ob_error *error = nullptr;
         auto      list  = ob_query_device_list(impl_, &error);
         Error::handle(&error);
@@ -88,7 +88,7 @@ public:
      *
      * @param[in] enable true to enable, false to disable
      */
-    void enableNetDeviceEnumeration(bool enable) {
+    void enableNetDeviceEnumeration(bool enable) const {
         ob_error *error = nullptr;
         ob_enable_net_device_enumeration(impl_, enable, &error);
         Error::handle(&error);
@@ -101,7 +101,7 @@ public:
      * @param[in] port The port number.
      * @return std::shared_ptr<Device> The created device object.
      */
-    std::shared_ptr<Device> createNetDevice(const char *address, uint16_t port) {
+    std::shared_ptr<Device> createNetDevice(const char *address, uint16_t port) const {
         ob_error *error  = nullptr;
         auto      device = ob_create_net_device(impl_, address, port, &error);
         Error::handle(&error);
@@ -125,7 +125,7 @@ public:
      *
      * @param repeatInterval The interval for auto-repeated synchronization, in milliseconds. If the value is 0, synchronization is performed only once.
      */
-    void enableDeviceClockSync(uint64_t repeatInterval) {
+    void enableDeviceClockSync(uint64_t repeatInterval) const {
         ob_error *error = nullptr;
         ob_enable_device_clock_sync(impl_, repeatInterval, &error);
         Error::handle(&error);
@@ -135,7 +135,7 @@ public:
      * @brief Frees idle memory from the internal frame memory pool.
      * @brief The SDK includes an internal frame memory pool that caches memory allocated for frames received from devices.
      */
-    void freeIdleMemory() {
+    void freeIdleMemory() const {
         ob_error *error = nullptr;
         ob_free_idle_memory(impl_, &error);
         Error::handle(&error);

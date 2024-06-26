@@ -20,9 +20,11 @@ public:
 
     StreamProfile(StreamProfile &streamProfile)            = delete;
     StreamProfile &operator=(StreamProfile &streamProfile) = delete;
+
     StreamProfile(StreamProfile &&streamProfile) noexcept : impl_(streamProfile.impl_) {
         streamProfile.impl_ = nullptr;
     }
+
     StreamProfile &operator=(StreamProfile &&streamProfile) noexcept {
         if(this != &streamProfile) {
             ob_error *error = nullptr;
@@ -51,7 +53,7 @@ public:
      *
      * @return OBFormat return the format of the stream
      */
-    OBFormat format() const {
+    OBFormat getFormat() const {
         ob_error *error  = nullptr;
         auto      format = ob_stream_profile_get_format(impl_, &error);
         Error::handle(&error);
@@ -63,7 +65,7 @@ public:
      *
      * @return OBStreamType return the type of the stream
      */
-    OBStreamType type() const {
+    OBStreamType getType() const {
         ob_error *error = nullptr;
         auto      type  = ob_stream_profile_get_type(impl_, &error);
         Error::handle(&error);
@@ -133,7 +135,7 @@ public:
      *
      * @return uint32_t Return the frame rate of the stream.
      */
-    uint32_t fps() const {
+    uint32_t getFps() const {
         ob_error *error = nullptr;
         auto      fps   = ob_video_stream_profile_get_fps(impl_, &error);
         Error::handle(&error);
@@ -145,7 +147,7 @@ public:
      *
      * @return uint32_t Return the width of the stream.
      */
-    uint32_t width() const {
+    uint32_t getWidth() const {
         ob_error *error = nullptr;
         auto      width = ob_video_stream_profile_get_width(impl_, &error);
         Error::handle(&error);
@@ -157,7 +159,7 @@ public:
      *
      * @return uint32_t Return the height of the stream.
      */
-    uint32_t height() const {
+    uint32_t getHeight() const {
         ob_error *error  = nullptr;
         auto      height = ob_video_stream_profile_get_height(impl_, &error);
         Error::handle(&error);
@@ -204,7 +206,7 @@ public:
      *
      * @return OBAccelFullScaleRange Return the scale range value.
      */
-    OBAccelFullScaleRange fullScaleRange() const {
+    OBAccelFullScaleRange getFullScaleRange() const {
         ob_error *error          = nullptr;
         auto      fullScaleRange = ob_accel_stream_profile_get_full_scale_range(impl_, &error);
         Error::handle(&error);
@@ -216,7 +218,7 @@ public:
      *
      * @return OBAccelFullScaleRange Return the sampling frequency.
      */
-    OBAccelSampleRate sampleRate() const {
+    OBAccelSampleRate getSampleRate() const {
         ob_error *error      = nullptr;
         auto      sampleRate = ob_accel_stream_profile_get_sample_rate(impl_, &error);
         Error::handle(&error);
@@ -250,7 +252,7 @@ public:
      *
      * @return OBAccelFullScaleRange Return the scale range value.
      */
-    OBGyroFullScaleRange fullScaleRange() const {
+    OBGyroFullScaleRange getFullScaleRange() const {
         ob_error *error          = nullptr;
         auto      fullScaleRange = ob_gyro_stream_profile_get_full_scale_range(impl_, &error);
         Error::handle(&error);
@@ -262,7 +264,7 @@ public:
      *
      * @return OBAccelFullScaleRange Return the sampling frequency.
      */
-    OBGyroSampleRate sampleRate() const {
+    OBGyroSampleRate getSampleRate() const {
         ob_error *error      = nullptr;
         auto      sampleRate = ob_gyro_stream_profile_get_sample_rate(impl_, &error);
         Error::handle(&error);
@@ -283,7 +285,7 @@ public:
 };
 
 template <typename T> bool StreamProfile::is() const {
-    switch(this->type()) {
+    switch(this->getType()) {
     case OB_STREAM_VIDEO:
     case OB_STREAM_IR:
     case OB_STREAM_IR_LEFT:
@@ -319,9 +321,9 @@ public:
      *
      * @return uint32_t Return the number of StreamProfile objects.
      */
-    uint32_t count() const {
+    uint32_t getCount() const {
         ob_error *error = nullptr;
-        auto      count = ob_stream_profile_list_count(impl_, &error);
+        auto      count = ob_stream_profile_list_get_count(impl_, &error);
         Error::handle(&error);
         return count;
     }

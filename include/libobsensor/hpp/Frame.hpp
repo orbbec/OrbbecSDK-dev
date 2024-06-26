@@ -14,7 +14,7 @@
 #include <typeinfo>
 
 /**
- *  Frame class：
+ *  Frame classis inheritance hierarchy：
  *         Frame
  *          |
  *      +-----------+----------+----------+-----------+
@@ -124,24 +124,9 @@ public:
      *
      * @return const uint8_t * The frame data pointer.
      */
-    virtual const uint8_t *getData() const {
+    virtual uint8_t *getData() const {
         ob_error *error = nullptr;
         auto      data  = ob_frame_get_data(impl_, &error);
-        Error::handle(&error);
-
-        return data;
-    }
-
-    /**
-     * @brief Get frame data (unsafe)
-     *
-     * @warning This function is unsafe. Ensure the returned data is not modified when the frame is accessed by multiple threads.
-     *
-     * @return uint8_t* The frame data pointer.
-     */
-    virtual uint8_t *getDataUnsafe() const {
-        ob_error *error = nullptr;
-        auto      data  = ob_frame_get_data_unsafe(impl_, &error);
         Error::handle(&error);
 
         return data;
@@ -213,7 +198,7 @@ public:
      *
      * @return const uint8_t * The metadata pointer of the frame.
      */
-    const uint8_t *getMetadata() const {
+    uint8_t *getMetadata() const {
         ob_error *error    = nullptr;
         auto      metadata = ob_frame_get_metadata(impl_, &error);
         Error::handle(&error);
@@ -267,7 +252,7 @@ public:
      *
      * @return std::shared_ptr<StreamProfile> The StreamProfile of the frame, may return nullptr if the frame is not captured from a stream.
      */
-    std::shared_ptr<const StreamProfile> getStreamProfile() const {
+    std::shared_ptr<StreamProfile> getStreamProfile() const {
         ob_error *error   = nullptr;
         auto      profile = ob_frame_get_stream_profile(impl_, &error);
         Error::handle(&error);
@@ -298,23 +283,6 @@ public:
         Error::handle(&error);
 
         return std::make_shared<Device>(device);
-    }
-
-    /**
-     * @brief Clone the frame object.
-     * @brief The returned frame object is a new object with the same properties. If copyData is true, the data of the new frame object will be a copy of the
-     * data of the original frame object. Otherwise, the data of the new frame object will be randomly generated.
-     *
-     * @param copyData Whether to copy the data of the original frame object. The default value is true.
-     *
-     * @return std::shared_ptr<Frame> The new frame object.
-     */
-    std::shared_ptr<Frame> clone(bool copyData = true) {
-        ob_error *error = nullptr;
-        auto      impl  = ob_clone_frame(impl_, copyData, &error);
-        Error::handle(&error);
-
-        return std::make_shared<Frame>(impl);
     }
 
     /**
@@ -359,6 +327,11 @@ public:
         Error::handle(&error);
 
         return std::make_shared<const T>(impl_);
+    }
+
+    /**[Deprecated] */
+    OBFrameType type() const {
+        return getType();
     }
 };
 
@@ -631,7 +604,7 @@ public:
      *
      * @return uint32_t The number of frames
      */
-    uint32_t getFrameCount() const {
+    uint32_t getCount() const {
         ob_error *error = nullptr;
         auto      count = ob_frameset_get_frame_count(impl_, &error);
         Error::handle(&error);
@@ -644,7 +617,7 @@ public:
      * @param frameType The type of sensor
      * @return std::shared_ptr<Frame> The corresponding type of frame
      */
-    std::shared_ptr<const Frame> getFrame(OBFrameType frameType) const {
+    std::shared_ptr< Frame> getFrame(OBFrameType frameType) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame(impl_, frameType, &error);
         if(!frame) {
@@ -660,7 +633,7 @@ public:
      * @param index The index of the frame
      * @return std::shared_ptr<Frame> The frame at the specified index
      */
-    std::shared_ptr<const Frame> getFrameByIndex(uint32_t index) const {
+    std::shared_ptr< Frame> getFrameByIndex(uint32_t index) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame_by_index(impl_, index, &error);
         if(!frame) {
@@ -677,7 +650,7 @@ public:
      *
      * @param frame The frame to be pushed
      */
-    void pushFrame(std::shared_ptr<const Frame> frame) {
+    void pushFrame(std::shared_ptr<const Frame> frame) const {
         ob_error *error = nullptr;
 
         // unsafe operation, need to cast const to non-const
@@ -730,6 +703,24 @@ public:
 
         auto frame = std::make_shared<Frame>(impl);
         return frame->as<VideoFrame>();
+    }
+
+    /**
+     * @brief Create (clone) a frame object based on the specified other frame object.
+     * @brief The new frame object will have the same properties as the other frame object, but the data buffer is newly allocated.
+     *
+     * @param shouldCopyData If true, the data of the source frame object will be copied to the new frame object. If false, the new frame object will
+     * have a data buffer with random data. The default value is true.
+     *
+     * @return std::shared_ptr<Frame> The new frame object.
+     */
+    static std::shared_ptr<Frame> createFrameFromOtherFrame(std::shared_ptr<const Frame> otherFrame, bool shouldCopyData = true) {
+        ob_error *error     = nullptr;
+        auto      otherImpl = otherFrame->getImpl();
+        auto      impl      = ob_create_frame_from_other_frame(otherImpl, shouldCopyData, &error);
+        Error::handle(&error);
+
+        return std::make_shared<Frame>(impl);
     }
 
     /**

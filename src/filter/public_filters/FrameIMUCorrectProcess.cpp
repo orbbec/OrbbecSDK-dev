@@ -96,7 +96,7 @@ std::shared_ptr<Frame> IMUCorrecter::processFunc(std::shared_ptr<const Frame> fr
         return nullptr;
     }
 
-    auto newFrame = FrameFactory::cloneFrame(frame, true);
+    auto newFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
     if(!frame->is<FrameSet>()) {
         return newFrame;
     }

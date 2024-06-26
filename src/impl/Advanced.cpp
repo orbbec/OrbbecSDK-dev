@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-const char *ob_device_get_current_preset_name(ob_device *device, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_get_current_preset_name(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto presetMgr = device->device->getPresetManager();
     return presetMgr->getCurrentPresetName().c_str();
@@ -40,7 +40,7 @@ void ob_device_export_current_settings_as_preset_json_file(ob_device *device, co
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
 
-ob_device_preset_list *ob_device_get_available_preset_list(ob_device *device, ob_error **error) BEGIN_API_CALL {
+ob_device_preset_list *ob_device_get_available_preset_list(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto presetMgr  = device->device->getPresetManager();
     auto presetList = presetMgr->getAvailablePresetList();
@@ -57,20 +57,20 @@ void ob_delete_preset_list(ob_device_preset_list *preset_list, ob_error **error)
 }
 HANDLE_EXCEPTIONS_NO_RETURN(preset_list)
 
-uint32_t ob_device_preset_list_count(ob_device_preset_list *preset_list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_device_preset_list_count(const ob_device_preset_list *preset_list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(preset_list);
     return static_cast<uint32_t>(preset_list->presetList.size());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, preset_list)
 
-const char *ob_device_preset_list_get_name(ob_device_preset_list *preset_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_preset_list_get_name(const ob_device_preset_list *preset_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(preset_list);
     VALIDATE_UNSIGNED_INDEX(index, preset_list->presetList.size());
     return preset_list->presetList.at(index).c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, preset_list, index)
 
-bool ob_device_preset_list_has_preset(ob_device_preset_list *preset_list, const char *preset_name, ob_error **error) BEGIN_API_CALL {
+bool ob_device_preset_list_has_preset(const ob_device_preset_list *preset_list, const char *preset_name, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(preset_list);
     VALIDATE_NOT_NULL(preset_name);
     for(auto &name: preset_list->presetList) {

@@ -44,16 +44,14 @@ ob_stream_profile *ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_s
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, full_scale_range, sample_rate)
 
-ob_stream_profile* ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error)BEGIN_API_CALL {
+ob_stream_profile *ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
-    auto sp = profile->profile->clone(new_format);
+    auto sp              = profile->profile->clone(new_format);
     auto profileImpl     = new ob_stream_profile();
     profileImpl->profile = sp;
     return profileImpl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, profile, new_format)
-
-
 
 ob_format ob_stream_profile_get_format(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
@@ -257,8 +255,8 @@ void ob_gyro_stream_set_intrinsic(ob_stream_profile *profile, ob_gyro_intrinsic 
 }
 HANDLE_EXCEPTIONS_NO_RETURN(profile /*, intrinsic*/)  // TODO: add ob_gyro_intrinsic operator<<
 
-const ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(const ob_stream_profile_list *profile_list, int width, int height, ob_format format,
-                                                                         int fps, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(const ob_stream_profile_list *profile_list, int width, int height, ob_format format, int fps,
+                                                                   ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile_list);
     auto matchedProfileList = libobsensor::matchVideoStreamProfile(profile_list->profileList, width, height, fps, format);
     if(matchedProfileList.empty()) {
@@ -270,8 +268,8 @@ const ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(const o
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, profile_list, width, height, format, fps)
 
-const ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(const ob_stream_profile_list *profile_list, ob_accel_full_scale_range full_scale_range,
-                                                                         ob_accel_sample_rate sample_rate, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(const ob_stream_profile_list *profile_list, ob_accel_full_scale_range full_scale_range,
+                                                                   ob_accel_sample_rate sample_rate, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile_list);
     auto matchedProfileList = libobsensor::matchAccelStreamProfile(profile_list->profileList, full_scale_range, sample_rate);
     if(matchedProfileList.empty()) {
@@ -283,8 +281,8 @@ const ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(const o
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, profile_list, full_scale_range, sample_rate)
 
-const ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(const ob_stream_profile_list *profile_list, ob_gyro_full_scale_range full_scale_range,
-                                                                        ob_gyro_sample_rate sample_rate, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(const ob_stream_profile_list *profile_list, ob_gyro_full_scale_range full_scale_range,
+                                                                  ob_gyro_sample_rate sample_rate, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile_list);
     auto matchedProfileList = libobsensor::matchGyroStreamProfile(profile_list->profileList, full_scale_range, sample_rate);
     if(matchedProfileList.empty()) {
@@ -296,7 +294,7 @@ const ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(const ob
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, profile_list, full_scale_range, sample_rate)
 
-const ob_stream_profile *ob_stream_profile_list_get_profile(const ob_stream_profile_list *profile_list, int index, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile *ob_stream_profile_list_get_profile(const ob_stream_profile_list *profile_list, int index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile_list);
     auto innerProfiles = profile_list->profileList;
     if(index < 0 || static_cast<size_t>(index) >= innerProfiles.size()) {
@@ -309,7 +307,7 @@ const ob_stream_profile *ob_stream_profile_list_get_profile(const ob_stream_prof
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, profile_list, index)
 
-uint32_t ob_stream_profile_list_count(const ob_stream_profile_list *profile_list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_stream_profile_list_get_count(const ob_stream_profile_list *profile_list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile_list);
     auto innerProfiles = profile_list->profileList;
     return (uint32_t)innerProfiles.size();

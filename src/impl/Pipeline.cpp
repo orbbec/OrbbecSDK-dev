@@ -27,7 +27,7 @@ ob_pipeline *ob_create_pipeline(ob_error **error) BEGIN_API_CALL {
 }
 NO_ARGS_HANDLE_EXCEPTIONS_AND_RETURN(nullptr)
 
-ob_pipeline *ob_create_pipeline_with_device(ob_device *dev, ob_error **error) BEGIN_API_CALL {
+ob_pipeline *ob_create_pipeline_with_device(const ob_device *dev, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(dev);
     auto pipeline = std::make_shared<libobsensor::Pipeline>(dev->device);
 
@@ -49,7 +49,7 @@ void ob_pipeline_start(ob_pipeline *pipeline, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 
-void ob_pipeline_start_with_config(ob_pipeline *pipeline, ob_config *config, ob_error **error) BEGIN_API_CALL {
+void ob_pipeline_start_with_config(ob_pipeline *pipeline, const ob_config *config, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
     if (!config) {
         ob_pipeline_start(pipeline, error);
@@ -61,7 +61,7 @@ void ob_pipeline_start_with_config(ob_pipeline *pipeline, ob_config *config, ob_
 }
 HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 
-void ob_pipeline_start_with_callback(ob_pipeline *pipeline, ob_config *config, ob_frameset_callback callback, void *user_data,
+void ob_pipeline_start_with_callback(ob_pipeline *pipeline, const ob_config *config, ob_frameset_callback callback, void *user_data,
                                      ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
     VALIDATE_NOT_NULL(config);
@@ -79,7 +79,7 @@ void ob_pipeline_stop(ob_pipeline *pipeline, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 
-ob_config *ob_pipeline_get_config(ob_pipeline *pipeline, ob_error **error) BEGIN_API_CALL {
+ob_config *ob_pipeline_get_config(const ob_pipeline *pipeline, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
     auto config    = new ob_config();
     config->config = std::const_pointer_cast<libobsensor::Config>(pipeline->pipeline->getConfig());  // todo: it's not safe to cast const to non-const, fix it
@@ -99,7 +99,7 @@ ob_frame *ob_pipeline_wait_for_frameset(ob_pipeline *pipeline, uint32_t timeout_
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, pipeline)
 
-ob_device *ob_pipeline_get_device(ob_pipeline *pipeline, ob_error **error) BEGIN_API_CALL {
+ob_device *ob_pipeline_get_device(const ob_pipeline *pipeline, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
     auto device  = pipeline->pipeline->getDevice();
     auto impl    = new ob_device();
@@ -108,7 +108,7 @@ ob_device *ob_pipeline_get_device(ob_pipeline *pipeline, ob_error **error) BEGIN
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, pipeline)
 
-ob_stream_profile_list *ob_pipeline_get_stream_profile_list(ob_pipeline *pipeline, ob_sensor_type sensorType, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile_list *ob_pipeline_get_stream_profile_list(const ob_pipeline *pipeline, ob_sensor_type sensorType, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
     auto device       = pipeline->pipeline->getDevice();
     auto sensor       = device->getSensor(sensorType);
@@ -131,7 +131,7 @@ void ob_pipeline_disable_frame_sync(ob_pipeline *pipeline, ob_error **error) BEG
 }
 HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 
-ob_stream_profile_list *ob_get_d2c_depth_profile_list(ob_pipeline *pipeline, ob_stream_profile *color_profile, ob_align_mode align_mode,
+ob_stream_profile_list *ob_get_d2c_depth_profile_list(const ob_pipeline *pipeline, const ob_stream_profile *color_profile, ob_align_mode align_mode,
                                                       ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
     VALIDATE_NOT_NULL(color_profile);
@@ -185,7 +185,7 @@ void ob_config_enable_gyro_stream(ob_config *config, ob_gyro_full_scale_range fu
 }
 HANDLE_EXCEPTIONS_NO_RETURN(config, full_scale_range, sample_rate)
 
-ob_stream_profile_list *ob_config_get_enabled_stream_profile_list(ob_config *config, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile_list *ob_config_get_enabled_stream_profile_list(const ob_config *config, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(config);
     auto profiles     = config->config->getEnabledStreamProfileList();
     auto impl         = new ob_stream_profile_list();

@@ -26,19 +26,19 @@ extern "C" {
 OB_EXPORT ob_frame *ob_create_frame(ob_frame_type frame_type, ob_format format, uint32_t data_size, ob_error **error);
 
 /**
- * @brief Create (clone) a frame object based on the specified reference frame object.
- * @brief The new frame object will have the same properties as the reference frame object，but the data buffer is newly allocated.
+ * @brief Create (clone) a frame object based on the specified other frame object.
+ * @brief The new frame object will have the same properties as the other frame object, but the data buffer is newly allocated.
  *
  * @attention The frame object is created with a reference count of 1, and the reference count should be decreased by calling @ref ob_delete_frame() when it is
- * no logger needed.
+ * no longer needed.
  *
- * @param[in] ref_frame The reference frame object to create the new frame object according to.
- * @param[in] copy_data If true, the data of the source frame object will be copied to the new frame object. If false, the new frame object will
- * have a uninitialized data buffer.
+ * @param[in] other_frame The frame object to create the new frame object according to.
+ * @param[in] should_copy_data If true, the data of the source frame object will be copied to the new frame object. If false, the new frame object will
+ * have a data buffer with random data.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the new frame object.
  */
-OB_EXPORT ob_frame *ob_clone_frame(const ob_frame *ref_frame, bool copy_data, ob_error **error);
+OB_EXPORT ob_frame *ob_create_frame_from_other_frame(const ob_frame *other_frame, bool should_copy_data, ob_error **error);
 
 /**
  * @brief Create a frame object according to the specified stream profile.
@@ -111,15 +111,6 @@ OB_EXPORT ob_frame *ob_create_video_frame_from_buffer(ob_frame_type frame_type, 
                                                       void *buffer_destroy_context, ob_error **error);
 
 /**
- * @brief Copy the information of one frame from another frame.
- *
- * @param[in] srcframe Original frame object to increase the reference count.
- * @param[in] dstframe Destination frame object to increase the reference count.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- */
-OB_EXPORT void ob_frame_copy_info(const ob_frame *srcframe, ob_frame *dstframe, ob_error **error);
-
-/**
  * @brief Create an empty frameset object.
  * @brief A frameset object is a special type of frame object that can be used to store multiple frames.
  *
@@ -151,6 +142,16 @@ OB_EXPORT void ob_frame_add_ref(const ob_frame *frame, ob_error **error);
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_delete_frame(const ob_frame *frame, ob_error **error);
+
+/**
+ * @brief Copy the information of the source frame object to the destination frame object.
+ * @brief Including the index，timestamp，system timestamp，global timestamp and metadata will be copied.
+ *
+ * @param[in] src_frame Source frame object to copy the information from.
+ * @param[in] dst_frame Destination frame object to copy the information to.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_frame_copy_info(const ob_frame *src_frame, ob_frame *dst_frame, ob_error **error);
 
 /**
  * @brief Get the frame index
@@ -210,6 +211,15 @@ OB_EXPORT void ob_frame_set_timestamp_us(ob_frame *frame, uint64_t timestamp_us,
 OB_EXPORT uint64_t ob_frame_get_system_timestamp_us(const ob_frame *frame, ob_error **error);
 
 /**
+ * @brief Set the system timestamp of the frame in microseconds.
+ *
+ * @param frame Frame object
+ * @param system_timestamp_us frame system timestamp to set in microseconds.
+ * @param error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_frame_set_system_timestamp_us(ob_frame *frame, uint64_t system_timestamp_us, ob_error **error);
+
+/**
  * @brief Get the global timestamp of the frame in microseconds.
  * @brief The global timestamp is the time point when the frame was was captured by the device, and has been converted to the host clock domain. The
  * conversion process base on the frame timestamp and can eliminate the timer drift of the device
@@ -224,33 +234,30 @@ OB_EXPORT uint64_t ob_frame_get_system_timestamp_us(const ob_frame *frame, ob_er
 OB_EXPORT uint64_t ob_frame_get_global_timestamp_us(const ob_frame *frame, ob_error **error);
 
 /**
- * @brief Get frame data
+ * @brief Get the data buffer of a frame.
  *
- * @param[in] frame Frame object
+ * @attention The returned data buffer is mutable, but it is not recommended to modify it directly. Modifying the data directly may cause issues if the frame is
+ * being used in other threads  or future use. If you need to modify the data, it is recommended to create a new frame object.
+ *
+ * @param[in] frame The frame object from which to retrieve the data.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
- * @return const uint8_t* return frame data pointer
+ * @return uint8_t* Pointer to the frame data buffer.
  */
-OB_EXPORT const uint8_t *ob_frame_get_data(const ob_frame *frame, ob_error **error);
+OB_EXPORT uint8_t *ob_frame_get_data(const ob_frame *frame, ob_error **error);
 
 /**
- * @brief Get frame data (unsafe)
+ * @brief Update the data of a frame.
+ * @brief The data will be memcpy to the frame data buffer.
+ * @brief The frame data size will be also updated as the input data size.
  *
- * @warning This function is unsafe. Ensure the returned data is not modified when the frame is accessed by multiple threads.
+ * @attention It is not recommended to update the frame data if the frame was not created by the user. If you must update it, ensure that the frame is not being
+ * used in other threads.
+ * @attention The size of the new data should be equal to or less than the current data size of the frame. Exceeding the original size may cause memory
+ * exceptions.
  *
- * @param frame Frame object
- * @param error Pointer to an error object that will be set if an error occurs.
- * @return uin8_t* return frame data pointer
- */
-OB_EXPORT uint8_t *ob_frame_get_data_unsafe(const ob_frame *frame, ob_error **error);
-
-/**
- * @brief Update frame data
- *
- * @attention The data size should be the equal to or less than the data size of the frame, otherwise it may cause memory exception.
- *
- * @param[in] frame Frame object
- * @param[in] data The new frame data to update.
- * @param[in] data_size The size of the new frame data.
+ * @param[in] frame The frame object to update.
+ * @param[in] data The new data to update the frame with.
+ * @param[in] data_size The size of the new data.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_frame_update_data(ob_frame *frame, const uint8_t *data, uint32_t data_size, ob_error **error);
@@ -269,11 +276,14 @@ OB_EXPORT uint32_t ob_frame_get_data_size(const ob_frame *frame, ob_error **erro
 /**
  * @brief Get the metadata of the frame
  *
+ * @attention The returned metadata is mutable, but it is not recommended to modify it directly. Modifying the metadata directly may cause issues if the frame
+ * is being used in other threads or future use. If you need to modify the metadata, it is recommended to create a new frame object.
+ *
  * @param[in] frame frame object
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return const uint8_t * return the metadata pointer of the frame
  */
-OB_EXPORT const uint8_t *ob_frame_get_metadata(const ob_frame *frame, ob_error **error);
+OB_EXPORT uint8_t *ob_frame_get_metadata(const ob_frame *frame, ob_error **error);
 #define ob_video_frame_metadata ob_frame_get_metadata  // for compatibility
 
 /**
@@ -288,7 +298,11 @@ OB_EXPORT uint32_t ob_frame_get_metadata_size(const ob_frame *frame, ob_error **
 
 /**
  * @brief Update the metadata of the frame
+ * @brief The metadata will be memcpy to the frame metadata buffer.
+ * @brief The frame metadata size will be also updated as the input metadata size.
  *
+ * @attention It is not recommended to update the frame metadata if the frame was not created by the user. If you must update it, ensure that the frame is not
+ * being used in other threads or future use.
  * @attention The metadata size should be equal to or less than 256 bytes, otherwise it will cause memory exception.
  *
  * @param[in] frame frame object
@@ -394,7 +408,6 @@ OB_EXPORT uint8_t ob_video_frame_get_pixel_available_bit_size(const ob_frame *fr
  * @param[in] frame video frame object
  * @param[in] bit_size the effective number of pixels in the pixel, or 0 if it is an unsupported format
  * @param[out] error Pointer to an error object that will be set if an error occurs.
- *
  */
 OB_EXPORT void ob_video_frame_set_pixel_available_bit_size(ob_frame *frame, uint8_t bit_size, ob_error **error);
 
@@ -494,7 +507,7 @@ OB_EXPORT uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_erro
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the depth frame.
  */
-OB_EXPORT const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error);
+OB_EXPORT ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the color frame from the frameset.
@@ -505,7 +518,7 @@ OB_EXPORT const ob_frame *ob_frameset_get_depth_frame(const ob_frame *frameset, 
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the color frame.
  */
-OB_EXPORT const ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error **error);
+OB_EXPORT ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the infrared frame from the frameset.
@@ -516,7 +529,7 @@ OB_EXPORT const ob_frame *ob_frameset_get_color_frame(const ob_frame *frameset, 
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the infrared frame.
  */
-OB_EXPORT const ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **error);
+OB_EXPORT ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get point cloud frame from the frameset.
@@ -527,7 +540,7 @@ OB_EXPORT const ob_frame *ob_frameset_get_ir_frame(const ob_frame *frameset, ob_
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the point cloud frame.
  */
-OB_EXPORT const ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error **error);
+OB_EXPORT ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get a frame of a specific type from the frameset.
@@ -539,7 +552,7 @@ OB_EXPORT const ob_frame *ob_frameset_get_points_frame(const ob_frame *frameset,
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the frame of the specified type, or nullptr if it does not exist.
  */
-OB_EXPORT const ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type frame_type, ob_error **error);
+OB_EXPORT ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_frame_type frame_type, ob_error **error);
 
 /**
  * @brief Get a frame at a specific index from the FrameSet
@@ -549,13 +562,17 @@ OB_EXPORT const ob_frame *ob_frameset_get_frame(const ob_frame *frameset, ob_fra
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_frame* Return the frame at the specified index, or nullptr if it does not exist.
  */
-OB_EXPORT const ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, uint32_t index, ob_error **error);
+OB_EXPORT ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, uint32_t index, ob_error **error);
 
 /**
- * @brief Add a frame of the specified type to the frameset.
+ * @brief Push a frame to the frameset
+ *
+ * @attention If a frame with same type already exists in the frameset, it will be replaced by the new frame.
+ * @attention The frame push to the frameset will be add reference count, so you still need to call @ref ob_delete_frame() to decrease the reference count when
+ * it is no longer needed.
  *
  * @param[in] frameset Frameset object.
- * @param[in] frame Frame object to add.
+ * @param[in] frame Frame object to push.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_frameset_push_frame(ob_frame *frameset, const ob_frame *frame, ob_error **error);

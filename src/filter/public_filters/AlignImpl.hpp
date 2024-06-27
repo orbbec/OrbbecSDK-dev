@@ -103,8 +103,6 @@ private:
 
     void D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z, int *map = nullptr);
     /** SSE speed-ed depth to color alignment with different distortion model */
-#if defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
-
     void distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
                              int *map = nullptr);
     void KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
@@ -113,7 +111,6 @@ private:
                                int *map = nullptr);
     void linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
                           int *map = nullptr);
-#endif
 
     /**
      * @brief               Transfer pixels of the source image buffer to the target

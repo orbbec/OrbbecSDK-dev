@@ -261,8 +261,6 @@ void AlignImpl::clearMatrixCache() {
     rot_coeff_ht_z.clear();
 }
 
-#if defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
-
 void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
                                       const float *coeff_mat_z, int *map) {
     __m128 x1_limit = _mm_set_ps1(float(x_start_));
@@ -1005,8 +1003,6 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
     }
 }
 
-#endif
-
 void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y, const float *coeff_mat_z,
                               int *map) {
 
@@ -1119,8 +1115,6 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
     const float *coeff_mat_z = finder_z->second;
 
     if(withSSE) {
-#if defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
-
         if(add_target_distortion_) {
             switch(rgb_disto_.model) {
             case OB_DISTORTION_BROWN_CONRADY:
@@ -1141,7 +1135,6 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
         else {
             linearD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
         }
-#endif
     }
     else {
         D2CWithoutSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);

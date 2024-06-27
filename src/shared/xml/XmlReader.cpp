@@ -8,7 +8,7 @@
 namespace libobsensor {
 XmlReader::XmlReader(const std::string& filePath) {
     doc_ = std::make_shared<XMLDocument>();
-    if(!filePath.empty()) {
+    if(filePath.empty()) {
         throw invalid_value_exception("XmlReader::XmlReader: filePath is empty!");
     }
 

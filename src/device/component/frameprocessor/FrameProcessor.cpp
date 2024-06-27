@@ -44,7 +44,10 @@ std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSe
     if(context_ && !context_->context || context_->create_processor == nullptr) {
         return nullptr;
     }
-    return std::make_shared<FrameProcessor>(context_, sensorType);
+
+    std::shared_ptr<FrameProcessor> processor;
+    TRY_EXECUTE({ processor = std::make_shared<FrameProcessor>(context_, sensorType); })
+    return processor;
 }
 
 FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType) : context_(context), sensorType_(sensorType) {
@@ -52,8 +55,9 @@ FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context, O
         ob_error *error   = nullptr;
         privateProcessor_ = context_->create_processor(context_->context, sensorType, &error);
         if(error) {
-            // TODO
-            throw std::runtime_error("create frame processor failed");
+            auto msg = std::string(error->message);
+            delete error;
+            throw std::runtime_error(msg);
         }
     }
 

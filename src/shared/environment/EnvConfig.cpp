@@ -1,5 +1,6 @@
 #include "EnvConfig.hpp"
 #include "utils/Utils.hpp"
+#include "exception/ObException.hpp"
 #include <cmrc/cmrc.hpp>
 CMRC_DECLARE(ob);
 
@@ -31,8 +32,10 @@ EnvConfig::EnvConfig(const std::string &configFile) {
         extConfigFile = defaultConfigFile;
     }
     if(utils::fileExists(extConfigFile.c_str())) {
-        auto xmlReader = std::make_shared<XmlReader>(extConfigFile);
-        xmlReaders_.push_back(xmlReader);
+        TRY_EXECUTE({
+            auto xmlReader = std::make_shared<XmlReader>(extConfigFile);
+            xmlReaders_.push_back(xmlReader);
+        });
     }
 
     // add default config file (binary resource compiled into the library via [cmrc](https://github.com/vector-of-bool/cmrc))

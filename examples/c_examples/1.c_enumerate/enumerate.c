@@ -33,6 +33,7 @@ int input_index(const char *prompt, int min_value, int max_value) {
         char input;
         scanf("%c", &input);
         getchar();
+
         if(input == 'q' || input == 'Q') {
             value = -1;
             break;
@@ -259,6 +260,8 @@ int main() {
     ob_delete_context(ctx, &error);
     check_ob_error(&error);
 
-    printf("\nProgram ended successfully.\n");
+    printf("\nProgram ended successfully. Press any key to exit.");
+    getchar();
+
     return 0;
 }

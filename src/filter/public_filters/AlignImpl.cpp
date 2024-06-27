@@ -1025,15 +1025,15 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
 
         switch(format) {
         case OB_FORMAT_Y8:
-            memset(out_rgb, 0, color_width * color_height * sizeof(uint8_t));
+            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint8_t));
             mapPixel<uint8_t>(depth_xy, static_cast<const uint8_t *>(rgb_buffer), color_width, color_height, (uint8_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_Y16:
-            memset(out_rgb, 0, color_width * color_height * sizeof(uint16_t));
+            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint16_t));
             mapPixel<uint16_t>(depth_xy, static_cast<const uint16_t *>(rgb_buffer), color_width, color_height, (uint16_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_RGB:
-            memset(out_rgb, 0, color_width * color_height * sizeof(uint24_t));
+            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint24_t));
             mapPixel<uint24_t>(depth_xy, static_cast<const uint24_t *>(rgb_buffer), color_width, color_height, (uint24_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_BGR:

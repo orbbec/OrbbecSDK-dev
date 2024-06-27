@@ -138,9 +138,7 @@ void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion de
     memcpy(&rgb_intric_, &rgb_intrin, sizeof(OBCameraIntrinsic));
     memcpy(&rgb_disto_, &rgb_disto, sizeof(OBCameraDistortion));
     memcpy(&transform_, &extrin, sizeof(OBExtrinsic));
-    // FIXME: why assign to itself?
-    // add_target_distortion = add_target_distortion;
-    (void)add_target_distortion;
+    add_target_distortion_ = add_target_distortion;
     depth_unit_mm_ = depth_unit_mm;
     gap_fill_copy_ = gap_fill_copy;
     // Translation is related to depth unit.

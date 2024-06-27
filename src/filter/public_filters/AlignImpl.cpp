@@ -76,35 +76,6 @@ static inline void removeDistortion(const OBCameraDistortion &distort_param, con
     pt_ud[1] = tmp_p_ud[1];
 }
 
-// __attribute__((unused)) static inline void convertProjectiveToWorldDisto(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
-//                                                                          float &pz, const OBCameraDistortion &distort_param) {
-//     float tx = (u - intrinsic.cx) / intrinsic.fx;
-//     float ty = (v - intrinsic.cy) / intrinsic.fy;
-
-//     float tx_d = tx;
-//     float ty_d = ty;
-//     float pUndisto[2];
-//     float pdisto[2] = { tx_d, ty_d };
-//     removeDistortion(distort_param, pdisto, pUndisto);
-
-//     tx = pUndisto[0];
-//     ty = pUndisto[1];
-
-//     px = z * tx;
-//     py = z * ty;
-//     pz = static_cast<float>(z);
-// }
-
-// __attribute__((unused)) static inline void convertProjectiveToWorldLinear(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
-//                                                                           float &pz) {
-//     float tx = (u - intrinsic.cx) / intrinsic.fx;
-//     float ty = (v - intrinsic.cy) / intrinsic.fy;
-
-//     px = z * tx;
-//     py = z * ty;
-//     pz = static_cast<float>(z);
-// }
-
 AlignImpl::AlignImpl() : initialized_(false) {
 #ifdef _WIN32
     omp_set_dynamic(0);
@@ -357,11 +328,6 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
         __m128 pixelx_hi = _mm_add_ps(_mm_mul_ps(X_hi, color_K_0_0), color_K_0_2);
         __m128 pixely_hi = _mm_add_ps(_mm_mul_ps(Y_hi, color_K_1_1), color_K_1_2);
 
-        // pixelx_lo = _mm_add_ps(pixelx_lo, point_five);
-        // pixely_lo = _mm_add_ps(pixely_lo, point_five);
-        // pixelx_hi = _mm_add_ps(pixelx_hi, point_five);
-        // pixely_hi = _mm_add_ps(pixely_hi, point_five);
-
         float x_lo[4] = { 0 };
         float y_lo[4] = { 0 };
         float z_lo[4] = { 0 };
@@ -546,11 +512,6 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
         __m128 pixely_lo = _mm_add_ps(_mm_mul_ps(ty_lo, color_K_1_1), color_K_1_2);
         __m128 pixely_hi = _mm_add_ps(_mm_mul_ps(ty_hi, color_K_1_1), color_K_1_2);
 
-        // pixelx_lo = _mm_add_ps(pixelx_lo, point_five);
-        // pixely_lo = _mm_add_ps(pixely_lo, point_five);
-        // pixelx_hi = _mm_add_ps(pixelx_hi, point_five);
-        // pixely_hi = _mm_add_ps(pixely_hi, point_five);
-
         float x_lo[4] = { 0 };
         float y_lo[4] = { 0 };
         float z_lo[4] = { 0 };
@@ -722,11 +683,6 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
         __m128 pixelx_hi = _mm_add_ps(_mm_mul_ps(tx_hi, color_K_0_0), color_K_0_2);
         __m128 pixely_lo = _mm_add_ps(_mm_mul_ps(ty_lo, color_K_1_1), color_K_1_2);
         __m128 pixely_hi = _mm_add_ps(_mm_mul_ps(ty_hi, color_K_1_1), color_K_1_2);
-
-        // pixelx_lo = _mm_add_ps(pixelx_lo, point_five);
-        // pixely_lo = _mm_add_ps(pixely_lo, point_five);
-        // pixelx_hi = _mm_add_ps(pixelx_hi, point_five);
-        // pixely_hi = _mm_add_ps(pixely_hi, point_five);
 
         float x_lo[4] = { 0 };
         float y_lo[4] = { 0 };

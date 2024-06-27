@@ -44,6 +44,7 @@ endif()
 # configure global directories variables
 set(OB_PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include/)
 set(OB_3RDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/3rdparty)
+set(OB_PROJECT_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 add_subdirectory(src)
 

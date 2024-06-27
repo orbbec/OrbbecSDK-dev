@@ -76,45 +76,12 @@ static inline void removeDistortion(const OBCameraDistortion &distort_param, con
     pt_ud[1] = tmp_p_ud[1];
 }
 
-// __attribute__((unused)) static inline void convertProjectiveToWorldDisto(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
-//                                                                          float &pz, const OBCameraDistortion &distort_param) {
-//     float tx = (u - intrinsic.cx) / intrinsic.fx;
-//     float ty = (v - intrinsic.cy) / intrinsic.fy;
-
-//     float tx_d = tx;
-//     float ty_d = ty;
-//     float pUndisto[2];
-//     float pdisto[2] = { tx_d, ty_d };
-//     removeDistortion(distort_param, pdisto, pUndisto);
-
-//     tx = pUndisto[0];
-//     ty = pUndisto[1];
-
-//     px = z * tx;
-//     py = z * ty;
-//     pz = static_cast<float>(z);
-// }
-
-// __attribute__((unused)) static inline void convertProjectiveToWorldLinear(const OBCameraIntrinsic &intrinsic, int u, int v, int z, float &px, float &py,
-//                                                                           float &pz) {
-//     float tx = (u - intrinsic.cx) / intrinsic.fx;
-//     float ty = (v - intrinsic.cy) / intrinsic.fy;
-
-//     px = z * tx;
-//     py = z * ty;
-//     pz = static_cast<float>(z);
-// }
-
 AlignImpl::AlignImpl() : initialized_(false) {
 #ifdef _WIN32
     omp_set_dynamic(0);
     int max_thread = omp_get_max_threads();
     omp_set_num_threads(max_thread);
 #endif
-    x_start_       = -1;
-    y_start_       = -1;
-    x_end_         = -1;
-    y_end_         = -1;
     depth_unit_mm_ = 1.0;
     r2_max_loc_    = 0.0;
     memset(&depth_intric_, 0, sizeof(OBCameraIntrinsic));
@@ -138,20 +105,13 @@ void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion de
     memcpy(&rgb_intric_, &rgb_intrin, sizeof(OBCameraIntrinsic));
     memcpy(&rgb_disto_, &rgb_disto, sizeof(OBCameraDistortion));
     memcpy(&transform_, &extrin, sizeof(OBExtrinsic));
-    // FIXME: why assign to itself?
-    // add_target_distortion = add_target_distortion;
-    (void)add_target_distortion;
+    add_target_distortion_ = add_target_distortion;
     depth_unit_mm_ = depth_unit_mm;
     gap_fill_copy_ = gap_fill_copy;
     // Translation is related to depth unit.
     for(int i = 0; i < 3; ++i) {
         scaled_trans_[i] = transform_.trans[i] / depth_unit_mm_;
     }
-
-    x_start_ = 0;
-    y_start_ = 0;
-    x_end_   = rgb_intric_.width;
-    y_end_   = rgb_intric_.height;
 
     prepareDepthResolution();
     initialized_ = true;
@@ -261,15 +221,8 @@ void AlignImpl::clearMatrixCache() {
     rot_coeff_ht_z.clear();
 }
 
-#if defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
-
 void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
                                       const float *coeff_mat_z, int *map) {
-    __m128 x1_limit = _mm_set_ps1(float(x_start_));
-    __m128 x2_limit = _mm_set_ps1(float(x_end_));
-    __m128 y1_limit = _mm_set_ps1(float(y_start_));
-    __m128 y2_limit = _mm_set_ps1(float(y_end_));
-
     __m128 k1 = _mm_set_ps1(rgb_disto_.k1);
     __m128 k2 = _mm_set_ps1(rgb_disto_.k2);
     __m128 k3 = _mm_set_ps1(rgb_disto_.k3);
@@ -375,18 +328,6 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
         __m128 pixelx_hi = _mm_add_ps(_mm_mul_ps(X_hi, color_K_0_0), color_K_0_2);
         __m128 pixely_hi = _mm_add_ps(_mm_mul_ps(Y_hi, color_K_1_1), color_K_1_2);
 
-        // pixelx_lo = _mm_add_ps(pixelx_lo, point_five);
-        // pixely_lo = _mm_add_ps(pixely_lo, point_five);
-        // pixelx_hi = _mm_add_ps(pixelx_hi, point_five);
-        // pixely_hi = _mm_add_ps(pixely_hi, point_five);
-
-        __m128 cmp_flag_lo =
-            _mm_and_ps(_mm_and_ps(_mm_and_ps(_mm_cmpge_ps(pixelx_lo, x1_limit), _mm_cmpge_ps(pixely_lo, y1_limit)), _mm_cmplt_ps(pixelx_lo, x2_limit)),
-                       _mm_cmplt_ps(pixely_lo, y2_limit));
-        __m128 cmp_flag_hi =
-            _mm_and_ps(_mm_and_ps(_mm_and_ps(_mm_cmpge_ps(pixelx_hi, x1_limit), _mm_cmpge_ps(pixely_hi, y1_limit)), _mm_cmplt_ps(pixelx_hi, x2_limit)),
-                       _mm_cmplt_ps(pixely_hi, y2_limit));
-
         float x_lo[4] = { 0 };
         float y_lo[4] = { 0 };
         float z_lo[4] = { 0 };
@@ -394,12 +335,12 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
         float y_hi[4] = { 0 };
         float z_hi[4] = { 0 };
 
-        _mm_storeu_ps(x_lo, _mm_and_ps(cmp_flag_lo, pixelx_lo));
-        _mm_storeu_ps(y_lo, _mm_and_ps(cmp_flag_lo, pixely_lo));
-        _mm_storeu_ps(z_lo, _mm_and_ps(cmp_flag_lo, Z_lo));
-        _mm_storeu_ps(x_hi, _mm_and_ps(cmp_flag_hi, pixelx_hi));
-        _mm_storeu_ps(y_hi, _mm_and_ps(cmp_flag_hi, pixely_hi));
-        _mm_storeu_ps(z_hi, _mm_and_ps(cmp_flag_hi, Z_hi));
+        _mm_storeu_ps(x_lo, pixelx_lo);
+        _mm_storeu_ps(y_lo, pixely_lo);
+        _mm_storeu_ps(z_lo, Z_lo);
+        _mm_storeu_ps(x_hi, pixelx_hi);
+        _mm_storeu_ps(y_hi, pixely_hi);
+        _mm_storeu_ps(z_hi, Z_hi);
 
         for(int k = 0; k < 2; k++) {
             float *xptr = (k < 1 ? x_lo : x_hi);
@@ -415,8 +356,8 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                 if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
                     if(map) {
-                        map[2 * i + k * 4 + j]     = u_rgb;
-                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                        map[2 * (i + k * 4 + j)]     = u_rgb;
+                        map[2 * (i + k * 4 + j) + 1] = v_rgb;
                     }
 
                     if(out_depth) {
@@ -450,11 +391,6 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
 
 void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
                                       const float *coeff_mat_z, int *map) {
-
-    __m128 x1_limit = _mm_set_ps1(float(x_start_));
-    __m128 x2_limit = _mm_set_ps1(float(x_end_));
-    __m128 y1_limit = _mm_set_ps1(float(y_start_));
-    __m128 y2_limit = _mm_set_ps1(float(y_end_));
 
     __m128 k1 = _mm_set_ps1(rgb_disto_.k1);
     __m128 k2 = _mm_set_ps1(rgb_disto_.k2);
@@ -576,29 +512,6 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
         __m128 pixely_lo = _mm_add_ps(_mm_mul_ps(ty_lo, color_K_1_1), color_K_1_2);
         __m128 pixely_hi = _mm_add_ps(_mm_mul_ps(ty_hi, color_K_1_1), color_K_1_2);
 
-        // pixelx_lo = _mm_add_ps(pixelx_lo, point_five);
-        // pixely_lo = _mm_add_ps(pixely_lo, point_five);
-        // pixelx_hi = _mm_add_ps(pixelx_hi, point_five);
-        // pixely_hi = _mm_add_ps(pixely_hi, point_five);
-
-        __m128 cmp1_lo     = _mm_cmpge_ps(pixelx_lo, x1_limit);
-        __m128 cmp2_lo     = _mm_cmpge_ps(pixely_lo, y1_limit);
-        __m128 cmp3_lo     = _mm_cmplt_ps(pixelx_lo, x2_limit);
-        __m128 cmp4_lo     = _mm_cmplt_ps(pixely_lo, y2_limit);
-        __m128 cmp1_hi     = _mm_cmpge_ps(pixelx_hi, x1_limit);
-        __m128 cmp2_hi     = _mm_cmpge_ps(pixely_hi, y1_limit);
-        __m128 cmp3_hi     = _mm_cmplt_ps(pixelx_hi, x2_limit);
-        __m128 cmp4_hi     = _mm_cmplt_ps(pixely_hi, y2_limit);
-        __m128 cmp_flag_lo = _mm_and_ps(_mm_and_ps(_mm_and_ps(cmp1_lo, cmp2_lo), cmp3_lo), cmp4_lo);
-        __m128 cmp_flag_hi = _mm_and_ps(_mm_and_ps(_mm_and_ps(cmp1_hi, cmp2_hi), cmp3_hi), cmp4_hi);
-
-        __m128 result_x_lo = _mm_and_ps(cmp_flag_lo, pixelx_lo);
-        __m128 result_y_lo = _mm_and_ps(cmp_flag_lo, pixely_lo);
-        __m128 result_z_lo = _mm_and_ps(cmp_flag_lo, Z_lo);
-        __m128 result_x_hi = _mm_and_ps(cmp_flag_hi, pixelx_hi);
-        __m128 result_y_hi = _mm_and_ps(cmp_flag_hi, pixely_hi);
-        __m128 result_z_hi = _mm_and_ps(cmp_flag_hi, Z_hi);
-
         float x_lo[4] = { 0 };
         float y_lo[4] = { 0 };
         float z_lo[4] = { 0 };
@@ -606,12 +519,12 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
         float y_hi[4] = { 0 };
         float z_hi[4] = { 0 };
 
-        _mm_storeu_ps(x_lo, result_x_lo);
-        _mm_storeu_ps(y_lo, result_y_lo);
-        _mm_storeu_ps(z_lo, result_z_lo);
-        _mm_storeu_ps(x_hi, result_x_hi);
-        _mm_storeu_ps(y_hi, result_y_hi);
-        _mm_storeu_ps(z_hi, result_z_hi);
+        _mm_storeu_ps(x_lo, pixelx_lo);
+        _mm_storeu_ps(y_lo, pixely_lo);
+        _mm_storeu_ps(z_lo, Z_lo);
+        _mm_storeu_ps(x_hi, pixelx_hi);
+        _mm_storeu_ps(y_hi, pixely_hi);
+        _mm_storeu_ps(z_hi, Z_hi);
 
         for(int k = 0; k < 2; k++) {
             float *xptr = (k < 1 ? x_lo : x_hi);
@@ -627,8 +540,8 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                 if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
                     if(map) {
-                        map[2 * i + k * 4 + j]     = u_rgb;
-                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                        map[2 * (i + k * 4 + j)]     = u_rgb;
+                        map[2 * (i + k * 4 + j) + 1] = v_rgb;
                     }
 
                     if(out_depth) {
@@ -662,12 +575,6 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
 
 void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
                                     const float *coeff_mat_z, int *map) {
-
-    __m128 x1_limit = _mm_set_ps1(float(x_start_));
-    __m128 x2_limit = _mm_set_ps1(float(x_end_));
-    __m128 y1_limit = _mm_set_ps1(float(y_start_));
-    __m128 y2_limit = _mm_set_ps1(float(y_end_));
-
     __m128 k1 = _mm_set_ps1(rgb_disto_.k1);
     __m128 k2 = _mm_set_ps1(rgb_disto_.k2);
     __m128 k3 = _mm_set_ps1(rgb_disto_.k3);
@@ -777,29 +684,6 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
         __m128 pixely_lo = _mm_add_ps(_mm_mul_ps(ty_lo, color_K_1_1), color_K_1_2);
         __m128 pixely_hi = _mm_add_ps(_mm_mul_ps(ty_hi, color_K_1_1), color_K_1_2);
 
-        // pixelx_lo = _mm_add_ps(pixelx_lo, point_five);
-        // pixely_lo = _mm_add_ps(pixely_lo, point_five);
-        // pixelx_hi = _mm_add_ps(pixelx_hi, point_five);
-        // pixely_hi = _mm_add_ps(pixely_hi, point_five);
-
-        __m128 cmp1_lo     = _mm_cmpge_ps(pixelx_lo, x1_limit);
-        __m128 cmp2_lo     = _mm_cmpge_ps(pixely_lo, y1_limit);
-        __m128 cmp3_lo     = _mm_cmplt_ps(pixelx_lo, x2_limit);
-        __m128 cmp4_lo     = _mm_cmplt_ps(pixely_lo, y2_limit);
-        __m128 cmp1_hi     = _mm_cmpge_ps(pixelx_hi, x1_limit);
-        __m128 cmp2_hi     = _mm_cmpge_ps(pixely_hi, y1_limit);
-        __m128 cmp3_hi     = _mm_cmplt_ps(pixelx_hi, x2_limit);
-        __m128 cmp4_hi     = _mm_cmplt_ps(pixely_hi, y2_limit);
-        __m128 cmp_flag_lo = _mm_and_ps(_mm_and_ps(_mm_and_ps(cmp1_lo, cmp2_lo), cmp3_lo), cmp4_lo);
-        __m128 cmp_flag_hi = _mm_and_ps(_mm_and_ps(_mm_and_ps(cmp1_hi, cmp2_hi), cmp3_hi), cmp4_hi);
-
-        __m128 result_x_lo = _mm_and_ps(cmp_flag_lo, pixelx_lo);
-        __m128 result_y_lo = _mm_and_ps(cmp_flag_lo, pixely_lo);
-        __m128 result_z_lo = _mm_and_ps(cmp_flag_lo, Z_lo);
-        __m128 result_x_hi = _mm_and_ps(cmp_flag_hi, pixelx_hi);
-        __m128 result_y_hi = _mm_and_ps(cmp_flag_hi, pixely_hi);
-        __m128 result_z_hi = _mm_and_ps(cmp_flag_hi, Z_hi);
-
         float x_lo[4] = { 0 };
         float y_lo[4] = { 0 };
         float z_lo[4] = { 0 };
@@ -807,12 +691,12 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
         float y_hi[4] = { 0 };
         float z_hi[4] = { 0 };
 
-        _mm_storeu_ps(x_lo, result_x_lo);
-        _mm_storeu_ps(y_lo, result_y_lo);
-        _mm_storeu_ps(z_lo, result_z_lo);
-        _mm_storeu_ps(x_hi, result_x_hi);
-        _mm_storeu_ps(y_hi, result_y_hi);
-        _mm_storeu_ps(z_hi, result_z_hi);
+        _mm_storeu_ps(x_lo, pixelx_lo);
+        _mm_storeu_ps(y_lo, pixely_lo);
+        _mm_storeu_ps(z_lo, Z_lo);
+        _mm_storeu_ps(x_hi, pixelx_hi);
+        _mm_storeu_ps(y_hi, pixely_hi);
+        _mm_storeu_ps(z_hi, Z_hi);
 
         for(int k = 0; k < 2; k++) {
             float *xptr = (k < 1 ? x_lo : x_hi);
@@ -828,8 +712,8 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
                 if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
                     if(map) {
-                        map[2 * i + k * 4 + j]     = u_rgb;
-                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                        map[2 * (i + k * 4 + j)]     = u_rgb;
+                        map[2 * (i + k * 4 + j) + 1] = v_rgb;
                     }
 
                     if(out_depth) {
@@ -863,12 +747,6 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
 
 void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y,
                                  const float *coeff_mat_z, int *map) {
-
-    __m128 x1 = _mm_set_ps1(float(x_start_));
-    __m128 x2 = _mm_set_ps1(float(x_end_));
-    __m128 y1 = _mm_set_ps1(float(y_start_));
-    __m128 y2 = _mm_set_ps1(float(y_end_));
-
     __m128 scaled_trans_1 = _mm_set_ps1(scaled_trans_[0]);
     __m128 scaled_trans_2 = _mm_set_ps1(scaled_trans_[1]);
     __m128 scaled_trans_3 = _mm_set_ps1(scaled_trans_[2]);
@@ -927,25 +805,6 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
         __m128 pixely_lo = _mm_add_ps(_mm_mul_ps(ty_lo, color_K_1_1), color_K_1_2);
         __m128 pixely_hi = _mm_add_ps(_mm_mul_ps(ty_hi, color_K_1_1), color_K_1_2);
 
-        __m128 cmp1_lo = _mm_cmpge_ps(pixelx_lo, x1);
-        __m128 cmp2_lo = _mm_cmpge_ps(pixely_lo, y1);
-        __m128 cmp3_lo = _mm_cmplt_ps(pixelx_lo, x2);
-        __m128 cmp4_lo = _mm_cmplt_ps(pixely_lo, y2);
-
-        __m128 cmp_flag_lo = _mm_and_ps(_mm_and_ps(_mm_and_ps(cmp1_lo, cmp2_lo), cmp3_lo), cmp4_lo);
-        __m128 result_x_lo = _mm_and_ps(cmp_flag_lo, pixelx_lo);
-        __m128 result_y_lo = _mm_and_ps(cmp_flag_lo, pixely_lo);
-        __m128 result_z_lo = _mm_and_ps(cmp_flag_lo, Z_lo);
-
-        __m128 cmp1_hi     = _mm_cmpge_ps(pixelx_hi, x1);
-        __m128 cmp2_hi     = _mm_cmpge_ps(pixely_hi, y1);
-        __m128 cmp3_hi     = _mm_cmplt_ps(pixelx_hi, x2);
-        __m128 cmp4_hi     = _mm_cmplt_ps(pixely_hi, y2);
-        __m128 cmp_flag_hi = _mm_and_ps(_mm_and_ps(_mm_and_ps(cmp1_hi, cmp2_hi), cmp3_hi), cmp4_hi);
-        __m128 result_x_hi = _mm_and_ps(cmp_flag_hi, pixelx_hi);
-        __m128 result_y_hi = _mm_and_ps(cmp_flag_hi, pixely_hi);
-        __m128 result_z_hi = _mm_and_ps(cmp_flag_hi, Z_hi);
-
         float x_lo[4] = { 0 };
         float y_lo[4] = { 0 };
         float z_lo[4] = { 0 };
@@ -953,12 +812,12 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
         float y_hi[4] = { 0 };
         float z_hi[4] = { 0 };
 
-        _mm_storeu_ps(x_lo, result_x_lo);
-        _mm_storeu_ps(y_lo, result_y_lo);
-        _mm_storeu_ps(z_lo, result_z_lo);
-        _mm_storeu_ps(x_hi, result_x_hi);
-        _mm_storeu_ps(y_hi, result_y_hi);
-        _mm_storeu_ps(z_hi, result_z_hi);
+        _mm_storeu_ps(x_lo, pixelx_lo);
+        _mm_storeu_ps(y_lo, pixely_lo);
+        _mm_storeu_ps(z_lo, Z_lo);
+        _mm_storeu_ps(x_hi, pixelx_hi);
+        _mm_storeu_ps(y_hi, pixely_hi);
+        _mm_storeu_ps(z_hi, Z_hi);
 
         for(int k = 0; k < 2; k++) {
             float *xptr = (k < 1 ? x_lo : x_hi);
@@ -974,8 +833,8 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
                 if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
                     if(map) {
-                        map[2 * i + k * 4 + j]     = u_rgb;
-                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                        map[2 * (i + k * 4 + j)]     = u_rgb;
+                        map[2 * (i + k * 4 + j) + 1] = v_rgb;
                     }
 
                     int      pos       = v_rgb * rgb_intric_.width + u_rgb;
@@ -1004,8 +863,6 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
         }
     }
 }
-
-#endif
 
 void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y, const float *coeff_mat_z,
                               int *map) {
@@ -1045,9 +902,6 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
                 pixel[1] = ty * rgb_intric_.fy + rgb_intric_.cy;
             }
 
-            if(pixel[0] < x_start_ || pixel[0] >= x_end_ || pixel[1] < y_start_ || pixel[1] >= y_end_)
-                continue;
-
             u_rgb = static_cast<int>(pixel[0]);
             v_rgb = static_cast<int>(pixel[1]);
             if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
@@ -1056,7 +910,6 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
                 {
                     map[2 * i]     = u_rgb;
                     map[2 * i + 1] = v_rgb;
-                    /// TODO(timon): filling for C2D
                 }
 
                 if(out_depth) {
@@ -1119,8 +972,6 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
     const float *coeff_mat_z = finder_z->second;
 
     if(withSSE) {
-#if defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
-
         if(add_target_distortion_) {
             switch(rgb_disto_.model) {
             case OB_DISTORTION_BROWN_CONRADY:
@@ -1141,7 +992,6 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
         else {
             linearD2CWithSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
         }
-#endif
     }
     else {
         D2CWithoutSSE(depth_buffer, out_depth, coeff_mat_x, coeff_mat_y, coeff_mat_z, map);
@@ -1175,15 +1025,15 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
 
         switch(format) {
         case OB_FORMAT_Y8:
-            memset(out_rgb, 0, color_width * color_height * sizeof(uint8_t));
+            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint8_t));
             mapPixel<uint8_t>(depth_xy, static_cast<const uint8_t *>(rgb_buffer), color_width, color_height, (uint8_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_Y16:
-            memset(out_rgb, 0, color_width * color_height * sizeof(uint16_t));
+            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint16_t));
             mapPixel<uint16_t>(depth_xy, static_cast<const uint16_t *>(rgb_buffer), color_width, color_height, (uint16_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_RGB:
-            memset(out_rgb, 0, color_width * color_height * sizeof(uint24_t));
+            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint24_t));
             mapPixel<uint24_t>(depth_xy, static_cast<const uint24_t *>(rgb_buffer), color_width, color_height, (uint24_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_BGR:
@@ -1206,8 +1056,8 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
 
 template <typename T>
 void AlignImpl::mapPixel(const int *map, const T *src_buffer, int src_width, int src_height, T *dst_buffer, int dst_width, int dst_height) {
-    for(int v = (y_start_ > 0 ? y_start_ : 0); v < (y_end_ < dst_height ? y_end_ : dst_height); v++) {
-        for(int u = (x_start_ > 0 ? x_start_ : 0); u < (x_end_ < dst_width ? x_end_ : dst_width); u++) {
+    for(int v = 0; v < dst_height; v++) {
+        for(int u = 0; u < dst_width; u++) {
             int id = v * dst_width + u;
             int us = map[2 * id], vs = map[2 * id + 1];
             if((us < 0) || (us > src_width - 1) || (vs < 0) || (vs > src_height - 1))

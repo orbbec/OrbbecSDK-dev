@@ -103,8 +103,6 @@ private:
 
     void D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z, int *map = nullptr);
     /** SSE speed-ed depth to color alignment with different distortion model */
-#if defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
-
     void distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
                              int *map = nullptr);
     void KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
@@ -113,7 +111,6 @@ private:
                                int *map = nullptr);
     void linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
                           int *map = nullptr);
-#endif
 
     /**
      * @brief               Transfer pixels of the source image buffer to the target
@@ -134,9 +131,6 @@ private:
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_x;
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_y;
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_z;
-
-    /** ROI setting */
-    int x_start_, y_start_, x_end_, y_end_;
 
     float              depth_unit_mm_;          // depth scale
     bool               add_target_distortion_;  // distort align frame with target coefficent

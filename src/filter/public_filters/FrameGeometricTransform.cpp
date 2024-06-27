@@ -276,7 +276,7 @@ std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> fra
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::cloneFrame(frame);
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
     if(frame->is<FrameSet>()) {
         return outFrame;
     }
@@ -387,7 +387,7 @@ std::shared_ptr<Frame> FrameFlip::processFunc(std::shared_ptr<const Frame> frame
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::cloneFrame(frame);
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
     if(frame->is<FrameSet>()) {
         return outFrame;
     }
@@ -491,7 +491,7 @@ std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> fra
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::cloneFrame(frame);
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
     if(frame->is<FrameSet>()) {
         return outFrame;
     }

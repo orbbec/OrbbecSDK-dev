@@ -12,7 +12,7 @@
 namespace ob {
 class Error : public std::exception {
 private:
-    const ob_error *impl_;
+    ob_error *impl_;
 
     /**
      * @brief Construct a new Error object
@@ -57,7 +57,7 @@ public:
     /**
      * @brief Returns the error message of the exception.
      *
-     * @return const char*  The error message.
+     * @return const char* The error message.
      */
     const char *what() const noexcept override {
         return impl_->message;
@@ -78,7 +78,7 @@ public:
      *
      * @return const char* The function name.
      */
-    const char *getFunctionName() const noexcept {
+    const char *getFunction() const noexcept {
         return impl_->function;
     }
 
@@ -91,26 +91,25 @@ public:
         return impl_->args;
     }
 
-    /***************Below functions are deprecated, leave here for compatibility***************/
+    /**
+     * @brief Returns the error message of the exception.
+     * @brief It is recommended to use the what() function instead.
+     *
+     * @return const char* The error message.
+     */
+    const char *getMessage() const noexcept {
+        return impl_->message;
+    }
 
+    /***************Below functions are deprecated, leave here for compatibility***************/
     /**
      * @brief (Deprecated) Returns the name of the function where the exception occurred.
-     * @brief Use the getFunctionName() function instead.
+     * @brief Use the getFunction() function instead.
      *
      * @return const char* The function name.
      */
     OB_DEPRECATED const char *getName() const noexcept {
         return impl_->function;
-    }
-
-    /**
-     * @brief (Deprecated) Returns the error code of the exception.
-     * @brief Use the what() function instead.
-     *
-     * @return const char* The error message.
-     */
-    OB_DEPRECATED const char *getMessage() const noexcept {
-        return impl_->message;
     }
 };
 }  // namespace ob

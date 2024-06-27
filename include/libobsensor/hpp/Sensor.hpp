@@ -18,16 +18,17 @@
 
 namespace ob {
 
-/**
- * @brief Callback function for frame data.
- *
- * @param frame The frame data.
- */
-using FrameCallback = std::function<void(std::shared_ptr<Frame> frame)>;
-
 class Sensor {
+public:
+    /**
+     * @brief Callback function for frame data.
+     *
+     * @param frame The frame data.
+     */
+    typedef std::function<void(std::shared_ptr<Frame> frame)> FrameCallback;
+
 protected:
-    ob_sensor_t  *impl_ = nullptr;
+    ob_sensor_t  *impl_;
     FrameCallback callback_;
 
 public:
@@ -36,6 +37,7 @@ public:
     Sensor(Sensor &&sensor) noexcept : impl_(sensor.impl_) {
         sensor.impl_ = nullptr;
     }
+
     Sensor &operator=(Sensor &&sensor) noexcept {
         if(this != &sensor) {
             ob_error *error = nullptr;
@@ -46,6 +48,7 @@ public:
         }
         return *this;
     }
+
     Sensor(const Sensor &sensor)            = delete;
     Sensor &operator=(const Sensor &sensor) = delete;
 
@@ -60,7 +63,7 @@ public:
      *
      * @return OBSensorType The sensor type.
      */
-    OBSensorType type() {
+    OBSensorType getType() const {
         ob_error *error = nullptr;
         auto      type  = ob_sensor_get_type(impl_, &error);
         Error::handle(&error);
@@ -72,7 +75,7 @@ public:
      *
      * @return std::shared_ptr<StreamProfileList> The stream profile list.
      */
-    std::shared_ptr<StreamProfileList> getStreamProfileList() {
+    std::shared_ptr<StreamProfileList> getStreamProfileList() const {
         ob_error *error = nullptr;
         auto      list  = ob_sensor_get_stream_profile_list(impl_, &error);
         Error::handle(&error);
@@ -83,7 +86,7 @@ public:
      * @brief Request recommended filters
      * @return OBFilterList list of frame processing block
      */
-    std::vector<std::shared_ptr<Filter>> getRecommendedFilters() {
+    std::vector<std::shared_ptr<Filter>> getRecommendedFilters() const {
         ob_error *error = nullptr;
         auto      list  = ob_sensor_get_recommended_filter_list(impl_, &error);
         Error::handle(&error);
@@ -111,18 +114,19 @@ public:
         Error::handle(&error);
     }
 
-    static void frameCallback(ob_frame *frame, void *userData) {
-        auto sensor = static_cast<Sensor *>(userData);
-        sensor->callback_(std::make_shared<Frame>(frame));
-    }
-
     /**
      * @brief Stop the stream.
      */
-    void stop() {
+    void stop() const {
         ob_error *error = nullptr;
         ob_sensor_stop(impl_, &error);
         Error::handle(&error);
+    }
+
+private:
+    static void frameCallback(ob_frame *frame, void *userData) {
+        auto sensor = static_cast<Sensor *>(userData);
+        sensor->callback_(std::make_shared<Frame>(frame));
     }
 };
 
@@ -144,7 +148,7 @@ public:
      *
      * @return uint32_t The number of sensors.
      */
-    uint32_t count() {
+    uint32_t getCount() const {
         ob_error *error = nullptr;
         auto      count = ob_sensor_list_get_sensor_count(impl_, &error);
         Error::handle(&error);
@@ -157,7 +161,7 @@ public:
      * @param index The sensor index.
      * @return OBSensorType The sensor type.
      */
-    OBSensorType type(uint32_t index) {
+    OBSensorType getSensorType(uint32_t index) const {
         ob_error *error = nullptr;
         auto      type  = ob_sensor_list_get_sensor_type(impl_, index, &error);
         Error::handle(&error);
@@ -170,7 +174,7 @@ public:
      * @param index The sensor index. The range is [0, count-1]. If the index exceeds the range, an exception will be thrown.
      * @return std::shared_ptr<Sensor> The sensor object.
      */
-    std::shared_ptr<Sensor> getSensor(uint32_t index) {
+    std::shared_ptr<Sensor> getSensor(uint32_t index) const {
         ob_error *error  = nullptr;
         auto      sensor = ob_sensor_list_get_sensor(impl_, index, &error);
         Error::handle(&error);
@@ -183,7 +187,7 @@ public:
      * @param sensorType The sensor type to obtain.
      * @return std::shared_ptr<Sensor> A sensor object. If the specified sensor type does not exist, it will return empty.
      */
-    std::shared_ptr<Sensor> getSensor(OBSensorType sensorType) {
+    std::shared_ptr<Sensor> getSensor(OBSensorType sensorType) const {
         ob_error *error  = nullptr;
         auto      sensor = ob_sensor_list_get_sensor_by_type(impl_, sensorType, &error);
         Error::handle(&error);

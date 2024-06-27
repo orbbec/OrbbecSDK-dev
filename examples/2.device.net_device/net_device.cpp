@@ -92,6 +92,6 @@ int main(void) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

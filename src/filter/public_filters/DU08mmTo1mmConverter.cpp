@@ -25,7 +25,7 @@ std::shared_ptr<Frame> DU08mmTo1mmConverter::processFunc(std::shared_ptr<const F
         return nullptr;
     }
 
-    auto newFrame = FrameFactory::cloneFrame(frame);
+    auto newFrame = FrameFactory::createFrameFromOtherFrame(frame);
     if(frame->is<FrameSet>()) {
         LOG_WARN_INTVL("The Frame processed by DU08mmTo1mmConverter cannot be FrameSet!");
         return newFrame;

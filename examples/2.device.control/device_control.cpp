@@ -27,8 +27,8 @@ int main(void) try {
     while(isSelectDevice) {
         // select a device to operate
         std::shared_ptr<ob::Device> device = nullptr;
-        if(deviceList->deviceCount() > 0) {
-            if(deviceList->deviceCount() <= 1) {
+        if(deviceList->getCount() > 0) {
+            if(deviceList->getCount() <= 1) {
                 // If a single device is plugged in, the first one is selected by default
                 device = deviceList->getDevice(0);
             }
@@ -38,8 +38,8 @@ int main(void) try {
             auto deviceInfo = device->getDeviceInfo();
             std::cout << "\n------------------------------------------------------------------------\n";
             std::cout << "Current Device: "
-                      << " name: " << deviceInfo->name() << ", vid: 0x" << std::hex << deviceInfo->vid() << ", pid: 0x" << std::setw(4) << std::setfill('0')
-                      << deviceInfo->pid() << ", uid: 0x" << deviceInfo->uid() << std::dec << std::endl;
+                      << " name: " << deviceInfo->getName() << ", vid: 0x" << std::hex << deviceInfo->getVid() << ", pid: 0x" << std::setw(4)
+                      << std::setfill('0') << deviceInfo->getPid() << ", uid: 0x" << deviceInfo->getUid() << std::dec << std::endl;
         }
         else {
             std::cout << "Device Not Found" << std::endl;
@@ -78,7 +78,7 @@ int main(void) try {
                     std::cout << "Property control usage: [property index] [set] [property value] or [property index] [get]" << std::endl;
                     continue;
                 }
-                int size     = static_cast<int>(propertyList.size());
+                size_t size     = propertyList.size();
                 int selectId = std::atoi(controlVec.at(0).c_str());
                 if(selectId >= size) {
                     std::cout << "Your selection is out of range, please reselect: " << std::endl;
@@ -108,17 +108,18 @@ int main(void) try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }
 
 // Select a device, the name, pid, vid, uid of the device will be printed here, and the corresponding device object will be created after selection
 std::shared_ptr<ob::Device> selectDevice(std::shared_ptr<ob::DeviceList> deviceList) {
-    int devCount = deviceList->deviceCount();
+    int devCount = deviceList->getCount();
     std::cout << "Device list: " << std::endl;
     for(int i = 0; i < devCount; i++) {
-        std::cout << i << ". name: " << deviceList->name(i) << ", vid: 0x" << std::hex << deviceList->vid(i) << ", pid: 0x" << std::setw(4) << std::setfill('0')
-                  << deviceList->pid(i) << ", uid: 0x" << deviceList->uid(i) << ", sn: " << deviceList->serialNumber(i) << std::dec << std::endl;
+        std::cout << i << ". name: " << deviceList->getName(i) << ", vid: 0x" << std::hex << deviceList->getVid(i) << ", pid: 0x" << std::setw(4)
+                  << std::setfill('0') << deviceList->getPid(i) << ", uid: 0x" << deviceList->getUid(i) << ", sn: " << deviceList->getSerialNumber(i)
+                  << std::dec << std::endl;
     }
     std::cout << "Select a device: ";
 

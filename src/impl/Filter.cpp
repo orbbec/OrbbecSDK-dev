@@ -16,7 +16,7 @@ ob_filter *ob_create_filter(const char *name, ob_error **error) BEGIN_API_CALL {
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, name)
 
-const char *ob_filter_get_name(ob_filter *filter, ob_error **error) BEGIN_API_CALL {
+const char *ob_filter_get_name(const ob_filter *filter, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
     return filter->filter->getName().c_str();
 }
@@ -90,7 +90,7 @@ void ob_filter_update_config(ob_filter *filter, size_t argc, const char **argv, 
 }
 HANDLE_EXCEPTIONS_NO_RETURN(filter, argc, argv)
 
-double ob_filter_get_config_value(ob_filter *filter, const char *config_name, ob_error **error) BEGIN_API_CALL {
+double ob_filter_get_config_value(const ob_filter *filter, const char *config_name, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
     VALIDATE_NOT_NULL(config_name);
     return filter->filter->getConfigValue(config_name);
@@ -116,7 +116,7 @@ void ob_filter_enable(ob_filter *filter, bool enable, ob_error **error) BEGIN_AP
 }
 HANDLE_EXCEPTIONS_NO_RETURN(filter, enable)
 
-bool ob_filter_is_enabled(ob_filter *filter, ob_error **error) BEGIN_API_CALL {
+bool ob_filter_is_enabled(const ob_filter *filter, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
     return filter->filter->isEnabled();
 }
@@ -149,13 +149,13 @@ void ob_filter_push_frame(ob_filter *filter, const ob_frame *frame, ob_error **e
 }
 HANDLE_EXCEPTIONS_NO_RETURN(filter, frame)
 
-uint32_t ob_filter_list_get_count(ob_filter_list *filter_list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_filter_list_get_count(const ob_filter_list *filter_list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter_list);
     return static_cast<uint32_t>(filter_list->filterList.size());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, filter_list)
 
-ob_filter *ob_filter_list_get_filter(ob_filter_list *filter_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+ob_filter *ob_filter_list_get_filter(const ob_filter_list *filter_list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter_list);
     auto filter        = filter_list->filterList.at(index);
     auto filterImpl    = new ob_filter();

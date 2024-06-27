@@ -18,7 +18,7 @@ public:
     void startEventHandler();
     void stopEventHandler();
 
-    size_t         deviceCount();
+    size_t         getCount();
     libusb_device *getDevice(uint8_t index);
     void           refreshDeviceList();
 

@@ -24,13 +24,13 @@
 ## 4. 获取Depth帧数据
 以阻塞方式等待一帧数据，该帧数据是一个复合帧，包含了配置中启用的所有数据流的帧数据，并设置等待超时时间
 ```cpp
-    auto frameSet = pipe.waitForFrames(100);	//Set the waiting time to 100ms
+    auto frameSet = pipe.waitForFrameset(100);	//Set the waiting time to 100ms
 ```
 
 ## 5. 停止Pipeline，不再生成帧数据
 ```cpp
     pipe.stop();
 ```
-## 6. expected Output 
+## 6. expected Output
 
 ![image](Image/DepthViewer.png)

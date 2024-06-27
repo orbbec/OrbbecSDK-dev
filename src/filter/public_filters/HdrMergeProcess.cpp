@@ -192,7 +192,7 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
 
     // 1.get depth frame,check the depth frame exists
     std::shared_ptr<const DepthFrame> depthFrame = nullptr;
-    std::shared_ptr<Frame>            outFrame   = FrameFactory::cloneFrame(frame);
+    std::shared_ptr<Frame>            outFrame   = FrameFactory::createFrameFromOtherFrame(frame);
     if(frame->is<FrameSet>()) {
         depthFrame = frame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
     }
@@ -315,7 +315,7 @@ std::shared_ptr<Frame> HdrMerge::mergingAlgorithm(std::shared_ptr<const Frame> f
 
     auto newFrame = FrameFactory::createFrameFromStreamProfile(first_depth->getStreamProfile());
     if(newFrame) {
-        newFrame->copyInfo(first_depth);
+        newFrame->copyInfoFromOther(first_depth);
         auto d0       = (uint16_t *)first_depth->getData();
         auto d1       = (uint16_t *)second_depth->getData();
         auto new_data = (uint16_t *)newFrame->getData();
@@ -338,7 +338,7 @@ std::shared_ptr<Frame> HdrMerge::mergingAlgorithm(std::shared_ptr<const Frame> f
         return newFrame;
     }
 
-    return FrameFactory::cloneFrame(first_fs,true);
+    return FrameFactory::createFrameFromOtherFrame(first_fs, true);
 }
 
 }  // namespace libobsensor

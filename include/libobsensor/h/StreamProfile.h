@@ -263,6 +263,27 @@ OB_EXPORT ob_gyro_intrinsic ob_gyro_stream_get_intrinsic(const ob_stream_profile
 OB_EXPORT void ob_gyro_stream_set_intrinsic(ob_stream_profile *profile, ob_gyro_intrinsic intrinsic, ob_error **error);
 
 /**
+ * @brief Get the number of StreamProfile lists.
+ *
+ * @param[in] profile_list StreamProfile list.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ * @return The number of StreamProfile lists.
+ */
+OB_EXPORT uint32_t ob_stream_profile_list_get_count(const ob_stream_profile_list *profile_list, ob_error **error);
+
+/**
+ * @brief Get the corresponding StreamProfile by subscripting.
+ *
+ * @attention The stream profile returned by this function should be deleted by calling @ref ob_delete_stream_profile() when it is no longer needed.
+ *
+ * @param[in] profile_list StreamProfile lists.
+ * @param[in] index Index.
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ * @return The matching profile.
+ */
+OB_EXPORT ob_stream_profile *ob_stream_profile_list_get_profile(const ob_stream_profile_list *profile_list, int index, ob_error **error);
+
+/**
  * @brief Match the corresponding ob_stream_profile through the passed parameters. If there are multiple matches,
  * the first one in the list will be returned by default. If no matched profile is found, an error will be returned.
  *
@@ -276,8 +297,8 @@ OB_EXPORT void ob_gyro_stream_set_intrinsic(ob_stream_profile *profile, ob_gyro_
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return The matching profile.
  */
-OB_EXPORT const ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(const ob_stream_profile_list *profile_list, int width, int height, ob_format format, int fps,
-                                                                   ob_error **error);
+OB_EXPORT ob_stream_profile *ob_stream_profile_list_get_video_stream_profile(const ob_stream_profile_list *profile_list, int width, int height,
+                                                                             ob_format format, int fps, ob_error **error);
 
 /**
  * @brief Match the corresponding ob_stream_profile through the passed parameters. If there are multiple matches,
@@ -291,8 +312,9 @@ OB_EXPORT const ob_stream_profile *ob_stream_profile_list_get_video_stream_profi
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return The matching profile.
  */
-OB_EXPORT const ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(const ob_stream_profile_list *profile_list, ob_accel_full_scale_range full_scale_range,
-                                                                   ob_accel_sample_rate sample_rate, ob_error **error);
+OB_EXPORT ob_stream_profile *ob_stream_profile_list_get_accel_stream_profile(const ob_stream_profile_list *profile_list,
+                                                                             ob_accel_full_scale_range full_scale_range, ob_accel_sample_rate sample_rate,
+                                                                             ob_error **error);
 
 /**
  * @brief Match the corresponding ob_stream_profile through the passed parameters. If there are multiple matches,
@@ -306,29 +328,9 @@ OB_EXPORT const ob_stream_profile *ob_stream_profile_list_get_accel_stream_profi
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return The matching profile.
  */
-OB_EXPORT const ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(const ob_stream_profile_list *profile_list, ob_gyro_full_scale_range full_scale_range,
-                                                                  ob_gyro_sample_rate sample_rate, ob_error **error);
-
-/**
- * @brief Get the corresponding StreamProfile by subscripting.
- *
- * @attention The stream profile returned by this function should be deleted by calling @ref ob_delete_stream_profile() when it is no longer needed.
- *
- * @param[in] profile_list StreamProfile lists.
- * @param[in] index Index.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- * @return The matching profile.
- */
-OB_EXPORT const ob_stream_profile *ob_stream_profile_list_get_profile(const ob_stream_profile_list *profile_list, int index, ob_error **error);
-
-/**
- * @brief Get the number of StreamProfile lists.
- *
- * @param[in] profile_list StreamProfile list.
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- * @return The number of StreamProfile lists.
- */
-OB_EXPORT uint32_t ob_stream_profile_list_count(const ob_stream_profile_list *profile_list, ob_error **error);
+OB_EXPORT ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(const ob_stream_profile_list *profile_list,
+                                                                            ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,
+                                                                            ob_error **error);
 
 /**
  * @brief Delete the stream profile list.

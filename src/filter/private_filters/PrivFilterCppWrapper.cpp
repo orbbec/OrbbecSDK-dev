@@ -11,7 +11,9 @@ PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, std::s
         delete error;
         return;
     }
-    configSchema_ = desc;
+    if(desc) {
+        configSchema_ = desc;
+    }
 }
 
 PrivFilterCppWrapper::~PrivFilterCppWrapper() noexcept {
@@ -32,7 +34,7 @@ void PrivFilterCppWrapper::updateConfig(std::vector<std::string> &params) {
 }
 
 const std::string &PrivFilterCppWrapper::getConfigSchema() const {
-   return configSchema_;
+    return configSchema_;
 }
 
 void PrivFilterCppWrapper::reset() {
@@ -45,10 +47,10 @@ void PrivFilterCppWrapper::reset() {
 }
 
 std::shared_ptr<Frame> PrivFilterCppWrapper::processFunc(std::shared_ptr<const Frame> frame) {
-    ob_error *error   = nullptr;
-    ob_frame *c_frame = new ob_frame();
+    ob_error              *error   = nullptr;
+    ob_frame              *c_frame = new ob_frame();
     std::shared_ptr<Frame> resultFrame;
-    c_frame->frame    = std::const_pointer_cast<Frame>(frame);
+    c_frame->frame = std::const_pointer_cast<Frame>(frame);
 
     auto rst_frame = privFilterCtx_->process(privFilterCtx_->filter, c_frame, &error);
     if(rst_frame) {

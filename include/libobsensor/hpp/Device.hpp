@@ -26,10 +26,28 @@ class DevicePresetList;
 class OBDepthWorkModeList;
 
 class Device {
+public:
+    /**
+     * @brief Callback function for device firmware update progress
+     *
+     * @param state The device firmware update status.
+     * @param message Status information.
+     * @param percent The percentage of the update progress.
+     */
+    typedef std::function<void(OBFwUpdateState state, const char *message, uint8_t percent)> DeviceFwUpdateCallback;
+
+    /**
+     * @brief Callback function for device status updates.
+     *
+     * @param state The device status.
+     * @param message Status information.
+     */
+    typedef std::function<void(OBDeviceState state, const char *message)> DeviceStateChangedCallback;
+
 protected:
     ob_device                 *impl_ = nullptr;
-    DeviceStateChangedCallback device_state_change_callback_;
-    DeviceUpgradeCallback      device_upgrade_callback_;
+    DeviceStateChangedCallback deviceStateChangeCallback_;
+    DeviceFwUpdateCallback     fwUpdateCallback_;
 
 public:
     /**
@@ -70,7 +88,7 @@ public:
      *
      * @return std::shared_ptr<DeviceInfo> return device information
      */
-    std::shared_ptr<DeviceInfo> getDeviceInfo() {
+    std::shared_ptr<DeviceInfo> getDeviceInfo() const {
         ob_error *error = nullptr;
         auto      info  = ob_device_get_device_info(impl_, &error);
         Error::handle(&error);
@@ -82,7 +100,7 @@ public:
      *
      * @return std::shared_ptr<SensorList> return the sensor list
      */
-    std::shared_ptr<SensorList> getSensorList() {
+    std::shared_ptr<SensorList> getSensorList() const {
         ob_error *error = nullptr;
         auto      list  = ob_device_get_sensor_list(impl_, &error);
         Error::handle(&error);
@@ -95,7 +113,7 @@ public:
      *
      * @return std::shared_ptr<Sensor> return the sensor example, if the device does not have the device,return nullptr
      */
-    std::shared_ptr<Sensor> getSensor(OBSensorType type) {
+    std::shared_ptr<Sensor> getSensor(OBSensorType type) const {
         ob_error *error  = nullptr;
         auto      sensor = ob_device_get_sensor(impl_, type, &error);
         Error::handle(&error);
@@ -108,7 +126,7 @@ public:
      * @param propertyId Property id
      * @param property Property to be set
      */
-    void setIntProperty(OBPropertyID propertyId, int32_t property) {
+    void setIntProperty(OBPropertyID propertyId, int32_t property) const {
         ob_error *error = nullptr;
         ob_device_set_int_property(impl_, propertyId, property, &error);
         Error::handle(&error);
@@ -120,7 +138,7 @@ public:
      * @param propertyId Property id
      * @param property Property to be set
      */
-    void setFloatProperty(OBPropertyID propertyId, float property) {
+    void setFloatProperty(OBPropertyID propertyId, float property) const {
         ob_error *error = nullptr;
         ob_device_set_float_property(impl_, propertyId, property, &error);
         Error::handle(&error);
@@ -132,7 +150,7 @@ public:
      * @param propertyId Property id
      * @param property Property to be set
      */
-    void setBoolProperty(OBPropertyID propertyId, bool property) {
+    void setBoolProperty(OBPropertyID propertyId, bool property) const {
         ob_error *error = nullptr;
         ob_device_set_bool_property(impl_, propertyId, property, &error);
         Error::handle(&error);
@@ -144,7 +162,7 @@ public:
      * @param propertyId Property id
      * @return int32_t Property to get
      */
-    int32_t getIntProperty(OBPropertyID propertyId) {
+    int32_t getIntProperty(OBPropertyID propertyId) const {
         ob_error *error = nullptr;
         auto      value = ob_device_get_int_property(impl_, propertyId, &error);
         Error::handle(&error);
@@ -157,7 +175,7 @@ public:
      * @param propertyId Property id
      * @return float Property to get
      */
-    float getFloatProperty(OBPropertyID propertyId) {
+    float getFloatProperty(OBPropertyID propertyId) const {
         ob_error *error = nullptr;
         auto      value = ob_device_get_float_property(impl_, propertyId, &error);
         Error::handle(&error);
@@ -170,7 +188,7 @@ public:
      * @param propertyId Property id
      * @return bool Property to get
      */
-    bool getBoolProperty(OBPropertyID propertyId) {
+    bool getBoolProperty(OBPropertyID propertyId) const {
         ob_error *error = nullptr;
         auto      value = ob_device_get_bool_property(impl_, propertyId, &error);
         Error::handle(&error);
@@ -183,7 +201,7 @@ public:
      * @param propertyId Property id
      * @return OBIntPropertyRange Property range
      */
-    OBIntPropertyRange getIntPropertyRange(OBPropertyID propertyId) {
+    OBIntPropertyRange getIntPropertyRange(OBPropertyID propertyId) const {
         ob_error *error = nullptr;
         auto      range = ob_device_get_int_property_range(impl_, propertyId, &error);
         Error::handle(&error);
@@ -196,7 +214,7 @@ public:
      * @param propertyId Property id
      * @return OBFloatPropertyRange Property range
      */
-    OBFloatPropertyRange getFloatPropertyRange(OBPropertyID propertyId) {
+    OBFloatPropertyRange getFloatPropertyRange(OBPropertyID propertyId) const {
         ob_error *error = nullptr;
         auto      range = ob_device_get_float_property_range(impl_, propertyId, &error);
         Error::handle(&error);
@@ -209,7 +227,7 @@ public:
      * @param propertyId The ID of the property
      * @return OBBoolPropertyRange The range of the property
      */
-    OBBoolPropertyRange getBoolPropertyRange(OBPropertyID propertyId) {
+    OBBoolPropertyRange getBoolPropertyRange(OBPropertyID propertyId) const {
         ob_error *error = nullptr;
         auto      range = ob_device_get_bool_property_range(impl_, propertyId, &error);
         Error::handle(&error);
@@ -223,7 +241,7 @@ public:
      * @param data The data to set
      * @param dataSize The size of the data to set
      */
-    void setStructuredData(OBPropertyID propertyId, const uint8_t *data, uint32_t dataSize) {
+    void setStructuredData(OBPropertyID propertyId, const uint8_t *data, uint32_t dataSize) const {
         ob_error *error = nullptr;
         ob_device_set_structured_data(impl_, propertyId, data, dataSize, &error);
         Error::handle(&error);
@@ -236,7 +254,7 @@ public:
      * @param data The property data obtained
      * @param dataSize The size of the data obtained
      */
-    void getStructuredData(OBPropertyID propertyId, uint8_t *data, uint32_t *dataSize) {
+    void getStructuredData(OBPropertyID propertyId, uint8_t *data, uint32_t *dataSize) const {
         ob_error *error = nullptr;
         ob_device_get_structured_data(impl_, propertyId, data, dataSize, &error);
         Error::handle(&error);
@@ -247,7 +265,7 @@ public:
      *
      * @return The number of supported properties
      */
-    int getSupportedPropertyCount() {
+    int getSupportedPropertyCount() const {
         ob_error *error = nullptr;
         auto      count = ob_device_get_supported_property_count(impl_, &error);
         Error::handle(&error);
@@ -260,7 +278,7 @@ public:
      * @param index The index of the property
      * @return The type of supported property
      */
-    OBPropertyItem getSupportedProperty(uint32_t index) {
+    OBPropertyItem getSupportedProperty(uint32_t index) const {
         ob_error *error = nullptr;
         auto      item  = ob_device_get_supported_property_item(impl_, index, &error);
         Error::handle(&error);
@@ -274,7 +292,7 @@ public:
      * @param permission The read and write permissions to check
      * @return Whether the property permission is supported
      */
-    bool isPropertySupported(OBPropertyID propertyId, OBPermissionType permission) {
+    bool isPropertySupported(OBPropertyID propertyId, OBPermissionType permission) const {
         ob_error *error  = nullptr;
         auto      result = ob_device_is_property_supported(impl_, propertyId, permission, &error);
         Error::handle(&error);
@@ -286,7 +304,7 @@ public:
      *
      * @return Whether the global timestamp is supported
      */
-    bool isGlobalTimestampSupported() {
+    bool isGlobalTimestampSupported() const {
         ob_error *error  = nullptr;
         auto      result = ob_device_is_global_timestamp_supported(impl_, &error);
         Error::handle(&error);
@@ -294,39 +312,31 @@ public:
     }
 
     /**
-     * @brief Upgrade the device firmware
+     * @brief Update the device firmware
      *
      * @param filePath Firmware path
-     * @param callback  Firmware upgrade progress and status callback
-     * @param async    Whether to execute asynchronously
+     * @param callback Firmware Update progress and status callback
+     * @param async Whether to execute asynchronously
      */
-    void deviceUpgrade(const char *filePath, DeviceUpgradeCallback callback, bool async = true) {
-        ob_error *error          = nullptr;
-        device_upgrade_callback_ = callback;
-        ob_device_update_firmware(impl_, filePath, &Device::UpgradeCallback, async, this, &error);
+    void updateFirmware(const char *filePath, DeviceFwUpdateCallback callback, bool async = true) {
+        ob_error *error   = nullptr;
+        fwUpdateCallback_ = callback;
+        ob_device_update_firmware(impl_, filePath, &Device::firmwareUpdateCallback, async, this, &error);
         Error::handle(&error);
     }
 
-    static void UpgradeCallback(ob_fw_update_state state, const char *message, uint8_t percent, void *userData) {
-        auto device = static_cast<Device *>(userData);
-        if(device->device_upgrade_callback_) {
-            device->device_upgrade_callback_(state, message, percent);
-        }
-    }
-
     /**
-     * \if English
-     * @brief Upgrade the device firmware
+     * @brief Update the device firmware from data
      *
-     * @param fileData Firmware file data
-     * @param fileSize Firmware file size
-     * @param callback  Firmware upgrade progress and status callback
-     * @param async    Whether to execute asynchronously
+     * @param firmwareData Firmware data
+     * @param firmwareDataSize Firmware data size
+     * @param callback Firmware Update progress and status callback
+     * @param async Whether to execute asynchronously
      */
-    void deviceUpgradeFromData(const char *fileData, uint32_t fileSize, DeviceUpgradeCallback callback, bool async = true) {
-        ob_error *error          = nullptr;
-        device_upgrade_callback_ = callback;
-        ob_device_upgrade_firmware_from_data(impl_, fileData, fileSize, &Device::UpgradeCallback, async, this, &error);
+    void updateFirmwareFromData(const uint8_t *firmwareData, uint32_t firmwareDataSize, DeviceFwUpdateCallback callback, bool async = true) {
+        ob_error *error   = nullptr;
+        fwUpdateCallback_ = callback;
+        ob_device_update_firmware_from_data(impl_, firmwareData, firmwareDataSize, &Device::firmwareUpdateCallback, async, this, &error);
         Error::handle(&error);
     }
 
@@ -337,15 +347,15 @@ public:
      * stream is closed due to high temperature, etc.)
      */
     void setDeviceStateChangedCallback(DeviceStateChangedCallback callback) {
-        ob_error *error               = nullptr;
-        device_state_change_callback_ = callback;
+        ob_error *error            = nullptr;
+        deviceStateChangeCallback_ = callback;
         ob_device_set_state_changed_callback(impl_, &Device::deviceStateChangedCallback, this, &error);
         Error::handle(&error);
     }
 
     static void deviceStateChangedCallback(OBDeviceState state, const char *message, void *userData) {
         auto device = static_cast<Device *>(userData);
-        device->device_state_change_callback_(state, message);
+        device->deviceStateChangeCallback_(state, message);
     }
 
     /**
@@ -353,7 +363,7 @@ public:
      *
      * @return ob_depth_work_mode Current depth work mode
      */
-    OBDepthWorkMode getCurrentDepthWorkMode() {
+    OBDepthWorkMode getCurrentDepthWorkMode() const {
         ob_error *error = nullptr;
         auto      mode  = ob_device_get_current_depth_work_mode(impl_, &error);
         Error::handle(&error);
@@ -362,10 +372,10 @@ public:
 
     /**
      * @brief Switch depth work mode by OBDepthWorkMode. Prefer invoke switchDepthWorkMode(const char *modeName) to switch depth mode
-     *        when known the complete name of depth work mode.
+     * when known the complete name of depth work mode.
      * @param[in] workMode Depth work mode come from ob_depth_work_mode_list which return by ob_device_get_depth_work_mode_list
      */
-    OBStatus switchDepthWorkMode(const OBDepthWorkMode &workMode) {
+    OBStatus switchDepthWorkMode(const OBDepthWorkMode &workMode) const {
         ob_error *error  = nullptr;
         auto      status = ob_device_switch_depth_work_mode(impl_, &workMode, &error);
         Error::handle(&error);
@@ -377,7 +387,7 @@ public:
      *
      * @param[in] modeName Depth work mode name which equals to OBDepthWorkMode.name
      */
-    OBStatus switchDepthWorkMode(const char *modeName) {
+    OBStatus switchDepthWorkMode(const char *modeName) const {
         ob_error *error  = nullptr;
         auto      status = ob_device_switch_depth_work_mode_by_name(impl_, modeName, &error);
         Error::handle(&error);
@@ -388,7 +398,7 @@ public:
      * @brief Request support depth work mode list
      * @return OBDepthWorkModeList list of ob_depth_work_mode
      */
-    std::shared_ptr<OBDepthWorkModeList> getDepthWorkModeList() {
+    std::shared_ptr<OBDepthWorkModeList> getDepthWorkModeList() const {
         ob_error *error = nullptr;
         auto      list  = ob_device_get_depth_work_mode_list(impl_, &error);
         Error::handle(&error);
@@ -398,26 +408,10 @@ public:
     /**
      * @brief Device restart
      * @attention The device will be disconnected and reconnected. After the device is disconnected, the access to the Device object interface may be abnormal.
-     *   Please delete the object directly and obtain it again after the device is reconnected.
+     * Please delete the object directly and obtain it again after the device is reconnected.
      */
-    void reboot() {
+    void reboot() const {
         ob_error *error = nullptr;
-        ob_device_reboot(impl_, &error);
-        Error::handle(&error);
-    }
-
-    /**
-     * @brief Device restart delay mode
-     * @attention The device will be disconnected and reconnected. After the device is disconnected, the access to the Device object interface may be abnormal.
-     *   Please delete the object directly and obtain it again after the device is reconnected.
-     * Support devices: Gemini2 L
-     *
-     * @param[in] delayMs Time unit：ms。delayMs == 0：No delay；delayMs > 0, Delay millisecond connect to host device after reboot
-     */
-    void reboot(uint32_t delayMs) {
-        ob_error *error = nullptr;
-        // FIXME:
-        std::this_thread::sleep_for(std::chrono::milliseconds(delayMs));
         ob_device_reboot(impl_, &error);
         Error::handle(&error);
     }
@@ -427,17 +421,17 @@ public:
      * @brief For example, if the return value is 0b00001100, it means the device supports @ref OB_MULTI_DEVICE_SYNC_MODE_PRIMARY and @ref
      * OB_MULTI_DEVICE_SYNC_MODE_SECONDARY. User can check the supported mode by the code:
      * ```c
-     *   if(supported_mode_bitmap & OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN){
-     *      //support OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN
-     *   }
-     *   if(supported_mode_bitmap & OB_MULTI_DEVICE_SYNC_MODE_STANDALONE){
-     *     //support OB_MULTI_DEVICE_SYNC_MODE_STANDALONE
-     *   }
-     *   // and so on
+     * if(supported_mode_bitmap & OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN){
+     * //support OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN
+     * }
+     * if(supported_mode_bitmap & OB_MULTI_DEVICE_SYNC_MODE_STANDALONE){
+     * //support OB_MULTI_DEVICE_SYNC_MODE_STANDALONE
+     * }
+     * // and so on
      * ```
      * @return uint16_t return the supported multi device sync mode bitmap of the device.
      */
-    uint16_t getSupportedMultiDeviceSyncModeBitmap() {
+    uint16_t getSupportedMultiDeviceSyncModeBitmap() const {
         ob_error *error = nullptr;
         auto      mode  = ob_device_get_supported_multi_device_sync_mode_bitmap(impl_, &error);
         Error::handle(&error);
@@ -449,7 +443,7 @@ public:
      *
      * @param[in] config The multi device sync configuration.
      */
-    void setMultiDeviceSyncConfig(const OBMultiDeviceSyncConfig &config) {
+    void setMultiDeviceSyncConfig(const OBMultiDeviceSyncConfig &config) const {
         ob_error *error = nullptr;
         ob_device_set_multi_device_sync_config(impl_, &config, &error);
         Error::handle(&error);
@@ -460,7 +454,7 @@ public:
      *
      * @return OBMultiDeviceSyncConfig return the multi device sync configuration of the device.
      */
-    OBMultiDeviceSyncConfig getMultiDeviceSyncConfig() {
+    OBMultiDeviceSyncConfig getMultiDeviceSyncConfig() const {
         ob_error *error  = nullptr;
         auto      config = ob_device_get_multi_device_sync_config(impl_, &error);
         Error::handle(&error);
@@ -478,7 +472,7 @@ public:
      * this function should not be too high, please refer to the product manual for the specific supported frequency.
      * @attention If the device is not in the @ref OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING mode, device will ignore the capture command.
      */
-    void triggerCapture() {
+    void triggerCapture() const {
         ob_error *error = nullptr;
         ob_device_trigger_capture(impl_, &error);
         Error::handle(&error);
@@ -487,7 +481,7 @@ public:
     /**
      * @brief set the timestamp reset configuration of the device.
      */
-    void setTimestampResetConfig(const OBDeviceTimestampResetConfig &config) {
+    void setTimestampResetConfig(const OBDeviceTimestampResetConfig &config) const {
         ob_error *error = nullptr;
         ob_device_set_timestamp_reset_config(impl_, &config, &error);
         Error::handle(&error);
@@ -498,7 +492,7 @@ public:
      *
      * @return OBDeviceTimestampResetConfig return the timestamp reset configuration of the device.
      */
-    OBDeviceTimestampResetConfig getTimestampResetConfig() {
+    OBDeviceTimestampResetConfig getTimestampResetConfig() const {
         ob_error *error  = nullptr;
         auto      config = ob_device_get_timestamp_reset_config(impl_, &error);
         Error::handle(&error);
@@ -516,14 +510,14 @@ public:
      * @attention Due to the timer of device is not high-accuracy, the timestamp of the continuous frames output by the stream will drift after a long time.
      * User can call this function periodically to reset the timer to avoid the timestamp drift, the recommended interval time is 60 minutes.
      */
-    void timestampReset() {
+    void timestampReset() const {
         ob_error *error = nullptr;
         ob_device_timestamp_reset(impl_, &error);
         Error::handle(&error);
     }
 
     /**
-     *  @brief Alias for @ref timestampReset since it is more accurate.
+     * @brief Alias for @ref timestampReset since it is more accurate.
      */
 #define timerReset timestampReset
 
@@ -538,7 +532,7 @@ public:
      * User can call this function periodically to synchronize the timer to avoid the timestamp drift, the recommended interval time is 60 minutes.
      *
      */
-    void timerSyncWithHost() {
+    void timerSyncWithHost() const {
         ob_error *error = nullptr;
         ob_device_timer_sync_with_host(impl_, &error);
         Error::handle(&error);
@@ -549,7 +543,7 @@ public:
      * @brief The preset mean a set of parameters or configurations that can be applied to the device to achieve a specific effect or function.
      * @return const char* return the current preset name, it should be one of the preset names returned by @ref getAvailablePresetList.
      */
-    const char *getCurrentPresetName() {
+    const char *getCurrentPresetName() const {
         ob_error   *error = nullptr;
         const char *name  = ob_device_get_current_preset_name(impl_, &error);
         Error::handle(&error);
@@ -562,7 +556,7 @@ public:
      * settings to update the user program temporarily.
      * @param presetName The preset name to set. The name should be one of the preset names returned by @ref getAvailablePresetList.
      */
-    void loadPreset(const char *presetName) {
+    void loadPreset(const char *presetName) const {
         ob_error *error = nullptr;
         ob_device_load_preset(impl_, presetName, &error);
         Error::handle(&error);
@@ -575,7 +569,7 @@ public:
      *
      * @return DevicePresetList return the available preset list.
      */
-    std::shared_ptr<DevicePresetList> getAvailablePresetList() {
+    std::shared_ptr<DevicePresetList> getAvailablePresetList() const {
         ob_error *error = nullptr;
         auto      list  = ob_device_get_available_preset_list(impl_, &error);
         Error::handle(&error);
@@ -592,7 +586,7 @@ public:
      *
      * @param filePath The path of the custom preset file.
      */
-    void loadPresetFromJsonFile(const char *filePath) {
+    void loadPresetFromJsonFile(const char *filePath) const {
         ob_error *error = nullptr;
         ob_device_load_preset_from_json_file(impl_, filePath, &error);
         Error::handle(&error);
@@ -605,10 +599,18 @@ public:
      *
      * @param filePath The path of the preset file to be exported.
      */
-    void exportSettingsAsPresetJsonFile(const char *filePath) {
+    void exportSettingsAsPresetJsonFile(const char *filePath) const {
         ob_error *error = nullptr;
         ob_device_export_current_settings_as_preset_json_file(impl_, filePath, &error);
         Error::handle(&error);
+    }
+
+private:
+    static void firmwareUpdateCallback(ob_fw_update_state state, const char *message, uint8_t percent, void *userData) {
+        auto device = static_cast<Device *>(userData);
+        if(device && device->fwUpdateCallback_) {
+            device->fwUpdateCallback_(state, message, percent);
+        }
     }
 };
 
@@ -632,7 +634,7 @@ public:
      *
      * @return const char * return the device name
      */
-    const char *name() const {
+    const char *getName() const {
         ob_error   *error = nullptr;
         const char *name  = ob_device_info_get_name(impl_, &error);
         Error::handle(&error);
@@ -644,7 +646,7 @@ public:
      *
      * @return int return the pid of the device
      */
-    int pid() {
+    int getPid() const {
         ob_error *error = nullptr;
         int       pid   = ob_device_info_get_pid(impl_, &error);
         Error::handle(&error);
@@ -656,7 +658,7 @@ public:
      *
      * @return int return the vid of the device
      */
-    int vid() {
+    int getVid() const {
         ob_error *error = nullptr;
         int       vid   = ob_device_info_get_vid(impl_, &error);
         Error::handle(&error);
@@ -668,7 +670,7 @@ public:
      *
      * @return const char * return the uid of the device
      */
-    const char *uid() const {
+    const char *getUid() const {
         ob_error   *error = nullptr;
         const char *uid   = ob_device_info_get_uid(impl_, &error);
         Error::handle(&error);
@@ -680,7 +682,7 @@ public:
      *
      * @return const char * return the serial number of the device
      */
-    const char *serialNumber() const {
+    const char *getSerialNumber() const {
         ob_error   *error = nullptr;
         const char *sn    = ob_device_info_get_serial_number(impl_, &error);
         Error::handle(&error);
@@ -692,7 +694,7 @@ public:
      *
      * @return const char* return the version number of the firmware
      */
-    const char *firmwareVersion() const {
+    const char *getFirmwareVersion() const {
         ob_error   *error   = nullptr;
         const char *version = ob_device_info_get_firmware_version(impl_, &error);
         Error::handle(&error);
@@ -705,7 +707,7 @@ public:
      * @return const char* the connection type of the device，currently supports："USB", "USB1.0", "USB1.1", "USB2.0", "USB2.1", "USB3.0", "USB3.1", "USB3.2",
      * "Ethernet"
      */
-    const char *connectionType() const {
+    const char *getConnectionType() const {
         ob_error   *error = nullptr;
         const char *type  = ob_device_info_get_connection_type(impl_, &error);
         Error::handle(&error);
@@ -719,7 +721,7 @@ public:
      *
      * @return const char* the IP address of the device, such as "192.168.1.10"
      */
-    const char *ipAddress() const {
+    const char *getIpAddress() const {
         ob_error   *error = nullptr;
         const char *ip    = ob_device_info_get_ip_address(impl_, &error);
         Error::handle(&error);
@@ -731,7 +733,7 @@ public:
      *
      * @return const char* the version number of the hardware
      */
-    const char *hardwareVersion() const {
+    const char *getHardwareVersion() const {
         ob_error   *error   = nullptr;
         const char *version = ob_device_info_get_hardware_version(impl_, &error);
         Error::handle(&error);
@@ -743,7 +745,7 @@ public:
      *
      * @return const char* the minimum SDK version number supported by the device
      */
-    const char *supportedMinSdkVersion() const {
+    const char *getSupportedMinSdkVersion() const {
         ob_error   *error   = nullptr;
         const char *version = ob_device_info_get_supported_min_sdk_version(impl_, &error);
         Error::handle(&error);
@@ -755,7 +757,7 @@ public:
      *
      * @return const char* Returns extended information about the device
      */
-    const char *extensionInfo(const char *info_key) const {
+    const char *getExtensionInfo(const char *info_key) const {
         ob_error   *error = nullptr;
         const char *info  = ob_device_info_get_extension_info(impl_, info_key, &error);
         Error::handle(&error);
@@ -767,7 +769,7 @@ public:
      *
      * @return const char* the chip type name
      */
-    const char *asicName() const {
+    const char *getAsicName() const {
         ob_error   *error = nullptr;
         const char *name  = ob_device_info_get_asicName(impl_, &error);
         Error::handle(&error);
@@ -779,7 +781,7 @@ public:
      *
      * @return OBDeviceType the device type
      */
-    OBDeviceType deviceType() {
+    OBDeviceType getDeviceType() const {
         ob_error    *error = nullptr;
         OBDeviceType type  = ob_device_info_get_device_type(impl_, &error);
         Error::handle(&error);
@@ -807,7 +809,7 @@ public:
      *
      * @return uint32_t the number of devices in the list
      */
-    uint32_t deviceCount() {
+    uint32_t getCount() const {
         ob_error *error = nullptr;
         auto      count = ob_device_list_get_device_count(impl_, &error);
         Error::handle(&error);
@@ -820,7 +822,7 @@ public:
      * @param index the index of the device
      * @return int the PID of the device
      */
-    int pid(uint32_t index) {
+    int getPid(uint32_t index) const {
         ob_error *error = nullptr;
         auto      pid   = ob_device_list_get_device_pid(impl_, index, &error);
         Error::handle(&error);
@@ -833,7 +835,7 @@ public:
      * @param index the index of the device
      * @return int the VID of the device
      */
-    int vid(uint32_t index) {
+    int getVid(uint32_t index) const {
         ob_error *error = nullptr;
         auto      vid   = ob_device_list_get_device_vid(impl_, index, &error);
         Error::handle(&error);
@@ -846,7 +848,7 @@ public:
      * @param index the index of the device
      * @return const char* the UID of the device
      */
-    const char *uid(uint32_t index) {
+    const char *getUid(uint32_t index) const {
         ob_error *error = nullptr;
         auto      uid   = ob_device_list_get_device_uid(impl_, index, &error);
         Error::handle(&error);
@@ -859,7 +861,7 @@ public:
      * @param index the index of the device
      * @return const char* the serial number of the device
      */
-    const char *serialNumber(uint32_t index) {
+    const char *getSerialNumber(uint32_t index) const {
         ob_error *error = nullptr;
         auto      sn    = ob_device_list_get_device_serial_number(impl_, index, &error);
         Error::handle(&error);
@@ -875,7 +877,7 @@ public:
      * @param index The index of the device in the device list.
      * @return const char* The name of the device at the specified index.
      */
-    const char *name(uint32_t index) {
+    const char *getName(uint32_t index) const {
         ob_error *error = nullptr;
         auto      name  = ob_device_list_get_device_name(impl_, index, &error);
         Error::handle(&error);
@@ -888,7 +890,7 @@ public:
      * @param index device index
      * @return const char* returns connection type，currently supports："USB", "USB1.0", "USB1.1", "USB2.0", "USB2.1", "USB3.0", "USB3.1", "USB3.2", "Ethernet"
      */
-    const char *connectionType(uint32_t index) {
+    const char *getConnectionType(uint32_t index) const {
         ob_error *error = nullptr;
         auto      type  = ob_device_list_get_device_connection_type(impl_, index, &error);
         Error::handle(&error);
@@ -903,7 +905,7 @@ public:
      * @param index the index of the device
      * @return const char* the ip address of the device
      */
-    const char *ipAddress(uint32_t index) {
+    const char *getIpAddress(uint32_t index) const {
         ob_error *error = nullptr;
         auto      ip    = ob_device_list_get_device_ip_address(impl_, index, &error);
         Error::handle(&error);
@@ -918,7 +920,7 @@ public:
      * @param index the index of the device to create
      * @return std::shared_ptr<Device> the device object
      */
-    std::shared_ptr<Device> getDevice(uint32_t index) {
+    std::shared_ptr<Device> getDevice(uint32_t index) const {
         ob_error *error  = nullptr;
         auto      device = ob_device_list_get_device(impl_, index, &error);
         Error::handle(&error);
@@ -933,7 +935,7 @@ public:
      * @param serialNumber the serial number of the device to create
      * @return std::shared_ptr<Device> the device object
      */
-    std::shared_ptr<Device> getDeviceBySN(const char *serialNumber) {
+    std::shared_ptr<Device> getDeviceBySN(const char *serialNumber) const {
         ob_error *error  = nullptr;
         auto      device = ob_device_list_get_device_by_serial_number(impl_, serialNumber, &error);
         Error::handle(&error);
@@ -951,7 +953,7 @@ public:
      * @param uid The uid of the device to be created
      * @return std::shared_ptr<Device> returns the device object
      */
-    std::shared_ptr<Device> getDeviceByUid(const char *uid) {
+    std::shared_ptr<Device> getDeviceByUid(const char *uid) const {
         ob_error *error  = nullptr;
         auto      device = ob_device_list_get_device_by_uid(impl_, uid, &error);
         Error::handle(&error);

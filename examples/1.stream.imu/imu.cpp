@@ -16,7 +16,7 @@ int main() try {
     // Query the list of connected devices.
     auto devList = ctx.queryDeviceList();
 
-    if(devList->deviceCount() == 0) {
+    if(devList->getCount() == 0) {
         std::cerr << "Device not found!" << std::endl;
         return -1;
     }
@@ -58,8 +58,7 @@ int main() try {
         }
     }
     catch(ob::Error &e) {
-        std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
-                  << std::endl;
+        std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
         std::cerr << "current device is not support imu!" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -116,6 +115,6 @@ int main() try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

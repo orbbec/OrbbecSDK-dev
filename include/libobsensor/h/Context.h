@@ -13,7 +13,7 @@ extern "C" {
 #include "ObTypes.h"
 
 /**
- * @brief Create a context object
+ * @brief Create a context object with the default configuration file
  *
  * @param[out] error Pointer to an error object that will be populated if an error occurs during context creation
  * @return Pointer to the created context object
@@ -23,11 +23,11 @@ OB_EXPORT ob_context *ob_create_context(ob_error **error);
 /**
  * @brief Create a context object with a specified configuration file
  *
- * @param[in] config_path Path to the configuration file. If NULL, the default configuration file will be used.
+ * @param[in] config_file_path Path to the configuration file. If NULL, the default configuration file will be used.
  * @param[out] error Pointer to an error object that will be populated if an error occurs during context creation
  * @return Pointer to the created context object
  */
-OB_EXPORT ob_context *ob_create_context_with_config(const char *config_path, ob_error **error);
+OB_EXPORT ob_context *ob_create_context_with_config(const char *config_file_path, ob_error **error);
 
 /**
  * @brief Delete a context object
@@ -90,7 +90,6 @@ OB_EXPORT void ob_set_device_changed_callback(ob_context *context, ob_device_cha
  * @param[out] error Pointer to an error object that will be populated if an error occurs during execution
  */
 OB_EXPORT void ob_enable_device_clock_sync(ob_context *context, uint64_t repeatInterval, ob_error **error);
-#define ob_enable_multi_device_sync ob_enable_device_clock_sync
 
 /**
  * @brief Free idle memory from the internal frame memory pool
@@ -128,7 +127,7 @@ OB_EXPORT void ob_set_logger_to_file(ob_log_severity severity, const char *direc
  * @param[in] user_data Pointer to user data that can be passed to and retrieved from the callback function
  * @param[out] error Pointer to an error object that will be populated if an error occurs during log callback function setting
  */
-OB_EXPORT void ob_set_logger_callback(ob_log_severity severity, ob_log_callback callback, void *user_data, ob_error **error);
+OB_EXPORT void ob_set_logger_to_callback(ob_log_severity severity, ob_log_callback callback, void *user_data, ob_error **error);
 
 /**
  * @brief Set the log output to the console
@@ -137,6 +136,10 @@ OB_EXPORT void ob_set_logger_callback(ob_log_severity severity, ob_log_callback 
  * @param[out] error Pointer to an error object that will be populated if an error occurs during log output setting
  */
 OB_EXPORT void ob_set_logger_to_console(ob_log_severity severity, ob_error **error);
+
+// for backward compatibility
+#define ob_enable_multi_device_sync ob_enable_device_clock_sync
+
 #ifdef __cplusplus
 }
 #endif

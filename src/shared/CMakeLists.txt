@@ -15,7 +15,7 @@ target_include_directories(shared PUBLIC ${OB_PUBLIC_HEADERS_DIR} ${OB_INTERFACE
 add_subdirectory(${OB_3RDPARTY_DIR}/tinyxml2 tinyxml2)
 target_link_libraries(shared PUBLIC tinyxml2::tinyxml2)
 
-add_subdirectory(envconfig)
+add_subdirectory(environment)
 target_link_libraries(shared PUBLIC ob::env_config_rc)
 
 add_library(ob::shared ALIAS shared)

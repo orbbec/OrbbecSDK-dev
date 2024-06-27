@@ -16,8 +16,8 @@
 
 获取设备并输出设备信息
 ```cpp
-    if(deviceList->deviceCount() > 0) {
-        if(deviceList->deviceCount() <= 1) {
+    if(deviceList->getCount() > 0) {
+        if(deviceList->getCount() <= 1) {
             // If a single device is plugged in, the first one is selected by default
             device = deviceList->getDevice(0);
         }

@@ -3,7 +3,7 @@
 #include "StreamIntrinsicsManager.hpp"
 #include "StreamExtrinsicsManager.hpp"
 #include "exception/ObException.hpp"
-#include "envconfig/EnvConfig.hpp"
+#include "environment/EnvConfig.hpp"
 #include "utils/Utils.hpp"
 
 namespace libobsensor {

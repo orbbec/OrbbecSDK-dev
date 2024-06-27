@@ -67,7 +67,7 @@ OB_EXPORT ob_exception_type ob_error_get_exception_type(const ob_error *error);
  *
  * @param[in] error The error object to delete.
  */
-OB_EXPORT void ob_delete_error(const ob_error *error);
+OB_EXPORT void ob_delete_error(ob_error *error);
 
 #ifdef __cplusplus
 }

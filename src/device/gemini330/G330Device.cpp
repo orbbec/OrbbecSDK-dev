@@ -3,7 +3,7 @@
 #include "InternalTypes.hpp"
 #include "DevicePids.hpp"
 
-#include "envconfig/EnvConfig.hpp"
+#include "environment/EnvConfig.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "property/VendorPropertyPort.hpp"
 #include "property/UvcPropertyPort.hpp"
@@ -113,7 +113,6 @@ void G330Device::initProperties() {
         if(sensor.first == OB_SENSOR_COLOR) {
             auto uvcPropertyPort = std::make_shared<UvcPropertyPort>(sourcePort);
             propertyAccessor_->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyPort);
@@ -130,11 +129,11 @@ void G330Device::initProperties() {
         }
         else if(sensor.first == OB_SENSOR_DEPTH) {
             auto uvcPropertyPort = std::make_shared<UvcPropertyPort>(sourcePort);
-            propertyAccessor_->registerProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", uvcPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyPort);
-            // FIXME
+
             auto vendorPropertyPort = std::make_shared<VendorPropertyPort>(sourcePort);
+            propertyAccessor_->registerProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor_->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_LASER_CONTROL_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor_->registerProperty(OB_PROP_LASER_ALWAYS_ON_BOOL, "rw", "rw", vendorPropertyPort);
@@ -406,9 +405,9 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         auto accelProfiles = accelSensor->getStreamProfileList();
         algParamManager_->bindStreamProfileParams(accelProfiles);
 
-        LOG_ERROR("Sensor {} created! Found {} stream profiles.", OB_SENSOR_ACCEL, accelProfiles.size());
+        LOG_INFO("Sensor {} created! Found {} stream profiles.", OB_SENSOR_ACCEL, accelProfiles.size());
         for(auto &profile: accelProfiles) {
-            LOG_ERROR(" - {}", profile);
+            LOG_INFO(" - {}", profile);
         }
 
         auto gyroIter           = sensors_.find(OB_SENSOR_GYRO);
@@ -419,9 +418,9 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         auto gyroProfiles = gyroSensor->getStreamProfileList();
         algParamManager_->bindStreamProfileParams(gyroProfiles);
 
-        LOG_ERROR("Sensor {} created! Found {} stream profiles.", OB_SENSOR_GYRO, gyroProfiles.size());
+        LOG_INFO("Sensor {} created! Found {} stream profiles.", OB_SENSOR_GYRO, gyroProfiles.size());
         for(auto &profile: gyroProfiles) {
-            LOG_ERROR(" - {}", profile);
+            LOG_INFO(" - {}", profile);
         }
     }
     else {  // type == OB_SENSOR_COLOR || type == OB_SENSOR_DEPTH || type == OB_SENSOR_IR_LEFT || type == OB_SENSOR_IR_RIGHT
@@ -497,11 +496,13 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         // frame preprocessor
         std::shared_ptr<FrameProcessor> frameProcessor = nullptr;
         if(!frameProcessorFactory_) {
-            frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this());
+            TRY_EXECUTE(frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this()));
         }
-        frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
-        if(frameProcessor) {
-            videoSensor->setFrameProcessor(frameProcessor);
+        if(frameProcessorFactory_) {
+            frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
+            if(frameProcessor) {
+                videoSensor->setFrameProcessor(frameProcessor);
+            }
         }
 
         iter->second.sensor = videoSensor;  // store
@@ -547,19 +548,18 @@ void G330Device::deactivate() {
     // todo: implement this
 }
 
-void G330Device::updateFirmware(const char *data, uint32_t dataSize, DeviceFwUpdateCallback updateCallback, bool async) {
+void G330Device::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) {
     // todo: implement this
-    utils::unusedVar(data);
-    utils::unusedVar(dataSize);
+    utils::unusedVar(firmware);
     utils::unusedVar(updateCallback);
     utils::unusedVar(async);
+    throw not_implemented_exception("Not implemented!");
 }
 
 const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uint8_t> &data) {
     // todo: implement this
     utils::unusedVar(data);
-    static std::vector<uint8_t> emptyData;
-    return emptyData;
+    throw not_implemented_exception("Not implemented!");
 }
 
 std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, OBSensorType type, bool createIfNotExist) {

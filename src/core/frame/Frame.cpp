@@ -69,10 +69,6 @@ const uint8_t *Frame::getData() const {
     return frameData_;
 }
 
-uint8_t *Frame::getDataUnsafe() const {
-    return const_cast<uint8_t *>(frameData_);
-}
-
 void Frame::updateData(const uint8_t *data, size_t dataSize) {
     if(dataSize > dataBufSize_) {
         throw memory_exception(utils::string::to_string() << "Update data size(" << dataSize << ") > data buffer size! (" << dataBufSize_ << ")");
@@ -207,15 +203,15 @@ void Frame::setStreamProfile(std::shared_ptr<const StreamProfile> streamProfile)
     streamProfile_ = streamProfile;
 }
 
-void Frame::copyInfo(const std::shared_ptr<const Frame> sourceFrame) {
-    number_              = sourceFrame->number_;
-    timeStampUsec_       = sourceFrame->timeStampUsec_;
-    systemTimeStampUsec_ = sourceFrame->systemTimeStampUsec_;
-    globalTimeStampUsec_ = sourceFrame->globalTimeStampUsec_;
+void Frame::copyInfoFromOther(const std::shared_ptr<const Frame> otherFrame) {
+    number_              = otherFrame->number_;
+    timeStampUsec_       = otherFrame->timeStampUsec_;
+    systemTimeStampUsec_ = otherFrame->systemTimeStampUsec_;
+    globalTimeStampUsec_ = otherFrame->globalTimeStampUsec_;
 
-    metadataSize_ = sourceFrame->metadataSize_;
-    memcpy(metadata_, sourceFrame->metadata_, metadataSize_);
-    metadataPhasers_ = sourceFrame->metadataPhasers_;
+    metadataSize_ = otherFrame->metadataSize_;
+    memcpy(metadata_, otherFrame->metadata_, metadataSize_);
+    metadataPhasers_ = otherFrame->metadataPhasers_;
 }
 
 size_t Frame::getDataBufSize() const {
@@ -237,8 +233,8 @@ void VideoFrame::setPixelAvailableBitSize(uint8_t bitSize) {
     availableBitSize_ = bitSize;
 }
 
-void VideoFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
-    Frame::copyInfo(sourceFrame);
+void VideoFrame::copyInfoFromOther(std::shared_ptr<const Frame> sourceFrame) {
+    Frame::copyInfoFromOther(sourceFrame);
     if(sourceFrame->is<VideoFrame>()) {
         auto vf           = sourceFrame->as<VideoFrame>();
         availableBitSize_ = vf->availableBitSize_;
@@ -260,8 +256,8 @@ float DepthFrame::getValueScale() const {
     return valueScale_;
 }
 
-void DepthFrame::copyInfo(std::shared_ptr<const Frame> sourceFrame) {
-    VideoFrame::copyInfo(sourceFrame);
+void DepthFrame::copyInfoFromOther(std::shared_ptr<const Frame> sourceFrame) {
+    VideoFrame::copyInfoFromOther(sourceFrame);
     if(sourceFrame->is<DepthFrame>()) {
         auto df     = sourceFrame->as<DepthFrame>();
         valueScale_ = df->valueScale_;
@@ -316,7 +312,7 @@ FrameSet::~FrameSet() noexcept {
     clearAllFrame();
 }
 
-uint32_t FrameSet::getFrameCount() const {
+uint32_t FrameSet::getCount() const {
     uint32_t frameCnt = 0;
     foreachFrame([&](void *item) {
         auto pFrame = (std::shared_ptr<const Frame> *)item;

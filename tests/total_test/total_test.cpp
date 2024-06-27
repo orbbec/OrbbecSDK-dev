@@ -103,7 +103,7 @@ void printf_sensor_list(ob_sensor_list *sensor_list) {
 void printf_stream_profile_list(const ob_stream_profile_list *stream_profile_list) {
     ob_error *err = NULL;
 
-    uint32_t count = ob_stream_profile_list_count(stream_profile_list, &err);
+    uint32_t count = ob_stream_profile_list_get_count(stream_profile_list, &err);
     check_ob_error(&err);
 
     printf("stream_profile_list:\n");

@@ -90,12 +90,12 @@ const std::string &PixelValueScaler::getConfigSchema() const {
 std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame> frame) {
     if(frame->getType() != OB_FRAME_DEPTH) {
         LOG_WARN_INTVL("PixelValueScaler unsupported to process this frame type: {}", frame->getType());
-        return FrameFactory::cloneFrame(frame);
+        return FrameFactory::createFrameFromOtherFrame(frame);
     }
 
     std::lock_guard<std::mutex> scaleLock(mtx_);
     auto depthFrame = frame->as<DepthFrame>();
-    auto outFrame = FrameFactory::cloneFrame(frame);
+    auto                        outFrame   = FrameFactory::createFrameFromOtherFrame(frame);
     switch(frame->getFormat()) {
     case OB_FORMAT_Y16:
         imagePixelValueScale<uint16_t>((uint16_t *)frame->getData(), (uint16_t *)outFrame->getData(), depthFrame->getWidth(), depthFrame->getHeight(), scale_);
@@ -150,7 +150,7 @@ std::shared_ptr<Frame> PixelValueCutOff::processFunc(std::shared_ptr<const Frame
 
     std::lock_guard<std::mutex> cutOffLock(mtx_);
     auto  videoFrame = frame->as<VideoFrame>();
-    auto  outFrame   = FrameFactory::cloneFrame(frame);
+    auto                        outFrame   = FrameFactory::createFrameFromOtherFrame(frame);
     float scale      = 1.0f;
     if(frame->is<DepthFrame>()) {
         scale = frame->as<DepthFrame>()->getValueScale();
@@ -204,7 +204,7 @@ std::shared_ptr<Frame> PixelValueOffset::processFunc(std::shared_ptr<const Frame
 
     std::lock_guard<std::mutex> offsetLock(mtx_);
     auto videoFrame = frame->as<VideoFrame>();
-    auto outFrame   = FrameFactory::cloneFrame(frame);
+    auto                        outFrame   = FrameFactory::createFrameFromOtherFrame(frame);
     if(offset_ != 0) {
         switch(frame->getFormat()) {
         case OB_FORMAT_Y16:

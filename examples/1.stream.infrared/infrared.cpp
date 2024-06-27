@@ -18,11 +18,11 @@ int main() try {
     // Create a config for pipeline.
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
-    for(uint32_t index = 0; index < sensorList->count(); index++) {
+    for(uint32_t index = 0; index < sensorList->getCount(); index++) {
         // Query all supported infrared sensor typ.e and enable the infrared stream.
         // For dual infrared device, enable the left and right infrared streams.
-        // For single infraed d, enable the infrared stream.
-        OBSensorType sensorType = sensorList->type(index);
+        // For single infrared device, enable the infrared stream.
+        OBSensorType sensorType = sensorList->getSensorType(index);
         if(sensorType == OB_SENSOR_IR || sensorType == OB_SENSOR_IR_LEFT || sensorType == OB_SENSOR_IR_RIGHT) {
             // Enable the stream with specified requirements.
             config->enableVideoStream(sensorStreamMap[sensorType], OB_WIDTH_ANY, OB_HEIGHT_ANY, 30, OB_FORMAT_ANY);
@@ -35,13 +35,13 @@ int main() try {
     Window app("InfraredViewer", 1280, 720, RENDER_ONE_ROW);
     while(app) {
         // Wait for up to 100ms for a frameset in blocking mode.
-        auto frameSet = pipe.waitForFrames(100);
+        auto frameSet = pipe.waitForFrameset(100);
         if(frameSet == nullptr) {
             continue;
         }
 
         std::vector<std::shared_ptr<const ob::Frame>> frames;
-        for(uint32_t index = 0; index < frameSet->getFrameCount(); index++){
+        for(uint32_t index = 0; index < frameSet->getCount(); index++) {
             auto frame = frameSet->getFrameByIndex(index);
             if(frame != nullptr){
                 frames.push_back(frame);
@@ -58,6 +58,6 @@ int main() try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

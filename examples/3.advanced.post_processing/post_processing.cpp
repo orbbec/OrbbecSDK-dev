@@ -39,7 +39,7 @@ int main() try {
 
     while(app) {
         // Wait for up to 1000ms for a frameset in blocking mode.
-        auto frameSet = pipe.waitForFrames(1000);
+        auto frameSet = pipe.waitForFrameset(1000);
         if(frameSet == nullptr) {
             continue;
         }
@@ -67,6 +67,6 @@ int main() try {
     return 0;
 }
 catch(ob::Error &e) {
-    std::cerr << "function:" << e.getFunctionName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
 }

@@ -411,8 +411,8 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                 if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
                     if(map) {
-                        map[2 * i + k * 4 + j]     = u_rgb;
-                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                        map[2 * (i + k * 4 + j)]     = u_rgb;
+                        map[2 * (i + k * 4 + j) + 1] = v_rgb;
                     }
 
                     if(out_depth) {
@@ -623,8 +623,8 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
                 if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
                     if(map) {
-                        map[2 * i + k * 4 + j]     = u_rgb;
-                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                        map[2 * (i + k * 4 + j)]     = u_rgb;
+                        map[2 * (i + k * 4 + j) + 1] = v_rgb;
                     }
 
                     if(out_depth) {
@@ -824,8 +824,8 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
                 if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
                     if(map) {
-                        map[2 * i + k * 4 + j]     = u_rgb;
-                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                        map[2 * (i + k * 4 + j)]     = u_rgb;
+                        map[2 * (i + k * 4 + j) + 1] = v_rgb;
                     }
 
                     if(out_depth) {
@@ -970,8 +970,8 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
                 if((u_rgb > -1) && (u_rgb < rgb_intric_.width) && (v_rgb > -1) && (v_rgb < rgb_intric_.height)) {
 
                     if(map) {
-                        map[2 * i + k * 4 + j]     = u_rgb;
-                        map[2 * i + 1 + k * 4 + j] = v_rgb;
+                        map[2 * (i + k * 4 + j)]     = u_rgb;
+                        map[2 * (i + k * 4 + j) + 1] = v_rgb;
                     }
 
                     int      pos       = v_rgb * rgb_intric_.width + u_rgb;
@@ -1050,7 +1050,6 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
                 {
                     map[2 * i]     = u_rgb;
                     map[2 * i + 1] = v_rgb;
-                    /// TODO(timon): filling for C2D
                 }
 
                 if(out_depth) {

@@ -132,9 +132,6 @@ private:
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_y;
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_z;
 
-    /** ROI setting */
-    int x_start_, y_start_, x_end_, y_end_;
-
     float              depth_unit_mm_;          // depth scale
     bool               add_target_distortion_;  // distort align frame with target coefficent
     bool               gap_fill_copy_;          // filling cracks with copy

@@ -253,257 +253,237 @@ float mapIMUSampleRateToValue(OBIMUSampleRate rate) {
     }
 }
 
-const std::map<OBSensorType, std::string> SENSOR_STR_MAP = {
+// type to string map
+const std::map<OBSensorType, std::string> Sensor_Str_Map = {
     { OB_SENSOR_IR, "IR" },           { OB_SENSOR_COLOR, "Color" },    { OB_SENSOR_DEPTH, "Depth" },      { OB_SENSOR_ACCEL, "Accel" },
     { OB_SENSOR_GYRO, "Gyro" },       { OB_SENSOR_IR_LEFT, "LeftIR" }, { OB_SENSOR_IR_RIGHT, "RightIR" }, { OB_SENSOR_RAW_PHASE, "RAW_PHASE" },
     { OB_SENSOR_UNKNOWN, "Unknown" },
 };
 
-const std::string &getSensorName(OBSensorType type) {
-    auto it = SENSOR_STR_MAP.find(type);
-    if(it == SENSOR_STR_MAP.end()) {
+const std::map<OBFrameType, std::string> Frame_Str_Map = { { OB_FRAME_UNKNOWN, "Unknown frame type" },
+                                                           { OB_FRAME_VIDEO, "Video" },
+                                                           { OB_FRAME_IR, "IR" },
+                                                           { OB_FRAME_COLOR, "Color" },
+                                                           { OB_FRAME_DEPTH, "Depth" },
+                                                           { OB_FRAME_ACCEL, "Acceler" },
+                                                           { OB_FRAME_SET, "SET" },
+                                                           { OB_FRAME_POINTS, "Points" },
+                                                           { OB_FRAME_GYRO, "Gyro" },
+                                                           { OB_FRAME_IR_LEFT, "LeftIR" },
+                                                           { OB_FRAME_IR_RIGHT, "RightIR" },
+                                                           { OB_FRAME_RAW_PHASE, "RawPhase" } };
+
+const std::map<OBStreamType, std::string> Stream_Str_Map = {
+    { OB_STREAM_UNKNOWN, "Unknown" },  { OB_STREAM_VIDEO, "Video" },       { OB_STREAM_IR, "IR" },     { OB_STREAM_COLOR, "color" },
+    { OB_STREAM_DEPTH, "depth" },      { OB_STREAM_ACCEL, "Acceler" },     { OB_STREAM_GYRO, "Gyro" }, { OB_STREAM_IR_LEFT, "LeftIR" },
+    { OB_STREAM_IR_RIGHT, "RightIR" }, { OB_STREAM_RAW_PHASE, "RawPhase" }
+};
+
+const std::map<OBIMUSampleRate, std::string> ImuRate_Str_Map = { { OB_SAMPLE_RATE_UNKNOWN, "UNKNOWN" },   { OB_SAMPLE_RATE_1_5625_HZ, "1_5625_HZ" },
+                                                                 { OB_SAMPLE_RATE_3_125_HZ, "3_125_HZ" }, { OB_SAMPLE_RATE_6_25_HZ, "6_25_HZ" },
+                                                                 { OB_SAMPLE_RATE_12_5_HZ, "12_5_HZ" },   { OB_SAMPLE_RATE_25_HZ, "25_HZ" },
+                                                                 { OB_SAMPLE_RATE_50_HZ, "50_HZ" },       { OB_SAMPLE_RATE_100_HZ, "100_HZ" },
+                                                                 { OB_SAMPLE_RATE_200_HZ, "200_HZ" },     { OB_SAMPLE_RATE_500_HZ, "500_HZ" },
+                                                                 { OB_SAMPLE_RATE_1_KHZ, "1_KHZ" },       { OB_SAMPLE_RATE_2_KHZ, "2_KHZ" },
+                                                                 { OB_SAMPLE_RATE_4_KHZ, "4_KHZ" },       { OB_SAMPLE_RATE_8_KHZ, "8_KHZ" },
+                                                                 { OB_SAMPLE_RATE_16_KHZ, "16_KHZ" },     { OB_SAMPLE_RATE_32_KHZ, "32_KHZ" } };
+
+const std::map<OBGyroFullScaleRange, std::string> GyroFullScaleRange_STR_MAP = { { OB_GYRO_FS_UNKNOWN, "Unknown" }, { OB_GYRO_FS_16dps, "16dps" },
+                                                                                 { OB_GYRO_FS_31dps, "31dps" },     { OB_GYRO_FS_62dps, "62dps" },
+                                                                                 { OB_GYRO_FS_125dps, "125dps" },   { OB_GYRO_FS_250dps, "250dps" },
+                                                                                 { OB_GYRO_FS_500dps, "500dps" },   { OB_GYRO_FS_1000dps, "1000dps" },
+                                                                                 { OB_GYRO_FS_2000dps, "2000dps" } };
+
+const std::map<OBAccelFullScaleRange, std::string> AccelFullScaleRange_Str_Map = {
+    { OB_ACCEL_FS_UNKNOWN, "Unknown" }, { OB_ACCEL_FS_2g, "2g" }, { OB_ACCEL_FS_4g, "4g" }, { OB_ACCEL_FS_8g, "8g" }, { OB_ACCEL_FS_16g, "16g" }
+};
+
+const std::map<OBFormat, std::string> Format_Str_Map = {
+    { OB_FORMAT_YUYV, "YUYV" },       { OB_FORMAT_YUY2, "YUY2" },
+    { OB_FORMAT_UYVY, "UYVY" },       { OB_FORMAT_NV12, "NV12" },
+    { OB_FORMAT_NV21, "NV21" },       { OB_FORMAT_MJPG, "MJPG" },
+    { OB_FORMAT_H264, "H264" },       { OB_FORMAT_H265, "H265" },
+    { OB_FORMAT_Y16, "Y16" },         { OB_FORMAT_Y8, "Y8" },
+    { OB_FORMAT_Y10, "Y10" },         { OB_FORMAT_Y11, "Y11" },
+    { OB_FORMAT_Y12, "Y12" },         { OB_FORMAT_GRAY, "GRAY" },
+    { OB_FORMAT_HEVC, "HEVC" },       { OB_FORMAT_I420, "I420" },
+    { OB_FORMAT_ACCEL, "ACCEL" },     { OB_FORMAT_GYRO, "GYRO" },
+    { OB_FORMAT_POINT, "POINT" },     { OB_FORMAT_RGB_POINT, "RGB_POINT" },
+    { OB_FORMAT_RLE, "RLE" },         { OB_FORMAT_RGB, "RGB" },
+    { OB_FORMAT_BGR, "BGR" },         { OB_FORMAT_Y14, "Y14" },
+    { OB_FORMAT_BGRA, "BGRA" },       { OB_FORMAT_COMPRESSED, "COMPRESSED" },
+    { OB_FORMAT_RVL, "RVL" },         { OB_FORMAT_Z16, "Z16" },
+    { OB_FORMAT_YV12, "YV12" },       { OB_FORMAT_BA81, "BA81" },
+    { OB_FORMAT_RGBA, "RGBA" },       { OB_FORMAT_BYR2, "BYR2" },
+    { OB_FORMAT_RW16, "RW16" },       { OB_FORMAT_DISP16, "DISP16" },
+    { OB_FORMAT_UNKNOWN, "UNKNOWN" },
+};
+
+// type to string
+const std::string &obFormatToStr(OBFormat type) {
+    auto it = Format_Str_Map.find(type);
+    if(it == Format_Str_Map.end()) {
+        throw invalid_value_exception("Unregistered stream type");
+    }
+    return it->second;
+}
+
+const std::string &obFrameToStr(OBFrameType type) {
+    auto it = Frame_Str_Map.find(type);
+    if(it == Frame_Str_Map.end()) {
+        throw invalid_value_exception("Unregistered frame type");
+    }
+    return it->second;
+}
+
+const std::string &obStreamToStr(OBStreamType type) {
+    auto it = Stream_Str_Map.find(type);
+    if(it == Stream_Str_Map.end()) {
+        throw invalid_value_exception("Unregistered stream type");
+    }
+    return it->second;
+}
+
+const std::string &obSensorToStr(OBSensorType type) {
+    auto it = Sensor_Str_Map.find(type);
+    if(it == Sensor_Str_Map.end()) {
         throw invalid_value_exception("Unregistered sensor type");
     }
     return it->second;
 }
 
-const std::map<std::string, OBFormat> STR_FORMAT_MAP = {  //
-    { "YUYV", OB_FORMAT_YUYV },      { "YUY2", OB_FORMAT_YUYV },
-    { "UYVY", OB_FORMAT_UYVY },      { "NV12", OB_FORMAT_NV12 },
-    { "NV21", OB_FORMAT_NV21 },      { "MJPG", OB_FORMAT_MJPG },
-    { "H264", OB_FORMAT_H264 },      { "H265", OB_FORMAT_H265 },
-    { "Y16", OB_FORMAT_Y16 },        { "Y8", OB_FORMAT_Y8 },
-    { "Y10", OB_FORMAT_Y10 },        { "Y11", OB_FORMAT_Y11 },
-    { "Y12", OB_FORMAT_Y12 },        { "GRAY", OB_FORMAT_GRAY },
-    { "HEVC", OB_FORMAT_HEVC },      { "I420", OB_FORMAT_I420 },
-    { "ACCEL", OB_FORMAT_ACCEL },    { "GYRO", OB_FORMAT_GYRO },
-    { "POINT", OB_FORMAT_POINT },    { "RGB_POINT", OB_FORMAT_RGB_POINT },
-    { "RLE", OB_FORMAT_RLE },        { "RGB", OB_FORMAT_RGB },
-    { "BGR", OB_FORMAT_BGR },        { "Y14", OB_FORMAT_Y14 },
-    { "BGRA", OB_FORMAT_BGRA },      { "COMPRESSED", OB_FORMAT_COMPRESSED },
-    { "RVL", OB_FORMAT_RVL },        { "Z16", OB_FORMAT_Z16 },
-    { "YV12", OB_FORMAT_YV12 },      { "BA81", OB_FORMAT_BA81 },
-    { "RGBA", OB_FORMAT_RGBA },      { "BYR2", OB_FORMAT_BYR2 },
-    { "RW16", OB_FORMAT_RW16 },      { "DISP16", OB_FORMAT_DISP16 },
-    { "Unknown", OB_FORMAT_UNKNOWN }
-};
-
-OBFormat strToOBFormat(const std::string &str) {
-    auto it = STR_FORMAT_MAP.find(str);
-    if(it == STR_FORMAT_MAP.end()) {
-        return OB_FORMAT_UNKNOWN;
+const std::string &obImuRateToStr(OBIMUSampleRate type) {
+    auto it = ImuRate_Str_Map.find(type);
+    if(it == ImuRate_Str_Map.end()) {
+        throw invalid_value_exception("Unregistered imu rate type");
     }
     return it->second;
 }
 
-const std::string &obFormatToStr(OBFormat format) {
-    for(auto it = STR_FORMAT_MAP.begin(); it != STR_FORMAT_MAP.end(); ++it) {
-        if(it->second == format) {
+const std::string &GyroFullScaleRangeToStr(OBGyroFullScaleRange type) {
+    auto it = GyroFullScaleRange_STR_MAP.find(type);
+    if(it == GyroFullScaleRange_STR_MAP.end()) {
+        throw invalid_value_exception("Unregistered gyro full scale range name");
+    }
+    return it->second;
+}
+
+const std::string &AccelFullScaleRangeToStr(OBAccelFullScaleRange type) {
+    auto it = AccelFullScaleRange_Str_Map.find(type);
+    if(it == AccelFullScaleRange_Str_Map.end()) {
+        throw invalid_value_exception("Unregistered acc full scale range name");
+    }
+    return it->second;
+}
+
+// string to type
+OBFormat strToOBFormat(const std::string str) {
+    for(auto it = Format_Str_Map.begin(); it != Format_Str_Map.end(); ++it) {
+        if(it->second == str) {
             return it->first;
         }
     }
-    throw invalid_value_exception("Unable to determine the string value.");
+    throw invalid_value_exception("Unregistered format type");
+}
+
+OBFrameType strToOBFrame(const std::string str) {
+    for(auto it = Frame_Str_Map.begin(); it != Frame_Str_Map.end(); ++it) {
+        if(it->second == str) {
+            return it->first;
+        }
+    }
+    throw invalid_value_exception("Unregistered frame type");
+}
+
+OBStreamType strToOBStream(const std::string str) {
+    for(auto it = Stream_Str_Map.begin(); it != Stream_Str_Map.end(); ++it) {
+        if(it->second == str) {
+            return it->first;
+        }
+    }
+    throw invalid_value_exception("Unregistered stream type");
+}
+
+OBSensorType strToOBSensor(const std::string str) {
+    for(auto it = Sensor_Str_Map.begin(); it != Sensor_Str_Map.end(); ++it) {
+        if(it->second == str) {
+            return it->first;
+        }
+    }
+    throw invalid_value_exception("Unregistered sensor type");
+}
+
+OBIMUSampleRate strToObImuRate(const std::string str) {
+    for(auto it = ImuRate_Str_Map.begin(); it != ImuRate_Str_Map.end(); ++it) {
+        if(it->second == str) {
+            return it->first;
+        }
+    }
+    throw invalid_value_exception("Unregistered Imu rate type");
+}
+
+OBGyroFullScaleRange strToGyroFullScaleRange(const std::string str) {
+    for(auto it = GyroFullScaleRange_STR_MAP.begin(); it != GyroFullScaleRange_STR_MAP.end(); ++it) {
+        if(it->second == str) {
+            return it->first;
+        }
+    }
+    throw invalid_value_exception("Unregistered gyro full scale range type");
+}
+
+OBAccelFullScaleRange strToAccelFullScaleRange(const std::string str) {
+    for(auto it = AccelFullScaleRange_Str_Map.begin(); it != AccelFullScaleRange_Str_Map.end(); ++it) {
+        if(it->second == str) {
+            return it->first;
+        }
+    }
+    throw invalid_value_exception("Unregistered accel full scale range type");
 }
 
 }  // namespace utils
 }  // namespace libobsensor
 
-std::ostream &operator<<(std::ostream &os, const OBFormat &format) {
-    os << libobsensor::utils::obFormatToStr(format);
+std::ostream &operator<<(std::ostream &os, const OBFormat &type) {
+    os << libobsensor::utils::obFormatToStr(type);
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, const OBFrameType &type) {
-    switch(type) {
-    case OB_FRAME_VIDEO:
-        os << "FRAME_VIDEO";
-        break;
-    case OB_FRAME_IR:
-        os << "FRAME_IR";
-        break;
-    case OB_FRAME_COLOR:
-        os << "FRAME_COLOR";
-        break;
-    case OB_FRAME_DEPTH:
-        os << "FRAME_DEPTH";
-        break;
-    case OB_FRAME_ACCEL:
-        os << "FRAME_ACCEL";
-        break;
-    case OB_FRAME_GYRO:
-        os << "FRAME_GYRO";
-        break;
-    case OB_FRAME_IR_LEFT:
-        os << "FRAME_IR_LEFT";
-        break;
-    case OB_FRAME_IR_RIGHT:
-        os << "FRAME_IR_RIGHT";
-        break;
-    case OB_FRAME_RAW_PHASE:
-        os << "FRAME_RAW_PHASE";
-        break;
-    default:
-        os << "Unknown frame type";
-        break;
-    }
+    os << libobsensor::utils::obFrameToStr(type);
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, const OBStreamType &type) {
-    switch(type) {
-    case OB_STREAM_VIDEO:
-        os << "Video";
-        break;
-    case OB_STREAM_IR:
-        os << "IR";
-        break;
-    case OB_STREAM_COLOR:
-        os << "Color";
-        break;
-    case OB_STREAM_DEPTH:
-        os << "Depth";
-        break;
-    case OB_STREAM_ACCEL:
-        os << "Accel";
-        break;
-    case OB_STREAM_GYRO:
-        os << "Gyro";
-        break;
-    case OB_STREAM_IR_LEFT:
-        os << "LeftIR";
-        break;
-    case OB_STREAM_IR_RIGHT:
-        os << "RightIR";
-        break;
-    case OB_STREAM_RAW_PHASE:
-        os << "RawPhase";
-        break;
-    default:
-        os << "Unknown stream type";
-        break;
-    }
+    os << libobsensor::utils::obStreamToStr(type);
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, const OBSensorType &type) {
-    os << libobsensor::utils::getSensorName(type);
+    os << libobsensor::utils::obSensorToStr(type);
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const OBIMUSampleRate &rate) {
-    switch(rate) {
-    case OB_SAMPLE_RATE_1_5625_HZ:
-        os << "1.5625Hz";
-        break;
-    case OB_SAMPLE_RATE_3_125_HZ:
-        os << "3.125Hz";
-        break;
-    case OB_SAMPLE_RATE_6_25_HZ:
-        os << "6.25Hz";
-        break;
-    case OB_SAMPLE_RATE_12_5_HZ:
-        os << "12.5Hz";
-        break;
-    case OB_SAMPLE_RATE_25_HZ:
-        os << "25Hz";
-        break;
-    case OB_SAMPLE_RATE_50_HZ:
-        os << "50Hz";
-        break;
-    case OB_SAMPLE_RATE_100_HZ:
-        os << "100Hz";
-        break;
-    case OB_SAMPLE_RATE_200_HZ:
-        os << "200Hz";
-        break;
-    case OB_SAMPLE_RATE_500_HZ:
-        os << "500Hz";
-        break;
-    case OB_SAMPLE_RATE_1_KHZ:
-        os << "1KHz";
-        break;
-    case OB_SAMPLE_RATE_2_KHZ:
-        os << "2KHz";
-        break;
-    case OB_SAMPLE_RATE_4_KHZ:
-        os << "4KHz";
-        break;
-    case OB_SAMPLE_RATE_8_KHZ:
-        os << "8KHz";
-        break;
-    case OB_SAMPLE_RATE_16_KHZ:
-        os << "16KHz";
-        break;
-    case OB_SAMPLE_RATE_32_KHZ:
-        os << "32KHz";
-        break;
-    default:
-        os << "Unknown IMU sample rate";
-        break;
-    }
+std::ostream &operator<<(std::ostream &os, const OBIMUSampleRate &type) {
+    os << libobsensor::utils::obImuRateToStr(type);
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const OBGyroFullScaleRange &range) {
-    switch(range) {
-    case OB_GYRO_FS_16dps:
-        os << "16dps";
-        break;
-    case OB_GYRO_FS_31dps:
-        os << "31dps";
-        break;
-    case OB_GYRO_FS_62dps:
-        os << "62dps";
-        break;
-    case OB_GYRO_FS_125dps:
-        os << "125dps";
-        break;
-    case OB_GYRO_FS_250dps:
-        os << "250dps";
-        break;
-    case OB_GYRO_FS_500dps:
-        os << "500dps";
-        break;
-    case OB_GYRO_FS_1000dps:
-        os << "1000dps";
-        break;
-    case OB_GYRO_FS_2000dps:
-        os << "2000dps";
-        break;
-    default:
-        os << "Unknown gyro full scale range";
-        break;
-    }
+std::ostream &operator<<(std::ostream &os, const OBGyroFullScaleRange &type) {
+    os << libobsensor::utils::GyroFullScaleRangeToStr(type);
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &range) {
-    switch(range) {
-    case OB_ACCEL_FS_2g:
-        os << "2g";
-        break;
-    case OB_ACCEL_FS_4g:
-        os << "4g";
-        break;
-    case OB_ACCEL_FS_8g:
-        os << "8g";
-        break;
-    case OB_ACCEL_FS_16g:
-        os << "16g";
-        break;
-    default:
-        os << "Unknown accel full scale range";
-        break;
-    }
+std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &type) {
+    os << libobsensor::utils::AccelFullScaleRangeToStr(type);
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, const OBCameraParam &params) {
     os << "{\n"
        << "depthIntrinsic:{ fx:" << params.depthIntrinsic.fx << ",fy:" << params.depthIntrinsic.fy << ",cx:" << params.depthIntrinsic.cx
-       << ",cy:" << params.depthIntrinsic.cy <<",width:"<<params.depthIntrinsic.width<<",height:"<<params.depthIntrinsic.height<< "}\n"
+       << ",cy:" << params.depthIntrinsic.cy << ",width:" << params.depthIntrinsic.width << ",height:" << params.depthIntrinsic.height << "}\n"
        << "rgbIntrinsic:{ fx:" << params.rgbIntrinsic.fx << ",fy:" << params.rgbIntrinsic.fy << ",cx:" << params.rgbIntrinsic.cx
-       << ",cy:" << params.rgbIntrinsic.cy <<",width:"<<params.rgbIntrinsic.width<<",height:"<<params.rgbIntrinsic.height<< "}\n"
+       << ",cy:" << params.rgbIntrinsic.cy << ",width:" << params.rgbIntrinsic.width << ",height:" << params.rgbIntrinsic.height << "}\n"
        << "depthDistortion:{ model:" << params.depthDistortion.model << ",k1:" << params.depthDistortion.k1 << ",k2:" << params.depthDistortion.k2
        << ",k3:" << params.depthDistortion.k3 << ",k4:" << params.depthDistortion.k4 << ",k5:" << params.depthDistortion.k5
        << ",k6:" << params.depthDistortion.k6 << ",p1:" << params.depthDistortion.p1 << ",p2:" << params.depthDistortion.p2 << "}\n"
@@ -512,7 +492,7 @@ std::ostream &operator<<(std::ostream &os, const OBCameraParam &params) {
        << ",p1:" << params.rgbDistortion.p1 << ",p2:" << params.rgbDistortion.p2 << "}\n"
        << "transform: rot:[" << params.transform.rot[0] << "," << params.transform.rot[1] << "," << params.transform.rot[2] << "," << params.transform.rot[3]
        << "," << params.transform.rot[4] << "," << params.transform.rot[5] << "," << params.transform.rot[6] << "," << params.transform.rot[7] << ","
-       << params.transform.rot[8] << "," << params.transform.rot[9] << "],trans:" << params.transform.trans[0] << ","<< params.transform.trans[1] << ","
+       << params.transform.rot[8] << "," << params.transform.rot[9] << "],trans:" << params.transform.trans[0] << "," << params.transform.trans[1] << ","
        << params.transform.trans[2] << "}\n"
        << "isMirror:" << params.isMirrored << "\n"
        << "}";

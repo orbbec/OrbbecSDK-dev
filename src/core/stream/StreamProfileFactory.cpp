@@ -97,7 +97,7 @@ std::shared_ptr<const StreamProfile> getDefaultStreamProfileFormEnvConfig(const 
 
     auto        envConfig    = EnvConfig::getInstance();
     std::string nodePathName = "Device." + devName + ".";
-    nodePathName += utils::getSensorName(sensorType);
+    nodePathName += utils::obSensorToStr(sensorType);
     int         w = 0, h = 0, fps = 0;
     std::string fmt;
     if(envConfig->getIntValue(nodePathName + ".Width", w) && envConfig->getIntValue(nodePathName + ".Height", h)

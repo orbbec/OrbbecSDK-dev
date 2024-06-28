@@ -130,7 +130,7 @@ void printf_stream_profile_list(const ob_stream_profile_list *stream_profile_lis
     }
 }
 
-void sensor_frame_callback(const ob_frame *frame, void *user_data) {
+void sensor_frame_callback(ob_frame *frame, void *user_data) {
     ob_error *err   = NULL;
     uint64_t  index = ob_frame_get_index(frame, &err);
     check_ob_error(&err);
@@ -198,7 +198,7 @@ int main() {
     const ob_stream_profile *stream_profile = ob_stream_profile_list_get_profile(stream_profile_list, 0, &err);
     check_ob_error(&err);
 
-    ob_sensor_start(sensor, (ob_stream_profile *)stream_profile, sensor_frame_callback, "hello, world", &err);
+    ob_sensor_start(sensor, stream_profile, sensor_frame_callback, "hello, world", &err);
     check_ob_error(&err);
 
     // sleep for 5 seconds

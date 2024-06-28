@@ -1,6 +1,6 @@
 #include <libobsensor/ObSensor.hpp>
 
-#include "window.hpp"
+#include "utils_opencv.hpp"
 
 const char *metaDataTypes[] = { "OB_FRAME_METADATA_TYPE_TIMESTAMP",
                                 "OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP",

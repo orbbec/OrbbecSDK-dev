@@ -10,7 +10,7 @@
  * must refer to the product manual to select 640x360 resolution.
  */
 
-#include "window.hpp"
+#include "utils_opencv.hpp"
 
 #include "libobsensor/OBSensor.hpp"
 #include <mutex>
@@ -82,7 +82,7 @@ int main(void) try {
     pipe.start(config);
 
     // Create a window for rendering and set the resolution of the window
-    Window app("AlignViewer", 1280, 720, RENDER_OVERLAY);
+    Window app("sync_align", 1280, 720, RENDER_OVERLAY);
 
     while(app) {
         keyEventProcess(app, pipe, config);

@@ -89,6 +89,13 @@ public:
         return key;
     }
 
+    bool run() {
+#ifdef __APPLE__
+        render();
+#endif
+        return !threadExit_;
+    }
+
     // if window is closed
     operator bool() {
 #ifdef __APPLE__
@@ -127,10 +134,10 @@ private:
     std::mutex              keyMtx_;
     std::condition_variable keyCv_;
 
-    std::thread                             processThread_;
+    std::thread                                   processThread_;
     std::vector<std::shared_ptr<const ob::Frame>> srcFrames_;
-    std::mutex                              srcFramesMtx_;
-    std::condition_variable                 srcFramesCv_;
+    std::mutex                                    srcFramesMtx_;
+    std::condition_variable                       srcFramesCv_;
 
 #ifndef __APPLE__
     std::thread renderThread_;
@@ -141,9 +148,9 @@ private:
 
     // frames processing thread
     void processFrames() {
-        std::vector<cv::Mat>                    mats;
-        cv::Mat                                 imuMat;
-        cv::Mat                                 rstMat;
+        std::vector<cv::Mat>                          mats;
+        cv::Mat                                       imuMat;
+        cv::Mat                                       rstMat;
         std::vector<std::shared_ptr<const ob::Frame>> frames;
         while(!threadExit_) {
             {
@@ -400,7 +407,7 @@ private:
                         return;  // No input images
                     }
 
-                    int idealSide = static_cast<int> (std::sqrt(count));
+                    int idealSide = static_cast<int>(std::sqrt(count));
                     int rows      = idealSide;
                     int cols      = idealSide;
                     while(rows * cols < count) {  // find the best row and column count

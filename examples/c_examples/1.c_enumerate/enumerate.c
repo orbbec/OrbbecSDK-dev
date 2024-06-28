@@ -26,9 +26,9 @@ void check_ob_error(ob_error **err) {
     *err = NULL;
 }
 
-int input_index(const char *prompt, int min_value, int max_value) {
+int select_index(const char *prompt, int min_value, int max_value) {  // todo: to support select index > 9
     int value = 0;
-    printf("\n%s (input a number between %d and %d or \'q\' to exit program): ", prompt, min_value, max_value);
+    printf("\n%s (Input a number between %d and %d or \'q\' to exit program): ", prompt, min_value, max_value);
     while(true) {
         char input;
         scanf("%c", &input);
@@ -148,7 +148,7 @@ void enumerate_sensor_info(ob_device *device) {
         check_ob_error(&error);
     }
 
-    int index = input_index("Select a sensor to enumerate its stream profiles", 0, sensor_count - 1);
+    int index = select_index("Select a sensor to enumerate its stream profiles", 0, sensor_count - 1);
     if(index >= 0) {
         // Get the selected sensor.
         ob_sensor *sensor = ob_sensor_list_get_sensor(sensor_list, index, &error);
@@ -218,8 +218,17 @@ int main() {
     // Get device count from device list.
     uint32_t dev_count = ob_device_list_get_device_count(dev_list, &error);
     check_ob_error(&error);
+
+    // Check if any device is connected.
     if(dev_count == 0) {
         printf("No device found! Please connect a supported device and retry this program.\n");
+
+        ob_delete_device_list(dev_list, &error);
+        check_ob_error(&error);
+
+        ob_delete_context(ctx, &error);
+        check_ob_error(&error);
+
         return -1;
     }
 
@@ -238,7 +247,7 @@ int main() {
     }
 
     // Select a device.
-    int device_index = input_index("Select a device to enumerate its sensors", 0, dev_count - 1);
+    int device_index = select_index("Select a device to enumerate its sensors", 0, dev_count - 1);
     if(device_index >= 0) {
         // get device from device list
         ob_device *device = ob_device_list_get_device(dev_list, device_index, &error);

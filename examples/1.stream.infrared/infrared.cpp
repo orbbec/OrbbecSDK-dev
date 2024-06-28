@@ -1,6 +1,6 @@
 #include <libobsensor/ObSensor.hpp>
 
-#include "window.hpp"
+#include "utils_opencv.hpp"
 
 std::map<OBSensorType, ob_stream_type> sensorStreamMap = {
     {OB_SENSOR_IR, OB_STREAM_IR},

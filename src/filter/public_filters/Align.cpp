@@ -192,7 +192,7 @@ void Align::alignFrames(std::shared_ptr<Frame> aligned, const std::shared_ptr<co
         auto depth_other_extrin = toProfile->getExtrinsicTo(fromProfile);
         pImpl->initialize(to_intrin_, to_disto_, from_intrin_, from_disto_, depth_other_extrin, depth_unit_mm_, add_target_distortion_, gap_fill_copy_);
         auto depth = reinterpret_cast<const uint16_t *>(to->getData());
-        auto in    = const_cast<const void *>((const void *)to->getData());
+        auto in    = const_cast<const void *>((const void *)from->getData());
         auto out   = const_cast<void *>((void *)aligned->getData());
         pImpl->C2D(depth, toVideoProfile->getWidth(), toVideoProfile->getHeight(), in, out, fromVideoProfile->getWidth(), fromVideoProfile->getHeight(),
                    from->getFormat());

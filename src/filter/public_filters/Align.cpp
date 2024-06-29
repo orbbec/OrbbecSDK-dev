@@ -21,7 +21,7 @@ Align::Align(const std::string &name) : FilterBase(name), align_to_stream_(OB_ST
     memset(&from_to_extrin_, 0, sizeof(OBTransform));
     depth_unit_mm_         = 1.f;
     add_target_distortion_ = true;
-    gap_fill_copy_         = true;
+    gap_fill_copy_         = false;
 }
 
 Align::~Align() noexcept {

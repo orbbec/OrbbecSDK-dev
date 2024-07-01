@@ -75,7 +75,7 @@ void GlobalTimestampFitter::fittingLoop() {
         uint64_t     sysTspUsec = 0;
         OBDeviceTime devTime;
 
-        BEGIN_TRY_EXECUTE({
+        try {
             auto owner            = getOwner();
             auto propertyAccessor = owner->getPropertyAccessor();
 
@@ -85,16 +85,17 @@ void GlobalTimestampFitter::fittingLoop() {
             sysTspUsec       = (sysTsp2Usec + sysTsp1Usec) / 2;
             devTime.rtt      = sysTsp2Usec - sysTsp1Usec;
             if(devTime.rtt > 10000) {
+                LOG_DEBUG("Get device time rtt is too large! rtt={}", devTime.rtt);
                 throw io_exception(utils::string::to_string() << "Get device time rtt is too large! rtt=" << devTime.rtt);
             }
-
             LOG_TRACE("sys={}, dev={}, rtt={}", sysTspUsec, devTime.time, devTime.rtt);
-        })
-        CATCH_EXCEPTION_AND_EXECUTE({
+        }
+        catch(const libobsensor_exception &e) {
+            utils::unusedVar(e);
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             retryCount++;
             continue;
-        })
+        }
 
         // Successfully obtain timestamp, the number of retries is reset to zero
         retryCount = 0;

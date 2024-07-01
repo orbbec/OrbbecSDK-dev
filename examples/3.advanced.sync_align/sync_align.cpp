@@ -95,7 +95,7 @@ int main(void) try {
         auto newFrameSet = newFrame->as<ob::FrameSet>();
         auto colorFrame  = newFrameSet->getFrame(OB_FRAME_COLOR);
         auto depthFrame  = newFrameSet->getFrame(OB_FRAME_DEPTH);
-        app.addToRender({ colorFrame, depthFrame });
+        app.renderFrameData({ colorFrame, depthFrame });
     }
     // Stop the Pipeline, no frame data will be generated
     pipe.stop();

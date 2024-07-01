@@ -99,7 +99,7 @@ int main(void) try {
                 framesForRender.push_back(frame.second);
             }
         }
-        app.addToRender(framesForRender);
+        app.renderFrameData(framesForRender);
     }
 
     // Stop the Pipeline, no frame data will be generated.

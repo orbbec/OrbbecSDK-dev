@@ -83,3 +83,25 @@ std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &type) {
     os << ob_accel_range_type_to_string(type);
     return os;
 }
+
+/**
+ * @brief Convert OBFrameMetadataType to " char* " type and then return.
+ *
+ * @param[in] type OBFrameMetadataType type.
+ * @return OBFrameMetadataType of "char*" type.
+ */
+std::ostream &operator<<(std::ostream &os, const OBFrameMetadataType &type) {
+    os << ob_meta_data_type_to_string(type);
+    return os;
+}
+
+
+/**
+ * @brief Convert OBSensorType to OBStreamType type and then return.
+ *
+ * @param[in] type OBSensorType type.
+ * @return OBStreamType type.
+ */
+OBStreamType convertSensorTypeToStreamType(OBSensorType type) {
+    ob_sensor_type_to_stream_type(type);
+}

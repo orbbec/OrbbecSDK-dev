@@ -36,6 +36,14 @@ const char* ob_accel_range_type_to_string(OBAccelFullScaleRange type){
     return libobsensor::utils::AccelFullScaleRangeToStr(type).c_str();
 }
 
+const char* ob_meta_data_type_to_string(OBFrameMetadataType type){
+    return libobsensor::utils::MetaDataToStr(type).c_str();
+}
+
+OBStreamType ob_sensor_type_to_stream_type(OBSensorType type){
+    return libobsensor::utils::mapSensorTypeToStreamType(type);
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -592,7 +592,7 @@ typedef struct {
     float x;  ///< X-direction component
     float y;  ///< Y-direction component
     float z;  ///< Z-direction component
-} OBAccelValue, OBGyroValue, ob_accel_value, ob_gyro_value;
+} OBAccelValue, OBGyroValue, OBFloat3D,ob_accel_value, ob_gyro_value, ob_float_3d;
 
 /**
  * @brief Device state

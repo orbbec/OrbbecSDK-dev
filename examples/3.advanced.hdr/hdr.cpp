@@ -75,11 +75,11 @@ int main(int argc, char **argv) try {
             }
 
             // add merged depth frame to render queue
-            app.addToRender(mergedDepthFrame);
+            app.renderFrameData(mergedDepthFrame);
         }
         else {
             // add original depth frame to render queue
-            app.addToRender(depthFrame);
+            app.renderFrameData(depthFrame);
         }
     }
 

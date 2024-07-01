@@ -75,10 +75,10 @@ int main(void) try {
                         // Print the Color data frame information every 30 frames
                         std::cout << "Color Frame: index=" << colorFrame->getIndex() << ", timestamp=" << colorFrame->getTimeStampUs();
                     }
-                    app.addToRender(depthFrame);
+                    app.renderFrameData(depthFrame);
                 }
                 else {
-                    app.addToRender({ colorFrame, depthFrame });
+                    app.renderFrameData({ colorFrame, depthFrame });
                 }
             }
         }

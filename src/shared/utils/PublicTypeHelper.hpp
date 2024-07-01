@@ -30,6 +30,7 @@ const std::string &obSensorToStr(OBSensorType type);
 const std::string &obImuRateToStr(OBIMUSampleRate type);
 const std::string &GyroFullScaleRangeToStr(OBGyroFullScaleRange range);
 const std::string &AccelFullScaleRangeToStr(OBAccelFullScaleRange params);
+const std::string &MetaDataToStr(OBFrameMetadataType params);
 
 OBFormat              strToOBFormat(const std::string str);
 OBFrameType           strToOBFrame(const std::string str);

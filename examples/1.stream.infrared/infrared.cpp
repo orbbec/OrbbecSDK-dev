@@ -50,7 +50,7 @@ int main() try {
 
         // Render a set of frame in the window, only the infrared frame is rendered here.
         // If the open stream type is not OB_SENSOR_IR, use the getFrame interface to get the frame.
-        app.addToRender(frames);
+        app.renderFrameData(frames);
     }
 
     // Stop the pipeline, no frame data will be generated

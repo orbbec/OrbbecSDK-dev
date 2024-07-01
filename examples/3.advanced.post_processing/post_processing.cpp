@@ -58,7 +58,7 @@ int main() try {
         }
 
         // Render frame in the window
-        app.addToRender(depthFrame);
+        app.renderFrameData(depthFrame);
     }
 
     // Stop the pipeline

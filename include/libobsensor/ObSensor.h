@@ -16,7 +16,6 @@
 #include <libobsensor/h/ObTypes.h>
 #include <libobsensor/h/Pipeline.h>
 #include <libobsensor/h/Property.h>
-// #include <libobsensor/h/RecordPlayback.h>
 #include <libobsensor/h/Sensor.h>
 #include <libobsensor/h/StreamProfile.h>
 #include <libobsensor/h/Version.h>

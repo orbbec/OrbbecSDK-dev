@@ -6,8 +6,8 @@
 
 namespace libobsensor {
 SensorBase::SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)
-    : sensorType_(sensorType),
-      owner_(owner),
+    : owner_(owner),
+      sensorType_(sensorType),
       backend_(backend),
       streamState_(STREAM_STATE_STOPED),
       onRecovering_(false),
@@ -31,6 +31,10 @@ OBSensorType SensorBase::getSensorType() const {
 }
 
 std::shared_ptr<IDevice> SensorBase::getOwner() const {
+    auto device = owner_.lock();
+    if(!device) {
+        throw camera_disconnected_exception("Device is disconnected or has been destroyed");
+    }
     return owner_.lock();
 }
 
@@ -47,8 +51,16 @@ bool SensorBase::isStreamActivated() const {
            || streamState_ == STREAM_STATE_STOPPING;
 }
 
-void SensorBase::setStreamStateChangedCallback(StreamStateChangedCallback callback) {
-    streamStateChangedCallback_ = callback;
+uint32_t SensorBase::registerStreamStateChangedCallback(StreamStateChangedCallback callback) {
+    std::unique_lock<std::mutex> lock(streamStateCallbackMutex_);
+    uint32_t                     token  = StreamStateChangedCallbackTokenCounter_++;
+    streamStateChangedCallbacks_[token] = callback;
+    return token;
+}
+
+void SensorBase::unregisterStreamStateChangedCallback(uint32_t token) {
+    std::unique_lock<std::mutex> lock(streamStateCallbackMutex_);
+    streamStateChangedCallbacks_.erase(token);
 }
 
 StreamProfileList SensorBase::getStreamProfileList() const {
@@ -122,8 +134,10 @@ void SensorBase::updateStreamState(OBStreamState state) {
     }
     auto oldState = streamState_.load();
     streamState_.store(state);
-    if(oldState != state && streamStateChangedCallback_) {
-        streamStateChangedCallback_(state, activatedStreamProfile_);  // call the callback function
+    if(oldState != state && !streamStateChangedCallbacks_.empty()) {
+        for(auto &callback: streamStateChangedCallbacks_) {
+            callback.second(state, activatedStreamProfile_);  // call the callback function
+        }
     }
     streamStateCv_.notify_all();
 }

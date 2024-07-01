@@ -3,6 +3,7 @@
 #include "IStreamProfile.hpp"
 #include "IFrame.hpp"
 #include "ISourcePort.hpp"
+#include "IDeviceComponent.hpp"
 #include <memory>
 
 namespace libobsensor {
@@ -16,14 +17,13 @@ typedef enum {
     STREAM_STATE_ERROR,      // error (change to this state when error occurred)
 } OBStreamState;
 
-typedef std::function<void(OBStreamState, std::shared_ptr<const StreamProfile>)> StreamStateChangedCallback;
+typedef std::function<void(OBStreamState, const std::shared_ptr<const StreamProfile> &)> StreamStateChangedCallback;
 
-class ISensor {
+class ISensor : virtual public IDeviceComponent {
 public:
     virtual ~ISensor() noexcept = default;
 
-    virtual OBSensorType             getSensorType() const = 0;
-    virtual std::shared_ptr<IDevice> getOwner() const      = 0;
+    virtual OBSensorType getSensorType() const = 0;
 
     virtual void start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) = 0;
     virtual void stop()                                                                 = 0;
@@ -33,10 +33,10 @@ public:
     virtual std::shared_ptr<const StreamProfile> getActivatedStreamProfile() const                                          = 0;
     virtual FrameCallback                        getFrameCallback() const                                                   = 0;
 
-    virtual OBStreamState getStreamState() const    = 0;
-    virtual bool          isStreamActivated() const = 0;
-
-    virtual void setStreamStateChangedCallback(StreamStateChangedCallback callback) = 0;
+    virtual OBStreamState getStreamState() const                                                  = 0;
+    virtual bool          isStreamActivated() const                                               = 0;
+    virtual uint32_t      registerStreamStateChangedCallback(StreamStateChangedCallback callback) = 0;
+    virtual void          unregisterStreamStateChangedCallback(uint32_t token)                    = 0;
 };
 
 struct LazySensor {

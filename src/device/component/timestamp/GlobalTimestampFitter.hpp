@@ -1,5 +1,6 @@
 #pragma once
 #include "IDevice.hpp"
+#include "component/DeviceComponentBase.hpp"
 
 #include <thread>
 #include <queue>
@@ -16,9 +17,9 @@ typedef struct {
     uint64_t checkDataY;
 } LinearFuncParam;
 
-class GlobalTimestampFitter {
+class GlobalTimestampFitter : public DeviceComponentBase {
 public:
-    GlobalTimestampFitter(DeviceResourceGetter<IPropertyAccessor> &propertyAccessorGetter);
+    GlobalTimestampFitter(std::shared_ptr<IDevice> owner);
     ~GlobalTimestampFitter();
     LinearFuncParam getLinearFuncParam();
     void            reFitting();
@@ -29,8 +30,6 @@ private:
     void fittingLoop();
 
 private:
-    DeviceResourceGetter<IPropertyAccessor> propertyAccessorGetter_;
-
     std::thread             sampleThread_;
     std::mutex              sampleMutex_;
     std::condition_variable sampleCondVar_;

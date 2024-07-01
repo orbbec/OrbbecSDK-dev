@@ -6,6 +6,8 @@
 #include "stream/StreamProfile.hpp"
 #include "frame/Frame.hpp"
 #include "filter/public_filters/FormatConverterProcess.hpp"
+#include "ISensorStreamStrategy.hpp"
+#include "IDevice.hpp"
 
 namespace libobsensor {
 
@@ -38,6 +40,17 @@ VideoSensor::VideoSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sen
 
 #define MIN_VIDEO_FRAME_DATA_SIZE 1024
 void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) {
+
+    // validate stream profile
+    {
+        auto owner = getOwner();
+        auto comp  = owner->getComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
+        if(comp) {
+            auto strategy = comp.as<ISensorStreamStrategy>();
+            strategy->validateStartStream(sp);
+        }
+    }
+
     activatedStreamProfile_ = sp;
     frameCallback_          = callback;
     updateStreamState(STREAM_STATE_STARTING);
@@ -48,17 +61,6 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     }
     currentBackendStreamProfile_ = backendIter->second.first;
     currentFormatFilterConfig_   = backendIter->second.second;
-
-    if(sensorStartStrategy_) {
-        if(!sensorStartStrategy_->validatePresetProfile(sensorType_, sp)) {
-            throw unsupported_operation_exception("Preset is in Factory Calib mode,only support IR streams at 1280x800@Y12/Y16 and 640x400@Y12/Y16");
-        }
-
-        if(!sensorStartStrategy_->validateSensorStart(sensorType_, sp)) {
-            throw unsupported_operation_exception(
-                "The resolution or FPS of the current stream should be the same as that of the already started depth/left ir/right ir stream.");
-        }
-    }
 
     if(currentFormatFilterConfig_ && currentFormatFilterConfig_->converter) {
         auto formatConverter = std::dynamic_pointer_cast<FormatConverter>(currentFormatFilterConfig_->converter);
@@ -142,19 +144,17 @@ void VideoSensor::outputFrame(std::shared_ptr<Frame> frame) {
 }
 
 void VideoSensor::stop() {
+    if(!isStreamActivated()) {
+        return;
+    }
     updateStreamState(STREAM_STATE_STOPPING);
 
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
     vsPort->stopStream(currentBackendStreamProfile_);
 
+    updateStreamState(STREAM_STATE_STOPED);
     activatedStreamProfile_.reset();
     frameCallback_ = nullptr;
-
-    if(sensorStartStrategy_) {
-        sensorStartStrategy_->clearValidateSensor(sensorType_);
-    }
-
-    updateStreamState(STREAM_STATE_STOPED);
 }
 
 void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) {
@@ -163,7 +163,9 @@ void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig>
     }
     formatFilterConfigs_ = configs;
     streamProfileList_.clear();
-    auto lazySelf   = std::make_shared<LazySensor>(owner_, sensorType_);
+
+    auto owner      = getOwner();
+    auto lazySelf   = std::make_shared<LazySensor>(owner, sensorType_);
     auto streamType = utils::mapSensorTypeToStreamType(sensorType_);
     for(const auto &backendSp: backendStreamProfileList_) {
         auto format   = backendSp->getFormat();
@@ -226,13 +228,6 @@ void VideoSensor::setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcess
         throw wrong_api_call_sequence_exception("Can not update frame processor while streaming");
     }
     frameProcessor_ = frameProcessor;
-}
-
-void VideoSensor::setSensorStartStrategy(std::shared_ptr<ISensorStartStrategy> sensorStartStrategy) {
-    if(isStreamActivated()) {
-        throw wrong_api_call_sequence_exception("Can not update sensor start strategy while streaming");
-    }
-    sensorStartStrategy_ = sensorStartStrategy;
 }
 
 }  // namespace libobsensor

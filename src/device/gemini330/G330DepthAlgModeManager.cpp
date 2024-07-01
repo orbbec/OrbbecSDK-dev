@@ -4,10 +4,9 @@
 
 namespace libobsensor {
 
-G330DepthAlgModeManager::G330DepthAlgModeManager(DeviceResourceGetter<IPropertyAccessor> &propertyAccessorGetter)
-    : propertyAccessorGetter_(propertyAccessorGetter) {
+G330DepthAlgModeManager::G330DepthAlgModeManager(std::shared_ptr<IDevice> owner) : DeviceComponentBase(owner) {
 
-    auto propAccessor = propertyAccessorGetter_.get();
+    auto propAccessor = owner->getPropertyAccessor();
 
     depthAlgModeChecksumList_ = propAccessor->getStructureDataListProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_RAW_DATA_DEPTH_ALG_MODE_LIST);
     currentAlgMode_           = propAccessor->getStructureDataProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE);
@@ -62,7 +61,8 @@ void G330DepthAlgModeManager::switchDepthAlgMode(const OBDepthAlgModeChecksum &t
         return;
     }
 
-    auto propAccessor = propertyAccessorGetter_.get();
+    auto owner        = getOwner();
+    auto propAccessor = owner->getPropertyAccessor();
     propAccessor->setStructureDataProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, targetDepthMode);
     currentAlgMode_ = targetDepthMode;
     LOG_DEBUG("switchDepthWorkMode done with mode: {1}", currentAlgMode_.name, targetDepthMode.name);

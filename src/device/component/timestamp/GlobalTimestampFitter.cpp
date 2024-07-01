@@ -6,8 +6,8 @@
 #include "property/InternalProperty.hpp"
 
 namespace libobsensor {
-GlobalTimestampFitter::GlobalTimestampFitter(DeviceResourceGetter<IPropertyAccessor> &propertyAccessorGetter)
-    : propertyAccessorGetter_(propertyAccessorGetter), sampleLoopExit_(false), linearFuncParam_({ 0, 0, 0, 0 }) {
+GlobalTimestampFitter::GlobalTimestampFitter(std::shared_ptr<IDevice> owner)
+    : DeviceComponentBase(owner), sampleLoopExit_(false), linearFuncParam_({ 0, 0, 0, 0 }) {
 
     // todo: read config from xml
 
@@ -76,7 +76,8 @@ void GlobalTimestampFitter::fittingLoop() {
         OBDeviceTime devTime;
 
         BEGIN_TRY_EXECUTE({
-            auto propertyAccessor = propertyAccessorGetter_.get();
+            auto owner            = getOwner();
+            auto propertyAccessor = owner->getPropertyAccessor();
 
             auto sysTsp1Usec = utils::getNowTimesUs();
             devTime          = propertyAccessor->getStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME);

@@ -4,6 +4,7 @@
 #include "ISensor.hpp"
 #include "IFilter.hpp"
 #include "IPresetManager.hpp"
+#include "IDeviceComponent.hpp"
 
 namespace libobsensor {
 
@@ -26,66 +27,21 @@ struct DeviceInfo {
 typedef std::function<void(OBDeviceState state, const char *message)>                    DeviceStateChangedCallback;
 typedef std::function<void(OBFwUpdateState state, const char *message, uint8_t percent)> DeviceFwUpdateCallback;
 
-typedef std::unique_lock<std::recursive_timed_mutex> DeviceResourceLock;
-
-template <typename T> class DeviceResourcePtr {
-public:
-    DeviceResourcePtr(std::shared_ptr<T> ptr, DeviceResourceLock &&lock) : ptr_(ptr), lock_(std::move(lock)) {}
-
-    // copy constructor and assignment operator are deleted to avoid accidental copies of the lock
-    DeviceResourcePtr(const DeviceResourcePtr &other)            = delete;
-    DeviceResourcePtr &operator=(const DeviceResourcePtr &other) = delete;
-
-    // move constructor and assignment operator are deleted to avoid accidental moves of the lock
-    DeviceResourcePtr(DeviceResourcePtr &&other)            = default;
-    DeviceResourcePtr &operator=(DeviceResourcePtr &&other) = default;
-
-    T *operator->() const {
-        return ptr_.get();
-    }
-
-    T &operator*() const {
-        return *ptr_;
-    }
-
-    operator bool() const {
-        return ptr_ != nullptr;
-    }
-
-private:
-    std::shared_ptr<T> ptr_;
-    DeviceResourceLock lock_;
-};
-
-template <typename T> class DeviceResourceGetter {
-public:
-    typedef std::function<DeviceResourcePtr<T>()> GetterFunc;
-
-public:
-    DeviceResourceGetter(GetterFunc getter) : getter_(getter) {}
-    virtual ~DeviceResourceGetter() = default;
-
-    DeviceResourcePtr<T> get() {
-        return std::move(getter_());
-    }
-
-private:
-    GetterFunc getter_;
-};
-
 class IDevice {
 public:
     virtual ~IDevice() = default;
 
+    virtual void init() = 0;
+
     virtual std::shared_ptr<const DeviceInfo> getInfo() const                              = 0;
     virtual const std::string                &getExtensionInfo(const std::string &infoKey) = 0;
 
-    virtual DeviceResourcePtr<IPropertyAccessor> getPropertyAccessor()    = 0;
-    virtual std::shared_ptr<IPresetManager>      getPresetManager() const = 0;
+    virtual DeviceComponentPtr<IDeviceComponent>  getComponent(const std::string &name, bool throwExIfNotFound = true) = 0;
+    virtual DeviceComponentPtr<IPropertyAccessor> getPropertyAccessor()                                                = 0;
+    virtual DeviceComponentPtr<ISensor>           getSensor(OBSensorType type)                                         = 0;
 
     virtual std::vector<OBSensorType>             getSensorTypeList() const                                 = 0;
     virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) = 0;
-    virtual DeviceResourcePtr<ISensor>            getSensor(OBSensorType type)                              = 0;
 
     virtual void enableHeadBeat(bool enable) = 0;
 

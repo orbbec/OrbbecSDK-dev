@@ -3,6 +3,7 @@
 #include "ISensor.hpp"
 #include "ISourcePort.hpp"
 
+#include <map>
 #include <mutex>
 #include <thread>
 #include <condition_variable>
@@ -24,7 +25,8 @@ public:
 
     OBStreamState getStreamState() const override;
     bool          isStreamActivated() const override;
-    void          setStreamStateChangedCallback(StreamStateChangedCallback callback) override;
+    uint32_t      registerStreamStateChangedCallback(StreamStateChangedCallback callback) override;
+    void          unregisterStreamStateChangedCallback(uint32_t token) override;
 
     StreamProfileList                    getStreamProfileList() const override;
     void                                 updateDefaultStreamProfile(const std::shared_ptr<const StreamProfile> &profile) override;
@@ -53,12 +55,14 @@ protected:
     std::shared_ptr<const StreamProfile> activatedStreamProfile_;
     FrameCallback                        frameCallback_;
 
-    std::atomic<OBStreamState> streamState_;
-    StreamStateChangedCallback streamStateChangedCallback_;
+    std::mutex                                     streamStateCallbackMutex_;
+    std::map<uint32_t, StreamStateChangedCallback> streamStateChangedCallbacks_;
+    uint32_t                                       StreamStateChangedCallbackTokenCounter_ = 0;
 
-    std::mutex              streamStateMutex_;
-    std::condition_variable streamStateCv_;
-    std::thread             streamStateWatcherThread_;
+    std::mutex                 streamStateMutex_;
+    std::condition_variable    streamStateCv_;
+    std::atomic<OBStreamState> streamState_;
+    std::thread                streamStateWatcherThread_;
 
     bool     onRecovering_;
     bool     recoveryEnabled_;

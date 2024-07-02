@@ -5,15 +5,16 @@
 #include "InternalTypes.hpp"
 #include "libobsensor/h/ObTypes.h"
 #include "imu_calibration_params.h"
+#include "component/DeviceComponentBase.hpp"
 
 #include <vector>
 #include <memory>
 
 namespace libobsensor {
 
-class G330AlgParamManager {
+class G330AlgParamManager : public DeviceComponentBase {
 public:
-    G330AlgParamManager(std::shared_ptr<const DeviceInfo> deviceInfo, DeviceResourceGetter<IPropertyAccessor> &propertyAccessorGetter);
+    G330AlgParamManager(std::shared_ptr<IDevice> owner);
     virtual ~G330AlgParamManager() = default;
 
     void bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
@@ -42,9 +43,6 @@ private:
     void bindIntrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
 
 private:
-    std::shared_ptr<const DeviceInfo>       deviceInfo_;
-    DeviceResourceGetter<IPropertyAccessor> propertyAccessorGetter_;
-
     // using empty stream profile to initialize and register extrinsic to GlobalStreamExtrinsicsManager
     std::shared_ptr<const StreamProfile> colorEmptyStreamProfile_;
     std::shared_ptr<const StreamProfile> depthEmptyStreamProfile_;

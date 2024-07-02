@@ -19,10 +19,9 @@ int main() try {
     // Print current preset name.
     std::cout << "Current PresetName: " << device->getCurrentPresetName() << std::endl;
 
-    std::cout << "Enter index of preset to load: ";
-
     // Select preset to load.
     int loadIndex;
+    std::cout << "Enter index of preset to load: ";
     std::cin >> loadIndex;
     auto presetName = presetLists->getName(loadIndex);
 

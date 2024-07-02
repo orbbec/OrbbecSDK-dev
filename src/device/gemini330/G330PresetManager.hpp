@@ -2,7 +2,7 @@
 #include "IDevice.hpp"
 #include "IPresetManager.hpp"
 #include "InternalTypes.hpp"
-#include "G330DepthAlgModeManager.hpp"
+#include "component/DeviceComponentBase.hpp"
 
 #include <map>
 #include <string>
@@ -53,9 +53,9 @@ struct G330Preset {
     //    int colorStreamHeight;
 };
 
-class G330PresetManager : public IPresetManager {
+class G330PresetManager : public IPresetManager, public DeviceComponentBase {
 public:
-    G330PresetManager(DeviceResourceGetter<IPropertyAccessor> &propertyAccessorGetter, std::shared_ptr<G330DepthAlgModeManager> depthAlgModeManager);
+    G330PresetManager(std::shared_ptr<IDevice> owner);
     ~G330PresetManager() override = default;
 
     void                            loadPreset(const std::string &presetName) override;
@@ -74,9 +74,6 @@ private:
     Json::Value exportSettingsAsPresetJsonValue(const std::string &presetName);
 
 private:
-    DeviceResourceGetter<IPropertyAccessor>  propertyAccessorGetter_;
-    std::shared_ptr<G330DepthAlgModeManager> depthAlgModeManager_;
-
     std::vector<std::string> availablePresets_;
     std::string              currentPreset_;
     std::vector<uint8_t>     tmpJsonData_;

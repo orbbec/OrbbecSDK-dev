@@ -32,7 +32,9 @@ namespace libobsensor {
 constexpr uint8_t INTERFACE_COLOR = 4;
 constexpr uint8_t INTERFACE_DEPTH = 0;
 
-G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info) {
+G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info) {}
+
+void G330Device::init() {
     initSensors();
     initProperties();
     initFrameMetadataParserContainer();
@@ -58,22 +60,28 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
         }
     }
 
-    DeviceResourceGetter<IPropertyAccessor> propertyAccessorGetter([this]() {
-        auto propAccessor = getPropertyAccessor();
-        return std::move(propAccessor);
-    });
-    algParamManager_       = std::make_shared<G330AlgParamManager>(deviceInfo_, propertyAccessorGetter);
-    depthAlgModeManager_   = std::make_shared<G330DepthAlgModeManager>(propertyAccessorGetter);
-    presetManager_         = std::make_shared<G330PresetManager>(propertyAccessorGetter, depthAlgModeManager_);
-    sensorStartStrategy_   = std::make_shared<G330SensorStartStrategy>(depthAlgModeManager_);
-    globalTimestampFitter_ = std::make_shared<GlobalTimestampFitter>(propertyAccessorGetter);
+    auto algParamManager = std::make_shared<G330AlgParamManager>(DeviceBase::shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
+    auto depthAlgModeManager = std::make_shared<G330DepthAlgModeManager>(DeviceBase::shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER, depthAlgModeManager);
+
+    auto presetManager = std::make_shared<G330PresetManager>(DeviceBase::shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
+
+    auto sensorStreamStrategy = std::make_shared<G330SensorStreamStrategy>(DeviceBase::shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, sensorStreamStrategy);
+
+    auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(DeviceBase::shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER, globalTimestampFitter);
+
+    // todo： make timestamp calculator as a component
     auto iter = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo_->pid_);
     if(iter != gG330LPids.end()) {
-        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter_);
+        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
     }
     else {
-        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter_);
+        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
     }
 }
 
@@ -106,110 +114,112 @@ void G330Device::initSensors() {
 }
 
 void G330Device::initProperties() {
-    propertyAccessor_ = std::make_shared<PropertyAccessor>();
+    auto propertyAccessor = std::make_shared<PropertyAccessor>(DeviceBase::shared_from_this());
     for(auto &sensor: sensors_) {
         auto &sourcePort = sensor.second.backend;
         // todo: lazy create source port
         if(sensor.first == OB_SENSOR_COLOR) {
             auto uvcPropertyPort = std::make_shared<UvcPropertyPort>(sourcePort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_WHITE_BALANCE_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_BRIGHTNESS_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_SHARPNESS_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_CONTRAST_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_HUE_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_GAMMA_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, "rw", "rw", uvcPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_WHITE_BALANCE_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_BRIGHTNESS_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_SHARPNESS_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_CONTRAST_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_HUE_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_GAMMA_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT, "rw", "rw", uvcPropertyPort);
         }
         else if(sensor.first == OB_SENSOR_DEPTH) {
             auto uvcPropertyPort = std::make_shared<UvcPropertyPort>(sourcePort);
-            propertyAccessor_->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyPort);
 
             auto vendorPropertyPort = std::make_shared<VendorPropertyPort>(sourcePort);
-            propertyAccessor_->registerProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_LASER_CONTROL_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_LASER_ALWAYS_ON_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_LASER_ON_OFF_PATTERN_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_TEMPERATURE_COMPENSATION_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_LDP_STATUS_BOOL, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_TIMER_RESET_DELAY_US_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_CAPTURE_IMAGE_SIGNAL_BOOL, "w", "w", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_CAPTURE_IMAGE_FRAME_NUMBER_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_VERSION, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_DEVICE_TIME, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_DEVICE_SERIAL_NUMBER, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_ASIC_SERIAL_NUMBER, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_RAW_DATA_DEPTH_CALIB_PARAM, "", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_RAW_DATA_ALIGN_CALIB_PARAM, "", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_RAW_DATA_D2C_ALIGN_SUPPORT_PROFILE_LIST, "", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_BASELINE_CALIBRATION_PARAM, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_DEPTH_HDR_CONFIG, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_COLOR_AE_ROI, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_DEPTH_AE_ROI, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_RAW_DATA_IMU_CALIB_PARAM, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_LASER_CONTROL_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_LASER_ALWAYS_ON_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_LASER_ON_OFF_PATTERN_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_TEMPERATURE_COMPENSATION_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_LDP_STATUS_BOOL, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_TIMER_RESET_DELAY_US_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_CAPTURE_IMAGE_SIGNAL_BOOL, "w", "w", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_CAPTURE_IMAGE_FRAME_NUMBER_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_VERSION, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_DEVICE_TIME, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_DEVICE_SERIAL_NUMBER, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_ASIC_SERIAL_NUMBER, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_RAW_DATA_DEPTH_CALIB_PARAM, "", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_RAW_DATA_ALIGN_CALIB_PARAM, "", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_RAW_DATA_D2C_ALIGN_SUPPORT_PROFILE_LIST, "", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_BASELINE_CALIBRATION_PARAM, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_DEPTH_HDR_CONFIG, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_COLOR_AE_ROI, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_DEPTH_AE_ROI, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_RAW_DATA_IMU_CALIB_PARAM, "", "rw", vendorPropertyPort);
 
             // todo: add these properties to the frame processor
-            // propertyAccessor_->registerProperty(OB_PROP_SDK_DEPTH_FRAME_UNPACK_BOOL, "rw", "rw", vendorPropertyPort);
+            // propertyAccessor->registerProperty(OB_PROP_SDK_DEPTH_FRAME_UNPACK_BOOL, "rw", "rw", vendorPropertyPort);
 
-            propertyAccessor_->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_EXTERNAL_SIGNAL_RESET_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_GPM_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_LASER_POWER_ACTUAL_LEVEL_INT, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_DEVICE_TIME, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_GYRO_ODR_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_ACCEL_ODR_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_ACCEL_SWITCH_BOOL, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_GYRO_SWITCH_BOOL, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_GYRO_FULL_SCALE_INT, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_ACCEL_FULL_SCALE_INT, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_ODR_LIST, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_IR_BRIGHTNESS_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_DEVICE_USB2_REPEAT_IDENTIFY_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_RAW_DATA_DEVICE_EXTENSION_INFORMATION, "", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_IR_AE_MAX_EXPOSURE_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, "rw", "rw", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL, "r", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_RAW_DATA_DEPTH_ALG_MODE_LIST, "", "r", vendorPropertyPort);
-            propertyAccessor_->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_EXTERNAL_SIGNAL_RESET_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_GPM_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_LASER_POWER_ACTUAL_LEVEL_INT, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_DEVICE_TIME, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_GYRO_ODR_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_ACCEL_ODR_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_ACCEL_SWITCH_BOOL, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_GYRO_SWITCH_BOOL, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_GYRO_FULL_SCALE_INT, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_ACCEL_FULL_SCALE_INT, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_ODR_LIST, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_IR_BRIGHTNESS_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DEVICE_USB2_REPEAT_IDENTIFY_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_RAW_DATA_DEVICE_EXTENSION_INFORMATION, "", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_IR_AE_MAX_EXPOSURE_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL, "r", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_RAW_DATA_DEPTH_ALG_MODE_LIST, "", "r", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyPort);
         }
         else if(sensor.first == OB_SENSOR_ACCEL) {
             auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter", sensor.first);
             auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
-            propertyAccessor_->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
         }
         else if(sensor.first == OB_SENSOR_GYRO) {
             auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter", sensor.first);
             auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
-            propertyAccessor_->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
         }
     }
-    propertyAccessor_->aliasProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
-    propertyAccessor_->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
-    propertyAccessor_->aliasProperty(OB_PROP_IR_GAIN_INT, OB_PROP_DEPTH_GAIN_INT);
+    propertyAccessor->aliasProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
+    propertyAccessor->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
+    propertyAccessor->aliasProperty(OB_PROP_IR_GAIN_INT, OB_PROP_DEPTH_GAIN_INT);
+
+    registerComponent(OB_DEV_COMPONENT_PROP_ACCESSOR, propertyAccessor, true);
 }
 
 void G330Device::initFrameMetadataParserContainer() {
@@ -277,14 +287,6 @@ void G330Device::initFrameMetadataParserContainer() {
     colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, makeStructureMetadataParser(&G330ColorUvcMetadata::exposure_roi_bottom));
 }
 
-DeviceResourceLock G330Device::tryLockResource() {
-    DeviceResourceLock resLock(componentLock_, std::defer_lock);
-    if(!resLock.try_lock_for(std::chrono::milliseconds(10000))) {
-        throw libobsensor::wrong_api_call_sequence_exception("Resource busy! You can try again later!");
-    }
-    return resLock;
-}
-
 std::shared_ptr<const DeviceInfo> G330Device::getInfo() const {
     return deviceInfo_;
 }
@@ -294,15 +296,6 @@ const std::string &G330Device::getExtensionInfo(const std::string &infoKey) {
     utils::unusedVar(infoKey);
     static std::string emptyStr;
     return emptyStr;
-}
-
-DeviceResourcePtr<IPropertyAccessor> G330Device::getPropertyAccessor() {
-    auto resLock = tryLockResource();
-    return DeviceResourcePtr<IPropertyAccessor>(propertyAccessor_, std::move(resLock));
-}
-
-std::shared_ptr<IPresetManager> G330Device::getPresetManager() const {
-    return presetManager_;
 }
 
 std::vector<OBSensorType> G330Device::getSensorTypeList() const {
@@ -374,7 +367,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     return {};
 }
 
-DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
+DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
     auto resLock = tryLockResource();
     auto iter    = sensors_.find(sensorType);
     if(iter == sensors_.end()) {
@@ -382,7 +375,7 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
     }
 
     if(iter->second.sensor) {
-        return DeviceResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
+        return DeviceComponentPtr<ISensor>(iter->second.sensor, std::move(resLock));
     }
 
     // create
@@ -392,7 +385,9 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter", sensorType);
         if(imuCorrecterFilter) {
             // TODO change set param way
-            auto imuCorrectionParams = algParamManager_->getIMUCalibrationParam();
+            auto comp                = getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+            auto algParamManager     = comp.as<G330AlgParamManager>();
+            auto imuCorrectionParams = algParamManager->getIMUCalibrationParam();
             std::dynamic_pointer_cast<IMUCorrecter>(imuCorrecterFilter)->setIMUCalibrationParam(imuCorrectionParams);
             motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, imuCorrecterFilter);  // todo: add data phaser
         }
@@ -403,7 +398,11 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
 
         // bind params: extrinsics, intrinsics, etc.
         auto accelProfiles = accelSensor->getStreamProfileList();
-        algParamManager_->bindStreamProfileParams(accelProfiles);
+        {
+            auto comp            = getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+            auto algParamManager = comp.as<G330AlgParamManager>();
+            algParamManager->bindStreamProfileParams(accelProfiles);
+        }
 
         LOG_INFO("Sensor {} created! Found {} stream profiles.", OB_SENSOR_ACCEL, accelProfiles.size());
         for(auto &profile: accelProfiles) {
@@ -416,7 +415,11 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
 
         // bind params: extrinsics, intrinsics, etc.
         auto gyroProfiles = gyroSensor->getStreamProfileList();
-        algParamManager_->bindStreamProfileParams(gyroProfiles);
+        {
+            auto comp            = getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+            auto algParamManager = comp.as<G330AlgParamManager>();
+            algParamManager->bindStreamProfileParams(gyroProfiles);
+        }
 
         LOG_INFO("Sensor {} created! Found {} stream profiles.", OB_SENSOR_GYRO, gyroProfiles.size());
         for(auto &profile: gyroProfiles) {
@@ -438,7 +441,6 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
 
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
-            videoSensor->setSensorStartStrategy(sensorStartStrategy_);
         }
         else if(sensorType == OB_SENSOR_IR_LEFT) {
             videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
@@ -452,7 +454,6 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             });
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
-            videoSensor->setSensorStartStrategy(sensorStartStrategy_);
         }
         else if(sensorType == OB_SENSOR_IR_RIGHT) {
             videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
@@ -468,7 +469,6 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             });
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
-            videoSensor->setSensorStartStrategy(sensorStartStrategy_);
         }
         else if(sensorType == OB_SENSOR_COLOR) {
             videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
@@ -509,14 +509,29 @@ DeviceResourcePtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
 
         // bind params: extrinsics, intrinsics, etc.
         auto profiles = iter->second.sensor->getStreamProfileList();
-        algParamManager_->bindStreamProfileParams(profiles);
+        {
+            auto comp            = getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+            auto algParamManager = comp.as<G330AlgParamManager>();
+            algParamManager->bindStreamProfileParams(profiles);
+        }
 
         LOG_INFO("Sensor {} created! Found {} stream profiles.", sensorType, profiles.size());
         for(auto &profile: profiles) {
             LOG_INFO(" - {}", profile);
         }
     }
-    return DeviceResourcePtr<ISensor>(iter->second.sensor, std::move(resLock));
+    iter->second.sensor->registerStreamStateChangedCallback([this](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
+        auto comp           = getComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
+        auto streamStrategy = comp.as<ISensorStreamStrategy>();
+        if(state == STREAM_STATE_STARTING) {
+            streamStrategy->markStreamStarted(sp);
+        }
+        else if(state == STREAM_STATE_STOPED) {
+            streamStrategy->markStreamStopped(sp);
+        }
+    });
+
+    return DeviceComponentPtr<ISensor>(iter->second.sensor, std::move(resLock));
 }
 
 void G330Device::enableHeadBeat(bool enable) {

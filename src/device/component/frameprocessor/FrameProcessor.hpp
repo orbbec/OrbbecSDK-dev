@@ -1,5 +1,5 @@
 #pragma once
-#include "interface/IDevice.hpp"
+#include "IDevice.hpp"
 #include "PrivFrameProcessorTypes.h"
 #include <dylib.hpp>
 #include <map>

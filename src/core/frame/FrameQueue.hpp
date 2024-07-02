@@ -49,11 +49,11 @@ public:
             return result;
         }
 
-        if(timeoutMsec == 0 || stoped_ || flushing_) {
+        if(timeoutMsec == 0) {
             return nullptr;
         }
 
-        condition_.wait_for(lock, std::chrono::milliseconds(timeoutMsec), [this] { return !queue_.empty() || stoped_ || flushing_; });
+        condition_.wait_for(lock, std::chrono::milliseconds(timeoutMsec), [this] { return !queue_.empty(); });
         if(queue_.empty()) {
             return nullptr;
         }
@@ -94,6 +94,7 @@ public:
     bool isStarted() const {  // returns true if dequeue thread is running
         return !stoped_;
     }
+
     void flush() {  // stop until all frames are called back
         flushing_ = true;
         condition_.notify_one();
@@ -101,6 +102,7 @@ public:
             dequeueThread_.join();
         }
     }
+
     void stop() {  // stop immediately
         stopping_ = true;
         condition_.notify_one();
@@ -132,7 +134,7 @@ private:
     std::atomic<bool>                       stoped_;
     std::atomic<bool>                       stopping_;
     std::function<void(std::shared_ptr<T>)> callback_;
-    std::atomic<bool> flushing_;
+    std::atomic<bool>                       flushing_;
 };
 
 }  // namespace libobsensor

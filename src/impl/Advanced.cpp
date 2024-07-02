@@ -11,7 +11,9 @@ extern "C" {
 
 const char *ob_device_get_current_preset_name(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto presetMgr = device->device->getPresetManager();
+
+    auto comp      = device->device->getComponent(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr = comp.as<libobsensor::IPresetManager>();
     return presetMgr->getCurrentPresetName().c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)
@@ -19,7 +21,9 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)
 void ob_device_load_preset(ob_device *device, const char *preset_name, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(preset_name);
-    auto presetMgr = device->device->getPresetManager();
+
+    auto comp      = device->device->getComponent(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr = comp.as<libobsensor::IPresetManager>();
     presetMgr->loadPreset(preset_name);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, preset_name)
@@ -27,7 +31,9 @@ HANDLE_EXCEPTIONS_NO_RETURN(device, preset_name)
 void ob_device_load_preset_from_json_file(ob_device *device, const char *json_file_path, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(json_file_path);
-    auto presetMgr = device->device->getPresetManager();
+
+    auto comp      = device->device->getComponent(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr = comp.as<libobsensor::IPresetManager>();
     presetMgr->loadPresetFromJsonFile(json_file_path);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
@@ -35,14 +41,17 @@ HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
 void ob_device_export_current_settings_as_preset_json_file(ob_device *device, const char *json_file_path, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(json_file_path);
-    auto presetMgr = device->device->getPresetManager();
+
+    auto comp      = device->device->getComponent(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr = comp.as<libobsensor::IPresetManager>();
     presetMgr->exportSettingsAsPresetJsonFile(json_file_path);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
 
 ob_device_preset_list *ob_device_get_available_preset_list(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto presetMgr  = device->device->getPresetManager();
+    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr  = comp.as<libobsensor::IPresetManager>();
     auto presetList = presetMgr->getAvailablePresetList();
 
     auto impl        = new ob_device_preset_list();

@@ -20,6 +20,8 @@ public:
     DeviceComponentPtr<IDeviceComponent>  getComponent(const std::string &name, bool throwExIfNotFound = true) override;
     DeviceComponentPtr<IPropertyAccessor> getPropertyAccessor() override;
 
+    // todo: move get sensor functions to base class
+
 protected:
     DeviceComponentLock tryLockResource();
 

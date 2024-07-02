@@ -2,12 +2,7 @@
 #include "DeviceBase.hpp"
 #include "IDeviceEnumerator.hpp"
 
-#include "timestamp/GlobalTimestampFitter.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
-#include "G330AlgParamManager.hpp"
-#include "G330PresetManager.hpp"
-#include "G330DepthAlgModeManager.hpp"
-#include "G330SensorStreamStrategy.hpp"
 
 #include <map>
 #include <memory>

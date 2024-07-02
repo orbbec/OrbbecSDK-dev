@@ -61,7 +61,6 @@ bool DeviceBase::isComponentExists(const std::string &name) const {
 }
 
 DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string &name, bool throwExIfNotFound) {
-
     auto sensorTypeIt = componentNameToSensorTypeMap.find(name);
     if(sensorTypeIt != componentNameToSensorTypeMap.end()) {
         auto sensor = getSensor(sensorTypeIt->second);

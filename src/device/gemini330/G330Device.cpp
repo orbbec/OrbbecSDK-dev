@@ -2,13 +2,10 @@
 #include "ObPal.hpp"
 #include "InternalTypes.hpp"
 #include "DevicePids.hpp"
+#include "utils/Utils.hpp"
 
 #include "environment/EnvConfig.hpp"
 #include "stream/StreamProfileFactory.hpp"
-#include "property/VendorPropertyPort.hpp"
-#include "property/UvcPropertyPort.hpp"
-#include "property/FilterPropertyPort.hpp"
-#include "property/PropertyAccessor.hpp"
 #include "sensor/video/VideoSensor.hpp"
 #include "sensor/video/DisparityBasedSensor.hpp"
 #include "sensor/motion/MotionStreamer.hpp"
@@ -16,14 +13,24 @@
 #include "sensor/motion/GyroSensor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
 #include "filter/FilterFactory.hpp"
-#include "utils/Utils.hpp"
-#include "metadata/FrameMetadataParserContainer.hpp"
-#include "filter/public_filters/FormatConverterProcess.hpp"
 
+#include "filter/public_filters/FormatConverterProcess.hpp"
+#include "filter/public_filters/FrameIMUCorrectProcess.hpp"
+
+#include "component/metadata/FrameMetadataParserContainer.hpp"
+#include "component/timestamp/GlobalTimestampFitter.hpp"
+#include "component/property/VendorPropertyPort.hpp"
+#include "component/property/UvcPropertyPort.hpp"
+#include "component/property/FilterPropertyPort.hpp"
+#include "component/property/PropertyAccessor.hpp"
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
 #include "G330TimestampCalculator.hpp"
-#include "filter/public_filters/FrameIMUCorrectProcess.hpp"
+#include "G330DeviceSyncConfigurator.hpp"
+#include "G330AlgParamManager.hpp"
+#include "G330PresetManager.hpp"
+#include "G330DepthAlgModeManager.hpp"
+#include "G330SensorStreamStrategy.hpp"
 
 #include <algorithm>
 
@@ -60,19 +67,7 @@ void G330Device::init() {
         }
     }
 
-    auto algParamManager = std::make_shared<G330AlgParamManager>(DeviceBase::shared_from_this());
-    registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
-
-    auto depthAlgModeManager = std::make_shared<G330DepthAlgModeManager>(DeviceBase::shared_from_this());
-    registerComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER, depthAlgModeManager);
-
-    auto presetManager = std::make_shared<G330PresetManager>(DeviceBase::shared_from_this());
-    registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
-
-    auto sensorStreamStrategy = std::make_shared<G330SensorStreamStrategy>(DeviceBase::shared_from_this());
-    registerComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, sensorStreamStrategy);
-
-    auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(DeviceBase::shared_from_this());
+    auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(shared_from_this());
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER, globalTimestampFitter);
 
     // todo： make timestamp calculator as a component
@@ -83,6 +78,25 @@ void G330Device::init() {
     else {
         videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
     }
+
+    auto algParamManager = std::make_shared<G330AlgParamManager>(shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
+
+    auto depthAlgModeManager = std::make_shared<G330DepthAlgModeManager>(shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER, depthAlgModeManager);
+
+    auto presetManager = std::make_shared<G330PresetManager>(shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
+
+    auto sensorStreamStrategy = std::make_shared<G330SensorStreamStrategy>(shared_from_this());
+    registerComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, sensorStreamStrategy);
+
+    static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes = {
+        OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN,         OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,          OB_MULTI_DEVICE_SYNC_MODE_PRIMARY,
+        OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED, OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING, OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING
+    };
+    auto deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(shared_from_this(), supportedSyncModes);
+    registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 }
 
 G330Device::~G330Device() noexcept {}
@@ -114,7 +128,7 @@ void G330Device::initSensors() {
 }
 
 void G330Device::initProperties() {
-    auto propertyAccessor = std::make_shared<PropertyAccessor>(DeviceBase::shared_from_this());
+    auto propertyAccessor = std::make_shared<PropertyAccessor>(shared_from_this());
     for(auto &sensor: sensors_) {
         auto &sourcePort = sensor.second.backend;
         // todo: lazy create source port

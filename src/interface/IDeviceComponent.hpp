@@ -66,5 +66,6 @@ private:
 #define OB_DEV_COMPONENT_PRESET_MANAGER "PresetManager"
 #define OB_DEV_COMPONENT_ALG_PARAM_MANAGER "AlgorithmParameterManager"
 #define OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER "DepthAlgorithmModeManager"
+#define OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR "DeviceSyncConfigurator"
 
 }  // namespace libobsensor

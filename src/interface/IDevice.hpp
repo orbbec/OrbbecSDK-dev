@@ -36,6 +36,7 @@ public:
     virtual std::shared_ptr<const DeviceInfo> getInfo() const                              = 0;
     virtual const std::string                &getExtensionInfo(const std::string &infoKey) = 0;
 
+    virtual bool                                  isComponentExists(const std::string &name) const                     = 0;
     virtual DeviceComponentPtr<IDeviceComponent>  getComponent(const std::string &name, bool throwExIfNotFound = true) = 0;
     virtual DeviceComponentPtr<IPropertyAccessor> getPropertyAccessor()                                                = 0;
     virtual DeviceComponentPtr<ISensor>           getSensor(OBSensorType type)                                         = 0;

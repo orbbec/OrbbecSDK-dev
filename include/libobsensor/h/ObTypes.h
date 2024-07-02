@@ -33,8 +33,6 @@ typedef struct ob_filter_t                    ob_filter;
 typedef struct ob_filter_list_t               ob_filter_list;
 typedef struct ob_pipeline_t                  ob_pipeline;
 typedef struct ob_config_t                    ob_config;
-typedef struct ob_recorder_t                  ob_recorder;
-typedef struct ob_playback_t                  ob_playback;
 typedef struct ob_depth_work_mode_list_t      ob_depth_work_mode_list;
 typedef struct ob_device_preset_list_t        ob_device_preset_list;
 typedef struct ob_filter_config_schema_list_t ob_filter_config_schema_list;

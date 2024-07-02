@@ -36,6 +36,30 @@ const std::map<std::string, OBSensorType> componentNameToSensorTypeMap = {
     { OB_DEV_COMPONENT_ACCEL_SENSOR, OB_SENSOR_ACCEL },
 };
 
+bool DeviceBase::isComponentExists(const std::string &name) const {
+    auto sensorTypeIt = componentNameToSensorTypeMap.find(name);
+    if(sensorTypeIt != componentNameToSensorTypeMap.end()) {
+        auto sensorTypeList = getSensorTypeList();
+        auto iter =
+            std::find_if(sensorTypeList.begin(), sensorTypeList.end(), [sensorTypeIt](const OBSensorType &type) { return type == sensorTypeIt->second; });
+        if(iter != sensorTypeList.end()) {
+            return true;
+        }
+    }
+
+    auto it = components_.find(name);
+    if(it != components_.end()) {
+        return true;
+    }
+
+    it = lockRequiredComponents_.find(name);
+    if(it != lockRequiredComponents_.end()) {
+        return true;
+    }
+
+    return false;
+}
+
 DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string &name, bool throwExIfNotFound) {
 
     auto sensorTypeIt = componentNameToSensorTypeMap.find(name);

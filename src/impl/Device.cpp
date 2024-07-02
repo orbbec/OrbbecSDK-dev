@@ -265,8 +265,11 @@ bool ob_device_is_property_supported(const ob_device *device, ob_property_id pro
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission);
 
-// todo: implement below:
-// bool ob_device_is_global_timestamp_supported(ob_device *device, ob_error **error);
+bool ob_device_is_global_timestamp_supported(const ob_device *device, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    return device->device->isComponentExists(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER);
+}
+HANDLE_EXCEPTIONS_AND_RETURN(false, device)
 
 void ob_device_update_firmware(ob_device *device, const char *path, ob_device_fw_update_callback callback, bool async, void *user_data,
                                ob_error **error) BEGIN_API_CALL {

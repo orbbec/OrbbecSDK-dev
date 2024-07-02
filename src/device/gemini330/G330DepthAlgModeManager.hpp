@@ -1,18 +1,21 @@
 #pragma once
 #include "IDevice.hpp"
 #include "InternalTypes.hpp"
+#include "IDepthAlgModeManager.hpp"
 #include "component/DeviceComponentBase.hpp"
 
 namespace libobsensor {
 
-class G330DepthAlgModeManager : public DeviceComponentBase {
+class G330DepthAlgModeManager : public IDepthAlgModeManager, public DeviceComponentBase {
 public:
     G330DepthAlgModeManager(std::shared_ptr<IDevice> owner);
     virtual ~G330DepthAlgModeManager() = default;
 
-    std::vector<OBDepthAlgModeChecksum> getDepthAlgModeList() const;
-    const OBDepthAlgModeChecksum       &getCurrentDepthAlgModeChecksum() const;
-    void                                switchDepthAlgMode(const char *modeName);
+    std::vector<OBDepthAlgModeChecksum> getDepthAlgModeList() const override;
+    const OBDepthAlgModeChecksum       &getCurrentDepthAlgModeChecksum() const override;
+    void                                switchDepthAlgMode(const std::string &modeName) override;
+
+private:
     void                                switchDepthAlgMode(const OBDepthAlgModeChecksum &targetDepthMode);
 
 private:

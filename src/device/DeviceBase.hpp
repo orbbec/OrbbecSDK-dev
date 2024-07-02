@@ -16,6 +16,7 @@ public:
 
     void registerComponent(const std::string &name, std::shared_ptr<IDeviceComponent> component, bool lockRequired = false);
 
+    bool                                  isComponentExists(const std::string &name) const override;
     DeviceComponentPtr<IDeviceComponent>  getComponent(const std::string &name, bool throwExIfNotFound = true) override;
     DeviceComponentPtr<IPropertyAccessor> getPropertyAccessor() override;
 

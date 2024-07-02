@@ -1,4 +1,4 @@
-#include "libobsensor/h/version.h"
+#include "libobsensor/h/Version.h"
 #include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 

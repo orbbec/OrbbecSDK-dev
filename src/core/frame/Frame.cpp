@@ -160,8 +160,20 @@ void Frame::updateMetadata(const uint8_t *metadata, size_t metadataSize) {
     if(metadataSize > sizeof(metadata_)) {
         throw memory_exception("Metadata size is too large!");
     }
-    metadataSize_ = metadataSize;
     memcpy(metadata_, metadata, metadataSize);
+    metadataSize_ = metadataSize;
+}
+
+void Frame::appendMetadata(const uint8_t *metadata, size_t metadataSize) {
+    if(metadataSize > 0 && metadata == nullptr) {
+        // In the try_read_metadata() function, metadata may be empty.
+        throw memory_exception("Metadata is null!");
+    }
+    if(metadataSize_ + metadataSize > sizeof(metadata_)) {
+        throw memory_exception("Metadata size is too large!");
+    }
+    memcpy(metadata_ + metadataSize_, metadata, metadataSize);
+    metadataSize_ += metadataSize;
 }
 
 const uint8_t *Frame::getMetadata() const {

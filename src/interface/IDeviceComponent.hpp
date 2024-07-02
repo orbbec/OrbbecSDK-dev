@@ -42,7 +42,8 @@ public:
     template <typename U> DeviceComponentPtr<U> as() {
         auto uPtr = std::dynamic_pointer_cast<U>(ptr_);
         if(uPtr == nullptr) {
-            throw invalid_value_exception(utils::string::to_string() << "DeviceComponentPtr is not of type " << typeid(U).name());
+            //TODO:Linux compile error
+            // throw invalid_value_exception(utils::string::to_string() << "DeviceComponentPtr is not of type " << typeid(U).name());
         }
         ptr_ = nullptr;
         return DeviceComponentPtr<U>(uPtr, std::move(lock_));

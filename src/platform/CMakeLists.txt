@@ -24,8 +24,7 @@ if (OB_BUILD_USB_PORT)
 
 if(NOT OB_BUILD_WIN32)
   add_subdirectory(${OB_3RDPARTY_DIR}/libuvc libuvc)
-  target_link_libraries(${OB_TARGET_PAL} PUBLIC -luvc)
-  target_include_directories(${OB_TARGET_PAL} PUBLIC ${OB_3RDPARTY_DIR}/libuvc/include)
+  target_link_libraries(${OB_TARGET_PAL} PUBLIC libuvc::libuvc)
 endif()
 
 endif ()

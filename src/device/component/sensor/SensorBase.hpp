@@ -46,8 +46,8 @@ protected:
     virtual void watchStreamState();
 
 protected:
-    const OBSensorType           sensorType_;
     std::weak_ptr<IDevice>       owner_;
+    const OBSensorType           sensorType_;
     std::shared_ptr<ISourcePort> backend_;
 
     StreamProfileList streamProfileList_;

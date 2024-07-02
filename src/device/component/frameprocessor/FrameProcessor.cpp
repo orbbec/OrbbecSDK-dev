@@ -41,7 +41,7 @@ FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device) {
 FrameProcessorFactory::~FrameProcessorFactory() noexcept = default;
 
 std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSensorType sensorType) {
-    if(context_ && !context_->context || context_->create_processor == nullptr) {
+    if(context_ && (!context_->context || context_->create_processor == nullptr)) {
         return nullptr;
     }
 

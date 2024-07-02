@@ -15,4 +15,4 @@ add_library(ob::env_config_rc ALIAS env_config_rc)
 set_target_properties(env_config_rc PROPERTIES FOLDER "dependencies")
 
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/version.hpp.in ${CMAKE_CURRENT_LIST_DIR}/Version.hpp)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/Version.hpp.in ${CMAKE_CURRENT_LIST_DIR}/Version.hpp)

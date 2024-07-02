@@ -1,4 +1,4 @@
-#include "libobsensor/h/advanced.h"
+#include "libobsensor/h/Advanced.h"
 #include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 

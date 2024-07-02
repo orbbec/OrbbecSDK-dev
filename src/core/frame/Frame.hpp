@@ -63,6 +63,7 @@ public:
 
     size_t         getMetadataSize() const;
     void           updateMetadata(const uint8_t *metadata, size_t metadataSize);
+    void           appendMetadata(const uint8_t *metadata, size_t metadataSize);
     const uint8_t *getMetadata() const;
 
     uint8_t *getMetadataUnsafe() const;  // use with caution, metadata may be changed while other threads are using it

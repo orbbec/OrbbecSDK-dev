@@ -362,7 +362,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(dtFilter);
         }
 
-        for(int i = 0; i < depthFilterList.size(); i++) {
+        for(size_t i = 0; i < depthFilterList.size(); i++) {
             auto filter = depthFilterList[i];
             if(filter != dtFilter) {
                 filter->enable(false);
@@ -592,7 +592,7 @@ const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uin
 }
 
 std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, OBSensorType type, bool createIfNotExist) {
-    auto filterIter = std::find_if(filters_.begin(), filters_.end(), [name, type](const auto &pair) {
+    auto filterIter = std::find_if(filters_.begin(), filters_.end(), [name, type](const std::pair<OBSensorType, std::shared_ptr<IFilter>> &pair) {
         if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
             return (pair.first == OB_SENSOR_ACCEL || pair.first == OB_SENSOR_GYRO) && (pair.second->getName() == name);
         }

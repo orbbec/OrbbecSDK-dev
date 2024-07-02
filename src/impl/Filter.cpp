@@ -77,7 +77,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, config_schema_list)
 ob_filter_config_schema_item ob_filter_config_schema_list_get_item(const ob_filter_config_schema_list *config_schema_list, uint32_t index,
                                                                    ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(config_schema_list);
-    VALIDATE_RANGE(index, 0, config_schema_list->configSchemaList.size());
+    VALIDATE_UNSIGNED_INDEX(index,config_schema_list->configSchemaList.size());
     auto &configSchema = config_schema_list->configSchemaList.at(index);
     return configSchema;
 }

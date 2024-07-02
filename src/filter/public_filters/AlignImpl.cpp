@@ -6,11 +6,11 @@
 #include <iostream>
 #include <chrono>
 
-#ifdef _WIN32
+#if (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
+#include "SSE2NEON.h"
+#else
 #include <xmmintrin.h>
 #include <smmintrin.h>
-#elif defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
-#include "SSE2NEON.h"
 #endif
 
 namespace libobsensor {
@@ -241,7 +241,7 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
     __m128 color_K_1_1 = _mm_set_ps1(rgb_intric_.fy);
     __m128 color_K_1_2 = _mm_set_ps1(rgb_intric_.cy);
 
-    __m128  point_five = _mm_set_ps1(0.5);
+    // __m128  point_five = _mm_set_ps1(0.5);
     __m128  two        = _mm_set_ps1(2);
     __m128i zero       = _mm_setzero_si128();
     __m128  zero_f     = _mm_set_ps1(0.0);
@@ -250,7 +250,7 @@ void AlignImpl::BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
     int imgSize = depth_intric_.width * depth_intric_.height;
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for(int i = 0; i < imgSize; i += 8) {
         __m128i depth_i16    = _mm_loadu_si128((__m128i *)(depth_buffer + i));
@@ -406,14 +406,14 @@ void AlignImpl::KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *ou
     __m128 color_K_1_1 = _mm_set_ps1(rgb_intric_.fy);
     __m128 color_K_1_2 = _mm_set_ps1(rgb_intric_.cy);
 
-    __m128  point_five = _mm_set_ps1(0.5);
-    __m128  two        = _mm_set_ps1(2);
+    // __m128  point_five = _mm_set_ps1(0.5);
+    // __m128  two        = _mm_set_ps1(2);
     __m128i zero       = _mm_setzero_si128();
 
     int imgSize = depth_intric_.width * depth_intric_.height;
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for(int i = 0; i < imgSize; i += 8) {
         __m128i depth_i16    = _mm_loadu_si128((__m128i *)(depth_buffer + i));
@@ -590,14 +590,14 @@ void AlignImpl::distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_
     __m128 color_K_1_1 = _mm_set_ps1(rgb_intric_.fy);
     __m128 color_K_1_2 = _mm_set_ps1(rgb_intric_.cy);
 
-    __m128  point_five = _mm_set_ps1(0.5);
+    // __m128  point_five = _mm_set_ps1(0.5);
     __m128  two        = _mm_set_ps1(2);
     __m128i zero       = _mm_setzero_si128();
 
     int imgSize = depth_intric_.width * depth_intric_.height;
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for(int i = 0; i < imgSize; i += 8) {
         __m128i depth_i16    = _mm_loadu_si128((__m128i *)(depth_buffer + i));
@@ -756,13 +756,13 @@ void AlignImpl::linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_dep
     __m128 color_K_1_1 = _mm_set_ps1(rgb_intric_.fy);
     __m128 color_K_1_2 = _mm_set_ps1(rgb_intric_.cy);
 
-    __m128  round_point_5 = _mm_set_ps1(0.5);
+    // __m128  round_point_5 = _mm_set_ps1(0.5);
     __m128i zero          = _mm_setzero_si128();
 
     int imgSize = depth_intric_.width * depth_intric_.height;
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
+//#pragma omp parallel for
 #endif
     for(int i = 0; i < imgSize; i += 8) {
         __m128i depth_i16 = _mm_loadu_si128((__m128i *)(depth_buffer + i));

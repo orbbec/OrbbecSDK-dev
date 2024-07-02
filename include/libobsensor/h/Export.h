@@ -9,20 +9,20 @@
 #  ifndef OB_EXPORT
 #    ifdef openobsdk_EXPORTS
         /* We are building this library */
-#      define OB_EXPORT __declspec(dllexport)
+#      define OB_EXPORT __attribute__((visibility("default")))
 #    else
         /* We are using this library */
-#      define OB_EXPORT __declspec(dllimport)
+#      define OB_EXPORT __attribute__((visibility("default")))
 #    endif
 #  endif
 
 #  ifndef OB_NO_EXPORT
-#    define OB_NO_EXPORT 
+#    define OB_NO_EXPORT __attribute__((visibility("hidden")))
 #  endif
 #endif
 
 #ifndef OB_DEPRECATED
-#  define OB_DEPRECATED __declspec(deprecated)
+#  define OB_DEPRECATED __attribute__ ((__deprecated__))
 #endif
 
 #ifndef OB_DEPRECATED_EXPORT

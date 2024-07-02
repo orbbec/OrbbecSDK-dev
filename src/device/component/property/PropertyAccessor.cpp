@@ -303,7 +303,7 @@ void PropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std:
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
                   [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_WRITE); });
     LOG_DEBUG("Property {} set structure data successfully over proto v1.1", propId);
-};
+}
 
 const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);

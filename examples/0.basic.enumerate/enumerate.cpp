@@ -139,8 +139,8 @@ int main(void) try {
         }
 
         //  Get the device.
-        auto device = deviceList->getDevice(deviceSelected);
-        enumerateSensors(device);
+        auto selectedDevice = deviceList->getDevice(deviceSelected);
+        enumerateSensors(selectedDevice);
     }
 
     return 0;

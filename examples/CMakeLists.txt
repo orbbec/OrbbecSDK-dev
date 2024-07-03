@@ -22,7 +22,7 @@ add_subdirectory(1.stream.depth)
 add_subdirectory(1.stream.color)
 add_subdirectory(1.stream.imu)
 add_subdirectory(1.stream.infrared)
-# add_subdirectory(1.stream.callback) #to do
+add_subdirectory(1.stream.callback) #to do
 add_subdirectory(1.stream.multi_streams)
 add_subdirectory(2.device.control)
 add_subdirectory(2.device.hot_plugin)

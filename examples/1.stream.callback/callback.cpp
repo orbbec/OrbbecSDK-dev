@@ -21,46 +21,34 @@ int main(void) try {
         // For dual infrared device, enable the left and right infrared streams.
         // For single infrared device, enable the infrared stream.
         OBSensorType sensorType = sensorList->getSensorType(index);
-        if(sensorType == OB_SENSOR_IR || sensorType == OB_SENSOR_IR_LEFT || sensorType == OB_SENSOR_IR_RIGHT) {
+        if(sensorType == OB_SENSOR_IR || sensorType == OB_SENSOR_IR_LEFT || sensorType == OB_SENSOR_IR_RIGHT || sensorType == OB_SENSOR_COLOR
+           || sensorType == OB_SENSOR_DEPTH) {
             // Enable the stream with specified requirements.
-            config->enableVideoStream(OB_STREAM_COLOR);
+            config->enableVideoStream(convertSensorTypeToStreamType(sensorType));
         }
     }
 
-    // Start the pipeline with default config, more info please refer to the `misc/config/OrbbecSDKConfig_v1.0.xml`.
-    pipe.start();
+    std::mutex                    frameMutex;
+    std::shared_ptr<ob::FrameSet> renderframeSet = nullptr;
+
+    // Start the pipeline with callback.
+    pipe.start(config, [&](std::shared_ptr<ob::FrameSet> frameSet) {
+        std::lock_guard<std::mutex> lock(frameMutex);
+        renderframeSet = frameSet;
+    });
 
     // Create a window for rendering, and set the size of the window.
-    Window app("quick start", 1280, 720, RENDER_ONE_ROW);
+    Window app("quick start", 1280, 720, RENDER_GRID);
 
     while(app) {
-        // Wait for frameSet from the pipeline.
-        auto frameSet = pipe.waitForFrameset();
+        std::lock_guard<std::mutex> lock(frameMutex);
 
-        if(frameSet == nullptr) {
-            continue;
-        }
-
-        // Get the depth raw from the frameSet.
-        auto depthFrameRaw  = frameSet->getFrame(OB_FRAME_DEPTH);
-        // Get the color raw from the frameSet.
-        auto colorFrameRaw  = frameSet->getFrame(OB_FRAME_COLOR);
-
-        if(depthFrameRaw == nullptr || colorFrameRaw == nullptr){
-            continue;
-        }
-
-        // Get the depth frame from the depth raw.
-        auto depthFrame = depthFrameRaw->as<ob::DepthFrame>();
-        // Get the color frame from the color raw.
-        auto colorFrame = colorFrameRaw->as<ob::ColorFrame>();
-
-        if(depthFrame == nullptr || colorFrame == nullptr){
+        if(renderframeSet == nullptr) {
             continue;
         }
 
         // Rendering display
-        app.renderFrameData({colorFrame, depthFrame});
+        app.renderFrameData(renderframeSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

@@ -97,7 +97,7 @@ void handleDeviceConnected(std::shared_ptr<ob::DeviceList> connectList) {
     const auto                            deviceCount = connectList->getCount();
     std::cout << "Device connect, deviceCount: " << deviceCount << std::endl;
     for(uint32_t i = 0; i < deviceCount; i++) {
-        auto uid = std::string(connectList->uid(i));
+        auto uid = std::string(connectList->getUid(i));
         auto itr = pipelineHolderMap.find(uid);
         if(itr != pipelineHolderMap.end()) {
             std::cout << "Device connected. device already exit. " << itr->second->deviceInfo << std::endl;
@@ -122,7 +122,7 @@ void handleDeviceDisconnected(std::shared_ptr<ob::DeviceList> disconnectList) {
     const auto                            deviceCount = disconnectList->getCount();
     std::cout << "Device disconnect, deviceCount: " << deviceCount << std::endl;
     for(uint32_t i = 0; i < deviceCount; i++) {
-        auto uid = std::string(disconnectList->uid(i));
+        auto uid = std::string(disconnectList->getUid(i));
         auto itr = pipelineHolderMap.find(uid);
         if(itr != pipelineHolderMap.end()) {
             auto deviceInfo = itr->second->deviceInfo;
@@ -153,8 +153,8 @@ void rebootDevices() {
 
 void startStream(std::shared_ptr<PipelineHolder> holder) {
     std::shared_ptr<FramePrintInfo> printInfo(new FramePrintInfo{});
-    std::string                     deviceSN = std::string(holder->deviceInfo->serialNumber());
-    ob::FrameSetCallback            callback = [deviceSN, printInfo](std::shared_ptr<ob::FrameSet> frameSet) {
+    std::string                     deviceSN = std::string(holder->deviceInfo->getSerialNumber());
+    ob::Pipeline::FrameSetCallback            callback = [deviceSN, printInfo](std::shared_ptr<ob::FrameSet> frameSet) {
         // Get the depth data frame
         auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>();
         if(depthFrame) {
@@ -267,24 +267,24 @@ std::ostream &operator<<(std::ostream &os, const OBFrameType frameType) {
 
 std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::DeviceInfo> deviceInfo) {
     std::ostringstream oss;
-    oss << std::setfill('0') << std::setw(4) << std::hex << "vid: 0x" << deviceInfo->vid() << ", pid: 0x" << deviceInfo->pid();
-    os << oss.str() << ", sn: " << std::string(deviceInfo->serialNumber()) << ", uid: " << std::string(deviceInfo->uid());
+    oss << std::setfill('0') << std::setw(4) << std::hex << "vid: 0x" << deviceInfo->getVid() << ", pid: 0x" << deviceInfo->getPid();
+    os << oss.str() << ", sn: " << std::string(deviceInfo->getSerialNumber()) << ", uid: " << std::string(deviceInfo->getUid());
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::DepthFrame> frame) {
-    uint16_t *data       = (uint16_t *)frame->getData();
-    auto      width      = frame->getWidth();
-    auto      height     = frame->getHeight();
-    auto      scale      = frame->getValueScale();
-    uint16_t  pixelValue = *(data + width * height / 2 + width / 2);
-    os << "FrameType: " << frame->getType() << ", index: " << frame->getIndex() << ", width: " << width << ", height: " << height << ", format: " << frame->getFormat()
-       << ", timeStampUs: " << frame->getTimeStampUs() << "us, centerDepth: " << (float)pixelValue * scale << "mm";
+    // uint16_t *data       = (uint16_t *)frame->getData();
+    // auto      width      = frame->getWidth();
+    // auto      height     = frame->getHeight();
+    // auto      scale      = frame->getValueScale();
+    // uint16_t  pixelValue = *(data + width * height / 2 + width / 2);
+    // os << "FrameType: " << frame->getType() << ", index: " << frame->getIndex() << ", width: " << width << ", height: " << height << ", format: " << frame->getFormat()
+    //    << ", timeStampUs: " << frame->getTimeStampUs() << "us, centerDepth: " << (float)pixelValue * scale << "mm";
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::VideoFrame> frame) {
-    os << "FrameType: " << frame->getType() << ", index: " << frame->getIndex() << ", width: " << frame->getWidth() << ", height: " << frame->getHeight()
-       << ", format: " << frame->getFormat() << ", timeStampUs: " << frame->getTimeStampUs() << "us";
+    // os << "FrameType: " << frame->getType() << ", index: " << frame->getIndex() << ", width: " << frame->getWidth() << ", height: " << frame->getHeight()
+    //    << ", format: " << frame->getFormat() << ", timeStampUs: " << frame->getTimeStampUs() << "us";
     return os;
 }

@@ -103,5 +103,5 @@ std::ostream &operator<<(std::ostream &os, const OBFrameMetadataType &type) {
  * @return OBStreamType type.
  */
 OBStreamType convertSensorTypeToStreamType(OBSensorType type) {
-    ob_sensor_type_to_stream_type(type);
+    return ob_sensor_type_to_stream_type(type);
 }

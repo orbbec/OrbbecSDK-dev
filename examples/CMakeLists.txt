@@ -22,17 +22,17 @@ add_subdirectory(1.stream.depth)
 add_subdirectory(1.stream.color)
 add_subdirectory(1.stream.imu)
 add_subdirectory(1.stream.infrared)
-add_subdirectory(1.stream.callback)
+# add_subdirectory(1.stream.callback) //to do
 add_subdirectory(1.stream.multi_streams)
 add_subdirectory(2.device.control)
-# add_subdirectory(2.device.hot_plugin)
+add_subdirectory(2.device.hot_plugin)
 # add_subdirectory(2.device.net_device)
-add_subdirectory(3.advanced.common_usages)
+# add_subdirectory(3.advanced.common_usages) //to do
 add_subdirectory(3.advanced.sync_align)
 # add_subdirectory(3.advanced.point_cloud)
 add_subdirectory(3.advanced.post_processing)
 # add_subdirectory(3.advanced.coordinate_convert)
-# add_subdirectory(3.advanced.hdr)
+add_subdirectory(3.advanced.hdr)
 add_subdirectory(3.advanced.preset)
 
 # c examples

@@ -19,8 +19,8 @@ typedef enum {
     RENDER_OVERLAY      // Render the frames in the array as an overlay
 } RenderType;
 
-const std::vector<OBFrameType> frameTypes = { OB_FRAME_VIDEO,  OB_FRAME_IR,   OB_FRAME_COLOR,   OB_FRAME_DEPTH,    OB_FRAME_ACCEL,     OB_FRAME_SET,
-                                              OB_FRAME_POINTS, OB_FRAME_GYRO, OB_FRAME_IR_LEFT, OB_FRAME_IR_RIGHT, OB_FRAME_RAW_PHASE, OB_FRAME_COUNT };
+// const std::vector<OBFrameType> frameTypes = { OB_FRAME_VIDEO,  OB_FRAME_IR,   OB_FRAME_COLOR,   OB_FRAME_DEPTH,    OB_FRAME_ACCEL,     OB_FRAME_SET,
+//                                               OB_FRAME_POINTS, OB_FRAME_GYRO, OB_FRAME_IR_LEFT, OB_FRAME_IR_RIGHT, OB_FRAME_RAW_PHASE, OB_FRAME_COUNT };
 
 class Window {
 public:
@@ -59,15 +59,20 @@ public:
     void renderFrameData(std::shared_ptr<const ob::Frame> currentFrame) {
         auto currentFrametype = currentFrame->getType();
         if(currentFrametype == OB_FRAME_SET) {
-            std::lock_guard<std::mutex>                   lk(srcFramesMtx_);
             std::vector<std::shared_ptr<const ob::Frame>> frames;
             auto                                          frameSet = currentFrame->as<const ob::FrameSet>();
-            for(auto frameType: frameTypes) {
-                auto frame = frameSet->getFrame(frameType);
-                if(frame) {
-                    frames.emplace_back(frame);
+            for(uint32_t index = 0; index < frameSet->getCount(); index++) {
+                auto frame = frameSet->getFrameByIndex(index);
+                if(frame != nullptr) {
+                    frames.push_back(frame);
                 }
             }
+            // for(auto frameType: frameTypes) {
+            //     auto frame = frameSet->getFrame(frameType);
+            //     if(frame) {
+            //         frames.emplace_back(frame);
+            //     }
+            // }
             renderFrameData(frames);
         }
         else {
@@ -80,7 +85,23 @@ public:
     // add frames to the rendering
     inline void renderFrameData(std::vector<std::shared_ptr<const ob::Frame>> frames) {
         std::lock_guard<std::mutex> lk(srcFramesMtx_);
-        srcFrames_ = frames;
+        // multi frameSet.
+        if(frames[0]->getType() == OB_FRAME_SET) {
+            std::vector<std::shared_ptr<const ob::Frame>> multiFrameSetframes;
+            for(int frameSetIndex = 0; frameSetIndex < frames.size(); frameSetIndex++) {
+                auto frameSet = frames[frameSetIndex]->as<ob::FrameSet>();
+                for(uint32_t index = 0; index < frameSet->getCount(); index++) {
+                    auto frame = frameSet->getFrameByIndex(index);
+                    if(frame != nullptr) {
+                        multiFrameSetframes.push_back(frame);
+                    }
+                }
+            }
+            srcFrames_ = multiFrameSetframes;
+        }
+        else { // multi frame.
+            srcFrames_ = frames;
+        }
         srcFramesCv_.notify_one();
     }
 

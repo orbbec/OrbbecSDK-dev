@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 set(OB_INTERFACE_DIR "${CMAKE_CURRENT_LIST_DIR}/interface")
 

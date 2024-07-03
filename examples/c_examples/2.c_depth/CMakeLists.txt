@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 project(ob_depth_c)
 add_executable(ob_depth_c depth.c)

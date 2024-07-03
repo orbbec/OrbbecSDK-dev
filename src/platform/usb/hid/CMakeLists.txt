@@ -1,5 +1,5 @@
-#  minimum required cmake version: 3.1.15 support vs2019
-cmake_minimum_required(VERSION 3.1.15)
+#  minimum required cmake version: 3.5 support vs2019
+cmake_minimum_required(VERSION 3.5)
 
 if(OB_BUILD_WIN32)
     file (GLOB _cpp_files "${CMAKE_CURRENT_LIST_DIR}/*.cpp")

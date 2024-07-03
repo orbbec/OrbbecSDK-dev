@@ -39,10 +39,10 @@ int main() try {
     pipe.start(config);
 
     while(true) {
-        if(_kbhit() && _getch() == ESC) {
+        auto key = ob_sample_utils::waitForKeyPressed(1);
+        if(key == 27) {  // Esc key to exit.
             break;
         }
-
         auto frameSet = pipe.waitForFrameset();
 
         auto accelFrameRaw    = frameSet->getFrame(OB_FRAME_ACCEL);

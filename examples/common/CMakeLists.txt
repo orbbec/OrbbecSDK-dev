@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 project(ob_examples_common)
 
 add_library(ob_examples_common STATIC

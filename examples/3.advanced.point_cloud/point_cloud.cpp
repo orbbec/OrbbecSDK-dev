@@ -57,89 +57,18 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) 
 }
 
 int main(int argc, char **argv) try {
-    ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_WARN);
     // create pipeline
     ob::Pipeline pipeline;
 
-    // Configure which streams to enable or disable for the Pipeline by creating a Config
-    std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-
-    // Turn on D2C alignment, which needs to be turned on when generating RGBD point clouds
-
-    std::shared_ptr<ob::VideoStreamProfile> colorProfile = nullptr;
-    try {
-        // Get all stream profiles of the color camera, including stream resolution, frame rate, and frame format
-        auto colorProfiles = pipeline.getStreamProfileList(OB_SENSOR_COLOR);
-        if(colorProfiles) {
-            auto profile = colorProfiles->getProfile(OB_PROFILE_DEFAULT);
-            colorProfile = profile->as<ob::VideoStreamProfile>();
-        }
-        config->enableStream(colorProfile);
-    }
-    catch(ob::Error &e) {
-        config->setAlignMode(ALIGN_DISABLE);
-        std::cerr << "Current device is not support color sensor!" << std::endl;
-    }
-
-    // Get all stream profiles of the depth camera, including stream resolution, frame rate, and frame format
-    std::shared_ptr<ob::StreamProfileList> depthProfileList;
-    OBAlignMode                            alignMode = ALIGN_DISABLE;
-    if(colorProfile) {
-        // Try find supported depth to color align hardware mode profile
-        depthProfileList = pipeline.getD2CDepthProfileList(colorProfile, ALIGN_D2C_HW_MODE);
-        if(depthProfileList->count() > 0) {
-            alignMode = ALIGN_D2C_HW_MODE;
-        }
-        else {
-            // Try find supported depth to color align software mode profile
-            depthProfileList = pipeline.getD2CDepthProfileList(colorProfile, ALIGN_D2C_SW_MODE);
-            if(depthProfileList->count() > 0) {
-                alignMode = ALIGN_D2C_SW_MODE;
-            }
-        }
-
-        try {
-            // Enable frame synchronization
-            pipeline.enableFrameSync();
-        }
-        catch(ob::Error &e) {
-            std::cerr << "Current device is not support frame sync!" << std::endl;
-        }
-    }
-    else {
-        depthProfileList = pipeline.getStreamProfileList(OB_SENSOR_DEPTH);
-    }
-
-    if(depthProfileList->count() > 0) {
-        std::shared_ptr<ob::StreamProfile> depthProfile;
-        try {
-            // Select the profile with the same frame rate as color.
-            if(colorProfile) {
-                depthProfile = depthProfileList->getVideoStreamProfile(OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FORMAT_ANY, colorProfile->fps());
-            }
-        }
-        catch(...) {
-            depthProfile = nullptr;
-        }
-
-        if(!depthProfile) {
-            // If no matching profile is found, select the default profile.
-            depthProfile = depthProfileList->getProfile(OB_PROFILE_DEFAULT);
-        }
-        config->enableStream(depthProfile);
-    }
-    config->setAlignMode(alignMode);
+    // Enable frame synchronization to ensure depth frame and color frame on output frameset are synchronized.
+    pipeline.enableFrameSync();
 
     // start pipeline with config
-    pipeline.start(config);
+    pipeline.start();
 
     // Create a point cloud Filter object (the device parameters will be obtained inside the Pipeline when the point cloud filter is created, so try to
     // configure the device before creating the filter)
     ob::PointCloudFilter pointCloud;
-
-    // get camera intrinsic and extrinsic parameters form pipeline and set to point cloud filter
-    auto cameraParam = pipeline.getCameraParam();
-    pointCloud.setCameraParam(cameraParam);
 
     // operation prompt
     std::cout << "Press R or r to create RGBD PointCloud and save to ply file! " << std::endl;

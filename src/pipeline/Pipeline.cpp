@@ -13,7 +13,7 @@
 #include <algorithm>
 
 namespace libobsensor {
-Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev),config_(nullptr), streamState_(STREAM_STATE_STOPED),pipelineCallback_(nullptr) {
+Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), config_(nullptr), streamState_(STREAM_STATE_STOPED), pipelineCallback_(nullptr) {
     LOG_DEBUG("Pipeline init ...");
     auto sensorTypeList = device_->getSensorTypeList();
     if(sensorTypeList.empty()) {
@@ -144,9 +144,9 @@ StreamProfileList Pipeline::getEnabledStreamProfileList() {
 
 std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config> cfg) {
     LOG_DEBUG("Check and set config start!");
-    std::shared_ptr<Config> config                = cfg->clone();
+    std::shared_ptr<Config> config = cfg->clone();
     config->disableAllStream();
-    const auto              enabledStreamProfiles = cfg->getEnabledStreamProfileList();
+    const auto enabledStreamProfiles = cfg->getEnabledStreamProfileList();
     for(auto sp: enabledStreamProfiles) {
         auto streamType = sp->getType();
         auto sensorType = utils::mapStreamTypeToSensorType(streamType);
@@ -256,18 +256,18 @@ void Pipeline::onFrameCallback(std::shared_ptr<const Frame> frame) {
 }
 
 void Pipeline::outputFrame(std::shared_ptr<const Frame> frame) {
-    LOG_FREQ_CALC(DEBUG, 5000, "Pipeline streaming... frameset output rate={freq}fps",streamState_);
+    LOG_FREQ_CALC(DEBUG, 5000, "Pipeline streaming... frameset output rate={freq}fps", streamState_);
     if(streamState_ == STREAM_STATE_STREAMING) {
         if(pipelineCallback_ != nullptr) {
             pipelineCallback_(frame);
+            return;
         }
-        else {
-            if(outputFrameQueue_->fulled()) {
-                LOG_WARN_INTVL("Output frameset queue is full, drop oldest frameset!");
-                outputFrameQueue_->dequeue();
-            }
-            outputFrameQueue_->enqueue(std::move(frame));
+
+        if(outputFrameQueue_->fulled()) {
+            LOG_WARN_INTVL("Output frameset queue is full, drop oldest frameset!");
+            outputFrameQueue_->dequeue();
         }
+        outputFrameQueue_->enqueue(std::move(frame));
     }
 }
 

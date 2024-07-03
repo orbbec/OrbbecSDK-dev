@@ -1,6 +1,6 @@
 
 
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 project(ob_point_cloud)
 
 add_executable(ob_point_cloud point_cloud.cpp)

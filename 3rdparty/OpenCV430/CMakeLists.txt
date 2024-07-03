@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 if(OB_BUILD_WIN32)
     set(OPENCV_LIB_PREFIX "")

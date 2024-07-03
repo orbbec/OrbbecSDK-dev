@@ -121,9 +121,11 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid)
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
     if(portInfoList != currentUsbPortInfoList_) {
-        currentUsbPortInfoList_    = portInfoList;
-        DeviceEnumInfoList curList = usbDeviceInfoMatch(portInfoList);
-        return utils::subtract_sets(deviceInfoList_, curList);
+        currentUsbPortInfoList_           = portInfoList;
+        DeviceEnumInfoList curList        = usbDeviceInfoMatch(portInfoList);
+        auto               removedDevList = utils::subtract_sets(deviceInfoList_, curList);
+        deviceInfoList_                   = curList;
+        return removedDevList;
     }
     return {};
 }

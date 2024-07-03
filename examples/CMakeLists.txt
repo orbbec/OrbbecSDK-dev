@@ -1,15 +1,6 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 file(GLOB subdirectories RELATIVE ${CMAKE_CURRENT_LIST_DIR} "*")
-
-# foreach(subdir ${subdirectories})
-#     if(IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/${subdir})
-#         add_subdirectory(${subdir})
-#     endif()
-# endforeach()
-
-# set(OpenCV_DIR "${CMAKE_SOURCE_DIR}/3rdparty/OpenCV430/Windows")
-# find_package(OpenCV REQUIRED)
 
 # dependecies
 add_subdirectory(${OB_3RDPARTY_DIR}/OpenCV430 opencv)

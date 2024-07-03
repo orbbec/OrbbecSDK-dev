@@ -49,17 +49,6 @@ typedef struct ob_filter_config_schema_list_t ob_filter_config_schema_list;
 #define OB_GYRO_SAMPLE_RATE_ANY OB_SAMPLE_RATE_UNKNOWN
 
 /**
- * @brief send data or receive data return status type
- */
-typedef enum {
-    HP_STATUS_OK                      = 0,      /**< success*/
-    HP_STATUS_NO_DEVICE_FOUND         = 1,      /**< No device found*/
-    HP_STATUS_CONTROL_TRANSFER_FAILED = 2,      /**< Transfer failed*/
-    HP_STATUS_UNKNOWN_ERROR           = 0xffff, /**< Unknown error*/
-} OBHPStatusCode,
-    ob_hp_status_code;
-
-/**
  * @brief the permission type of api or property
  */
 typedef enum {

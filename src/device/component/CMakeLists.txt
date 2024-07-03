@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 file(GLOB_RECURSE SOURCE_FILES "*.cpp" EXCLUDE unittest)
 file(GLOB_RECURSE HEADERS_FILES "*.hpp" EXCLUDE unittest)

@@ -69,27 +69,28 @@ void DeviceMonitor::heartbeatAndFetchState() {
         BEGIN_TRY_EXECUTE({ resp = protocol::parseHeartbeatAndStateResp(recvData_.data(), respDataSize); })
         CATCH_EXCEPTION_AND_EXECUTE({ continue; })
 
-        //  Heartbeat state value
-        //  ==================================================
-        //  |-- [0, 31]bit --|-- [32, 62]bit --|-- {63}bit --|
-        //  |----------------|-----------------|-------------|
-        //  |-- ERROR msg  --|-- WARNING msg --| CACHE flag  |
-        //  ==================================================
+        // Heartbeat state value
+        // ==================================================
+        // |--[0, 31]bit --|--[32, 62]bit --|-- [63]bit ---|
+        // |---------------|----------------|-------------|
+        // |--ERROR msg  --|--WARNING msg --| CACHE flag  |
+        // ==================================================
 
-        // 最高位为设备状态信息缓存标记位，如果设备还缓存有其他的状态信息，应立即执行下一次心跳
+        // The highest bit is the device status information cache flag bit. If the device also caches other status information, the next heartbeat should be
+        // executed immediately.
         emitNextHeartBeatImmediately = (bool)(resp->state >> 63);
 
-        // 获取状态码（不包含缓存标记位）
-        devState_ = (resp->state & (~((uint64_t)0x01 << 63)));
+        // Get status code (excluding cache flag 1 bit)
+        devState_ = (OBDeviceState)(resp->state & 0x7FFFFFFFFFFFFFFF);
 
-        // 剩余信息为msg
-        auto msgSize = resp->header.sizeInHalfWords * 2 - 10;  // 除去header.error和state，剩余的为msg
+        // The remaining information is msg
+        auto msgSize = resp->header.sizeInHalfWords * 2 - 10;  // Remove header.error and state, the remaining is msg
 
-        // 固件返回非0状态码时的回调
+        // Callback when firmware returns non-0 status code
         if(0 != devState_ || msgSize) {
             auto msg = std::string(resp->message, msgSize);
 
-            LOG_INFO("Firmware State/Log: state code={0}, msg={1}", devState_, msg);
+            LOG_INFO("Firmware State/Log ({0}):\n{1}", devState_, msg);
             std::lock_guard<std::mutex> lock(stateChangedCallbacksMutex_);
             for(auto &callback: stateChangedCallbacks_) {
                 callback.second(devState_, msg);

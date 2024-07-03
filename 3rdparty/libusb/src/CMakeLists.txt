@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 set(LIBUSB_C libusb/core.c libusb/descriptor.c libusb/hotplug.c libusb/io.c libusb/strerror.c libusb/sync.c)
 if(WIN32)

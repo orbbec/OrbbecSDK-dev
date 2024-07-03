@@ -1,6 +1,6 @@
 
 
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 project(ob_hdr)
 
 add_executable(ob_hdr hdr.cpp)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 add_executable(align_test align_test.cpp ${OB_PROJECT_ROOT_DIR}/src/filter/public_filters/AlignImpl.hpp ../../src/filter/public_filters/AlignImpl.cpp)
 target_include_directories(align_test PRIVATE ${OB_PROJECT_ROOT_DIR}/src/filter/public_filters/)

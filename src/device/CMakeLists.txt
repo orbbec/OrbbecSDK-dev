@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 set(OB_TARGET_DEVICE device)
 add_library(${OB_TARGET_DEVICE} STATIC)

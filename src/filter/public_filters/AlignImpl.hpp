@@ -7,6 +7,13 @@
 #include <memory>
 #include "libobsensor/h/ObTypes.h"
 
+#ifdef _WIN32
+#include <xmmintrin.h>
+#include <smmintrin.h>
+#elif defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
+#include "SSE2NEON.h"
+#endif
+
 namespace libobsensor {
 
 #define EPSILON (1e-6)
@@ -102,15 +109,13 @@ private:
     void clearMatrixCache();
 
     void D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z, int *map = nullptr);
+    void D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z, int *map = nullptr);
     /** SSE speed-ed depth to color alignment with different distortion model */
-    void distortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
-                             int *map = nullptr);
-    void KBDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
-                               int *map = nullptr);
-    void BMDistortedD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
-                               int *map = nullptr);
-    void linearD2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z,
-                          int *map = nullptr);
+	void distortedWithSSE(__m128 &nx, __m128 &ny, const __m128 x2, const __m128 y2, const __m128 r2);
+    void KBDistortedWithSSE(__m128 &nx, __m128 &ny, const __m128 r2);
+    void BMDistortedWithSSE(__m128 &nx, __m128 &ny, const __m128 x2, const __m128 y2, const __m128 r2);
+
+    void transferDepth(const float *pixelx, const float *pixely, const float *depth, const int npts, const int point_index, uint16_t *out_depth, int *map);
 
     /**
      * @brief               Transfer pixels of the source image buffer to the target
@@ -144,6 +149,29 @@ private:
 
     // possible inflection point of the calibrated K6 distortion curve
     float r2_max_loc_;
+
+    // members for SSE
+	__m128 color_cx_;
+    __m128 color_cy_;
+    __m128 color_fx_;
+    __m128 color_fy_;
+    __m128 color_k1_;
+    __m128 color_k2_;
+    __m128 color_k3_;
+    __m128 color_k4_;
+    __m128 color_k5_;
+    __m128 color_k6_;
+    __m128 color_p1_;
+    __m128 color_p2_;
+    __m128 scaled_trans_1_;
+    __m128 scaled_trans_2_;
+    __m128 scaled_trans_3_;
+    __m128 r2_max_loc_sse_;
+
+	const static __m128  POINT_FIVE;
+    const static __m128  TWO;
+    const static __m128i ZERO;
+    const static __m128  ZERO_F;
 };
 
 #endif  // D2C_DEPTH_TO_COLOR_IMPL_H

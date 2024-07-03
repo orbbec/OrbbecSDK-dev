@@ -295,22 +295,21 @@ void AlignImpl::transferDepth(const float *x, const float *y, const float *z, co
         int v_rgb[] = { -1, -1 };
 
         uint16_t cur_depth       = 65535;
-        bool     skip_this_pixel = false;
+        bool     skip_this_pixel = true;
         for(int chl = 0; chl < nchannels; chl++) {
-            int k = i * nchannels + chl;
-            if(0 == static_cast<uint16_t>(z[k])) {
-                skip_this_pixel = true;
+            int k = i + chl * npts;
+            if(z[k] < EPSILON) {
                 break;
             }
 
             u_rgb[chl] = static_cast<int>(x[k] + 0.5), v_rgb[chl] = static_cast<int>(y[k] + 0.5);
             if((u_rgb[chl] < 0) || (u_rgb[chl] >= rgb_intric_.width) || (v_rgb[chl] < 0) || (v_rgb[chl] >= rgb_intric_.height)) {
-                skip_this_pixel = true;
                 break;
             }
 
             if(z[k] < cur_depth)
                 cur_depth = static_cast<uint16_t>(z[k]);
+            skip_this_pixel = false;
         }
 
         if(skip_this_pixel)
@@ -418,20 +417,23 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
 
     for(int v = 0; v < depth_intric_.height; v += 1) {
         for(int u = 0; u < depth_intric_.width; u += 1) {
-            int      i       = v * depth_intric_.width + u;
-            uint16_t depth   = depth_buffer[i];
+            int      depth_idx = v * depth_intric_.width + u;
+            uint16_t depth     = depth_buffer[depth_idx];
+            if(depth < EPSILON)
+                continue;
+            int      coeff_idx = depth_idx * channel;
             int      u_rgb[] = { -1, -1 };
             int      v_rgb[] = { -1, -1 };
-
             float pixelx_f[2], pixely_f[2], dst[2];
 
-            bool skip_this_pixel = false;
+            bool skip_this_pixel = true;
             for(int k = 0; k < channel; k++) {
-                float dst_x = depth * coeff_mat_x[i * channel + k] + scaled_trans_[0];
-                float dst_y = depth * coeff_mat_y[i * channel + k] + scaled_trans_[1];
-                dst[k]      = depth * coeff_mat_z[i * channel + k] + scaled_trans_[2];
+                float dst_x = depth * coeff_mat_x[coeff_idx] + scaled_trans_[0];
+                float dst_y = depth * coeff_mat_y[coeff_idx] + scaled_trans_[1];
+                dst[k]      = depth * coeff_mat_z[coeff_idx] + scaled_trans_[2];
+                coeff_idx++;
 
-                if(fabs(dst[k]) < EPSILON) {
+                if(dst[k] < EPSILON) {
                     break;
                 }
                 else {
@@ -442,8 +444,7 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
                         float pt_ud[2] = { tx, ty };
                         float pt_d[2];
                         float r2_cur = pt_ud[0] * pt_ud[0] + pt_ud[1] * pt_ud[1];
-                        if((r2_max_loc_ != 0) && (r2_cur > r2_max_loc_)) {
-                            skip_this_pixel = true;
+                        if( (OB_DISTORTION_BROWN_CONRADY_K6 == rgb_disto_.model) && (r2_max_loc_ != 0) && (r2_cur > r2_max_loc_)) {
                             break;
                         }
                         addDistortion(rgb_disto_, pt_ud, pt_d);
@@ -453,10 +454,14 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
 
                     pixelx_f[k] = tx * rgb_intric_.fx + rgb_intric_.cx;
                     pixely_f[k] = ty * rgb_intric_.fy + rgb_intric_.cy;
+                    skip_this_pixel = false;
                 }
             }
 
-            transferDepth(pixelx_f, pixely_f, dst, 1, i, out_depth, map);
+            if(skip_this_pixel)
+                continue;
+
+            transferDepth(pixelx_f, pixely_f, dst, 1, depth_idx, out_depth, map);
         }
     }
 }
@@ -464,9 +469,6 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
 void AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y, const float *coeff_mat_z, int *map) {
 
     int channel = (gap_fill_copy_ ? 1 : 2);
-	// we are processing 4 points if set gap-filling to copy
-	// otherwise 2 points (upper-left and bottom-right for each point)
-	int npts = 4 / channel;
 
 #if !defined(ANDROID) && !defined(__ANDROID__)
 #pragma omp parallel for
@@ -486,14 +488,20 @@ void AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, co
 
 			__m128 depth_o, nx, ny;
 			__m128 depth_sse  = _mm_cvtepi32_ps(depth_i[k]);
+			float x[8] = { 0 };
+			float y[8] = { 0 };
+			float z[8] = { 0 };
 
             // center or top-left-and-bottom-right
 			for(int fold = 0; fold < channel; fold++) {
                 //int coeff_idx = half_idx + fold * 2 * channel;
-                int coeff_idx = half_idx + fold * 4;
-                __m128 coeff_sse1 = _mm_loadu_ps(coeff_mat_x + coeff_idx);
-                __m128 coeff_sse2 = _mm_loadu_ps(coeff_mat_y + coeff_idx);
-                __m128 coeff_sse3 = _mm_loadu_ps(coeff_mat_z + coeff_idx);
+                int coeff_idx = half_idx;
+                float  coeff_x[4] = {coeff_mat_x[coeff_idx + fold], coeff_mat_x[coeff_idx + 1*channel + fold], coeff_mat_x[coeff_idx+2*channel+fold], coeff_mat_x[coeff_idx+3*channel+fold]};
+                float  coeff_y[4] = {coeff_mat_y[coeff_idx + fold], coeff_mat_y[coeff_idx + 1*channel + fold], coeff_mat_y[coeff_idx+2*channel+fold], coeff_mat_y[coeff_idx+3*channel+fold]};
+                float  coeff_z[4] = {coeff_mat_z[coeff_idx + fold], coeff_mat_z[coeff_idx + 1*channel + fold], coeff_mat_z[coeff_idx+2*channel+fold], coeff_mat_z[coeff_idx+3*channel+fold]};
+                __m128 coeff_sse1 = _mm_loadu_ps(coeff_x);
+                __m128 coeff_sse2 = _mm_loadu_ps(coeff_y);
+                __m128 coeff_sse3 = _mm_loadu_ps(coeff_z);
 
                 __m128 X = _mm_add_ps(_mm_mul_ps(depth_sse, coeff_sse1), scaled_trans_1_);
                 __m128 Y = _mm_add_ps(_mm_mul_ps(depth_sse, coeff_sse2), scaled_trans_2_);
@@ -527,16 +535,12 @@ void AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, co
 
 				__m128 pixelx = _mm_add_ps(_mm_mul_ps(nx, color_fx_), color_cx_);
                 __m128 pixely = _mm_add_ps(_mm_mul_ps(ny, color_fy_), color_cy_);
-
-                float x[4] = { 0 };
-                float y[4] = { 0 };
-                float z[4] = { 0 };
-                _mm_storeu_ps(x, pixelx);
-                _mm_storeu_ps(y, pixely);
-                _mm_storeu_ps(z, depth_o);
-
-                transferDepth(x, y, z, npts, i + k * 4 + fold * 2, out_depth, map);
+                _mm_storeu_ps(x + fold * 4, pixelx);
+                _mm_storeu_ps(y + fold * 4, pixely);
+                _mm_storeu_ps(z + fold * 4, depth_o);
             }
+
+			transferDepth(x, y, z, 4, i + k * 4, out_depth, map);
         }
     }
 }

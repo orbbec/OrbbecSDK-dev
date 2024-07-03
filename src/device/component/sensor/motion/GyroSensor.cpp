@@ -17,7 +17,7 @@ typedef struct {
 } GyroFullScaleRangeList;
 #pragma pack()
 
-GyroSensor::GyroSensor(const std::shared_ptr<IDevice> &owner, const std::shared_ptr<ISourcePort> &backend, const std::shared_ptr<MotionStreamer> &streamer)
+GyroSensor::GyroSensor(IDevice *owner, const std::shared_ptr<ISourcePort> &backend, const std::shared_ptr<MotionStreamer> &streamer)
     : SensorBase(owner, OB_SENSOR_GYRO, backend), streamer_(streamer) {
     auto propAccessor = owner->getPropertyAccessor();
 

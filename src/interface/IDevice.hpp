@@ -24,14 +24,11 @@ struct DeviceInfo {
     std::string deviceSn_;
 };
 
-typedef std::function<void(OBDeviceState state, const char *message)>                    DeviceStateChangedCallback;
 typedef std::function<void(OBFwUpdateState state, const char *message, uint8_t percent)> DeviceFwUpdateCallback;
 
-class IDevice {
+class IDevice : public std::enable_shared_from_this<IDevice> {
 public:
     virtual ~IDevice() = default;
-
-    virtual void init() = 0;
 
     virtual std::shared_ptr<const DeviceInfo> getInfo() const                              = 0;
     virtual const std::string                &getExtensionInfo(const std::string &infoKey) = 0;
@@ -42,21 +39,13 @@ public:
     virtual DeviceComponentPtr<ISensor>           getSensor(OBSensorType type)                                         = 0;
 
     virtual std::vector<OBSensorType>             getSensorTypeList() const                                 = 0;
+    virtual bool                                  hasAnySensorStreamActivated() const                       = 0;
     virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) = 0;
-
-    virtual void enableHeadBeat(bool enable) = 0;
-
-    virtual OBDeviceState getDeviceState()                                                       = 0;
-    virtual int           registerDeviceStateChangeCallback(DeviceStateChangedCallback callback) = 0;
-    virtual void          unregisterDeviceStateChangeCallback(int index)                         = 0;
 
     virtual void reboot()     = 0;
     virtual void deactivate() = 0;
 
     virtual void updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) = 0;
-
-    // for debug and vendor specific purpose
-    virtual const std::vector<uint8_t> &sendAndReceiveData(const std::vector<uint8_t> &data) = 0;
 };
 
 }  // namespace libobsensor

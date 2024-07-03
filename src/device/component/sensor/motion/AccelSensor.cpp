@@ -17,7 +17,7 @@ typedef struct {
 } AccelFullScaleRangeList;
 #pragma pack()
 
-AccelSensor::AccelSensor(const std::shared_ptr<IDevice> &owner, const std::shared_ptr<ISourcePort> &backend, const std::shared_ptr<MotionStreamer> &streamer)
+AccelSensor::AccelSensor(IDevice *owner, const std::shared_ptr<ISourcePort> &backend, const std::shared_ptr<MotionStreamer> &streamer)
     : SensorBase(owner, OB_SENSOR_ACCEL, backend), streamer_(streamer) {
     auto propAccessor = owner->getPropertyAccessor();
 

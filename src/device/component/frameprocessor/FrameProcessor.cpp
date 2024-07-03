@@ -3,7 +3,7 @@
 #include "shared/utils/Utils.hpp"
 
 namespace libobsensor {
-FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device) {
+FrameProcessorFactory::FrameProcessorFactory(IDevice *device) {
     dylib_ = std::make_shared<dylib>(moduleLoadPath_.c_str(), "ob_frame_processor");
 
     auto dylib = dylib_;
@@ -28,7 +28,7 @@ FrameProcessorFactory::FrameProcessorFactory(std::shared_ptr<IDevice> device) {
 
     if(context_->create_context && !context_->context) {
         ob_device cDevice;
-        cDevice.device    = std::move(device);
+        cDevice.device    = std::move(device->shared_from_this());
         ob_error *error   = nullptr;
         context_->context = context_->create_context(&cDevice, &error);
         if(error) {

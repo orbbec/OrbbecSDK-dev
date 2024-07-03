@@ -1,5 +1,5 @@
 #include "Ethernet.hpp"
-#include "core/command/protocol/HostProtocol.hpp"
+#include "core/command/protocol/Protocol.hpp"
 #include "core/command/VendorCommand.hpp"
 #include "exception/ObException.hpp"
 #include "parameter/Mx6600CalibParamParser.hpp"
@@ -39,8 +39,8 @@ void NetDeviceWatcher::start(deviceChangedCallback callback) {
                             auto netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, info.ip, DEFAULT_CMD_PORT);
                             // auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo, 500, 500);
                             auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
-                            auto            hostProtocol  = std::make_shared<HostProtocol>(netVendorPort);
-                            auto            command       = std::make_shared<VendorCommand>(hostProtocol);
+                            auto            Protocol      = std::make_shared<Protocol>(netVendorPort);
+                            auto            command       = std::make_shared<VendorCommand>(Protocol);
                             OBPropertyValue pidValue{};
                             command->getPropertyValue(OB_PROP_PID_INT, &pidValue);
                             if(pidValue.intValue != PID_GEMINI2XL) {
@@ -91,8 +91,8 @@ SourcePortInfoList Ethernet::queryNetSourcePort() {
             TRY_EXECUTE({
                 auto            netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, info.ip, DEFAULT_CMD_PORT);
                 auto            netVendorPort     = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
-                auto            hostProtocol      = std::make_shared<HostProtocol>(netVendorPort);
-                auto            command           = std::make_shared<VendorCommand>(hostProtocol);
+                auto            Protocol          = std::make_shared<Protocol>(netVendorPort);
+                auto            command           = std::make_shared<VendorCommand>(Protocol);
                 OBPropertyValue pidValue{};
                 BEGIN_TRY_EXECUTE({
                     command->getPropertyValue(OB_PROP_PID_INT, &pidValue);
@@ -125,8 +125,8 @@ std::shared_ptr<NetSourcePortInfo> Ethernet::queryNetVendorPort(std::string addr
     SourcePortInfoList list;
     auto               netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, address, DEFAULT_CMD_PORT);
     auto               netVendorPort     = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
-    auto               hostProtocol      = std::make_shared<HostProtocol>(netVendorPort);
-    auto               command           = std::make_shared<VendorCommand>(hostProtocol);
+    auto               Protocol          = std::make_shared<Protocol>(netVendorPort);
+    auto               command           = std::make_shared<VendorCommand>(Protocol);
     auto               pid               = PID_FEMTO_MEGA;
     TRY_EXECUTE({
         OBPropertyValue pidValue{};
@@ -165,8 +165,8 @@ SourcePortInfoList Ethernet::queryAssociatedNetSourcePort(const std::shared_ptr<
     else {
         auto                                 netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, info->address, info->port);
         auto                                 netVendorPort     = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
-        auto                                 hostProtocol      = std::make_shared<HostProtocol>(netVendorPort);
-        auto                                 command           = std::make_shared<VendorCommand>(hostProtocol);
+        auto                                 Protocol          = std::make_shared<Protocol>(netVendorPort);
+        auto                                 command           = std::make_shared<VendorCommand>(Protocol);
         std::vector<OBNetworkStreamPortInfo> networkStreamPortInfos;
         std::vector<uint8_t>                 dataVec;
         TRY_EXECUTE({

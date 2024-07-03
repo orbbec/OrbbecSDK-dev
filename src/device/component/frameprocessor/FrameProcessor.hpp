@@ -20,7 +20,7 @@ struct FrameProcessorContext {
 
 class FrameProcessorFactory final {
 public:
-    explicit FrameProcessorFactory(std::shared_ptr<IDevice> device);
+    explicit FrameProcessorFactory(IDevice *device);
     ~FrameProcessorFactory() noexcept;
 
     std::shared_ptr<FrameProcessor> createFrameProcessor(OBSensorType sensorType);

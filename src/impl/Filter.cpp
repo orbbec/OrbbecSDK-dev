@@ -1,6 +1,7 @@
+#include "libobsensor/h/Filter.h"
+
 #include "ImplTypes.hpp"
 #include "filter/FilterFactory.hpp"
-#include "libobsensor/h/Filter.h"
 
 #ifdef __cplusplus
 extern "C" {

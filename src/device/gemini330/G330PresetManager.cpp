@@ -9,7 +9,7 @@
 
 namespace libobsensor {
 
-G330PresetManager::G330PresetManager(std::shared_ptr<IDevice> owner) : DeviceComponentBase(owner) {
+G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner) {
     auto comp                = owner->getComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
     auto depthAlgModeManager = comp.as<G330DepthAlgModeManager>();
     auto depthAlgModeList    = depthAlgModeManager->getDepthAlgModeList();

@@ -4,7 +4,7 @@
 
 namespace libobsensor {
 
-G330DepthAlgModeManager::G330DepthAlgModeManager(std::shared_ptr<IDevice> owner) : DeviceComponentBase(owner) {
+G330DepthAlgModeManager::G330DepthAlgModeManager(IDevice *owner) : DeviceComponentBase(owner) {
 
     auto propAccessor = owner->getPropertyAccessor();
 
@@ -40,15 +40,12 @@ void G330DepthAlgModeManager::switchDepthAlgMode(const std::string &modeName) {
 }
 
 void G330DepthAlgModeManager::switchDepthAlgMode(const OBDepthAlgModeChecksum &targetDepthMode) {
-    auto owner          = getOwner();
-    auto sensorTypeList = owner->getSensorTypeList();
-    for(auto &sensorType: sensorTypeList) {
-        auto sensor = owner->getSensor(sensorType);
-        if(sensor->isStreamActivated()) {
-            throw unsupported_operation_exception(utils::string::to_string()
-                                                  << "Cannot switch depth work mode while stream is started. Please stop stream first! sensor "
-                                                  << sensor->getSensorType() << " is streaming");
-        }
+    auto owner        = getOwner();
+    auto propAccessor = owner->getPropertyAccessor();  // get property accessor first to lock resource to avoid start stream at the same time
+
+    if(owner->hasAnySensorStreamActivated()) {
+        throw unsupported_operation_exception(utils::string::to_string()
+                                              << "Cannot switch depth work mode while any stream is started. Please stop all stream first!");
     }
 
     if(strncmp(currentAlgMode_.name, targetDepthMode.name, sizeof(targetDepthMode.name)) == 0) {
@@ -56,7 +53,6 @@ void G330DepthAlgModeManager::switchDepthAlgMode(const OBDepthAlgModeChecksum &t
         return;
     }
 
-    auto propAccessor = owner->getPropertyAccessor();
     propAccessor->setStructureDataProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, targetDepthMode);
     currentAlgMode_ = targetDepthMode;
     LOG_DEBUG("switchDepthWorkMode done with mode: {1}", currentAlgMode_.name, targetDepthMode.name);

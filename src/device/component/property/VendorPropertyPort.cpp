@@ -1,6 +1,6 @@
 #include "VendorPropertyPort.hpp"
 #include "exception/ObException.hpp"
-#include "HostProtocol.hpp"
+#include "protocol/Protocol.hpp"
 
 namespace libobsensor {
 

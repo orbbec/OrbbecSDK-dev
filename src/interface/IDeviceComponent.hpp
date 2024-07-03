@@ -10,7 +10,7 @@ class IDevice;
 class IDeviceComponent {
 public:
     virtual ~IDeviceComponent()                       = default;
-    virtual std::shared_ptr<IDevice> getOwner() const = 0;
+    virtual IDevice *getOwner() const                 = 0;
 };
 
 typedef std::unique_lock<std::recursive_timed_mutex> DeviceComponentLock;
@@ -37,6 +37,11 @@ public:
 
     operator bool() const {
         return ptr_ != nullptr;
+    }
+
+    void reset() {
+        ptr_.reset();
+        lock_ = DeviceComponentLock();
     }
 
     template <typename U> DeviceComponentPtr<U> as() {
@@ -68,5 +73,6 @@ private:
 #define OB_DEV_COMPONENT_ALG_PARAM_MANAGER "AlgorithmParameterManager"
 #define OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER "DepthAlgorithmModeManager"
 #define OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR "DeviceSyncConfigurator"
+#define OB_DEV_COMPONENT_DEVICE_MONITOR "DeviceMonitor"
 
 }  // namespace libobsensor

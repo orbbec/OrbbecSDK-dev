@@ -417,6 +417,20 @@ public:
     }
 
     /**
+     * @brief Enable or disable the device heartbeat.
+     * @brief After enable the device heartbeat, the sdk will start a thread to send heartbeat signal to the device error every 3 seconds.
+     *
+     * @attention If the device does not receive the heartbeat signal for a long time, it will be disconnected and rebooted.
+     *
+     * @param[in] enable Whether to enable the device heartbeat.
+     */
+    void enableHeartbeat(bool enable) const {
+        ob_error *error = nullptr;
+        ob_device_enable_heartbeat(impl_, enable, &error);
+        Error::handle(&error);
+    }
+
+    /**
      * @brief Get the supported multi device sync mode bitmap of the device.
      * @brief For example, if the return value is 0b00001100, it means the device supports @ref OB_MULTI_DEVICE_SYNC_MODE_PRIMARY and @ref
      * OB_MULTI_DEVICE_SYNC_MODE_SECONDARY. User can check the supported mode by the code:

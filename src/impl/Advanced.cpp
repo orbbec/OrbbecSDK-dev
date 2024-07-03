@@ -1,6 +1,6 @@
 #include "libobsensor/h/Advanced.h"
+
 #include "ImplTypes.hpp"
-#include "exception/ObException.hpp"
 
 #include "IDepthAlgModeManager.hpp"
 #include "IPresetManager.hpp"

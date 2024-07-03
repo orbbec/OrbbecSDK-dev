@@ -40,8 +40,8 @@ public:
 };
 
 struct LazySensor {
-    explicit LazySensor(std::weak_ptr<IDevice> device, OBSensorType type) : device(device), sensorType(type) {}
-    std::weak_ptr<IDevice> device;  // sensor is lazy create base on device
+    explicit LazySensor(IDevice *device, OBSensorType type) : device(device), sensorType(type) {}
+    IDevice               *device;  // sensor is lazy create base on device
     OBSensorType           sensorType;
 };
 

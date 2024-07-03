@@ -9,7 +9,7 @@
 
 namespace libobsensor {
 
-G330SensorStreamStrategy::G330SensorStreamStrategy(std::shared_ptr<IDevice> owner) : DeviceComponentBase(owner) {}
+G330SensorStreamStrategy::G330SensorStreamStrategy(IDevice *owner) : DeviceComponentBase(owner) {}
 
 G330SensorStreamStrategy::~G330SensorStreamStrategy() noexcept {}
 

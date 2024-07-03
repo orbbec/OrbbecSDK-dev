@@ -8,7 +8,7 @@ namespace libobsensor {
 
 class G330DepthAlgModeManager : public IDepthAlgModeManager, public DeviceComponentBase {
 public:
-    G330DepthAlgModeManager(std::shared_ptr<IDevice> owner);
+    G330DepthAlgModeManager(IDevice *owner);
     virtual ~G330DepthAlgModeManager() = default;
 
     std::vector<OBDepthAlgModeChecksum> getDepthAlgModeList() const override;

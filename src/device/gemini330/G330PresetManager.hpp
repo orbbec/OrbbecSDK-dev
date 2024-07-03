@@ -55,7 +55,7 @@ struct G330Preset {
 
 class G330PresetManager : public IPresetManager, public DeviceComponentBase {
 public:
-    G330PresetManager(std::shared_ptr<IDevice> owner);
+    G330PresetManager(IDevice *owner);
     ~G330PresetManager() override = default;
 
     void                            loadPreset(const std::string &presetName) override;

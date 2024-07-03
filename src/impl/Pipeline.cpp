@@ -1,4 +1,5 @@
 #include "libobsensor/h/Pipeline.h"
+
 #include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"

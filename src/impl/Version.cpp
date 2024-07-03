@@ -1,7 +1,6 @@
 #include "libobsensor/h/Version.h"
-#include "ImplTypes.hpp"
-#include "exception/ObException.hpp"
 
+#include "ImplTypes.hpp"
 #include "environment/Version.hpp"
 
 #ifdef __cplusplus

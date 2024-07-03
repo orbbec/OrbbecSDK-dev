@@ -1,4 +1,5 @@
 #include "libobsensor/h/Sensor.h"
+
 #include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 

@@ -6,7 +6,7 @@
 
 namespace libobsensor {
 
-PropertyAccessor::PropertyAccessor(std::shared_ptr<IDevice> owner) : DeviceComponentBase(owner) {}
+PropertyAccessor::PropertyAccessor(IDevice *owner) : DeviceComponentBase(owner) {}
 
 void PropertyAccessor::registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyPort> port) {
     properties_[propertyId] = { propertyId, userPerms, intPerms, port };
@@ -339,5 +339,4 @@ const std::vector<OBPropertyItem> &PropertyAccessor::getAvailableProperties(Prop
     static const std::vector<OBPropertyItem> emptyVec;
     return emptyVec;
 }
-
 }  // namespace libobsensor

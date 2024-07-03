@@ -6,6 +6,8 @@
 namespace libobsensor {
 namespace protocol {
 
+// HP mean hardware protocol
+
 #define HP_REQUEST_MAGIC 0x4d47   // MG
 #define HP_RESPONSE_MAGIC 0x4252  // BR
 
@@ -225,8 +227,18 @@ typedef struct {
 
 typedef struct {
     RespHeader header;
-    uint32_t  dataSize;
+    uint32_t   dataSize;
 } GetRawDataResp;
+
+typedef struct {
+    ReqHeader header;
+} HeartbeatAndStateReq;
+
+typedef struct {
+    RespHeader header;
+    uint64_t   state;
+    char       message[1];
+} HeartbeatAndStateResp;
 
 #pragma pack(pop)
 
@@ -245,17 +257,20 @@ FinishGetStructureDataListReq *initFinishGetStructureDataList(uint8_t *dataBuf, 
 GetPropertyReq                *initGetRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t cmd);
 ReadRawData                   *initReadRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t size);
 
+HeartbeatAndStateReq *initHeartbeatAndStateReq(uint8_t *dataBuf);
+
 GetPropertyResp               *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
 SetPropertyResp               *parseSetPropertyResp(uint8_t *dataBuf, uint16_t dataSize);
 GetStructureDataResp          *parseGetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
+int16_t                        getStructureDataSize(const GetStructureDataResp *resp);
 GetStructureDataRespV1_1      *parseGetStructureDataRespV1_1(uint8_t *dataBuf, uint16_t dataSize);
 SetStructureDataRespV1_1      *parseSetStructureDataRespV1_1(uint8_t *dataBuf, uint16_t dataSize);
-int16_t                        getStructureDataSize(const GetStructureDataResp *resp);
+int16_t                        getStructureDataSizeV1_1(const GetStructureDataRespV1_1 *resp);
 SetStructureDataResp          *parseSetStructureDataResp(uint8_t *dataBuf, uint16_t dataSize);
 GetCmdVerDataResp             *parseGetCmdVerDataResp(uint8_t *dataBuf, uint16_t dataSize);
 GetRawDataResp                *parseGetRawDataResp(uint8_t *dataBuf, uint16_t dataSize);
 StartGetStructureDataListResp *parseStartStructureDataListResp(uint8_t *dataBuf, uint16_t dataSize);
-int16_t                        getStructureDataSizeV1_1(const GetStructureDataRespV1_1 *resp);
+HeartbeatAndStateResp         *parseHeartbeatAndStateResp(uint8_t *dataBuf, uint16_t dataSize);
 
 HpStatus execute(const std::shared_ptr<IVendorDataPort> &dataPort, uint8_t *reqData, uint16_t reqDataSize, uint8_t *respData, uint16_t *respDataSize);
 bool     checkStatus(HpStatus stat, bool throwException = true);

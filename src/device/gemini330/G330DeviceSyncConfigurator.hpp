@@ -10,7 +10,7 @@ namespace libobsensor {
 
 class G330DeviceSyncConfigurator : public IDeviceSyncConfigurator, public DeviceComponentBase {
 public:
-    G330DeviceSyncConfigurator(std::shared_ptr<IDevice> owner, const std::vector<OBMultiDeviceSyncMode> &supportedSyncModes);
+    G330DeviceSyncConfigurator(IDevice *owner, const std::vector<OBMultiDeviceSyncMode> &supportedSyncModes);
     virtual ~G330DeviceSyncConfigurator() = default;
 
     OBMultiDeviceSyncConfig      getSyncConfig() override;

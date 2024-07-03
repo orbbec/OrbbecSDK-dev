@@ -6,7 +6,7 @@
 namespace libobsensor {
 class DisparityBasedSensor : public VideoSensor {
 public:
-    DisparityBasedSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
+    DisparityBasedSensor(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
     ~DisparityBasedSensor() override = default;
 
     void updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) override;

@@ -14,7 +14,7 @@ namespace libobsensor {
 
 class G330AlgParamManager : public DeviceComponentBase {
 public:
-    G330AlgParamManager(std::shared_ptr<IDevice> owner);
+    G330AlgParamManager(IDevice *owner);
     virtual ~G330AlgParamManager() = default;
 
     void bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);

@@ -1,11 +1,13 @@
 #include "libobsensor/h/Device.h"
+
 #include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 
 #include "IDeviceEnumerator.hpp"
 #include "IProperty.hpp"
 #include "IDevice.hpp"
-#include "device/component/property/PropertyAccessor.hpp"
+#include "IProperty.hpp"
+#include "IDeviceMonitor.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -302,14 +304,58 @@ void ob_device_update_firmware_from_data(ob_device *device, const uint8_t *data,
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, data, data_size, callback, async, user_data)
 
-// ob_device_state ob_device_get_device_state(ob_device *device, ob_error **error);
-// void            ob_device_set_state_changed_callback(ob_device *device, ob_device_state_callback callback, void *user_data, ob_error **error);
-
 void ob_device_reboot(ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     device->device->reboot();
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device)
+
+ob_device_state ob_device_get_device_state(const ob_device *device, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_DEVICE_MONITOR);
+    auto devMonitor = comp.as<libobsensor::IDeviceMonitor>();
+    return devMonitor->getCurrentDeviceState();
+}
+HANDLE_EXCEPTIONS_AND_RETURN(0, device)
+
+void ob_device_set_state_changed_callback(ob_device *device, ob_device_state_callback callback, void *user_data, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    VALIDATE_NOT_NULL(callback);
+    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_DEVICE_MONITOR);
+    auto devMonitor = comp.as<libobsensor::IDeviceMonitor>();
+    devMonitor->registerStateChangedCallback([callback, user_data](OBDeviceState state, const std::string &message) {  //
+        callback(state, message.c_str(), user_data);
+    });
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device, callback, user_data)
+
+void ob_device_enable_heartbeat(ob_device *device, bool enable, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_DEVICE_MONITOR);
+    auto devMonitor = comp.as<libobsensor::IDeviceMonitor>();
+    if(enable) {
+        devMonitor->enableHeartbeat();
+    }
+    else {
+        devMonitor->disableHeartbeat();
+    }
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device, enable)
+
+void ob_device_send_and_receive_data(ob_device *device, const uint8_t *send_data, uint32_t send_data_size, uint8_t *receive_data, uint32_t *receive_data_size,
+                                     ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    VALIDATE_NOT_NULL(send_data);
+    VALIDATE_NOT_NULL(receive_data);
+    VALIDATE_NOT_NULL(receive_data_size);
+    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_DEVICE_MONITOR);
+    auto devMonitor = comp.as<libobsensor::IDeviceMonitor>();
+    auto dataVec    = std::vector<uint8_t>(send_data, send_data + send_data_size);
+    auto result     = devMonitor->sendAndReceiveData(dataVec, *receive_data_size);
+    std::copy(result.begin(), result.end(), receive_data);
+    *receive_data_size = static_cast<uint32_t>(result.size());
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device, send_data, send_data_size, receive_data, receive_data_size)
 
 ob_device_info *ob_device_get_device_info(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);

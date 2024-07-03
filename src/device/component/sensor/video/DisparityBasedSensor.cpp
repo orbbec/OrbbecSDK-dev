@@ -4,7 +4,7 @@
 #include "frame/Frame.hpp"
 
 namespace libobsensor {
-DisparityBasedSensor::DisparityBasedSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)
+DisparityBasedSensor::DisparityBasedSensor(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)
     : VideoSensor(owner, sensorType, backend) {
     convertProfileAsDisparityBasedProfile();
 }

@@ -14,6 +14,7 @@ target_include_directories(${OB_TARGET_DEVICE} PUBLIC ${OB_PUBLIC_HEADERS_DIR}  
 # common:
 add_subdirectory(context)
 add_subdirectory(devicemanager)
+add_subdirectory(protocol)
 add_subdirectory(component)
 
 # devices support:

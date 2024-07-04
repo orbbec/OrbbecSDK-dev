@@ -86,8 +86,7 @@ void G330SensorStreamStrategy::validatePreset(const std::vector<std::shared_ptr<
 
     {
         auto owner               = getOwner();
-        auto comp                = owner->getComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-        auto depthAlgModeManager = comp.as<G330DepthAlgModeManager>();
+        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
         currentDepthMode         = depthAlgModeManager->getCurrentDepthAlgModeChecksum();
     }
 

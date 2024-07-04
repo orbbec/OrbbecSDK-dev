@@ -69,7 +69,6 @@ public:
 private:
     void        loadCustomPreset(const std::string &presetName, const G330Preset &preset);
     void        storeCustomPreset(std::string presetName);
-    void        restoreCustomPreset(std::string presetName);
     void        loadPresetFromJsonValue(const std::string &presetName, const Json::Value &root);
     Json::Value exportSettingsAsPresetJsonValue(const std::string &presetName);
 

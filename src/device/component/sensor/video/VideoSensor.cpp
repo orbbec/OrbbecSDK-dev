@@ -42,10 +42,9 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
 
     // validate stream profile
     {
-        auto owner = getOwner();
-        auto comp  = owner->getComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
-        if(comp) {
-            auto strategy = comp.as<ISensorStreamStrategy>();
+        auto owner    = getOwner();
+        auto strategy = owner->getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, false);
+        if(strategy) {
             strategy->validateStartStream(sp);
         }
     }

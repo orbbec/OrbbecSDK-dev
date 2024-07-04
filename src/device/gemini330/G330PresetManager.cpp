@@ -10,16 +10,18 @@
 namespace libobsensor {
 
 G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner) {
-    auto comp                = owner->getComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-    auto depthAlgModeManager = comp.as<G330DepthAlgModeManager>();
+    auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
     auto depthAlgModeList    = depthAlgModeManager->getDepthAlgModeList();
 
     availablePresets_.emplace_back("Custom");
     for(auto &mode: depthAlgModeList) {
         availablePresets_.emplace_back(mode.name);
     }
-    currentPreset_ = availablePresets_[1];
-    depthAlgModeManager->switchDepthAlgMode(currentPreset_.c_str());
+
+    if(availablePresets_.size() > 1) {
+        currentPreset_ = availablePresets_[1];
+        depthAlgModeManager->switchDepthAlgMode(currentPreset_.c_str());
+    }
 
     auto onPropertyValueUpdate = [&](uint32_t propertyId, const uint8_t *data, size_t size, PropertyOperationType operationType) {
         utils::unusedVar(data);
@@ -47,7 +49,6 @@ G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner
             case OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT:
             case OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT:
                 currentPreset_ = "Custom";
-                storeCustomPreset("Custom");
                 break;
             default:
                 break;
@@ -63,6 +64,9 @@ void G330PresetManager::loadPreset(const std::string &presetName) {
         throw std::invalid_argument("Invalid preset name: " + presetName);
     }
 
+    // store current preset to as "Custom"
+    storeCustomPreset("Custom");
+
     auto iter = customPresets_.find(presetName);
     if(iter != customPresets_.end()) {
         // Load custom preset
@@ -70,8 +74,8 @@ void G330PresetManager::loadPreset(const std::string &presetName) {
     }
     else {
         auto owner               = getOwner();
-        auto comp                = owner->getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-        auto depthAlgModeManager = comp.as<G330DepthAlgModeManager>();
+        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+
         depthAlgModeManager->switchDepthAlgMode(presetName.c_str());
         currentPreset_ = presetName;
     }
@@ -80,9 +84,8 @@ void G330PresetManager::loadPreset(const std::string &presetName) {
 void G330PresetManager::loadCustomPreset(const std::string &presetName, const G330Preset &preset) {
 
     auto owner = getOwner();
-    auto comp  = owner->getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
     {
-        auto depthAlgModeManager = comp.as<G330DepthAlgModeManager>();
+        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         depthAlgModeManager->switchDepthAlgMode(preset.depthAlgMode.c_str());
     }
 
@@ -126,18 +129,16 @@ void G330PresetManager::loadPresetFromJsonData(const std::string &presetName, co
     if(!reader.parse(std::string((const char *)jsonData.data(), jsonData.size()), root)) {
         throw std::invalid_argument("Invalid JSON data");
     }
-    storeCustomPreset("TempCustom");
+    storeCustomPreset("Custom");
     loadPresetFromJsonValue(presetName, root);
-    restoreCustomPreset("TempCustom");
 }
 
 void G330PresetManager::loadPresetFromJsonFile(const std::string &filePath) {
     Json::Value   root;
     std::ifstream ifs(filePath);
     ifs >> root;
-    storeCustomPreset("TempCustom");
+    storeCustomPreset("Custom");
     loadPresetFromJsonValue(filePath, root);
-    restoreCustomPreset("TempCustom");
 }
 
 void G330PresetManager::loadPresetFromJsonValue(const std::string &presetName, const Json::Value &root) {
@@ -201,8 +202,7 @@ Json::Value G330PresetManager::exportSettingsAsPresetJsonValue(const std::string
 
     {
         auto owner               = getOwner();
-        auto comp                = owner->getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-        auto depthAlgModeManager = comp.as<G330DepthAlgModeManager>();
+        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         preset.depthAlgMode      = depthAlgModeManager->getCurrentDepthAlgModeChecksum().name;
     }
 
@@ -290,34 +290,9 @@ void G330PresetManager::storeCustomPreset(std::string presetName) {
 
     {
         auto owner                              = getOwner();
-        auto comp                               = owner->getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-        auto depthAlgModeManager                = comp.as<G330DepthAlgModeManager>();
+        auto depthAlgModeManager                = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         customPresets_[presetName].depthAlgMode = depthAlgModeManager->getCurrentDepthAlgModeChecksum().name;
     }
-}
-
-void G330PresetManager::restoreCustomPreset(std::string presetName) {
-    customPresets_["Custom"].laserState                 = customPresets_[presetName].laserState;
-    customPresets_["Custom"].laserPowerLevel            = customPresets_[presetName].laserPowerLevel;
-    customPresets_["Custom"].depthAutoExposure          = customPresets_[presetName].depthAutoExposure;
-    customPresets_["Custom"].depthExposureTime          = customPresets_[presetName].depthExposureTime;
-    customPresets_["Custom"].depthGain                  = customPresets_[presetName].depthGain;
-    customPresets_["Custom"].depthBrightness            = customPresets_[presetName].depthBrightness;
-    customPresets_["Custom"].colorAutoExposure          = customPresets_[presetName].colorAutoExposure;
-    customPresets_["Custom"].colorExposureTime          = customPresets_[presetName].colorExposureTime;
-    customPresets_["Custom"].colorAutoWhiteBalance      = customPresets_[presetName].colorAutoWhiteBalance;
-    customPresets_["Custom"].colorWhiteBalance          = customPresets_[presetName].colorWhiteBalance;
-    customPresets_["Custom"].colorGain                  = customPresets_[presetName].colorGain;
-    customPresets_["Custom"].colorContrast              = customPresets_[presetName].colorContrast;
-    customPresets_["Custom"].colorSaturation            = customPresets_[presetName].colorSaturation;
-    customPresets_["Custom"].colorSharpness             = customPresets_[presetName].colorSharpness;
-    customPresets_["Custom"].colorBrightness            = customPresets_[presetName].colorBrightness;
-    customPresets_["Custom"].colorHue                   = customPresets_[presetName].colorHue;
-    customPresets_["Custom"].colorGamma                 = customPresets_[presetName].colorGamma;
-    customPresets_["Custom"].colorBacklightCompensation = customPresets_[presetName].colorBacklightCompensation;
-    customPresets_["Custom"].colorPowerLineFrequency    = customPresets_[presetName].colorPowerLineFrequency;
-
-    customPresets_["Custom"].depthAlgMode = customPresets_[presetName].depthAlgMode;
 }
 
 }  // namespace libobsensor

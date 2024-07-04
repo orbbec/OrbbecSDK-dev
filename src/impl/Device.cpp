@@ -312,8 +312,8 @@ HANDLE_EXCEPTIONS_NO_RETURN(device)
 
 ob_device_state ob_device_get_device_state(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_DEVICE_MONITOR);
-    auto devMonitor = comp.as<libobsensor::IDeviceMonitor>();
+
+    auto devMonitor       = device->device->getComponentT<libobsensor::IDeviceMonitor>(OB_DEV_COMPONENT_DEVICE_MONITOR);
     return devMonitor->getCurrentDeviceState();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, device)
@@ -321,9 +321,8 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, device)
 void ob_device_set_state_changed_callback(ob_device *device, ob_device_state_callback callback, void *user_data, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(callback);
-    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_DEVICE_MONITOR);
-    auto devMonitor = comp.as<libobsensor::IDeviceMonitor>();
-    devMonitor->registerStateChangedCallback([callback, user_data](OBDeviceState state, const std::string &message) {  //
+       auto devMonitor       = device->device->getComponentT<libobsensor::IDeviceMonitor>(OB_DEV_COMPONENT_DEVICE_MONITOR);
+devMonitor->registerStateChangedCallback([callback, user_data](OBDeviceState state, const std::string &message) {  //
         callback(state, message.c_str(), user_data);
     });
 }
@@ -331,8 +330,8 @@ HANDLE_EXCEPTIONS_NO_RETURN(device, callback, user_data)
 
 void ob_device_enable_heartbeat(ob_device *device, bool enable, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_DEVICE_MONITOR);
-    auto devMonitor = comp.as<libobsensor::IDeviceMonitor>();
+    auto devMonitor       = device->device->getComponentT<libobsensor::IDeviceMonitor>(OB_DEV_COMPONENT_DEVICE_MONITOR);
+
     if(enable) {
         devMonitor->enableHeartbeat();
     }
@@ -348,8 +347,8 @@ void ob_device_send_and_receive_data(ob_device *device, const uint8_t *send_data
     VALIDATE_NOT_NULL(send_data);
     VALIDATE_NOT_NULL(receive_data);
     VALIDATE_NOT_NULL(receive_data_size);
-    auto comp       = device->device->getComponent(OB_DEV_COMPONENT_DEVICE_MONITOR);
-    auto devMonitor = comp.as<libobsensor::IDeviceMonitor>();
+
+    auto devMonitor       = device->device->getComponentT<libobsensor::IDeviceMonitor>(OB_DEV_COMPONENT_DEVICE_MONITOR);
     auto dataVec    = std::vector<uint8_t>(send_data, send_data + send_data_size);
     auto result     = devMonitor->sendAndReceiveData(dataVec, *receive_data_size);
     std::copy(result.begin(), result.end(), receive_data);

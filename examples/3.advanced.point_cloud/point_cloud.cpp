@@ -11,7 +11,10 @@
 
 // Save point cloud data to ply
 void savePointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) {
-    int   pointsSize = frame->getDataSize() / sizeof(OBPoint);
+    // get point cloud size (number of points)
+    uint32_t pointsSize = frame->getDataSize() / sizeof(OBPoint);
+
+    // open file for writing, ply format
     FILE *fp         = fopen(fileName.c_str(), "wb+");
     fprintf(fp, "ply\n");
     fprintf(fp, "format ascii 1.0\n");
@@ -21,19 +24,29 @@ void savePointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) {
     fprintf(fp, "property float z\n");
     fprintf(fp, "end_header\n");
 
-    OBPoint *point = (OBPoint *)frame->getData();
-    for(int i = 0; i < pointsSize; i++) {
+    // get point cloud data
+    auto data = frame->getData();
+
+    // cast data to OBPoint pointer
+    auto point = reinterpret_cast<OBPoint *>(data);
+
+    // iterate through all points and save to file
+    for(uint32_t i = 0; i < pointsSize; i++) {
         fprintf(fp, "%.3f %.3f %.3f\n", point->x, point->y, point->z);
         point++;
     }
 
+    // flush and close file
     fflush(fp);
     fclose(fp);
 }
 
 // Save colored point cloud data to ply
 void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) {
-    int   pointsSize = frame->getDataSize() / sizeof(OBColorPoint);
+    // get point cloud size (number of points)
+    uint32_t pointsSize = frame->getDataSize() / sizeof(OBColorPoint);
+
+    // open file for writing, ply format
     FILE *fp         = fopen(fileName.c_str(), "wb+");
     fprintf(fp, "ply\n");
     fprintf(fp, "format ascii 1.0\n");
@@ -46,12 +59,19 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) 
     fprintf(fp, "property uchar blue\n");
     fprintf(fp, "end_header\n");
 
-    OBColorPoint *point = (OBColorPoint *)frame->getData();
-    for(int i = 0; i < pointsSize; i++) {
+    // get point cloud data
+    auto data = frame->getData();
+
+    // cast data to OBColorPoint pointer
+    auto point = reinterpret_cast<OBColorPoint *>(data);
+
+    // iterate through all points and save to file
+    for(uint32_t i = 0; i < pointsSize; i++) {
         fprintf(fp, "%.3f %.3f %.3f %d %d %d\n", point->x, point->y, point->z, (int)point->r, (int)point->g, (int)point->b);
         point++;
     }
 
+    // flush and close file
     fflush(fp);
     fclose(fp);
 }
@@ -61,9 +81,9 @@ int main(void) try {
     // create config to configure the pipeline streams
     auto config = std::make_shared<ob::Config>();
 
-    // enable depth and color streams
+    // enable depth and color streams with specified format
     config->enableVideoStream(OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_Y16);
-    config->enableVideoStream(OB_STREAM_COLOR, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_YUYV);
+    config->enableVideoStream(OB_STREAM_COLOR, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_RGB);
 
     // set frame aggregate output mode to all type frame require. therefor, the output frameset will contain all type of frames
     config->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE);

@@ -1,6 +1,6 @@
-#include "utils_opencv.hpp"
-
 #include <libobsensor/ObSensor.hpp>
+
+#include "utils_opencv.hpp"
 
 int main(void) try {
     // Create a pipeline with default device

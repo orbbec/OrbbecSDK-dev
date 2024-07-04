@@ -1,9 +1,9 @@
 #include <libobsensor/ObSensor.hpp>
 
+#include "utils.hpp"
+
 #include <mutex>
 #include <iostream>
-
-#include "utils.hpp"
 
 void printImuValue(OBFloat3D obFloat3d, uint64_t index, uint64_t timeStampUs, float temperature, OBFrameType type) {
     std::cout << index << std::endl;

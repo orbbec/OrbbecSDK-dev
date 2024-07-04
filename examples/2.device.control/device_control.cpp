@@ -1,12 +1,13 @@
-#include <algorithm>
-#include <thread>
-#include <iostream>
-#include <cstring>
-#include <string>
-#include <iomanip>
-#include <vector>
-#include <sstream>
 #include <libobsensor/ObSensor.hpp>
+
+#include <thread>
+#include <string>
+#include <vector>
+#include <cstring>
+#include <iomanip>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
 
 std::shared_ptr<ob::Device> selectDevice(std::shared_ptr<ob::DeviceList> deviceList);
 std::vector<OBPropertyItem> getPropertyList(std::shared_ptr<ob::Device> device);

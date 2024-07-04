@@ -1,6 +1,6 @@
-#include "utils_opencv.hpp"
-
 #include <libobsensor/ObSensor.h>
+
+#include "utils_opencv.hpp"
 
 #include <mutex>
 #include <thread>

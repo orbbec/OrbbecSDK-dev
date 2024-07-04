@@ -1,8 +1,8 @@
 #include <libobsensor/ObSensor.hpp>
 
-#include <iostream>
-
 #include "utils_opencv.hpp"
+
+#include <iostream>
 
 // get input option
 int getInputOption() {

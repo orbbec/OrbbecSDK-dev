@@ -2,15 +2,14 @@
 
 #include "utils.hpp"
 
-#include <iostream>
-#include <thread>
 #include <map>
-#include <string>
-#include <iostream>
-#include <sstream>
-#include <bitset>
-#include <iomanip>
 #include <mutex>
+#include <thread>
+#include <string>
+#include <bitset>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
 
 #define ESC 27
 

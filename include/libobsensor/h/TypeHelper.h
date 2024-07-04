@@ -70,6 +70,12 @@ OB_EXPORT const char* ob_accel_range_type_to_string(OBAccelFullScaleRange type);
  */
 OB_EXPORT const char* ob_meta_data_type_to_string(OBFrameMetadataType type);
 
+/**
+ * @brief Convert OBStreamType to OBSensorType.
+ *
+ * @param[in] type The sensor type to convert.
+ * @return OBStreamType The corresponding stream type.
+ */
 OB_EXPORT OBStreamType ob_sensor_type_to_stream_type(OBSensorType type);
 
 #ifdef __cplusplus

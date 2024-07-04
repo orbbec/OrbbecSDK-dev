@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 add_subdirectory(src)
 ob_source_group(spdlog::spdlog)

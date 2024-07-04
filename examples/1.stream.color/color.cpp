@@ -29,7 +29,7 @@ int main(void) try {
         // get color frame from frameset.
         auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR);
         // Render colorFrame.
-        app.renderFrameData(colorFrame);
+        app.renderFrame(colorFrame);
     }
 
     // Stop the Pipeline, no frame data will be generated

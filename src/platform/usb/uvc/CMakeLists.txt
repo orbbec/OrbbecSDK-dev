@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 if(OB_BUILD_WIN32)
     target_sources(${OB_TARGET_PAL} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/WmfUvcDevicePort.cpp")

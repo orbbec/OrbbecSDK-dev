@@ -12,16 +12,16 @@ PointCloudFilter::PointCloudFilter(const std::string &name)
     : FilterBase(name),
       pointFormat_(OB_FORMAT_POINT),
       positionDataScale_(1.0f),
-      coordinateSystemCoefficient_(1),
-      isColorDataNormalization_(false){}
+      coordinateSystemType_(OB_LEFT_HAND_COORDINATE_SYSTEM),
+      isColorDataNormalization_(false) {}
 
 PointCloudFilter::~PointCloudFilter() noexcept {}
 
-void PointCloudFilter::reset(){
-    if(formatConverter_){
+void PointCloudFilter::reset() {
+    if(formatConverter_) {
         formatConverter_.reset();
     }
-    if(tablesData_){
+    if(tablesData_) {
         tablesData_.reset();
     }
     FilterBase::reset();
@@ -48,13 +48,8 @@ void PointCloudFilter::updateConfig(std::vector<std::string> &params) {
         int colorDataNormalizationState = std::stoi(params[2]);
         isColorDataNormalization_       = colorDataNormalizationState == 0 ? false : true;
 
-        int csType = std::stoi(params[3]);
-        if(csType == OB_LEFT_HAND_COORDINATE_SYSTEM) {
-            coordinateSystemCoefficient_ = -1;
-        }
-        else if(csType == OB_RIGHT_HAND_COORDINATE_SYSTEM) {
-            coordinateSystemCoefficient_ = 1;
-        }
+        int csType            = std::stoi(params[3]);
+        coordinateSystemType_ = static_cast<OBCoordinateSystemType>(csType);
     }
     catch(const std::exception &e) {
         throw invalid_value_exception("PointCloudFilter config error: " + std::string(e.what()));
@@ -63,10 +58,10 @@ void PointCloudFilter::updateConfig(std::vector<std::string> &params) {
 
 const std::string &PointCloudFilter::getConfigSchema() const {
     // csv format: name，type， min，max，step，default，description
-    static const std::string schema = "pointFormat, int, 0, 1, 1, 0, create point type\n"
-                                      "scale, float, 0.01, 100, 0.01, 1.0, create point type\n"
-                                      "colorDataState, int, 0, 1, 1, 0, color data normal state\n"
-                                      "coordinateSystemType, int, 0, 1, 1, 1, Coordinate system representation type\n";
+    static const std::string schema = "pointFormat, integer, 19, 20, 1, 19, create point type: 19 is OB_FORMAT_POINT; 20 is OB_FORMAT_RGB_POINT\n"
+                                      "coordinateDataScale, float, 0.01, 100, 0.01, 1.0, coordinate data scale\n"
+                                      "colorDataNormalization, integer, 0, 1, 1, 0, color data normal state\n"
+                                      "coordinateSystemType, integer, 0, 1, 1, 1, Coordinate system representation type: 0 is left hand; 1 is right hand\n";
     return schema;
 }
 
@@ -75,7 +70,8 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
     if(frame->is<FrameSet>()) {
         auto frameSet = frame->as<FrameSet>();
         depthFrame    = frameSet->getFrame(OB_FRAME_DEPTH);
-    }else{
+    }
+    else {
         depthFrame = frame;
     }
 
@@ -84,11 +80,11 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
         return nullptr;
     }
 
-    auto depthVideoFrame = depthFrame->as<VideoFrame>();
+    auto depthVideoFrame         = depthFrame->as<VideoFrame>();
     auto depthVideoStreamProfile = depthVideoFrame->getStreamProfile()->as<VideoStreamProfile>();
-    auto depthWidth = depthVideoFrame->getWidth();
-    auto depthHeight = depthVideoFrame->getHeight();
-    auto pointDataSize = depthWidth * depthHeight * sizeof(OBPoint);
+    auto depthWidth              = depthVideoFrame->getWidth();
+    auto depthHeight             = depthVideoFrame->getHeight();
+    auto pointDataSize           = depthWidth * depthHeight * sizeof(OBPoint);
 
     auto pointFrame = FrameFactory::createFrame(OB_FRAME_POINTS, OB_FORMAT_POINT, pointDataSize);
     if(pointFrame == nullptr) {
@@ -98,12 +94,11 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
 
     if(tablesData_ == nullptr) {
         auto tablesSize = depthWidth * depthHeight * 2;
-        tablesData_         = std::shared_ptr<float>(new float[tablesSize], std::default_delete<float[]>());
+        tablesData_     = std::shared_ptr<float>(new float[tablesSize], std::default_delete<float[]>());
 
         OBCameraIntrinsic  depthIntrinsic = depthVideoStreamProfile->getIntrinsic();
-        OBCameraDistortion depthDisto = depthVideoStreamProfile->getDistortion();
-        if(!CoordinateUtil::transformationInitXYTables(depthIntrinsic, depthDisto, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
-                                                       &xyTables_)) {
+        OBCameraDistortion depthDisto     = depthVideoStreamProfile->getDistortion();
+        if(!CoordinateUtil::transformationInitXYTables(depthIntrinsic, depthDisto, reinterpret_cast<float *>(tablesData_.get()), &tablesSize, &xyTables_)) {
             LOG_ERROR_INTVL("Init transformation coordinate tables failed!");
             tablesData_.reset();
             return nullptr;
@@ -136,18 +131,18 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
         return nullptr;
     }
 
-    auto depthVideoFrame = depthFrame->as<VideoFrame>();
-    auto colorVideoFrame = colorFrame->as<VideoFrame>();
-    auto depthVideoStreamProfile = depthVideoFrame->getStreamProfile()->as<VideoStreamProfile>();
-    auto colorVideoStreamProfile = colorVideoFrame->getStreamProfile()->as<VideoStreamProfile>();
-    OBPointCloudDistortionType distortionType = getDistortionType(colorVideoStreamProfile->getDistortion(), depthVideoStreamProfile->getDistortion());
+    auto                       depthVideoFrame         = depthFrame->as<VideoFrame>();
+    auto                       colorVideoFrame         = colorFrame->as<VideoFrame>();
+    auto                       depthVideoStreamProfile = depthVideoFrame->getStreamProfile()->as<VideoStreamProfile>();
+    auto                       colorVideoStreamProfile = colorVideoFrame->getStreamProfile()->as<VideoStreamProfile>();
+    OBPointCloudDistortionType distortionType          = getDistortionType(colorVideoStreamProfile->getDistortion(), depthVideoStreamProfile->getDistortion());
 
-    //How C2D can recognize
-    uint32_t dstHeight       = depthVideoFrame->getHeight();
-    uint32_t dstWidth        = depthVideoFrame->getWidth();
-    auto dstVideoStreamProfile = depthVideoStreamProfile;
-    OBCameraIntrinsic dstIntrinsic = dstVideoStreamProfile->getIntrinsic();
-    OBCameraDistortion dstDistortion = dstVideoStreamProfile->getDistortion();
+    // How C2D can recognize
+    uint32_t           dstHeight             = depthVideoFrame->getHeight();
+    uint32_t           dstWidth              = depthVideoFrame->getWidth();
+    auto               dstVideoStreamProfile = depthVideoStreamProfile;
+    OBCameraIntrinsic  dstIntrinsic          = dstVideoStreamProfile->getIntrinsic();
+    OBCameraDistortion dstDistortion         = dstVideoStreamProfile->getDistortion();
 
     // Create an RGBD point cloud frame
     auto pointFrame = FrameFactory::createFrame(OB_FRAME_POINTS, OB_FORMAT_RGB_POINT, dstWidth * dstHeight * sizeof(OBColorPoint));
@@ -158,11 +153,11 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
 
     // decode rgb frame
     if(formatConverter_ == nullptr) {
-        formatConverter_  = std::make_shared<FormatConverter>("FormatConverter");
+        formatConverter_ = std::make_shared<FormatConverter>("FormatConverter");
     }
 
     std::shared_ptr<const Frame> tarFrame;
-    std::vector<std::string> params;
+    std::vector<std::string>     params;
     switch(colorFrame->getFormat()) {
     case OB_FORMAT_YUYV:
         // FORMAT_YUYV_TO_RGB
@@ -217,7 +212,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     if(tablesData_ == nullptr) {
         uint32_t tablesSize = dstWidth * dstHeight * 2;
         tablesData_         = std::shared_ptr<float>(new float[tablesSize], std::default_delete<float[]>());
-        if(distortionType == OBPointCloudDistortionType::OB_POINT_CLOUD_ZERO_DISTORTION_TYPE){
+        if(distortionType == OBPointCloudDistortionType::OB_POINT_CLOUD_ZERO_DISTORTION_TYPE) {
             memset(&dstDistortion, 0, sizeof(OBCameraDistortion));
         }
 
@@ -227,7 +222,8 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
                 LOG_ERROR_INTVL("Init add distortion transformation coordinate tables failed!");
                 return nullptr;
             }
-        }else{
+        }
+        else {
             if(!CoordinateUtil::transformationInitXYTables(dstIntrinsic, dstDistortion, reinterpret_cast<float *>(tablesData_.get()), &tablesSize,
                                                            &xyTables_)) {
                 LOG_ERROR_INTVL("Init transformation coordinate tables failed!");
@@ -239,14 +235,15 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     if(distortionType == OBPointCloudDistortionType::OB_POINT_CLOUD_ADD_DISTORTION_TYPE) {
         CoordinateUtil::transformationDepthToRGBDPointCloudByUVTables(dstIntrinsic, &xyTables_, depthFrame->getData(), colorData, (void *)pointFrame->getData(),
                                                                       positionDataScale_, coordinateSystemType_, isColorDataNormalization_);
-    }else{
+    }
+    else {
         CoordinateUtil::transformationDepthToRGBDPointCloud(&xyTables_, depthFrame->getData(), colorData, (void *)pointFrame->getData(), positionDataScale_,
                                                             coordinateSystemType_, isColorDataNormalization_);
     }
 
     float depthValueScale = depthVideoFrame->as<DepthFrame>()->getValueScale();
     pointFrame->copyInfoFromOther(depthFrame);
-    //Actual coordinate scaling = Depth scaling factor / Set coordinate scaling factor.
+    // Actual coordinate scaling = Depth scaling factor / Set coordinate scaling factor.
     pointFrame->as<PointsFrame>()->setCoordinateValueScale(depthValueScale / positionDataScale_);
     return pointFrame;
 }
@@ -267,11 +264,10 @@ std::shared_ptr<Frame> PointCloudFilter::processFunc(std::shared_ptr<const Frame
     return pointsFrame;
 }
 
-PointCloudFilter::OBPointCloudDistortionType PointCloudFilter::getDistortionType(OBCameraDistortion colorDistortion,OBCameraDistortion depthDistortion)
-{
+PointCloudFilter::OBPointCloudDistortionType PointCloudFilter::getDistortionType(OBCameraDistortion colorDistortion, OBCameraDistortion depthDistortion) {
     OBPointCloudDistortionType type;
-    OBCameraDistortion zeroDistortion;
-    memset(&zeroDistortion,0,sizeof(OBCameraDistortion));
+    OBCameraDistortion         zeroDistortion;
+    memset(&zeroDistortion, 0, sizeof(OBCameraDistortion));
 
     if(memcmp(&colorDistortion, &depthDistortion, sizeof(OBCameraDistortion)) == 0) {
         type = OBPointCloudDistortionType::OB_POINT_CLOUD_UN_DISTORTION_TYPE;

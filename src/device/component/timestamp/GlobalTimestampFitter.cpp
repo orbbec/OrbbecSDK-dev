@@ -85,12 +85,11 @@ void GlobalTimestampFitter::fittingLoop() {
             devTime.rtt      = sysTsp2Usec - sysTsp1Usec;
             if(devTime.rtt > 10000) {
                 LOG_DEBUG("Get device time rtt is too large! rtt={}", devTime.rtt);
-                throw io_exception(utils::string::to_string() << "Get device time rtt is too large! rtt=" << devTime.rtt);
+                throw std::runtime_error("RTT too large");
             }
             LOG_TRACE("sys={}, dev={}, rtt={}", sysTspUsec, devTime.time, devTime.rtt);
         }
-        catch(const libobsensor_exception &e) {
-            utils::unusedVar(e);
+        catch(...) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             retryCount++;
             continue;

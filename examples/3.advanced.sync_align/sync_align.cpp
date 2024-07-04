@@ -16,11 +16,12 @@
 #include <mutex>
 #include <thread>
 
-static bool  sync  = false;
-static float alpha = 0.5;
+bool    sync       = false;
+float   alpha      = 0.5;
+uint8_t align_mode = 0;
 
 // key press event processing
-void keyEventProcess(Window &app, ob::Pipeline &pipe, std::shared_ptr<ob::Config> config) {
+void handleKeyPress(Window &app, std::shared_ptr<ob::Pipeline> pipe, std::shared_ptr<ob::Config> config) {
     ////Get the key value
     int key = app.waitKey(10);
     if(key == '+' || key == '=') {
@@ -42,66 +43,64 @@ void keyEventProcess(Window &app, ob::Pipeline &pipe, std::shared_ptr<ob::Config
     else if(key == 'F' || key == 'f') {
         // Press the F key to switch synchronization
         sync = !sync;
+
         if(sync) {
-            try {
-                // enable synchronization
-                pipe.enableFrameSync();
-            }
-            catch(...) {
-                std::cerr << "Sync not support" << std::endl;
-            }
+            // enable synchronization
+            pipe->enableFrameSync();
         }
         else {
-            try {
-                // turn off sync
-                pipe.disableFrameSync();
-            }
-            catch(...) {
-                std::cerr << "Sync not support" << std::endl;
-            }
+            // turn off sync
+            pipe->disableFrameSync();
         }
+    }
+    else if(key == 't' || key == 'T') {
+        // Press the T key to switch align mode
+        align_mode = (align_mode + 1) % 2;
     }
 }
 
 int main(void) try {
-    // Create a pipeline with default device
-    ob::Pipeline pipe;
-
     // Configure which streams to enable or disable for the Pipeline by creating a Config
-    std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
+    auto config = std::make_shared<ob::Config>();
 
-    config->enableStream(OB_STREAM_DEPTH);
-    config->enableStream(OB_STREAM_COLOR);
+    // enable depth and color streams with specified format
+    config->enableVideoStream(OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_Y16);
+    config->enableVideoStream(OB_STREAM_COLOR, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_RGB);
 
-    /* Config depth align to color or color align to depth.
-    OBStreamType align_to_stream = OB_STREAM_DEPTH; */
-    // OBStreamType align_to_stream = OB_STREAM_COLOR;
-    auto align = ob::FilterFactory::createFilter("Align");
+    // Create a pipeline with default device to manage stream
+    auto pipe = std::make_shared<ob::Pipeline>();
 
     // Start the pipeline with config
-    pipe.start(config);
+    pipe->start(config);
+
+    // Create a Align Filter to align depth frame to color frame
+    auto depth2colorAlign = std::make_shared<ob::Align>(OB_STREAM_COLOR);
+
+    // create a filter to align color frame to depth frame
+    auto color2depthAlign = std::make_shared<ob::Align>(OB_STREAM_DEPTH);
 
     // Create a window for rendering and set the resolution of the window
     Window app("sync_align", 1280, 720, RENDER_OVERLAY);
 
     while(app) {
-        keyEventProcess(app, pipe, config);
+        handleKeyPress(app, pipe, config);
 
-        auto frameSet = pipe.waitForFrameset(100);
+        auto frameSet = pipe->waitForFrameset(100);
         if(frameSet == nullptr) {
             continue;
         }
-        auto newFrame    = align->process(frameSet);
-        auto newFrameSet = newFrame->as<ob::FrameSet>();
-        auto colorFrame  = newFrameSet->getFrame(OB_FRAME_COLOR);
-        auto depthFrame  = newFrameSet->getFrame(OB_FRAME_DEPTH);
-        if(colorFrame == nullptr || depthFrame == nullptr){
-            continue;
+        std::shared_ptr<ob::Filter> alignFilter = depth2colorAlign;
+        if(align_mode % 2 == 0) {
+            alignFilter = color2depthAlign;
         }
-        app.renderFrameData({ colorFrame, depthFrame });
+
+        auto alignedFrameSet = alignFilter->process(frameSet);
+
+        // render and display
+        app.renderFrame(alignedFrameSet);
     }
     // Stop the Pipeline, no frame data will be generated
-    pipe.stop();
+    pipe->stop();
 
     return 0;
 }

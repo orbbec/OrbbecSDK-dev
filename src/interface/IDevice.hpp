@@ -46,6 +46,15 @@ public:
     virtual void deactivate() = 0;
 
     virtual void updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) = 0;
+
+public:
+    template <typename T> DeviceComponentPtr<T> getComponentT(const std::string &name, bool throwExIfNotFound = true) {
+        auto comp = getComponent(name, throwExIfNotFound);
+        if(comp) {
+            return comp.as<T>();
+        }
+        return nullptr;
+    }
 };
 
 }  // namespace libobsensor

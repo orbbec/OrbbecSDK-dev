@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 
 file(GLOB_RECURSE _cpp_files "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 file(GLOB_RECURSE _head_files "${CMAKE_CURRENT_LIST_DIR}/*.hpp")

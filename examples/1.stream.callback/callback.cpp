@@ -48,7 +48,7 @@ int main(void) try {
         }
 
         // Rendering display
-        app.renderFrameData(renderframeSet);
+        app.renderFrame(renderframeSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

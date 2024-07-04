@@ -44,7 +44,7 @@ int main() try {
         }
 
         // Render a set of frame in the window.
-        app.renderFrameData(frameSet);
+        app.renderFrame(frameSet);
     }
 
     // Stop the pipeline, no frame data will be generated

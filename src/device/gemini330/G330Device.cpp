@@ -410,8 +410,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter", sensorType);
         if(imuCorrecterFilter) {
             // TODO change set param way
-            auto comp                = getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-            auto algParamManager     = comp.as<G330AlgParamManager>();
+            auto algParamManager                = getComponentT<G330AlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
             auto imuCorrectionParams = algParamManager->getIMUCalibrationParam();
             std::dynamic_pointer_cast<IMUCorrecter>(imuCorrecterFilter)->setIMUCalibrationParam(imuCorrectionParams);
             motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, imuCorrecterFilter);  // todo: add data phaser
@@ -424,8 +423,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         // bind params: extrinsics, intrinsics, etc.
         auto accelProfiles = accelSensor->getStreamProfileList();
         {
-            auto comp            = getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-            auto algParamManager = comp.as<G330AlgParamManager>();
+            auto algParamManager = getComponentT<G330AlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
             algParamManager->bindStreamProfileParams(accelProfiles);
         }
 
@@ -441,8 +439,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         // bind params: extrinsics, intrinsics, etc.
         auto gyroProfiles = gyroSensor->getStreamProfileList();
         {
-            auto comp            = getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-            auto algParamManager = comp.as<G330AlgParamManager>();
+            auto algParamManager  = getComponentT<G330AlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
             algParamManager->bindStreamProfileParams(gyroProfiles);
         }
 
@@ -535,8 +532,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         // bind params: extrinsics, intrinsics, etc.
         auto profiles = iter->second.sensor->getStreamProfileList();
         {
-            auto comp            = getComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-            auto algParamManager = comp.as<G330AlgParamManager>();
+            auto algParamManager = getComponentT<G330AlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
             algParamManager->bindStreamProfileParams(profiles);
         }
 
@@ -546,8 +542,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         }
     }
     iter->second.sensor->registerStreamStateChangedCallback([this](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
-        auto comp           = getComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
-        auto streamStrategy = comp.as<ISensorStreamStrategy>();
+        auto streamStrategy           = getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
         if(state == STREAM_STATE_STARTING) {
             streamStrategy->markStreamStarted(sp);
         }

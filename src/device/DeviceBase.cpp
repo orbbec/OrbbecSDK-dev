@@ -91,9 +91,7 @@ DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string 
 }
 
 DeviceComponentPtr<IPropertyAccessor> DeviceBase::getPropertyAccessor() {
-    auto comp          = getComponent(OB_DEV_COMPONENT_PROP_ACCESSOR, true);
-    auto propProcessor = comp.as<IPropertyAccessor>();
-    return std::move(propProcessor);
+    return getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_PROP_ACCESSOR, true);
 }
 
 }  // namespace libobsensor

@@ -297,7 +297,7 @@ public:
      * @param timeout_ms The waiting timeout in milliseconds
      * @return std::shared_ptr<FrameSet> The waiting frameset data
      */
-    std::shared_ptr<FrameSet> waitForFrameset(uint32_t timeoutMs = 100) const {
+    std::shared_ptr<FrameSet> waitForFrameset(uint32_t timeoutMs = 1000) const {
         ob_error *error    = nullptr;
         auto      frameSet = ob_pipeline_wait_for_frameset(impl_, timeoutMs, &error);
         if(frameSet == nullptr) {

@@ -29,14 +29,19 @@ typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
  */
 class Filter : public std::enable_shared_from_this<Filter> {
 protected:
-    ob_filter     *impl_ = nullptr;
-    std::string    name_;
-    FilterCallback callback_;
+    ob_filter                            *impl_ = nullptr;
+    std::string                           name_;
+    FilterCallback                        callback_;
     std::vector<OBFilterConfigSchemaItem> configSchemaVec_;
 
-public:
+protected:
+    /**
+     * @brief Default constructor with nullptr impl, used for derived classes only.
+     */
     Filter() = default;
-    Filter(ob_filter *impl) : impl_(impl) {
+
+    void init(ob_filter *impl) {
+        impl_           = impl;
         ob_error *error = nullptr;
         name_           = ob_filter_get_name(impl_, &error);
         Error::handle(&error);
@@ -54,12 +59,26 @@ public:
         }
     }
 
+public:
+    explicit Filter(ob_filter *impl) {
+        init(impl);
+    }
+
     virtual ~Filter() noexcept {
         if(impl_ != nullptr) {
             ob_error *error = nullptr;
             ob_delete_filter(impl_, &error);
             Error::handle(&error, false);
         }
+    }
+
+    /**
+     * @brief Get the Impl object of the filter.
+     *
+     * @return ob_filter* The Impl object of the filter.
+     */
+    ob_filter *getImpl() const {
+        return impl_;
     }
 
     /**
@@ -239,6 +258,78 @@ public:
         auto      code  = ob_filter_get_vendor_specific_code(name.c_str(), &error);
         Error::handle(&error);
         return code;
+    }
+};
+
+class PointCloudFilter : public Filter {
+public:
+    PointCloudFilter() {
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_filter("PointCloudFilter", &error);
+        Error::handle(&error);
+        init(impl);
+    }
+
+    virtual ~PointCloudFilter() noexcept = default;
+
+    /**
+     * @brief Set the output pointcloud frame format.
+     *
+     * @param type The point cloud frame format: OB_FORMAT_POINT or OB_FORMAT_RGB_POINT
+     */
+    void setCreatePointFormat(OBFormat format) {
+        setConfigValue("pointFormat", static_cast<double>(format));
+    }
+
+    /**
+     * @brief Set the point cloud coordinate data zoom factor.
+     *
+     * @brief Calling this function to set the scale will change the point coordinate scaling factor of the output point cloud frame, The point coordinate
+     * scaling factor for the output point cloud frame can be obtained via @ref PointsFrame::getCoordinateValueScale function.
+     *
+     * @param factor The scale factor.
+     */
+    void setCoordinateDataScaled(float factor) {
+        setConfigValue("coordinateDataScale", factor);
+    }
+
+    /**
+     * @brief Set point cloud color data normalization.
+     * @brief If normalization is required, the output point cloud frame's color data will be normalized to the range [0, 1].
+     *
+     * @attention This function only works for when create point format is set to OB_FORMAT_RGB_POINT.
+     *
+     * @param state Whether normalization is required.
+     */
+    void setColorDataNormalization(bool state) {
+        setConfigValue("colorDataNormalization", state);
+    }
+
+    /**
+     * @brief Set the point cloud coordinate system.
+     *
+     * @param type The coordinate system type.
+     */
+    void setCoordinateSystem(OBCoordinateSystemType type) {
+        setConfigValue("coordinateSystem", static_cast<double>(type));
+    }
+};
+
+class Align : public Filter {
+public:
+    Align(OBStreamType alignToStreamType) {
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_filter("Align", &error);
+        Error::handle(&error);
+        init(impl);
+
+        setConfigValue("AlignType", static_cast<double>(alignToStreamType));
+    }
+
+    virtual ~Align() noexcept = default;
+
+    OBStreamType getAlignToStreamType() {
+        return static_cast<OBStreamType>(getConfigValue("AlignType"));
     }
 };
 

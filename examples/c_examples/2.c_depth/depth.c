@@ -3,15 +3,12 @@
 
 #include <libobsensor/ObSensor.h>
 
-#include "utils.hpp"
-#define ESC 27
-
-
+#include "utils_c.h"
 
 // helper function to check for errors and exit if there is one
 void check_ob_error(ob_error **err) {
     if(*err) {
-        const char* error_message = ob_error_get_message(*err);
+        const char *error_message = ob_error_get_message(*err);
         fprintf(stderr, "Error: %s\n", error_message);
         ob_delete_error(*err);
         exit(-1);
@@ -21,34 +18,40 @@ void check_ob_error(ob_error **err) {
 
 int main(void) {
     // Used to return SDK interface error information.
-    ob_error    *error    = NULL;
+    ob_error *error = NULL;
 
-
-    ob_config *config = ob_create_config(&error);
-    check_ob_error(&error);
-
-    ob_config_enable_stream(config, OB_STREAM_DEPTH, &error);
-    check_ob_error(&error);
-
-    // pipeline, used to open the depth stream after connecting the device.
+    // Create a pipeline object to manage the streams.
     ob_pipeline *pipeline = ob_create_pipeline(&error);
     check_ob_error(&error);
 
-    // Start Pipeline.
-    ob_pipeline_start(pipeline, &error);
+    // Crete a config object to configure the pipeline streams.
+    ob_config *config = ob_create_config(&error);
+    check_ob_error(&error);
+
+    // enable depth stream, set resolution to any, and format to Y16.
+    ob_config_enable_video_stream(config, OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_Y16, &error);
+    check_ob_error(&error);
+
+    // Start Pipeline with the configured streams.
     ob_pipeline_start_with_config(pipeline, config, &error);
     check_ob_error(&error);
 
-    // Wait in a loop, exit after the window receives the "esc" key
-    while(true) {
+    printf("Depth Stream Started. Press 'ESC' key to exit the program.\n");
 
-        if(_kbhit() && _getch() == ESC) {
+    // Wait frameset in a loop, exit when ESC is pressed.
+    while(true) {
+        // Wait for a key press
+        char key = ob_sample_utils_wait_for_key_press(10);
+        if(key == ESC_KEY) {  // ESC key
+            printf("Exiting...\n");
             break;
         }
-        // Wait for up to 100ms for a frameset in blocking mode.
-        const ob_frame *frameset = ob_pipeline_wait_for_frameset(pipeline, 100, &error);
+
+        // Wait for a frameset, timeout after 1000 milliseconds.
+        const ob_frame *frameset = ob_pipeline_wait_for_frameset(pipeline, 1000, &error);
         check_ob_error(&error);
 
+        // If no frameset is available with in the timeout, continue waiting.
         if(frameset == NULL) {
             continue;
         }
@@ -56,33 +59,41 @@ int main(void) {
         // Get the depth frame from frameset。
         const ob_frame *depth_frame = ob_frameset_get_depth_frame(frameset, &error);
         check_ob_error(&error);
-        if(depth_frame != NULL) {
-            // Get index from depth frame.
-            uint64_t index = ob_frame_get_index(depth_frame, &error);
+
+        // Get index from depth frame.
+        uint64_t index = ob_frame_get_index(depth_frame, &error);
+        check_ob_error(&error);
+
+        // print the distance of the center pixel every 30 frames to reduce output
+        if(index % 30 == 0) {
+            // Get the width and height of the depth frame.
+            uint32_t width = ob_video_frame_get_width(depth_frame, &error);
             check_ob_error(&error);
-            // Get format from depth frame.
-            ob_format format = ob_frame_get_format(depth_frame, &error);
+
+            // Get the height of the depth frame.
+            uint32_t height = ob_video_frame_get_height(depth_frame, &error);
             check_ob_error(&error);
 
-            // for Y16 format depth frame, print the distance of the center pixel every 30 frames
-            if(index % 30 == 0 && format == OB_FORMAT_Y16) {
-                uint32_t width = ob_video_frame_get_width(depth_frame, &error);
-                check_ob_error(&error);
-                uint32_t height = ob_video_frame_get_height(depth_frame, &error);
-                check_ob_error(&error);
-                float scale = ob_depth_frame_get_value_scale(depth_frame, &error);
-                check_ob_error(&error);
-                uint16_t *data = (uint16_t *)ob_frame_get_data(depth_frame, &error);
-                check_ob_error(&error);
+            // Get the scale of the depth frame.
+            float scale = ob_depth_frame_get_value_scale(depth_frame, &error);
+            check_ob_error(&error);
 
-                // pixel value multiplied by scale is the actual distance value in millimeters
-                float center_distance = data[width * height / 2 + width / 2] * scale;
+            // Get the data of the depth frame, cast to uint16_t* to access the pixels directly for Y16 format.
+            uint16_t *data = (uint16_t *)ob_frame_get_data(depth_frame, &error);
+            check_ob_error(&error);
 
-                // attention: if the distance is 0, it means that the depth camera cannot detect the object（may be out of detection range）
-                printf("Facing an object %.2f mm away.\n", center_distance);
-            }
-            ob_delete_frame(depth_frame, &error);
+            // pixel value multiplied by scale is the actual distance value in millimeters
+            float center_distance = data[width * height / 2 + width / 2] * scale;
+
+            // attention: if the distance is 0, it means that the depth camera cannot detect the object（may be out of detection range）
+            printf("Facing an object %.2f mm away.\n", center_distance);
         }
+
+        // delete the depth frame
+        ob_delete_frame(depth_frame, &error);
+        check_ob_error(&error);
+
+        // delete the frameset
         ob_delete_frame(frameset, &error);
         check_ob_error(&error);
     };

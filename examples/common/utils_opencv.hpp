@@ -56,51 +56,32 @@ public:
         cv::resizeWindow(name_, width_, height_);
     }
 
-    void renderFrameData(std::shared_ptr<const ob::Frame> currentFrame) {
-        auto currentFrametype = currentFrame->getType();
-        if(currentFrametype == OB_FRAME_SET) {
-            std::vector<std::shared_ptr<const ob::Frame>> frames;
-            auto                                          frameSet = currentFrame->as<const ob::FrameSet>();
-            for(uint32_t index = 0; index < frameSet->getCount(); index++) {
-                auto frame = frameSet->getFrameByIndex(index);
-                if(frame != nullptr) {
-                    frames.push_back(frame);
-                }
-            }
-            // for(auto frameType: frameTypes) {
-            //     auto frame = frameSet->getFrame(frameType);
-            //     if(frame) {
-            //         frames.emplace_back(frame);
-            //     }
-            // }
-            renderFrameData(frames);
-        }
-        else {
-            std::vector<std::shared_ptr<const ob::Frame>> frames;
-            frames.emplace_back(currentFrame);
-            renderFrameData(frames);
-        }
+    void renderFrame(std::shared_ptr<const ob::Frame> currentFrame) {
+        renderFrame(std::vector<std::shared_ptr<const ob::Frame>>{ currentFrame });
     }
 
     // add frames to the rendering
-    inline void renderFrameData(std::vector<std::shared_ptr<const ob::Frame>> frames) {
+    inline void renderFrame(std::vector<std::shared_ptr<const ob::Frame>> frames) {
         std::lock_guard<std::mutex> lk(srcFramesMtx_);
-        // multi frameSet.
-        if(frames[0]->getType() == OB_FRAME_SET) {
-            std::vector<std::shared_ptr<const ob::Frame>> multiFrameSetframes;
-            for(int frameSetIndex = 0; frameSetIndex < frames.size(); frameSetIndex++) {
-                auto frameSet = frames[frameSetIndex]->as<ob::FrameSet>();
-                for(uint32_t index = 0; index < frameSet->getCount(); index++) {
-                    auto frame = frameSet->getFrameByIndex(index);
-                    if(frame != nullptr) {
-                        multiFrameSetframes.push_back(frame);
-                    }
-                }
+        srcFrames_.clear();
+
+        for(auto &frame: frames) {
+            if(frame == nullptr) {
+                continue;
             }
-            srcFrames_ = multiFrameSetframes;
-        }
-        else { // multi frame.
-            srcFrames_ = frames;
+
+            if(!frame->is<ob::FrameSet>()) {
+                // single frame, add to the list
+                srcFrames_.push_back(frame);
+                continue;
+            }
+
+            // FrameSet contains multiple frames
+            auto frameSet = frame->as<ob::FrameSet>();
+            for(uint32_t index = 0; index < frameSet->getCount(); index++) {
+                auto subFrame = frameSet->getFrameByIndex(index);
+                srcFrames_.push_back(subFrame);
+            }
         }
         srcFramesCv_.notify_one();
     }

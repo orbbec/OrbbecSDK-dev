@@ -1,86 +1,67 @@
 #include <libobsensor/ObSensor.hpp>
-
+#include <iostream>
+#include <iomanip>
 #include "utils.hpp"
 
-#include <map>
-#include <mutex>
-#include <thread>
-#include <string>
-#include <bitset>
-#include <sstream>
-#include <iomanip>
-#include <iostream>
+void printDeviceList(const std::string &prompt, std::shared_ptr<ob::DeviceList> deviceList) {
+    auto count = deviceList->getCount();
+    if(count == 0) {
+        return;
+    }
+    std::cout << count << " device(s) " << prompt << ": " << std::endl;
+    for(uint32_t i = 0; i < count; i++) {
+        auto uid          = deviceList->getUid(i);
+        auto vid          = deviceList->getVid(i);
+        auto pid          = deviceList->getPid(i);
+        auto serialNumber = deviceList->getSerialNumber(i);
+        std::cout << " - uid: " << uid << ", vid: 0x" << std::hex << std::setfill('0') << std::setw(4) << vid << ", pid: 0x" << pid
+                  << ", serial number: " << serialNumber << std::endl;
+    }
+    std::cout << std::endl;
+}
 
-#define ESC 27
+void rebootDevices(std::shared_ptr<ob::DeviceList> deviceList) {
+    for(uint32_t i = 0; i < deviceList->getCount(); i++) {
+        // get device from device list
+        auto device = deviceList->getDevice(i);
 
-typedef struct PipelineHolder_t {
-    std::shared_ptr<ob::Pipeline>   pipeline;
-    std::shared_ptr<ob::DeviceInfo> deviceInfo;
-    bool                            isStarted;
-} PipelineHolder;
-
-typedef struct FramePrintInfo_t {
-    uint32_t colorCount;
-    uint32_t irCount;
-    uint32_t irLeftCount;
-    uint32_t irRightCount;
-    uint32_t depthCount;
-} FramePrintInfo;
-
-std::recursive_mutex                                   pipelineHolderMutex;
-std::map<std::string, std::shared_ptr<PipelineHolder>> pipelineHolderMap;
-
-std::ostream &operator<<(std::ostream &os, const OBFrameType frameType);
-std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::DeviceInfo> deviceInfo);
-std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::DepthFrame> frame);
-std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::VideoFrame> frame);
-
-void handleDeviceConnected(std::shared_ptr<ob::DeviceList> connectList);
-void handleDeviceDisconnected(std::shared_ptr<ob::DeviceList> disconnectList);
-void rebootDevices();
-void startStream(std::shared_ptr<PipelineHolder> holder);
-void stopStream(std::shared_ptr<PipelineHolder> holder);
+        // reboot device
+        device->reboot();
+    }
+}
 
 int main(void) try {
-
     // create context
     ob::Context ctx;
 
     // register device callback
-    ctx.setDeviceChangedCallback([](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> addedList) {
-        handleDeviceDisconnected(removedList);
-        handleDeviceConnected(addedList);
+    ctx.setDeviceChangedCallback([](std::shared_ptr<ob::DeviceList> removedList, std::shared_ptr<ob::DeviceList> deviceList) {
+        printDeviceList("added", deviceList);
+        printDeviceList("removed", removedList);
     });
 
-    // handle current connected devices.
-    handleDeviceConnected(ctx.queryDeviceList());
+    // query current device list
+    auto currentList = ctx.queryDeviceList();
+    printDeviceList("connected", currentList);
 
+    std::cout << "Press 'r' to reboot the connected devices to trigger the device disconnect and reconnect event, or manually unplug and plugin the device."
+              << std::endl;
+    std::cout << "Press 'Esc' to exit." << std::endl << std::endl;
+
+    // main loop, wait for key press
     while(true) {
-        if(_kbhit()) {
-            int key = _getch();
-
-            // Press the esc key to exit
-            if(key == ESC) {
-                break;
-            }
-
-            // Press the r key to reboot the device to trigger the device disconnect and reconnect event, or manually unplug and plugin the device.
-            if(key == 'r' || key == 'R') {
-                rebootDevices();
-            }
+        auto key = ob_sample_utils::waitForKeyPressed(100);
+        // Press the esc key to exit
+        if(key == 27) {
+            break;
         }
-        else {
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        }
-    }
+        else if(key == 'r' || key == 'R') {
+            // update device list
+            currentList = ctx.queryDeviceList();
 
-    // Free resource
-    {
-        std::lock_guard<std::recursive_mutex> lk(pipelineHolderMutex);
-        for(auto itr = pipelineHolderMap.begin(); itr != pipelineHolderMap.end(); itr++) {
-            stopStream(itr->second);
+            std::cout << "Rebooting devices..." << std::endl;
+            rebootDevices(currentList);
         }
-        pipelineHolderMap.clear();
     }
 
     return 0;
@@ -88,202 +69,4 @@ int main(void) try {
 catch(ob::Error &e) {
     std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
-}
-
-// Device connection callback
-void handleDeviceConnected(std::shared_ptr<ob::DeviceList> connectList) {
-    std::lock_guard<std::recursive_mutex> lk(pipelineHolderMutex);
-    const auto                            deviceCount = connectList->getCount();
-    std::cout << "Device connect, deviceCount: " << deviceCount << std::endl;
-    for(uint32_t i = 0; i < deviceCount; i++) {
-        auto uid = std::string(connectList->getUid(i));
-        auto itr = pipelineHolderMap.find(uid);
-        if(itr != pipelineHolderMap.end()) {
-            std::cout << "Device connected. device already exit. " << itr->second->deviceInfo << std::endl;
-        }
-        else {
-            auto device     = connectList->getDevice(i);
-            auto deviceInfo = device->getDeviceInfo();
-
-            std::shared_ptr<ob::Pipeline>   pipeline(new ob::Pipeline(device));
-            std::shared_ptr<PipelineHolder> holder(new PipelineHolder{ pipeline, deviceInfo, false });
-            pipelineHolderMap.insert({ uid, holder });
-
-            std::cout << "Device connected. " << deviceInfo << std::endl;
-            startStream(holder);
-        }
-    }
-}
-
-// Device disconnect callback
-void handleDeviceDisconnected(std::shared_ptr<ob::DeviceList> disconnectList) {
-    std::lock_guard<std::recursive_mutex> lk(pipelineHolderMutex);
-    const auto                            deviceCount = disconnectList->getCount();
-    std::cout << "Device disconnect, deviceCount: " << deviceCount << std::endl;
-    for(uint32_t i = 0; i < deviceCount; i++) {
-        auto uid = std::string(disconnectList->getUid(i));
-        auto itr = pipelineHolderMap.find(uid);
-        if(itr != pipelineHolderMap.end()) {
-            auto deviceInfo = itr->second->deviceInfo;
-            stopStream(itr->second);
-            pipelineHolderMap.erase(uid);
-            std::cout << "Device disconnected. " << deviceInfo << std::endl;
-        }
-        else {
-            std::cout << "Device disconnect, unresolve deviceUid: " << uid << std::endl;
-        }
-    }
-}
-
-void rebootDevices() {
-    std::cout << "Reboot devices, count: " << pipelineHolderMap.size() << std::endl;
-    for(auto itr = pipelineHolderMap.begin(); itr != pipelineHolderMap.end(); itr++) {
-        try {
-            std::cout << "Reboot device, " << itr->second->deviceInfo << std::endl;
-            stopStream(itr->second);
-            itr->second->pipeline->getDevice()->reboot();
-        }
-        catch(ob::Error &e) {
-            std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
-                      << std::endl;
-        }
-    }
-}
-
-void startStream(std::shared_ptr<PipelineHolder> holder) {
-    std::shared_ptr<FramePrintInfo> printInfo(new FramePrintInfo{});
-    std::string                     deviceSN = std::string(holder->deviceInfo->getSerialNumber());
-    ob::Pipeline::FrameSetCallback            callback = [deviceSN, printInfo](std::shared_ptr<ob::FrameSet> frameSet) {
-        // Get the depth data frame
-        auto depthFrame = frameSet->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>();
-        if(depthFrame) {
-            printInfo->depthCount++;
-            if(printInfo->depthCount == 15) {
-                std::cout << "=====Depth Frame Info====== SN: " << std::string(deviceSN) << ", " << depthFrame << std::endl;
-                printInfo->depthCount = 0;
-            }
-        }
-
-        // Get the ir data frame
-        auto irFrame = frameSet->getFrame(OB_FRAME_COLOR)->as<ob::IRFrame>();
-        if(irFrame) {
-            printInfo->irCount++;
-            if(printInfo->irCount == 15) {
-                std::cout << "=====IR Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<const ob::VideoFrame>(irFrame)
-                          << std::endl;
-                printInfo->irCount = 0;
-            }
-        }
-
-        // Get the ir left data frame
-        auto irLeftFrame = frameSet->getFrame(OB_FRAME_IR_LEFT);
-        if(irLeftFrame) {
-            printInfo->irLeftCount++;
-            if(printInfo->irLeftCount == 15) {
-                std::cout << "=====IR Left Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<const ob::VideoFrame>(irLeftFrame)
-                          << std::endl;
-                printInfo->irLeftCount = 0;
-            }
-        }
-
-        // Get the ir right data frame
-        auto irRightFrame = frameSet->getFrame(OB_FRAME_IR_RIGHT);
-        if(irRightFrame) {
-            printInfo->irRightCount++;
-            if(printInfo->irRightCount == 15) {
-                std::cout << "=====IR Right Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<const ob::VideoFrame>(irRightFrame)
-                          << std::endl;
-                printInfo->irRightCount = 0;
-            }
-        }
-
-        // Get the color data frame
-        auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR)->as<ob::ColorFrame>();
-        if(colorFrame) {
-            printInfo->colorCount++;
-            if(printInfo->colorCount == 15) {
-                std::cout << "=====Color Frame Info====== SN: " << std::string(deviceSN) << ", " << std::dynamic_pointer_cast<const ob::VideoFrame>(colorFrame)
-                          << std::endl;
-                printInfo->colorCount = 0;
-            }
-        }
-    };
-
-    // Start video stream according to the stream profile of the configuration file.If there is no configuration file, the first stream profile will be used.
-    try {
-        std::cout << "startStream " << holder->deviceInfo << std::endl;
-        holder->pipeline->start(nullptr, callback);
-        holder->isStarted = true;
-    }
-    catch(...) {
-        std::cout << "Pipeline start failed!" << std::endl;
-        holder->isStarted = false;
-    }
-}
-
-void stopStream(std::shared_ptr<PipelineHolder> holder) {
-    if(!holder->isStarted) {
-        return;
-    }
-
-    try {
-        std::cout << "stopStream " << holder->deviceInfo << std::endl;
-        holder->isStarted = false;
-        holder->pipeline->stop();
-    }
-    catch(ob::Error &e) {
-        std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
-    }
-}
-
-std::ostream &operator<<(std::ostream &os, const OBFrameType frameType) {
-    if(frameType == OB_FRAME_COLOR) {
-        os << "OB_FRAME_COLOR";
-    }
-    else if(frameType == OB_FRAME_IR) {
-        os << "OB_FRAME_IR";
-    }
-    else if(frameType == OB_FRAME_IR_LEFT) {
-        os << "OB_FRAME_IR_LEFT";
-    }
-    else if(frameType == OB_FRAME_IR_RIGHT) {
-        os << "OB_FRAME_IR_RIGHT";
-    }
-    else if(frameType == OB_FRAME_DEPTH) {
-        os << "OB_FRAME_DEPTH";
-    }
-    else if(frameType == OB_FRAME_ACCEL) {
-        os << "OB_FRAME_ACCEL";
-    }
-    else if(frameType == OB_FRAME_GYRO) {
-        os << "OB_FRAME_GYRO";
-    }
-    else {
-        os << (int)frameType;
-    }
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::DeviceInfo> deviceInfo) {
-    std::ostringstream oss;
-    oss << std::setfill('0') << std::setw(4) << std::hex << "vid: 0x" << deviceInfo->getVid() << ", pid: 0x" << deviceInfo->getPid();
-    os << oss.str() << ", sn: " << std::string(deviceInfo->getSerialNumber()) << ", uid: " << std::string(deviceInfo->getUid());
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::DepthFrame> frame) {
-    // uint16_t *data       = (uint16_t *)frame->getData();
-    // auto      width      = frame->getWidth();
-    // auto      height     = frame->getHeight();
-    // auto      scale      = frame->getValueScale();
-    // uint16_t  pixelValue = *(data + width * height / 2 + width / 2);
-    // os << "FrameType: " << frame->getType() << ", index: " << frame->getIndex() << ", width: " << width << ", height: " << height << ", format: " << frame->getFormat()
-    //    << ", timeStampUs: " << frame->getTimeStampUs() << "us, centerDepth: " << (float)pixelValue * scale << "mm";
-    return os;
-}
-
-std::ostream &operator<<(std::ostream &os, std::shared_ptr<ob::VideoFrame> frame) {
-    // os << "FrameType: " << frame->getType() << ", index: " << frame->getIndex() << ", width: " << frame->getWidth() << ", height: " << frame->getHeight()
-    //    << ", format: " << frame->getFormat() << ", timeStampUs: " << frame->getTimeStampUs() << "us";
-    return os;
 }

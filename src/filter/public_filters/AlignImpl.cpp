@@ -276,8 +276,12 @@ void fillPixelGap(const int *u, const int *v, const int width, const int height,
         }
     }
     else {
-        for(int vr = v[0]; vr <= v[1]; vr++) {
-            for(int ur = u[0]; ur <= u[1]; ur++) {
+        int v0 = v[0] < 0 ? 0 : v[0];
+        int u0 = u[0] < 0 ? 0 : u[0];
+        int v1 = v[1] < (height - 1) ? v[1] : (height - 1);
+        int u1 = u[1] < (width - 1) ? u[1] : (width - 1);
+        for(int vr = v0; vr <= v1; vr++) {
+            for(int ur = u0; ur <= u1; ur++) {
                 int pos = vr * width + ur;
                 if(buffer[pos] > val)
                     buffer[pos] = val;
@@ -295,29 +299,28 @@ void AlignImpl::transferDepth(const float *x, const float *y, const float *z, co
         int v_rgb[] = { -1, -1 };
 
         uint16_t cur_depth       = 65535;
-        bool     skip_this_pixel = true;
+        bool     depth_invalid = false;
         for(int chl = 0; chl < nchannels; chl++) {
             int k = i + chl * npts;
             if(z[k] < EPSILON) {
+				depth_invalid = true;
                 break;
             }
 
             u_rgb[chl] = static_cast<int>(x[k] + 0.5), v_rgb[chl] = static_cast<int>(y[k] + 0.5);
-            if((u_rgb[chl] < 0) || (u_rgb[chl] >= rgb_intric_.width) || (v_rgb[chl] < 0) || (v_rgb[chl] >= rgb_intric_.height)) {
-                break;
-            }
 
             if(z[k] < cur_depth)
                 cur_depth = static_cast<uint16_t>(z[k]);
-            skip_this_pixel = false;
         }
 
-        if(skip_this_pixel)
+        if(depth_invalid)
             continue;
 
         if(map) {  // coordinates mapping for C2D
-            map[2 * (point_index + i)]     = u_rgb[0];
-            map[2 * (point_index + i) + 1] = v_rgb[0];
+            if((u_rgb[0] >= 0) && (u_rgb[0] < rgb_intric_.width) && (v_rgb[0] >= 0) && (v_rgb[0] < rgb_intric_.height)) {
+				map[2 * (point_index + i)]     = u_rgb[0];
+				map[2 * (point_index + i) + 1] = v_rgb[0];
+            }
         }
 
         if(out_depth) {

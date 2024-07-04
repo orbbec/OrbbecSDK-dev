@@ -260,7 +260,7 @@ public:
     void start(std::shared_ptr<Config> config, FrameSetCallback callback) {
         callback_       = callback;
         ob_error *error = nullptr;
-        ob_pipeline_start_with_callback(impl_, config->getImpl(), &Pipeline::frameSetCallback, this, &error);
+        ob_pipeline_start_with_callback(impl_, config ? config->getImpl():nullptr, &Pipeline::frameSetCallback, this, &error);
         Error::handle(&error);
     }
 

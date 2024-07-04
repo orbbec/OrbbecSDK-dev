@@ -51,7 +51,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(0, list, index)
 
 const char *ob_device_list_get_device_uid(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
-    VALIDATE_UNSIGNED_INDEX(index, list->list.size() - 1);
+    VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
     return info->getUid().c_str();
 }

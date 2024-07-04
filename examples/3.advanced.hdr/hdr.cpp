@@ -1,8 +1,8 @@
-#include "utils_opencv.hpp"
-
 #include <libobsensor/ObSensor.hpp>
 
-int main(int argc, char **argv) try {
+#include "utils_opencv.hpp"
+
+int main(void) try {
     // Create a pipeline with default device
     ob::Pipeline pipe;
 
@@ -25,7 +25,7 @@ int main(int argc, char **argv) try {
 
     // Create HdrMerge post processor to merge depth frames betweens different hdr sequence ids.
     // The HdrMerge also supports processing of infrared frames.
-    ob::HdrMerge hdrMerge;
+    auto hdrMerge = ob::FilterFactory::createFilter("HdrMerge");
 
     // configure and enable Hdr stream
     OBHdrConfig obHdrConfig;
@@ -34,13 +34,12 @@ int main(int argc, char **argv) try {
     obHdrConfig.gain_1     = 24;
     obHdrConfig.exposure_2 = 100;
     obHdrConfig.gain_2     = 16;
-    device->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, &obHdrConfig, sizeof(OBHdrConfig));
+    device->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, reinterpret_cast<uint8_t*>(&obHdrConfig), sizeof(OBHdrConfig));
 
     // Start the pipeline with config
     pipe.start(config);
 
     // Create a window for rendering and set the resolution of the window
-    bool   resizeWindows = true;
     Window app("HDR-Merge", 1280, 720);
     bool   mergeRequired = true;
 
@@ -69,17 +68,17 @@ int main(int argc, char **argv) try {
 
         if(mergeRequired) {
             // Using HdrMerge post processor to merge depth frames
-            auto mergedDepthFrame = hdrMerge.process(depthFrame);
+            auto mergedDepthFrame = hdrMerge->process(depthFrame);
             if(mergedDepthFrame == nullptr) {
                 continue;
             }
 
             // add merged depth frame to render queue
-            app.addToRender(mergedDepthFrame);
+            app.renderFrameData(mergedDepthFrame);
         }
         else {
             // add original depth frame to render queue
-            app.addToRender(depthFrame);
+            app.renderFrameData(depthFrame);
         }
     }
 
@@ -88,7 +87,7 @@ int main(int argc, char **argv) try {
 
     // close hdr merge
     obHdrConfig.enable = false;
-    device->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, &obHdrConfig, sizeof(OBHdrConfig));
+    device->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, reinterpret_cast<uint8_t*>(&obHdrConfig) , sizeof(OBHdrConfig));
 
     return 0;
 }

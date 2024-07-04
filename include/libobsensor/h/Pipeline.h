@@ -270,7 +270,7 @@ OB_EXPORT void ob_config_set_depth_scale_after_align_require(ob_config *config, 
  * @param[in] mode The frame aggregation output mode to be set (default mode is @ref OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION)
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-void ob_config_set_frame_aggregate_output_mode(ob_config *config, ob_frame_aggregate_output_mode mode, ob_error **error);
+OB_EXPORT void ob_config_set_frame_aggregate_output_mode(ob_config *config, ob_frame_aggregate_output_mode mode, ob_error **error);
 
 #ifdef __cplusplus
 }

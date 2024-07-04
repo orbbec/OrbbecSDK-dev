@@ -65,12 +65,17 @@ HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 void ob_pipeline_start_with_callback(ob_pipeline *pipeline, const ob_config *config, ob_frameset_callback callback, void *user_data,
                                      ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
-    VALIDATE_NOT_NULL(config);
-    pipeline->pipeline->start(config->config, [callback, user_data](std::shared_ptr<const libobsensor::Frame> frame) {
-        auto impl   = new ob_frame();
-        impl->frame = std::const_pointer_cast<libobsensor::Frame>(frame);  // todo: it's not safe to cast const to non-const, fix it
-        callback(impl, user_data);
-    });
+    if(!config) {
+        ob_pipeline_start(pipeline, error);
+    }
+    else {
+        VALIDATE_NOT_NULL(config);
+        pipeline->pipeline->start(config->config, [callback, user_data](std::shared_ptr<const libobsensor::Frame> frame) {
+            auto impl   = new ob_frame();
+            impl->frame = std::const_pointer_cast<libobsensor::Frame>(frame);  // todo: it's not safe to cast const to non-const, fix it
+            callback(impl, user_data);
+        });
+    }
 }
 HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 

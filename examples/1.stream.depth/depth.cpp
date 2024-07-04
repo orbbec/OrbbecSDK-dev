@@ -26,13 +26,14 @@ int main(void) try {
             continue;
         }
 
-        // Get the depth frame from frameset.
-        auto frame = frameSet->getFrame(OB_FRAME_DEPTH);
-        if(!frame) {
+        // Get the depth frame raw from frameset.
+        auto depthFrameRaw = frameSet->getFrame(OB_FRAME_DEPTH);
+        if(!depthFrameRaw) {
             continue;
         }
 
-        auto depthFrame = frame->as<ob::DepthFrame>();
+        // Get the depth Frame form depthFrameRaw.
+        auto depthFrame = depthFrameRaw->as<ob::DepthFrame>();
         // for Y16 format depth frame, print the distance of the center pixel every 30 frames.
         if(depthFrame->getIndex() % 30 == 0 && depthFrame->getFormat() == OB_FORMAT_Y16) {
             uint32_t        width  = depthFrame->getWidth();
@@ -47,8 +48,8 @@ int main(void) try {
             std::cout << "Facing an object " << centerDistance << " mm away. " << std::endl;
         }
 
-        // Render frame in the window
-        app.addToRender(depthFrame);
+        // Render frame in the window.
+        app.renderFrameData(depthFrame);
     }
 
     // Stop the pipeline

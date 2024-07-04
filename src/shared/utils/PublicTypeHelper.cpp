@@ -265,7 +265,7 @@ const std::map<OBFrameType, std::string> Frame_Str_Map = { { OB_FRAME_UNKNOWN, "
                                                            { OB_FRAME_IR, "IR" },
                                                            { OB_FRAME_COLOR, "Color" },
                                                            { OB_FRAME_DEPTH, "Depth" },
-                                                           { OB_FRAME_ACCEL, "Acceler" },
+                                                           { OB_FRAME_ACCEL, "Accel" },
                                                            { OB_FRAME_SET, "SET" },
                                                            { OB_FRAME_POINTS, "Points" },
                                                            { OB_FRAME_GYRO, "Gyro" },
@@ -317,6 +317,41 @@ const std::map<OBFormat, std::string> Format_Str_Map = {
     { OB_FORMAT_RGBA, "RGBA" },       { OB_FORMAT_BYR2, "BYR2" },
     { OB_FORMAT_RW16, "RW16" },       { OB_FORMAT_DISP16, "DISP16" },
     { OB_FORMAT_UNKNOWN, "UNKNOWN" },
+};
+
+std::map<OBFrameMetadataType, std::string> Metadata_Str_Map = {
+    {OB_FRAME_METADATA_TYPE_TIMESTAMP, "Timestamp"},
+    {OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, "Sensor Timestamp"},
+    {OB_FRAME_METADATA_TYPE_FRAME_NUMBER, "Frame Number"},
+    {OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE, "Auto Exposure"},
+    {OB_FRAME_METADATA_TYPE_EXPOSURE, "Exposure"},
+    {OB_FRAME_METADATA_TYPE_GAIN, "Gain"},
+    {OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE, "Auto White Balance"},
+    {OB_FRAME_METADATA_TYPE_WHITE_BALANCE, "White Balance"},
+    {OB_FRAME_METADATA_TYPE_BRIGHTNESS, "Brightness"},
+    {OB_FRAME_METADATA_TYPE_CONTRAST, "Contrast"},
+    {OB_FRAME_METADATA_TYPE_SATURATION, "Saturation"},
+    {OB_FRAME_METADATA_TYPE_SHARPNESS, "Sharpness"},
+    {OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION, "Backlight Compensation"},
+    {OB_FRAME_METADATA_TYPE_HUE, "Hue"},
+    {OB_FRAME_METADATA_TYPE_GAMMA, "Gamma"},
+    {OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY, "Power Line Frequency"},
+    {OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION, "Low Light Compensation"},
+    {OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE, "Manual White Balance"},
+    {OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, "Actual Frame Rate"},
+    {OB_FRAME_METADATA_TYPE_FRAME_RATE, "Frame Rate"},
+    {OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, "AE ROI Left"},
+    {OB_FRAME_METADATA_TYPE_AE_ROI_TOP, "AE ROI Top"},
+    {OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, "AE ROI Right"},
+    {OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, "AE ROI Bottom"},
+    {OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY, "Exposure Priority"},
+    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME, "HDR Sequence Name"},
+    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE, "HDR Sequence Size"},
+    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX, "HDR Sequence Index"},
+    {OB_FRAME_METADATA_TYPE_LASER_POWER, "Laser Power"},
+    {OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL, "Laser Power Level"},
+    {OB_FRAME_METADATA_TYPE_LASER_STATUS, "Laser Status"},
+    {OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA, "GPIO Input Data"}
 };
 
 // type to string
@@ -372,6 +407,14 @@ const std::string &AccelFullScaleRangeToStr(OBAccelFullScaleRange type) {
     auto it = AccelFullScaleRange_Str_Map.find(type);
     if(it == AccelFullScaleRange_Str_Map.end()) {
         throw invalid_value_exception("Unregistered acc full scale range name");
+    }
+    return it->second;
+}
+
+const std::string &MetaDataToStr(OBFrameMetadataType type) {
+    auto it = Metadata_Str_Map.find(type);
+    if(it == Metadata_Str_Map.end()) {
+        throw invalid_value_exception("Unregistered metadata name");
     }
     return it->second;
 }

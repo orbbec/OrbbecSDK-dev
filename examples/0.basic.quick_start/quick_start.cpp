@@ -2,8 +2,6 @@
 
 #include "utils_opencv.hpp"
 
-// #include "utils.hpp"
-
 int main(void) try {
 
     // Create a pipeline.
@@ -13,29 +11,36 @@ int main(void) try {
     pipe.start();
 
     // Create a window for rendering, and set the size of the window.
-    Window app("MultiStream", 1280, 720, RENDER_ONE_ROW);
+    Window app("quick start", 1280, 720, RENDER_ONE_ROW);
 
     while(app) {
         // Wait for frameSet from the pipeline.
         auto frameSet = pipe.waitForFrameset();
+
         if(frameSet == nullptr) {
             continue;
         }
 
-        // Get the depth from the frameSet.
-        auto dFrame = frameSet->getFrame(OB_FRAME_DEPTH);
-        // Get the color from the frameSet.
-        auto cFrame = frameSet->getFrame(OB_FRAME_COLOR);
-        if(dFrame && cFrame) {
-            auto depthFrame = dFrame->as<ob::DepthFrame>();
-            auto colorFrame = cFrame->as<ob::ColorFrame>();
+        // Get the depth raw from the frameSet.
+        auto depthFrameRaw  = frameSet->getFrame(OB_FRAME_DEPTH);
+        // Get the color raw from the frameSet.
+        auto colorFrameRaw  = frameSet->getFrame(OB_FRAME_COLOR);
 
-            if((depthFrame != nullptr) && (colorFrame != nullptr)){
-                // Render frame in the window.
-                app.addToRender({colorFrame, depthFrame});
-            }
+        if(depthFrameRaw == nullptr || colorFrameRaw == nullptr){
+            continue;
         }
 
+        // Get the depth frame from the depth raw.
+        auto depthFrame = depthFrameRaw->as<ob::DepthFrame>();
+        // Get the color frame from the color raw.
+        auto colorFrame = colorFrameRaw->as<ob::ColorFrame>();
+
+        if(depthFrame == nullptr || colorFrame == nullptr){
+            continue;
+        }
+
+        // Rendering display
+        app.renderFrameData({colorFrame, depthFrame});
     }
 
     // Stop the Pipeline, no frame data will be generated

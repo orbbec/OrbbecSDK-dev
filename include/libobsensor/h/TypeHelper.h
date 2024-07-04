@@ -62,6 +62,16 @@ OB_EXPORT const char* ob_gyro_range_type_to_string(OBGyroFullScaleRange type);
  */
 OB_EXPORT const char* ob_accel_range_type_to_string(OBAccelFullScaleRange type);
 
+/**
+ * @brief Convert OBFrameMetadataType to " char* " type and then return.
+ *
+ * @param[in] type OBFrameMetadataType type.
+ * @return OBFrameMetadataType of "char*" type.
+ */
+OB_EXPORT const char* ob_meta_data_type_to_string(OBFrameMetadataType type);
+
+OB_EXPORT OBStreamType ob_sensor_type_to_stream_type(OBSensorType type);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,116 +1,74 @@
 #include <libobsensor/ObSensor.hpp>
 
-#include <iostream>
-#include <mutex>
 #include "utils.hpp"
 
-#define ESC 27
-std::mutex printerMutex;
+#include <mutex>
+#include <iostream>
+
+void printImuValue(OBFloat3D obFloat3d, uint64_t index, uint64_t timeStampUs, float temperature, OBFrameType type) {
+    std::cout << index << std::endl;
+    std::cout << type << " Frame: \n\r{\n\r"
+              << "  tsp = " << timeStampUs << "\n\r"
+              << "  temperature = " << temperature << "\n\r"
+              << "  " << type << ".x = " << obFloat3d.x << " m/s^2"
+              << "\n\r"
+              << "  " << type << ".y = " << obFloat3d.y << " m/s^2"
+              << "\n\r"
+              << "  " << type << ".z = " << obFloat3d.z << " m/s^2"
+              << "\n\r"
+              << "}\n\r" << std::endl;
+}
 int main() try {
-    // Print the SDK version number, the SDK version number is divided into major version number, minor version number and revision number.
-    // std::cout << "SDK version: " << ob::Version::getMajor() << "." << ob::Version::getMinor() << "." << ob::Version::getPatch() << std::endl;
 
-    // Create a Context.
-    ob::Context ctx;
+    // Create a pipeline with default device.
+    ob::Pipeline pipe;
 
-    // Query the list of connected devices.
-    auto devList = ctx.queryDeviceList();
+    // Configure which streams to enable or disable for the Pipeline by creating a Config.
+    std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
-    if(devList->getCount() == 0) {
-        std::cerr << "Device not found!" << std::endl;
-        return -1;
-    }
+    // Enable Accel stream.
+    config->enableAccelStream();
 
-    // Create a device, 0 represents the index of the first device.
-    auto                        dev         = devList->getDevice(0);
-    std::shared_ptr<ob::Sensor> gyroSensor  = nullptr;
-    std::shared_ptr<ob::Sensor> accelSensor = nullptr;
-    try {
-        // Get Gyroscope Sensor.
-        gyroSensor = dev->getSensorList()->getSensor(OB_SENSOR_GYRO);
-        if(gyroSensor) {
-            // Get configuration list.
-            auto profiles = gyroSensor->getStreamProfileList();
-            // Select the first profile to open stream.
-            auto profile = profiles->getProfile(OB_PROFILE_DEFAULT);
-            gyroSensor->start(profile, [](std::shared_ptr<ob::Frame> frame) {
-                std::unique_lock<std::mutex> lk(printerMutex);
-                auto                         timeStamp = frame->getTimeStampUs();
-                auto                         index     = frame->getIndex();
-                auto                         gyroFrame = frame->as<ob::GyroFrame>();
-                if(gyroFrame != nullptr && (index % 50) == 2) {  //( timeStamp % 500 ) < 2: Reduce printing frequency.
-                    auto value = gyroFrame->getValue();
-                    std::cout << "Gyro Frame: \n\r{\n\r"
-                              << "  tsp = " << timeStamp << "\n\r"
-                              << "  temperature = " << gyroFrame->getTemperature() << "\n\r"
-                              << "  gyro.x = " << value.x << " rad/s"
-                              << "\n\r"
-                              << "  gyro.y = " << value.y << " rad/s"
-                              << "\n\r"
-                              << "  gyro.z = " << value.z << " rad/s"
-                              << "\n\r"
-                              << "}\n\r" << std::endl;
-                }
-            });
-        }
-        else {
-            std::cout << "get gyro Sensor failed ! " << std::endl;
-        }
-    }
-    catch(ob::Error &e) {
-        std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
-        std::cerr << "current device is not support imu!" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    // Enable Gyro stream.
+    config->enableGyroStream();
 
-    // Get Acceleration Sensor.
-    accelSensor = dev->getSensorList()->getSensor(OB_SENSOR_ACCEL);
-    if(accelSensor) {
-        // Get configuration list.
-        auto profiles = accelSensor->getStreamProfileList();
-        // Select the first profile to open stream.
-        auto profile = profiles->getProfile(OB_PROFILE_DEFAULT);
-        accelSensor->start(profile, [](std::shared_ptr<ob::Frame> frame) {
-            std::unique_lock<std::mutex> lk(printerMutex);
-            auto                         timeStamp  = frame->getTimeStampUs();
-            auto                         index      = frame->getIndex();
-            auto                         accelFrame = frame->as<ob::AccelFrame>();
-            if(accelFrame != nullptr && (index % 50) == 0) {
-                auto value = accelFrame->getValue();
-                std::cout << "Accel Frame: \n\r{\n\r"
-                          << "  tsp = " << timeStamp << "\n\r"
-                          << "  temperature = " << accelFrame->getTemperature() << "\n\r"
-                          << "  accel.x = " << value.x << " m/s^2"
-                          << "\n\r"
-                          << "  accel.y = " << value.y << " m/s^2"
-                          << "\n\r"
-                          << "  accel.z = " << value.z << " m/s^2"
-                          << "\n\r"
-                          << "}\n\r" << std::endl;
-            }
-        });
-    }
-    else {
-        std::cout << "Get Accel Sensor failed ! " << std::endl;
-    }
+    // Only FrameSet that contains all types of data frames will be output.
+    config->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE);
 
-    std::cout << "Press ESC to exit! " << std::endl;
+    // Start the pipeline with config.
+    pipe.start(config);
 
     while(true) {
-        // Get the value of the pressed key, if it is the ESC key, exit the program.
-        int key = _getch();
-        if(key == ESC)
+        if(_kbhit() && _getch() == ESC) {
             break;
+        }
+
+        auto frameSet = pipe.waitForFrameset();
+
+        auto accelFrameRaw    = frameSet->getFrame(OB_FRAME_ACCEL);
+        auto accelFrame       = accelFrameRaw->as<ob::AccelFrame>();
+        auto accelIndex       = accelFrame->getIndex();
+        auto accelTimeStampUs = accelFrame->getTimeStampUs();
+        auto accelTemperature = accelFrame->getTemperature();
+        auto accelType        = accelFrame->getType();
+        if(accelIndex % 50 == 0) {  // print information every 50 frames.
+            auto accelValue = accelFrame->getValue();
+            printImuValue(accelValue, accelIndex, accelTimeStampUs, accelTemperature, accelType);
+        }
+
+        auto gyroFrameRaw    = frameSet->getFrame(OB_FRAME_GYRO);
+        auto gyroFrame       = gyroFrameRaw->as<ob::GyroFrame>();
+        auto gyroIndex       = gyroFrame->getIndex();
+        auto gyrotimeStampUs = gyroFrame->getTimeStampUs();
+        auto gyroTemperature = gyroFrame->getTemperature();
+        auto gyroType        = gyroFrame->getType();
+        if(gyroIndex % 50 == 0) {  // print information every 50 frames.
+            auto gyroValue = gyroFrame->getValue();
+            printImuValue(gyroValue, gyroIndex, gyrotimeStampUs, gyroTemperature, gyroType);
+        }
     }
 
-    if(gyroSensor) {
-        // Stop gyro sensor.
-        gyroSensor->stop();
-    }
-    if(accelSensor) {
-        // Stop acc sensor.
-        accelSensor->stop();
-    }
+    pipe.stop();
 
     return 0;
 }

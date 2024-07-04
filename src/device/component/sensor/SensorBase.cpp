@@ -5,7 +5,7 @@
 #include "stream/StreamProfile.hpp"
 
 namespace libobsensor {
-SensorBase::SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)
+SensorBase::SensorBase(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)
     : owner_(owner),
       sensorType_(sensorType),
       backend_(backend),
@@ -30,12 +30,8 @@ OBSensorType SensorBase::getSensorType() const {
     return sensorType_;
 }
 
-std::shared_ptr<IDevice> SensorBase::getOwner() const {
-    auto device = owner_.lock();
-    if(!device) {
-        throw camera_disconnected_exception("Device is disconnected or has been destroyed");
-    }
-    return owner_.lock();
+IDevice *SensorBase::getOwner() const {
+    return owner_;
 }
 
 std::shared_ptr<ISourcePort> SensorBase::getBackend() const {

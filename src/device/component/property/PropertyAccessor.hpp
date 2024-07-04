@@ -18,7 +18,7 @@ class PropertyAccessor : public IPropertyAccessor, public DeviceComponentBase {
     };
 
 public:
-    PropertyAccessor(std::shared_ptr<IDevice> owner);
+    PropertyAccessor(IDevice *owner);
     ~PropertyAccessor() noexcept = default;
 
     void registerAccessCallback(PropertyAccessCallback callback) override;

@@ -21,7 +21,7 @@ void G330TimestampCalculator::calculate(std::shared_ptr<Frame> frame) {
 #if 0
     auto globalTsp = frame->getGlobalTimeStampUsec();
     auto frameType = frame->getType();
-    LOG_INFO("Frame {} timestamp: {} us, Global timestamp: {} us", frameType, frameTsp, globalTsp);
+    LOG_DEBUG("Frame {} timestamp: {} us, Global timestamp: {} us", frameType, frameTsp, globalTsp);
 #endif
 }
 

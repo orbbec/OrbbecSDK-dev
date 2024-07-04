@@ -219,6 +219,16 @@ OB_EXPORT void ob_device_update_firmware_from_data(ob_device *device, const uint
                                                    bool async, void *user_data, ob_error **error);
 
 /**
+ * @brief Device reboot
+ * @attention The device will be disconnected and reconnected. After the device is disconnected, the interface access to the device handle may be abnormal.
+ * Please use the ob_delete_device interface to delete the handle directly. After the device is reconnected, it can be obtained again.
+ *
+ * @param[in] device Device object
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_device_reboot(ob_device *device, ob_error **error);
+
+/**
  * @brief Get the current device status.
  *
  * @param[in] device The device object.
@@ -239,14 +249,32 @@ OB_EXPORT ob_device_state ob_device_get_device_state(const ob_device *device, ob
 OB_EXPORT void ob_device_set_state_changed_callback(ob_device *device, ob_device_state_callback callback, void *user_data, ob_error **error);
 
 /**
- * @brief Device reboot
- * @attention The device will be disconnected and reconnected. After the device is disconnected, the interface access to the device handle may be abnormal.
- * Please use the ob_delete_device interface to delete the handle directly. After the device is reconnected, it can be obtained again.
+ * @brief Enable or disable the device heartbeat.
+ * @brief After enable the device heartbeat, the sdk will start a thread to send heartbeat signal to the device error every 3 seconds.
+
+ * @attention If the device does not receive the heartbeat signal for a long time, it will be disconnected and rebooted.
  *
- * @param[in] device Device object
- * @param[out] error Pointer to an error object that will be set if an error occurs.
+ * @param[in] device The device object.
+ * @param[in] enable Whether to enable the device heartbeat.
+ * @param error Pointer to an error object that will be set if an error occurs.
  */
-OB_EXPORT void ob_device_reboot(ob_device *device, ob_error **error);
+OB_EXPORT void ob_device_enable_heartbeat(ob_device *device, bool enable, ob_error **error);
+
+/**
+ * @brief Send data to the device and receive data from the device.
+ * @brief This is a factory and debug function, which can be used to send and receive data from the device. The data format is secret and belongs to the device
+ * vendor.
+ *
+ * @param[in] device The device object.
+ * @param[in] send_data The data to be sent to the device.
+ * @param[in] send_data_size The size of the data to be sent to the device.
+ * @param[out] receive_data The data received from the device.
+ * @param[in, out] receive_data_size Pass in the expected size of the receive data, and return the actual size of the received data.
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return OB_EXPORT
+ */
+OB_EXPORT void ob_device_send_and_receive_data(ob_device *device, const uint8_t *send_data, uint32_t send_data_size, uint8_t *receive_data,
+                                               uint32_t *receive_data_size, ob_error **error);
 
 /**
  * @brief Get device information.

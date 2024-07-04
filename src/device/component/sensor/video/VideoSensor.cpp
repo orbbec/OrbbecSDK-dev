@@ -11,8 +11,7 @@
 
 namespace libobsensor {
 
-VideoSensor::VideoSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)
-    : SensorBase(owner, sensorType, backend) {
+VideoSensor::VideoSensor(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend) : SensorBase(owner, sensorType, backend) {
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
     if(!vsPort) {
         throw invalid_value_exception("Backend is not a valid IVideoStreamPort");

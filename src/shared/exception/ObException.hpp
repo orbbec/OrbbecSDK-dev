@@ -105,33 +105,33 @@ public:
         statement;                   \
     }
 
-#define CATCH_EXCEPTION                                                                                                                                        \
-    catch(const libobsensor::libobsensor_exception &e) {                                                                                                       \
-        LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n - where: {0}({1}):{2}\n - where: {3}\n - type: {4}", __FILENAME__, __LINE__,        \
-                 __FUNCTION__, e.get_message(), typeid(e).name());                                                                                             \
-    }                                                                                                                                                          \
-    catch(const std::exception &e) {                                                                                                                           \
-        LOG_WARN("Execute failure! A std::exception has occurred!\n - where: {0}({1}):{2}\n - where: {2}\n - type: {3}", __FILENAME__, __LINE__, __FUNCTION__, \
-                 e.what(), typeid(e).name());                                                                                                                  \
-    }                                                                                                                                                          \
-    catch(...) {                                                                                                                                               \
-        LOG_WARN("Execute failure! An unknown exception has occurred!\n - where: {0}({1}):{2}", __FILENAME__, __LINE__, __FUNCTION__);                         \
+#define CATCH_EXCEPTION                                                                                                                                      \
+    catch(const libobsensor::libobsensor_exception &e) {                                                                                                     \
+        LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n - where: {0}({1}):{2}\n - msg: {3}\n - type: {4}", __FILENAME__, __LINE__,        \
+                 __FUNCTION__, e.get_message(), typeid(e).name());                                                                                           \
+    }                                                                                                                                                        \
+    catch(const std::exception &e) {                                                                                                                         \
+        LOG_WARN("Execute failure! A std::exception has occurred!\n - where: {0}({1}):{2}\n - msg: {3}\n - type: {4}", __FILENAME__, __LINE__, __FUNCTION__, \
+                 e.what(), typeid(e).name());                                                                                                                \
+    }                                                                                                                                                        \
+    catch(...) {                                                                                                                                             \
+        LOG_WARN("Execute failure! An unknown exception has occurred!\n - where: {0}({1}):{2}", __FILENAME__, __LINE__, __FUNCTION__);                       \
     }
 
-#define CATCH_EXCEPTION_AND_EXECUTE(statement)                                                                                                                 \
-    catch(const libobsensor::libobsensor_exception &e) {                                                                                                       \
-        LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n - where: {0}({1}):{2}\n - where: {3}\n - type: {4}", __FILENAME__, __LINE__,        \
-                 __FUNCTION__, e.get_message(), typeid(e).name());                                                                                             \
-        statement;                                                                                                                                             \
-    }                                                                                                                                                          \
-    catch(const std::exception &e) {                                                                                                                           \
-        LOG_WARN("Execute failure! A std::exception has occurred!\n - where: {0}({1}):{2}\n - where: {3}\n - type: {3}", __FILENAME__, __LINE__, __FUNCTION__, \
-                 e.what(), typeid(e).name());                                                                                                                  \
-        statement;                                                                                                                                             \
-    }                                                                                                                                                          \
-    catch(...) {                                                                                                                                               \
-        LOG_WARN("Execute failure! An unknown exception has occurred!\n - where: {0}({1}):{2}", __FILENAME__, __LINE__, __FUNCTION__);                         \
-        statement;                                                                                                                                             \
+#define CATCH_EXCEPTION_AND_EXECUTE(statement)                                                                                                               \
+    catch(const libobsensor::libobsensor_exception &e) {                                                                                                     \
+        LOG_WARN("Execute failure! A libobsensor_exception has occurred!\n - where: {0}({1}):{2}\n - msg: {3}\n - type: {4}", __FILENAME__, __LINE__,        \
+                 __FUNCTION__, e.get_message(), typeid(e).name());                                                                                           \
+        statement;                                                                                                                                           \
+    }                                                                                                                                                        \
+    catch(const std::exception &e) {                                                                                                                         \
+        LOG_WARN("Execute failure! A std::exception has occurred!\n - where: {0}({1}):{2}\n - msg: {3}\n - type: {4}", __FILENAME__, __LINE__, __FUNCTION__, \
+                 e.what(), typeid(e).name());                                                                                                                \
+        statement;                                                                                                                                           \
+    }                                                                                                                                                        \
+    catch(...) {                                                                                                                                             \
+        LOG_WARN("Execute failure! An unknown exception has occurred!\n - where: {0}({1}):{2}", __FILENAME__, __LINE__, __FUNCTION__);                       \
+        statement;                                                                                                                                           \
     }
 
 #define CATCH_EXCEPTION_AND_LOG(severity, ...) CATCH_EXCEPTION_AND_EXECUTE(LOG_##severity(__VA_ARGS__))

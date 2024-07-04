@@ -27,7 +27,7 @@ typedef struct {
 typedef struct {
     uint64_t time;  ///< sdk->dev: timing time; dev->sdk: current time of device;
     uint64_t rtt;   ///< sdk->dev: command round-trip time, the device sets the time to time+rtt/2 after receiving it; dev->sdk: reserved; unit: ms
-} DEVICE_TIME, OBDeviceTime, ob_device_time;
+} OBDeviceTime, ob_device_time;
 
 /**
  *@brief Post-process parameters after depth align to color

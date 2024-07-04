@@ -1,4 +1,4 @@
-#include "HostProtocol.hpp"
+#include "Protocol.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 
@@ -210,6 +210,23 @@ SetStructureDataReq *initSetStructureDataReq(uint8_t *dataBuf, uint32_t property
     req->propertyId             = propertyId;
     memcpy(req->data, data, dataSize);
     return req;
+}
+
+HeartbeatAndStateReq *initHeartbeatAndStateReq(uint8_t *dataBuf) {
+    auto *req                   = reinterpret_cast<HeartbeatAndStateReq *>(dataBuf);
+    req->header.magic           = HP_REQUEST_MAGIC;
+    req->header.sizeInHalfWords = 0;
+    req->header.opcode          = OPCODE_HEARTBEAT_AND_STATE;
+    req->header.requestId       = generateRequestId();
+    return req;
+}
+
+HeartbeatAndStateResp *parseHeartbeatAndStateResp(uint8_t *dataBuf, uint16_t dataSize) {
+    auto *resp = reinterpret_cast<HeartbeatAndStateResp *>(dataBuf);
+    if(dataSize < sizeof(HeartbeatAndStateResp) - 1) {  // may dose'nt have any msg, subtract 1 byte to avoid overflow
+        throw io_exception("device response with wrong data size");
+    }
+    return resp;
 }
 
 GetPropertyResp *parseGetPropertyResp(uint8_t *dataBuf, uint16_t dataSize) {

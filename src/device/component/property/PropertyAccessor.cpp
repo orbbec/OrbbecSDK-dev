@@ -6,7 +6,7 @@
 
 namespace libobsensor {
 
-PropertyAccessor::PropertyAccessor(std::shared_ptr<IDevice> owner) : DeviceComponentBase(owner) {}
+PropertyAccessor::PropertyAccessor(IDevice *owner) : DeviceComponentBase(owner) {}
 
 void PropertyAccessor::registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyPort> port) {
     properties_[propertyId] = { propertyId, userPerms, intPerms, port };
@@ -303,7 +303,7 @@ void PropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std:
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
                   [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_WRITE); });
     LOG_DEBUG("Property {} set structure data successfully over proto v1.1", propId);
-};
+}
 
 const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -339,5 +339,4 @@ const std::vector<OBPropertyItem> &PropertyAccessor::getAvailableProperties(Prop
     static const std::vector<OBPropertyItem> emptyVec;
     return emptyVec;
 }
-
 }  // namespace libobsensor

@@ -16,11 +16,11 @@ class SensorBase : public ISensor, public std::enable_shared_from_this<SensorBas
     static constexpr int DefaultMaxRecoveryCount         = 3;
 
 public:
-    SensorBase(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
+    SensorBase(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
     ~SensorBase() noexcept override;
 
     OBSensorType                 getSensorType() const override;
-    std::shared_ptr<IDevice>     getOwner() const override;
+    IDevice                     *getOwner() const override;
     std::shared_ptr<ISourcePort> getBackend() const;
 
     OBStreamState getStreamState() const override;
@@ -46,8 +46,8 @@ protected:
     virtual void watchStreamState();
 
 protected:
+    IDevice                     *owner_;
     const OBSensorType           sensorType_;
-    std::weak_ptr<IDevice>       owner_;
     std::shared_ptr<ISourcePort> backend_;
 
     StreamProfileList streamProfileList_;

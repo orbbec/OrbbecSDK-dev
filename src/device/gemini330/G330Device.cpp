@@ -2,13 +2,10 @@
 #include "ObPal.hpp"
 #include "InternalTypes.hpp"
 #include "DevicePids.hpp"
+#include "utils/Utils.hpp"
 
 #include "environment/EnvConfig.hpp"
 #include "stream/StreamProfileFactory.hpp"
-#include "property/VendorPropertyPort.hpp"
-#include "property/UvcPropertyPort.hpp"
-#include "property/FilterPropertyPort.hpp"
-#include "property/PropertyAccessor.hpp"
 #include "sensor/video/VideoSensor.hpp"
 #include "sensor/video/DisparityBasedSensor.hpp"
 #include "sensor/motion/MotionStreamer.hpp"
@@ -16,14 +13,25 @@
 #include "sensor/motion/GyroSensor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
 #include "filter/FilterFactory.hpp"
-#include "utils/Utils.hpp"
-#include "metadata/FrameMetadataParserContainer.hpp"
-#include "filter/public_filters/FormatConverterProcess.hpp"
 
+#include "filter/public_filters/FormatConverterProcess.hpp"
+#include "filter/public_filters/FrameIMUCorrectProcess.hpp"
+
+#include "component/metadata/FrameMetadataParserContainer.hpp"
+#include "component/timestamp/GlobalTimestampFitter.hpp"
+#include "component/property/VendorPropertyPort.hpp"
+#include "component/property/UvcPropertyPort.hpp"
+#include "component/property/FilterPropertyPort.hpp"
+#include "component/property/PropertyAccessor.hpp"
+#include "component/monitor/DeviceMonitor.hpp"
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
 #include "G330TimestampCalculator.hpp"
-#include "filter/public_filters/FrameIMUCorrectProcess.hpp"
+#include "G330DeviceSyncConfigurator.hpp"
+#include "G330AlgParamManager.hpp"
+#include "G330PresetManager.hpp"
+#include "G330DepthAlgModeManager.hpp"
+#include "G330SensorStreamStrategy.hpp"
 
 #include <algorithm>
 
@@ -32,9 +40,7 @@ namespace libobsensor {
 constexpr uint8_t INTERFACE_COLOR = 4;
 constexpr uint8_t INTERFACE_DEPTH = 0;
 
-G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info) {}
-
-void G330Device::init() {
+G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info) {
     initSensors();
     initProperties();
     initFrameMetadataParserContainer();
@@ -60,19 +66,7 @@ void G330Device::init() {
         }
     }
 
-    auto algParamManager = std::make_shared<G330AlgParamManager>(DeviceBase::shared_from_this());
-    registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
-
-    auto depthAlgModeManager = std::make_shared<G330DepthAlgModeManager>(DeviceBase::shared_from_this());
-    registerComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER, depthAlgModeManager);
-
-    auto presetManager = std::make_shared<G330PresetManager>(DeviceBase::shared_from_this());
-    registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
-
-    auto sensorStreamStrategy = std::make_shared<G330SensorStreamStrategy>(DeviceBase::shared_from_this());
-    registerComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, sensorStreamStrategy);
-
-    auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(DeviceBase::shared_from_this());
+    auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(this);
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER, globalTimestampFitter);
 
     // todo： make timestamp calculator as a component
@@ -83,6 +77,25 @@ void G330Device::init() {
     else {
         videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
     }
+
+    auto algParamManager = std::make_shared<G330AlgParamManager>(this);
+    registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
+
+    auto depthAlgModeManager = std::make_shared<G330DepthAlgModeManager>(this);
+    registerComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER, depthAlgModeManager);
+
+    auto presetManager = std::make_shared<G330PresetManager>(this);
+    registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
+
+    auto sensorStreamStrategy = std::make_shared<G330SensorStreamStrategy>(this);
+    registerComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, sensorStreamStrategy);
+
+    static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes = {
+        OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN,         OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,          OB_MULTI_DEVICE_SYNC_MODE_PRIMARY,
+        OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED, OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING, OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING
+    };
+    auto deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
+    registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 }
 
 G330Device::~G330Device() noexcept {}
@@ -114,7 +127,7 @@ void G330Device::initSensors() {
 }
 
 void G330Device::initProperties() {
-    auto propertyAccessor = std::make_shared<PropertyAccessor>(DeviceBase::shared_from_this());
+    auto propertyAccessor = std::make_shared<PropertyAccessor>(this);
     for(auto &sensor: sensors_) {
         auto &sourcePort = sensor.second.backend;
         // todo: lazy create source port
@@ -203,6 +216,9 @@ void G330Device::initProperties() {
             propertyAccessor->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_RAW_DATA_DEPTH_ALG_MODE_LIST, "", "r", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyPort);
+
+            auto devMonitor = std::make_shared<DeviceMonitor>(this, sourcePort);
+            registerComponent(OB_DEV_COMPONENT_DEVICE_MONITOR, devMonitor);
         }
         else if(sensor.first == OB_SENSOR_ACCEL) {
             auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter", sensor.first);
@@ -306,6 +322,15 @@ std::vector<OBSensorType> G330Device::getSensorTypeList() const {
     return sensorTypes;
 }
 
+bool G330Device::hasAnySensorStreamActivated() const {
+    for(auto &sensor: sensors_) {
+        if(sensor.second.sensor && sensor.second.sensor->isStreamActivated()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessingFilters(OBSensorType type) {
     if(type == OB_SENSOR_DEPTH) {
         std::vector<std::shared_ptr<IFilter>> depthFilterList;
@@ -348,7 +373,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(dtFilter);
         }
 
-        for(int i = 0; i < depthFilterList.size(); i++) {
+        for(size_t i = 0; i < depthFilterList.size(); i++) {
             auto filter = depthFilterList[i];
             if(filter != dtFilter) {
                 filter->enable(false);
@@ -393,7 +418,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         }
 
         auto accelIter           = sensors_.find(OB_SENSOR_ACCEL);
-        auto accelSensor         = std::make_shared<AccelSensor>(shared_from_this(), accelIter->second.backend, motionStreamer);
+        auto accelSensor         = std::make_shared<AccelSensor>(this, accelIter->second.backend, motionStreamer);
         accelIter->second.sensor = accelSensor;
 
         // bind params: extrinsics, intrinsics, etc.
@@ -410,7 +435,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         }
 
         auto gyroIter           = sensors_.find(OB_SENSOR_GYRO);
-        auto gyroSensor         = std::make_shared<GyroSensor>(shared_from_this(), gyroIter->second.backend, motionStreamer);
+        auto gyroSensor         = std::make_shared<GyroSensor>(this, gyroIter->second.backend, motionStreamer);
         gyroIter->second.sensor = gyroSensor;
 
         // bind params: extrinsics, intrinsics, etc.
@@ -429,7 +454,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
     else {  // type == OB_SENSOR_COLOR || type == OB_SENSOR_DEPTH || type == OB_SENSOR_IR_LEFT || type == OB_SENSOR_IR_RIGHT
         std::shared_ptr<VideoSensor> videoSensor;
         if(sensorType == OB_SENSOR_DEPTH) {
-            videoSensor         = std::make_shared<DisparityBasedSensor>(shared_from_this(), sensorType, iter->second.backend);
+            videoSensor         = std::make_shared<DisparityBasedSensor>(this, sensorType, iter->second.backend);
             iter->second.sensor = videoSensor;
 
             videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
@@ -443,7 +468,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
         else if(sensorType == OB_SENSOR_IR_LEFT) {
-            videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
+            videoSensor          = std::make_shared<VideoSensor>(this, sensorType, iter->second.backend);
             auto formatConverter = getSpecifyFilter("FrameUnpacker", sensorType);
             videoSensor->updateFormatFilterConfig({
                 { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
@@ -456,7 +481,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
         else if(sensorType == OB_SENSOR_IR_RIGHT) {
-            videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
+            videoSensor          = std::make_shared<VideoSensor>(this, sensorType, iter->second.backend);
             auto formatConverter = getSpecifyFilter("FrameUnpacker", sensorType);
             videoSensor->updateFormatFilterConfig({
                 { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },
@@ -471,7 +496,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
         }
         else if(sensorType == OB_SENSOR_COLOR) {
-            videoSensor          = std::make_shared<VideoSensor>(shared_from_this(), sensorType, iter->second.backend);
+            videoSensor          = std::make_shared<VideoSensor>(this, sensorType, iter->second.backend);
             auto formatConverter = getSpecifyFilter("FormatConverter", sensorType);
             videoSensor->updateFormatFilterConfig({
                 { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
@@ -496,7 +521,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         // frame preprocessor
         std::shared_ptr<FrameProcessor> frameProcessor = nullptr;
         if(!frameProcessorFactory_) {
-            TRY_EXECUTE(frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(shared_from_this()));
+            TRY_EXECUTE(frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(this));
         }
         if(frameProcessorFactory_) {
             frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
@@ -534,25 +559,6 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
     return DeviceComponentPtr<ISensor>(iter->second.sensor, std::move(resLock));
 }
 
-void G330Device::enableHeadBeat(bool enable) {
-    // todo:implement this
-    utils::unusedVar(enable);
-}
-
-OBDeviceState G330Device::getDeviceState() {
-    // todo: implement this
-    return 0;
-}
-int G330Device::registerDeviceStateChangeCallback(DeviceStateChangedCallback callback) {
-    // todo: implement this
-    utils::unusedVar(callback);
-    return 0;
-}
-void G330Device::unregisterDeviceStateChangeCallback(int index) {
-    // todo: implement this
-    utils::unusedVar(index);
-}
-
 void G330Device::reboot() {
     auto propAccessor = getPropertyAccessor();
     propAccessor->setPropertyValueT(OB_PROP_DEVICE_RESET_BOOL, true);
@@ -560,7 +566,8 @@ void G330Device::reboot() {
 }
 
 void G330Device::deactivate() {
-    // todo: implement this
+    sensors_.clear();
+    DeviceBase::deactivate();
 }
 
 void G330Device::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) {
@@ -571,14 +578,8 @@ void G330Device::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUp
     throw not_implemented_exception("Not implemented!");
 }
 
-const std::vector<uint8_t> &G330Device::sendAndReceiveData(const std::vector<uint8_t> &data) {
-    // todo: implement this
-    utils::unusedVar(data);
-    throw not_implemented_exception("Not implemented!");
-}
-
 std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, OBSensorType type, bool createIfNotExist) {
-    auto filterIter = std::find_if(filters_.begin(), filters_.end(), [name, type](const auto &pair) {
+    auto filterIter = std::find_if(filters_.begin(), filters_.end(), [name, type](const std::pair<OBSensorType, std::shared_ptr<IFilter>> &pair) {
         if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
             return (pair.first == OB_SENSOR_ACCEL || pair.first == OB_SENSOR_GYRO) && (pair.second->getName() == name);
         }

@@ -6,8 +6,7 @@
 #include "property/InternalProperty.hpp"
 
 namespace libobsensor {
-GlobalTimestampFitter::GlobalTimestampFitter(std::shared_ptr<IDevice> owner)
-    : DeviceComponentBase(owner), sampleLoopExit_(false), linearFuncParam_({ 0, 0, 0, 0 }) {
+GlobalTimestampFitter::GlobalTimestampFitter(IDevice *owner) : DeviceComponentBase(owner), sampleLoopExit_(false), linearFuncParam_({ 0, 0, 0, 0 }) {
 
     // todo: read config from xml
 

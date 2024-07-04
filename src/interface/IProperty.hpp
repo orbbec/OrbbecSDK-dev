@@ -1,10 +1,10 @@
 #pragma once
+#include "libobsensor/h/ObTypes.h"
+#include "libobsensor/h/Property.h"
+#include "exception/ObException.hpp"
+
 #include <vector>
 #include <memory>
-#include "libobsensor/h/ObTypes.h"
-#include "exception/ObException.hpp"
-#include "property/HostProtocol.hpp"
-#include "libobsensor/h/Property.h"
 
 namespace libobsensor {
 typedef union {
@@ -79,8 +79,8 @@ public:
     virtual void registerProperty(uint32_t propertyId, const std::string &userPerms, const std::string &intPerms, std::shared_ptr<IPropertyPort> port) = 0;
     virtual void aliasProperty(uint32_t aliasId, uint32_t propertyId)                                                                                  = 0;
 
-    virtual bool checkProperty(uint32_t propertyId,PropertyOperationType operationType, PropertyAccessType accessType) const = 0;
-    virtual const std::vector<OBPropertyItem> &getAvailableProperties(PropertyAccessType accessType)                                         = 0;
+    virtual bool                               checkProperty(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const = 0;
+    virtual const std::vector<OBPropertyItem> &getAvailableProperties(PropertyAccessType accessType)                                                        = 0;
 
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType)  = 0;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) = 0;
@@ -98,6 +98,7 @@ public:
 
     virtual const std::vector<uint8_t> &getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) = 0;
 
+public:  // template functions to simplify the usage of IPropertyAccessor
     template <typename T>
     typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type
     setPropertyValueT(uint32_t propertyId, const T &value, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
@@ -171,7 +172,7 @@ public:
     template <typename T> T getStructureDataT(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
         std::vector<uint8_t> vec = getStructureData(propertyId, accessType);
         T                    data;
-        if(vec.size() != sizeof(T)) {
+        if(vec.size() != sizeof(T) && vec.size() + 1 != sizeof(T) && vec.size() - 1 != sizeof(T)) {
             LOG_WARN("Firmware data size is not match with property type");
         }
         std::memcpy(&data, vec.data(), std::min(vec.size(), sizeof(T)));
@@ -181,7 +182,7 @@ public:
     template <typename T, uint32_t CMD_VER> T getStructureDataProtoV1_1_T(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
         std::vector<uint8_t> vec = getStructureDataProtoV1_1(propertyId, CMD_VER, accessType);
         T                    data;
-        if(vec.size() != sizeof(T)) {
+        if(vec.size() != sizeof(T) && vec.size() + 1 != sizeof(T) && vec.size() - 1 != sizeof(T)) {
             LOG_WARN("Firmware data size is not match with property type");
         }
         std::memcpy(&data, vec.data(), std::min(vec.size(), sizeof(T)));

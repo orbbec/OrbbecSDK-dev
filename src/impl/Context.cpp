@@ -1,7 +1,8 @@
-#include "ImplTypes.hpp"
 #include "libobsensor/h/Context.h"
-#include "context/Context.hpp"
+
+#include "ImplTypes.hpp"
 #include "logger/Logger.hpp"
+#include "context/Context.hpp"
 
 #ifdef __cplusplus
 extern "C" {

@@ -21,4 +21,6 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/G330DepthAlgModeManager.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330SensorStreamStrategy.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330SensorStreamStrategy.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330DeviceSyncConfigurator.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330DeviceSyncConfigurator.hpp
 )

@@ -1,8 +1,11 @@
+#include "libobsensor/h/TypeHelper.h"
+
 #include "ImplTypes.hpp"
 #include "utils/Utils.hpp"
-#include "exception/ObException.hpp"
 
-#include "libobsensor/h/TypeHelper.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 const char* ob_format_type_to_string(OBFormat type){
     return libobsensor::utils::obFormatToStr(type).c_str();
@@ -32,3 +35,7 @@ const char* ob_gyro_range_type_to_string(OBGyroFullScaleRange type){
 const char* ob_accel_range_type_to_string(OBAccelFullScaleRange type){
     return libobsensor::utils::AccelFullScaleRangeToStr(type).c_str();
 }
+
+#ifdef __cplusplus
+}
+#endif

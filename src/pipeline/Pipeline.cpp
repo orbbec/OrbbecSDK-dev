@@ -13,7 +13,7 @@
 #include <algorithm>
 
 namespace libobsensor {
-Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), streamState_(STREAM_STATE_STOPED) {
+Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev),config_(nullptr), streamState_(STREAM_STATE_STOPED),pipelineCallback_(nullptr) {
     LOG_DEBUG("Pipeline init ...");
     auto sensorTypeList = device_->getSensorTypeList();
     if(sensorTypeList.empty()) {
@@ -256,7 +256,7 @@ void Pipeline::onFrameCallback(std::shared_ptr<const Frame> frame) {
 }
 
 void Pipeline::outputFrame(std::shared_ptr<const Frame> frame) {
-    LOG_FREQ_CALC(DEBUG, 5000, "Pipeline streaming... frameset output rate={freq}fps");
+    LOG_FREQ_CALC(DEBUG, 5000, "Pipeline streaming... frameset output rate={freq}fps",streamState_);
     if(streamState_ == STREAM_STATE_STREAMING) {
         if(pipelineCallback_ != nullptr) {
             pipelineCallback_(frame);

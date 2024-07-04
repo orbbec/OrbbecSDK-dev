@@ -48,11 +48,11 @@ private:
     std::shared_ptr<Config> checkAndSetConfig(std::shared_ptr<const Config> cfg);
 
 private:
+    std::shared_ptr<IDevice>      device_;
+    std::shared_ptr<const Config> config_;
+    
     OBStreamState streamState_;
     std::mutex    streamMutex_;
-
-    std::shared_ptr<const Config> config_;
-    std::shared_ptr<IDevice>      device_;
 
     std::shared_ptr<FrameQueue<const Frame>> outputFrameQueue_;
     FrameCallback                            pipelineCallback_;

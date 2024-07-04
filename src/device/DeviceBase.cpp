@@ -6,9 +6,19 @@
 
 namespace libobsensor {
 
-DeviceBase::DeviceBase() : ctx_(Context::getInstance()) {}
+DeviceBase::DeviceBase() : ctx_(Context::getInstance()), isDeactivated_(false) {}
+
+DeviceBase::~DeviceBase() {}
+
+void DeviceBase::deactivate() {
+    clearComponents();
+    isDeactivated_ = true;
+}
 
 DeviceComponentLock DeviceBase::tryLockResource() {
+    if(isDeactivated_) {
+        throw libobsensor::wrong_api_call_sequence_exception("Device is deactivated/disconnected!");
+    }
     DeviceComponentLock resLock(componentMutex_, std::defer_lock);
     if(!resLock.try_lock_for(std::chrono::milliseconds(10000))) {
         throw libobsensor::wrong_api_call_sequence_exception("Resource busy! You can try again later!");
@@ -18,12 +28,11 @@ DeviceComponentLock DeviceBase::tryLockResource() {
 
 void DeviceBase::registerComponent(const std::string &name, std::shared_ptr<IDeviceComponent> component, bool lockRequired) {
     DeviceComponentLock resLock = tryLockResource();
-    auto               &compMap = lockRequired ? lockRequiredComponents_ : components_;
+    components_.push_back({ name, component, lockRequired });
+}
 
-    if(compMap.find(name) != compMap.end()) {
-        throw invalid_value_exception(utils::string::to_string() << "Component " << name << " already registered!");
-    }
-    compMap[name] = component;
+void DeviceBase::clearComponents() {
+    components_.clear();
 }
 
 const std::map<std::string, OBSensorType> componentNameToSensorTypeMap = {
@@ -36,7 +45,29 @@ const std::map<std::string, OBSensorType> componentNameToSensorTypeMap = {
     { OB_DEV_COMPONENT_ACCEL_SENSOR, OB_SENSOR_ACCEL },
 };
 
+bool DeviceBase::isComponentExists(const std::string &name) const {
+    auto sensorTypeIt = componentNameToSensorTypeMap.find(name);
+    if(sensorTypeIt != componentNameToSensorTypeMap.end()) {
+        auto sensorTypeList = getSensorTypeList();
+        auto iter =
+            std::find_if(sensorTypeList.begin(), sensorTypeList.end(), [sensorTypeIt](const OBSensorType &type) { return type == sensorTypeIt->second; });
+        if(iter != sensorTypeList.end()) {
+            return true;
+        }
+    }
+
+    auto it = std::find_if(components_.begin(), components_.end(), [name](const ComponentItem &item) { return item.name == name; });
+    if(it != components_.end()) {
+        return true;
+    }
+
+    return false;
+}
+
 DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string &name, bool throwExIfNotFound) {
+    if(isDeactivated_) {
+        throw libobsensor::wrong_api_call_sequence_exception("Device is deactivated/disconnected!");
+    }
 
     auto sensorTypeIt = componentNameToSensorTypeMap.find(name);
     if(sensorTypeIt != componentNameToSensorTypeMap.end()) {
@@ -44,17 +75,13 @@ DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string 
         return sensor.as<IDeviceComponent>();
     }
 
-    // components dons't require a lock
-    auto it = components_.find(name);
+    auto it = std::find_if(components_.begin(), components_.end(), [name](const ComponentItem &item) { return item.name == name; });
     if(it != components_.end()) {
-        return DeviceComponentPtr<IDeviceComponent>(it->second);
-    }
-
-    // lockRequired components require a lock
-    DeviceComponentLock resLock = tryLockResource();
-    it                          = lockRequiredComponents_.find(name);
-    if(it != lockRequiredComponents_.end()) {
-        return DeviceComponentPtr<IDeviceComponent>(it->second, std::move(resLock));
+        if(!it->lockRequired) {
+            return DeviceComponentPtr<IDeviceComponent>(it->component);
+        }
+        DeviceComponentLock resLock = tryLockResource();
+        return DeviceComponentPtr<IDeviceComponent>(it->component, std::move(resLock));
     }
 
     if(throwExIfNotFound) {

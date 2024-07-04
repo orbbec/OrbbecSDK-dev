@@ -19,7 +19,7 @@ typedef struct {
 
 class GlobalTimestampFitter : public DeviceComponentBase {
 public:
-    GlobalTimestampFitter(std::shared_ptr<IDevice> owner);
+    GlobalTimestampFitter(IDevice *owner);
     ~GlobalTimestampFitter();
     LinearFuncParam getLinearFuncParam();
     void            reFitting();

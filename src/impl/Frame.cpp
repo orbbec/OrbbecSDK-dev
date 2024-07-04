@@ -1,7 +1,10 @@
-#include "ImplTypes.hpp"
 #include "libobsensor/h/Frame.h"
+
+#include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 #include "frame/FrameFactory.hpp"
+
+#include "IFrame.hpp"
 #include "ISensor.hpp"
 
 #ifdef __cplusplus
@@ -295,8 +298,16 @@ ob_sensor *ob_frame_get_sensor(const ob_frame *frame, ob_error **error) BEGIN_AP
         throw libobsensor::invalid_value_exception("Frame has no owner sensor!");
     }
 
+    std::shared_ptr<libobsensor::IDevice> device;
+    try {
+        device = lazySensor->device->shared_from_this();
+    }
+    catch(...) {
+        throw libobsensor::wrong_api_call_sequence_exception("The device of the frame has been released!");
+    }
+
     auto sensorImpl    = new ob_sensor();
-    sensorImpl->device = lazySensor->device.lock();
+    sensorImpl->device = device;
     sensorImpl->type   = lazySensor->sensorType;
     return sensorImpl;
 }
@@ -314,9 +325,12 @@ ob_device *ob_frame_get_device(const ob_frame *frame, ob_error **error) BEGIN_AP
         throw libobsensor::invalid_value_exception("Frame has no owner sensor!");
     }
 
-    auto device = lazySensor->device.lock();
-    if(!device) {
-        throw libobsensor::invalid_value_exception("Frame has no owner device or device has been destroyed!");
+    std::shared_ptr<libobsensor::IDevice> device;
+    try {
+        device = lazySensor->device->shared_from_this();
+    }
+    catch(...) {
+        throw libobsensor::wrong_api_call_sequence_exception("The device of the frame has been released!");
     }
 
     auto deviceImpl    = new ob_device();

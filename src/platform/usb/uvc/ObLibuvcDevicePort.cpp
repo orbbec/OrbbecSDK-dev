@@ -6,6 +6,8 @@
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 #include "utils/PublicTypeHelper.hpp"
+#include "frame/FrameFactory.hpp"
+#include "stream/StreamProfileFactory.hpp"
 
 #include "usb/backend/DeviceLibusb.hpp"
 #include "stream/StreamProfile.hpp"
@@ -439,26 +441,17 @@ int32_t ObLibuvcDevicePort::uvcCtrlValueTranslate(uvc_req_code action, OBPropert
 }
 
 void ObLibuvcDevicePort::onFrameCallback(uvc_frame *frame, void *userPtr) {
-    (void)userPtr;
-    VideoFrameObject fo;
-    fo.frameSize = frame->data_bytes;
-    fo.frameData = frame->data;
+    OBUvcStreamHandle *handle = (OBUvcStreamHandle *)userPtr;
+    auto rawframe  = FrameFactory::createFrameFromStreamProfile(handle->profile);
+    auto videoFrame    = rawframe->as<VideoFrame>();
+    videoFrame->updateData(static_cast<const uint8_t *>(frame->data),frame->data_bytes);
+    videoFrame->updateMetadata(static_cast<const uint8_t *>(frame->payload_header),frame->payload_header_bytes);
+    videoFrame->appendMetadata(static_cast<const uint8_t *>(frame->metadata),frame->metadata_bytes);
+    auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    videoFrame->setSystemTimeStampUsec(realtime);
+    videoFrame->setTimeStampUsec(frame->pts);
 
-    if(frame->metadata_bytes > 255) {
-        frame->metadata_bytes = 255;
-    }
-    fo.metadataSize = frame->metadata_bytes;
-    fo.metadata     = frame->metadata;
-
-    fo.systemTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    fo.deviceTime = frame->pts;
-
-    if(frame->payload_header_bytes >= 12) {
-        fo.scrDataBuf  = (char *)frame->payload_header + UVC_PAYLOAD_HEADER_SRC_OFFSET;
-        fo.scrDataSize = UVC_PAYLOAD_HEADER_SRC_LENGTH;
-    }
-    // FIXME:
-    // handle->callback(fo);
+    handle->callback(videoFrame);
 }
 
 int32_t ObLibuvcDevicePort::getCtrl(uvc_req_code action, uint8_t control, uint8_t unit) const {

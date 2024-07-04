@@ -33,7 +33,7 @@ extern "C" {
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return uint16_t return the supported multi device sync mode bitmap of the device.
  */
-uint16_t ob_device_get_supported_multi_device_sync_mode_bitmap(const ob_device *device, ob_error **error);
+OB_EXPORT uint16_t ob_device_get_supported_multi_device_sync_mode_bitmap(const ob_device *device, ob_error **error);
 
 /**
  * @brief set the multi device sync configuration of the device.
@@ -42,7 +42,7 @@ uint16_t ob_device_get_supported_multi_device_sync_mode_bitmap(const ob_device *
  * @param[in] config The multi device sync configuration.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-void ob_device_set_multi_device_sync_config(ob_device *device, const ob_multi_device_sync_config *config, ob_error **error);
+OB_EXPORT void ob_device_set_multi_device_sync_config(ob_device *device, const ob_multi_device_sync_config *config, ob_error **error);
 
 /**
  * @brief get the current multi device sync configuration of the device.
@@ -51,7 +51,7 @@ void ob_device_set_multi_device_sync_config(ob_device *device, const ob_multi_de
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_multi_device_sync_config return the multi device sync configuration of the device.
  */
-ob_multi_device_sync_config ob_device_get_multi_device_sync_config(const ob_device *device, ob_error **error);
+OB_EXPORT ob_multi_device_sync_config ob_device_get_multi_device_sync_config(const ob_device *device, ob_error **error);
 
 /**
  * @brief send the capture command to the device to trigger the capture.
@@ -66,7 +66,7 @@ ob_multi_device_sync_config ob_device_get_multi_device_sync_config(const ob_devi
  * @param[in] device The device handle.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-void ob_device_trigger_capture(ob_device *device, ob_error **error);
+OB_EXPORT void ob_device_trigger_capture(ob_device *device, ob_error **error);
 
 /**
  * @brief set the timestamp reset configuration of the device.
@@ -75,7 +75,7 @@ void ob_device_trigger_capture(ob_device *device, ob_error **error);
  * @param[in] config The timestamp reset configuration.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-void ob_device_set_timestamp_reset_config(ob_device *device, const ob_device_timestamp_reset_config *config, ob_error **error);
+OB_EXPORT void ob_device_set_timestamp_reset_config(ob_device *device, const ob_device_timestamp_reset_config *config, ob_error **error);
 
 /**
  * @brief get the timestamp reset configuration of the device.
@@ -84,7 +84,7 @@ void ob_device_set_timestamp_reset_config(ob_device *device, const ob_device_tim
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_device_timestamp_reset_config return the timestamp reset configuration of the device.
  */
-ob_device_timestamp_reset_config ob_device_get_timestamp_reset_config(ob_device *device, ob_error **error);
+OB_EXPORT ob_device_timestamp_reset_config ob_device_get_timestamp_reset_config(ob_device *device, ob_error **error);
 
 /**
  * @brief send the timestamp reset command to the device.
@@ -98,7 +98,7 @@ ob_device_timestamp_reset_config ob_device_get_timestamp_reset_config(ob_device 
  * @param[in] device The device handle.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-void ob_device_timestamp_reset(ob_device *device, ob_error **error);
+OB_EXPORT void ob_device_timestamp_reset(ob_device *device, ob_error **error);
 
 /**
  * @brief Alias for @ref ob_device_timestamp_reset since it is more accurate.
@@ -117,7 +117,7 @@ void ob_device_timestamp_reset(ob_device *device, ob_error **error);
  * @param[in] device The device handle.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-void ob_device_timer_sync_with_host(ob_device *device, ob_error **error);
+OB_EXPORT void ob_device_timer_sync_with_host(ob_device *device, ob_error **error);
 
 #ifdef __cplusplus
 }  // extern "C"

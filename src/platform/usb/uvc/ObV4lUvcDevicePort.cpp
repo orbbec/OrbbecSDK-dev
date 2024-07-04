@@ -15,6 +15,8 @@
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
 #include "utils/PublicTypeHelper.hpp"
+#include "frame/FrameFactory.hpp"
+#include "stream/StreamProfileFactory.hpp"
 
 namespace libobsensor {
 
@@ -468,25 +470,23 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
                     auto timestamp = (double)buf.timestamp.tv_sec * 1000.f + (double)buf.timestamp.tv_usec / 1000.f;
                     (void)timestamp;
 
-                    VideoFrameObject videoFrame;
-                    videoFrame.frameSize = buf.bytesused;
-                    videoFrame.frameData = devHandle->buffers[buf.index].ptr;
+                    auto rawframe  = FrameFactory::createFrameFromStreamProfile(devHandle->profile);
+                    auto videoFrame    = rawframe->as<VideoFrame>();
+                    videoFrame->updateData(static_cast<const uint8_t *>(devHandle->buffers[buf.index].ptr),buf.bytesused);
                     if(metadataBufferIndex >= 0 && devHandle->metadataBuffers[metadataBufferIndex].sequence == buf.sequence) {
                         auto uvc_payload_header     = devHandle->metadataBuffers[metadataBufferIndex].ptr + sizeof(V4L2UvcMetaHeader);
                         auto uvc_payload_header_len = devHandle->metadataBuffers[metadataBufferIndex].actual_length - sizeof(V4L2UvcMetaHeader);
                         if(uvc_payload_header_len >= sizeof(StandardUvcFramePayloadHeader)) {
-                            videoFrame.metadataSize = uvc_payload_header_len - sizeof(StandardUvcFramePayloadHeader);
-                            videoFrame.metadata     = (void *)(uvc_payload_header + sizeof(StandardUvcFramePayloadHeader));
                             auto payloadHeader      = (StandardUvcFramePayloadHeader *)uvc_payload_header;
-                            videoFrame.deviceTime   = payloadHeader->dwPresentationTime;
-                            videoFrame.scrDataSize  = sizeof(StandardUvcFramePayloadHeader::scrSourceClock);
-                            videoFrame.scrDataBuf   = (void *)payloadHeader->scrSourceClock;
+                            videoFrame->updateMetadata(static_cast<const uint8_t *>(payloadHeader->scrSourceClock),sizeof(StandardUvcFramePayloadHeader::scrSourceClock));
+                            videoFrame->appendMetadata(static_cast<const uint8_t *>(uvc_payload_header + sizeof(StandardUvcFramePayloadHeader)),uvc_payload_header_len - sizeof(StandardUvcFramePayloadHeader));
+                            videoFrame->setTimeStampUsec(payloadHeader->dwPresentationTime);
                         }
                     }
 
-                    videoFrame.systemTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                    // FIXME:
-                    // devHandle->frameCallback(videoFrame);
+                    auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    videoFrame->setSystemTimeStampUsec(realtime);
+                    devHandle->frameCallback(videoFrame);
                 }
 
                 if(devHandle->isCapturing) {

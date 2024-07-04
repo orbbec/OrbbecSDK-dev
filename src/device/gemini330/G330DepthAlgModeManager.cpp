@@ -4,7 +4,7 @@
 
 namespace libobsensor {
 
-G330DepthAlgModeManager::G330DepthAlgModeManager(std::shared_ptr<IDevice> owner) : DeviceComponentBase(owner) {
+G330DepthAlgModeManager::G330DepthAlgModeManager(IDevice *owner) : DeviceComponentBase(owner) {
 
     auto propAccessor = owner->getPropertyAccessor();
 
@@ -20,49 +20,39 @@ const OBDepthAlgModeChecksum &G330DepthAlgModeManager::getCurrentDepthAlgModeChe
     return currentAlgMode_;
 }
 
-void G330DepthAlgModeManager::switchDepthAlgMode(const char *modeName) {
-    OBDepthAlgModeChecksum dstMode;
-    memset(&dstMode, 0, sizeof(dstMode));
-    for(auto &mode: depthAlgModeChecksumList_) {
-        if(strcmp(mode.name, modeName) == 0) {
-            dstMode = mode;
-            break;
-        }
-    }
+void G330DepthAlgModeManager::switchDepthAlgMode(const std::string &modeName) {
+    auto iter = std::find_if(depthAlgModeChecksumList_.begin(), depthAlgModeChecksumList_.end(),
+                             [&modeName](const OBDepthAlgModeChecksum &mode) { return modeName == mode.name; });
 
-    if(strlen(dstMode.name) == 0) {
+    if(iter == depthAlgModeChecksumList_.end()) {
         std::string totalNames;
-        for(auto &mode: depthAlgModeChecksumList_) {
+        std::for_each(depthAlgModeChecksumList_.begin(), depthAlgModeChecksumList_.end(), [&totalNames](const OBDepthAlgModeChecksum &mode) {
             if(!totalNames.empty()) {
-                totalNames = totalNames + ",";
+                totalNames += ",";
             }
-            totalNames = totalNames + std::string(mode.name);
-        }
-        throw unsupported_operation_exception(
-            std::string("Invalid depth mode: " + std::string(modeName) + ", support depth work mode list: " + totalNames).c_str());
+            totalNames += mode.name;
+        });
+        throw unsupported_operation_exception("Invalid depth mode: " + modeName + ", support depth work mode list: " + totalNames);
     }
 
+    OBDepthAlgModeChecksum dstMode = *iter;
     switchDepthAlgMode(dstMode);
 }
 
 void G330DepthAlgModeManager::switchDepthAlgMode(const OBDepthAlgModeChecksum &targetDepthMode) {
-    // todo: check stream status
-    // for(auto it: sensorEntryList_) {
-    //     auto sensor = it.second.sensor;
-    //     if(sensor && sensor->isStreamStarted()) {
-    //         std::ostringstream ss;
-    //         ss << "Cannot switch depth work mode while stream is started. Please stop stream first! sensor " << sensor->getSensorType() << " is streaming";
-    //         throw unsupported_operation_exception(ss.str());
-    //     }
-    // }
+    auto owner        = getOwner();
+    auto propAccessor = owner->getPropertyAccessor();  // get property accessor first to lock resource to avoid start stream at the same time
+
+    if(owner->hasAnySensorStreamActivated()) {
+        throw unsupported_operation_exception(utils::string::to_string()
+                                              << "Cannot switch depth work mode while any stream is started. Please stop all stream first!");
+    }
 
     if(strncmp(currentAlgMode_.name, targetDepthMode.name, sizeof(targetDepthMode.name)) == 0) {
         LOG_DEBUG("switchDepthWorkMode done with same mode: {1}", currentAlgMode_.name, targetDepthMode.name);
         return;
     }
 
-    auto owner        = getOwner();
-    auto propAccessor = owner->getPropertyAccessor();
     propAccessor->setStructureDataProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, targetDepthMode);
     currentAlgMode_ = targetDepthMode;
     LOG_DEBUG("switchDepthWorkMode done with mode: {1}", currentAlgMode_.name, targetDepthMode.name);

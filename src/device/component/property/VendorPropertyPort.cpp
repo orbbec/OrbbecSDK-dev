@@ -1,6 +1,6 @@
 #include "VendorPropertyPort.hpp"
 #include "exception/ObException.hpp"
-#include "HostProtocol.hpp"
+#include "protocol/Protocol.hpp"
 
 namespace libobsensor {
 
@@ -170,7 +170,7 @@ const std::vector<uint8_t> &VendorPropertyPort::getStructureDataProtoV1_1(uint32
     if(resp->cmdVer != cmdVersion) {
         res.statusCode    = protocol::HP_STATUS_DEVICE_RESPONSE_CMD_VERSION_UNMATCHED;
         res.respErrorCode = protocol::HP_RESP_ERROR_UNKNOWN;
-        res.msg           = "get structure data return cmd version unmatched" + std::to_string(resp->cmdVer) + " expect: " + std::to_string(cmdVersion);
+        res.msg           = "get structure data return cmd version unmatched: " + std::to_string(resp->cmdVer) + ", expect: " + std::to_string(cmdVersion);
         protocol::checkStatus(res);
     }
 

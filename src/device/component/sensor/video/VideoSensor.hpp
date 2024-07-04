@@ -27,7 +27,7 @@ struct FormatFilterConfig {
 
 class VideoSensor : public SensorBase {
 public:
-    VideoSensor(const std::shared_ptr<IDevice> &owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
+    VideoSensor(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
 
     ~VideoSensor() noexcept override = default;
 

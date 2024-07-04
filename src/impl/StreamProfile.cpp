@@ -1,10 +1,12 @@
-#include "ImplTypes.hpp"
 #include "libobsensor/h/StreamProfile.h"
-#include "libobsensor/h/ObTypes.h"
+
+#include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 #include "context/Context.hpp"
 #include "stream/StreamProfile.hpp"
 #include "stream/StreamProfileFactory.hpp"
+
+#include "IStreamProfile.hpp"
 
 #ifdef __cplusplus
 extern "C" {

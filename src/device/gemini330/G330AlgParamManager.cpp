@@ -54,7 +54,7 @@ bool findBestMatchedCameraParam(const std::vector<OBCameraParam> &cameraParamLis
     return found;
 }
 
-G330AlgParamManager::G330AlgParamManager(std::shared_ptr<IDevice> owner) : DeviceComponentBase(owner) {
+G330AlgParamManager::G330AlgParamManager(IDevice *owner) : DeviceComponentBase(owner) {
     fetchParams();
     fixD2CParmaList();
     registerBasicExtrinsics();

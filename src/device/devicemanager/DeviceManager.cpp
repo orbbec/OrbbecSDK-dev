@@ -173,8 +173,7 @@ void DeviceManager::onDeviceChanged(const DeviceEnumInfoList &removed, const Dev
             if(iter != createdDevices_.end()) {
                 auto dev = iter->second.lock();
                 if(dev) {
-                    // dev->handleDeviceDetached();
-                    // todo: handle device detach
+                    dev->deactivate();
                 }
                 createdDevices_.erase(iter);
             }

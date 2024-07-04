@@ -21,7 +21,6 @@
 #include "component/timestamp/GlobalTimestampFitter.hpp"
 #include "component/property/VendorPropertyPort.hpp"
 #include "component/property/UvcPropertyPort.hpp"
-#include "component/property/FilterPropertyPort.hpp"
 #include "component/property/PropertyAccessor.hpp"
 #include "component/monitor/DeviceMonitor.hpp"
 #include "G330MetadataParser.hpp"
@@ -222,13 +221,17 @@ void G330Device::initProperties() {
         }
         else if(sensor.first == OB_SENSOR_ACCEL) {
             auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter", sensor.first);
-            auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
-            propertyAccessor->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
+            if(imuCorrecterFilter){
+                auto filter = std::dynamic_pointer_cast<IMUCorrecter>(imuCorrecterFilter);
+                propertyAccessor->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", filter);
+            }
         }
         else if(sensor.first == OB_SENSOR_GYRO) {
             auto imuCorrecterFilter       = getSpecifyFilter("IMUCorrecter", sensor.first);
-            auto imuCorrecterPropertyPort = std::make_shared<FilterPropertyPort>(imuCorrecterFilter);
-            propertyAccessor->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", imuCorrecterPropertyPort);
+            if(imuCorrecterFilter){
+                auto filter = std::dynamic_pointer_cast<IMUCorrecter>(imuCorrecterFilter);
+                propertyAccessor->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", filter);
+            }
         }
     }
     propertyAccessor->aliasProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);

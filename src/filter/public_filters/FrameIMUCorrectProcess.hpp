@@ -3,12 +3,13 @@
 #include "libobsensor/h/ObTypes.h"
 #include "imu_calibration_params.h"
 #include "imu_calibration_params_parser.h"
+#include "IProperty.hpp"
 #include <Eigen/Core>
 #include <Eigen/LU>
 
 namespace libobsensor {
 
-class IMUCorrecter : public FilterBase {
+class IMUCorrecter : public FilterBase,public IPropertyPort {
 public:
     static IMUCalibrateParams parserIMUCalibrationParamsRaw(uint8_t* filedata, uint32_t size);
 
@@ -26,17 +27,35 @@ public:
 
     virtual const std::string &getConfigSchema() const override;
 
-    void setAccelScaleRange(int scaleRange) {
-        accelScaleRange_ = scaleRange;
-    }
-
-    void setGyroScaleRange(int scaleRange) {
-        gyroScaleRange_ = scaleRange;
-    }
-
     void setIMUCalibrationParam(IMUCalibrateParams param) {
         param_ = param;
     }
+
+    void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override{
+        if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL){
+            throw invalid_value_exception("Not support this property");
+        }
+        FilterBase::enable(static_cast<bool>(value.intValue));
+    }
+
+    void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override{
+        if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL){
+            throw invalid_value_exception("Not support this property");
+        }
+        value->intValue = static_cast<int32_t>(isEnabled());
+    }
+
+    void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override{
+        if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL){
+            throw invalid_value_exception("Not support this property");
+        }
+        range->cur.intValue = static_cast<int32_t>(isEnabled());
+        range->def.intValue = 1;
+        range->max.intValue = 1;
+        range->min.intValue = 0;
+        range->step.intValue = 1;
+    }
+
 
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;

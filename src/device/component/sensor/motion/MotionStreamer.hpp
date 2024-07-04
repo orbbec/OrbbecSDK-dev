@@ -60,6 +60,8 @@ private:
     std::map<std::shared_ptr<const StreamProfile>, FrameCallback> callbacks_;
 
     std::atomic_bool running_;
+
+    uint64_t frameIndex_;
 };
 
 }

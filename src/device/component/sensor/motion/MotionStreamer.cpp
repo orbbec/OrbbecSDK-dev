@@ -8,7 +8,7 @@
 
 namespace libobsensor {
 MotionStreamer::MotionStreamer(const std::shared_ptr<IDataStreamPort> &backend, const std::shared_ptr<IFilter> &dataPhaser)
-    : backend_(backend), dataPhaser_(dataPhaser), running_(false) {
+    : backend_(backend), dataPhaser_(dataPhaser), running_(false),frameIndex_(0) {
     dataPhaser_->setCallback([this](std::shared_ptr<const Frame> frame) {
         if(!frame){
             return;
@@ -150,14 +150,14 @@ void MotionStreamer::praseIMUData(std::shared_ptr<Frame> frame){
 
         uint64_t timestamp = ((uint64_t)imuData->timestamp[0] | ((uint64_t)imuData->timestamp[1] << 32));
         if(accelFrame){
-            // accelFrame->setNumber((uint32_t)frameIndex_++);
+            accelFrame->setNumber(frameIndex_++);
             accelFrame->setTimeStampUsec(timestamp);
             accelFrame->setSystemTimeStampUsec(nowTimeUs);
             frameSet->pushFrame(accelFrame);
         }
 
         if(gyroFrame){
-            // gyroFrame->setNumber((uint32_t)frameIndex_++);
+            gyroFrame->setNumber(frameIndex_++);
             gyroFrame->setTimeStampUsec(timestamp);
             gyroFrame->setSystemTimeStampUsec(nowTimeUs);
             frameSet->pushFrame(gyroFrame);

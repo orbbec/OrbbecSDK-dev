@@ -4,6 +4,9 @@
 #include <fstream>
 #include <regex>
 
+#define RESOLUTION std::pair<int, int>
+#define INTRINSIC_MAP std::unordered_map<RESOLUTION, OBCameraIntrinsic, libobsensor::ResHashFunc, libobsensor::ResComp>
+
 int parse_obviewer_data(char *filename, OBCameraIntrinsic &depth_intr, OBCameraIntrinsic &color_intr, OBCameraDistortion &depth_disto,
                         OBCameraDistortion &color_disto, OBTransform &trans) {
     std::ifstream file(filename);
@@ -76,7 +79,98 @@ int parse_obviewer_data(char *filename, OBCameraIntrinsic &depth_intr, OBCameraI
     return 0;
 }
 
+int parse_oblog_data(char *filename, INTRINSIC_MAP &depth_intr_map, INTRINSIC_MAP &color_intr_map, OBCameraDistortion &depth_disto,
+    OBCameraDistortion &color_disto, OBTransform &trans) {
+
+    std::ifstream file(filename);
+    if(!file.is_open()) {
+        std::cerr << "Error opening file." << std::endl;
+        return 1;
+    }
+
+    std::string line;
+
+    const std::string numberPattern = R"([+-]?\d+\.?\d*[eE]?[+-]?\d*)";
+
+    // Define regular expressions for each type of line
+    std::regex intrinsicRegex(R"(cx: ()" + numberPattern + R"(), cy: ()" + numberPattern + R"(), fx: ()" + numberPattern + R"(), fy: ()" + numberPattern
+                              + R"(), width: (\d+), height: (\d+))");
+
+    std::regex distortionRegex(R"(k1: ()" + numberPattern + R"(), k2: ()" + numberPattern + R"(), k3: ()" + numberPattern + R"(), k4: ()" + numberPattern + R"(), k5: ()"
+                               + numberPattern + R"(), k6: ()" + numberPattern + R"(), p1: ()" + numberPattern + R"(), p2: ()" + numberPattern + R"())");
+
+    std::regex extrinsicRegex(R"(rot: \[()" + numberPattern + R"(), ()" + numberPattern + R"(), ()" + numberPattern + R"(), ()"
+        + numberPattern + R"(), ()" + numberPattern + R"(), ()" + numberPattern + R"(), ()"
+        + numberPattern + R"(), ()" + numberPattern + R"(), ()" + numberPattern + R"()\], trans: \[()"
+        + numberPattern + R"(), ()" + numberPattern + R"(), ()" + numberPattern + R"()\])");
+
+    while(std::getline(file, line)) {
+        printf("%s\n", line.c_str());
+        std::smatch match;
+
+        // Match color intrinsic parameters
+        if(std::regex_search(line, match, intrinsicRegex) && line.find("rgbIntrinsic") != std::string::npos) {
+            OBCameraIntrinsic color_intr = { std::stof(match[1]), std::stof(match[2]),          std::stof(match[3]),
+                           std::stof(match[4]), int16_t(std::stoi(match[5])), int16_t(std::stoi(match[6])) };
+            color_intr_map[RESOLUTION(color_intr.width, color_intr.height)] = color_intr;
+        }
+
+        // Match depth intrinsic parameters
+        else if(std::regex_search(line, match, intrinsicRegex) && line.find("depthIntrinsic") != std::string::npos) {
+            OBCameraIntrinsic depth_intr = { std::stof(match[1]), std::stof(match[2]),          std::stof(match[3]),
+                           std::stof(match[4]), int16_t(std::stoi(match[5])), int16_t(std::stoi(match[6])) };
+            depth_intr_map[RESOLUTION(depth_intr.width, depth_intr.height)] = depth_intr;
+        }
+
+        // Match color distortion parameters
+        else if(std::regex_search(line, match, distortionRegex) && line.find("rgbDistortion") != std::string::npos) {
+            color_disto = { std::stof(match[1]), std::stof(match[2]), std::stof(match[3]),
+                            std::stof(match[4]), std::stof(match[5]), std::stof(match[6]),
+                            std::stof(match[7]), std::stof(match[8]), OBCameraDistortionModel::OB_DISTORTION_BROWN_CONRADY };
+        }
+
+        // Match depth distortion parameters
+        else if(std::regex_search(line, match, distortionRegex) && line.find("depthDistortion") != std::string::npos) {
+            depth_disto = { std::stof(match[1]), std::stof(match[2]), std::stof(match[3]),
+                            std::stof(match[4]), std::stof(match[5]), std::stof(match[6]),
+                            std::stof(match[7]), std::stof(match[8]), OBCameraDistortionModel::OB_DISTORTION_BROWN_CONRADY };
+        }
+
+        // Match depth to color rotation parameters
+        else if(std::regex_search(line, match, extrinsicRegex)) {
+            for(int i = 0; i < 9; ++i) {
+                trans.rot[i] = std::stof(match[1 + i]);
+            }
+            for(int i = 0; i < 3; ++i) {
+                trans.trans[i] = std::stof(match[1 + 9 + i]);
+            }
+        }
+    }
+
+    file.close();
+    return 0;
+
+}
+
+
 int main(int argc, char *argv[]) {
+    if(argc < 4) {
+        std::cerr << "Usage: %s <param_file> <depth_image_file> <color_image_file>" << std::endl;
+        return -1;
+    }
+
+    INTRINSIC_MAP  depth_intr, color_intr;
+    OBCameraDistortion depth_disto, color_disto;
+    OBTransform        transform;
+    if(0 != parse_oblog_data(argv[1], depth_intr, color_intr, depth_disto, color_disto, transform)) {
+        std::cerr << "Parse parameter file error." << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+int main_(int argc, char *argv[]) {
     if(argc < 4) {
         std::cerr << "Usage: %s <param_file> <depth_image_file> <color_image_file>" << std::endl;
         return -1;
@@ -109,7 +203,7 @@ int main(int argc, char *argv[]) {
     }
     uint32_t  aligned_depth_size = color_intr.width * color_intr.height * sizeof(uint16_t);
     uint16_t *aligned_depth_data = (uint16_t *)malloc(aligned_depth_size);
-    if(0 == impl->D2C(depth_data, depth_intr.width, depth_intr.height, aligned_depth_data, color_intr.width, color_intr.height, nullptr, false)) {
+    if(0 == impl->D2C(depth_data, depth_intr.width, depth_intr.height, aligned_depth_data, color_intr.width, color_intr.height, nullptr, true)) {
         char nname[256];
         sprintf(nname, "%s_filtered.raw", argv[2]);
         FILE *fp = fopen(nname, "wb");

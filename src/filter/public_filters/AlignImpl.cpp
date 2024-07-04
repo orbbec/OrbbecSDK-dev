@@ -137,45 +137,45 @@ void AlignImpl::reset() {
 }
 
 float estimateInflectionPoint(ob_camera_intrinsic intric, ob_camera_distortion disto) {
-    float result   = 0.f;
+    float result = 0.f;
     if(OB_DISTORTION_BROWN_CONRADY_K6 == disto.model) {
-		float w  = intric.width;
-		float h  = intric.height;
-		float fx = intric.fx;
-		float fy = intric.fy;
-		float cx = intric.cx;
-		float cy = intric.cy;
-		float k1 = disto.k1, k2 = disto.k2, k3 = disto.k3;
-		float k4 = disto.k4, k5 = disto.k5, k6 = disto.k6;
+        float w  = intric.width;
+        float h  = intric.height;
+        float fx = intric.fx;
+        float fy = intric.fy;
+        float cx = intric.cx;
+        float cy = intric.cy;
+        float k1 = disto.k1, k2 = disto.k2, k3 = disto.k3;
+        float k4 = disto.k4, k5 = disto.k5, k6 = disto.k6;
 
-		float pt_ud_max[2] /*, pt_d_max[2]*/;
-		pt_ud_max[0] = (w / 2 + std::abs(w / 2 - cx)) / fx;
-		pt_ud_max[1] = (h / 2 + std::abs(h / 2 - cy)) / fy;
-		float r2     = powf(pt_ud_max[0], 2) + powf(pt_ud_max[1], 2);
+        float pt_ud_max[2] /*, pt_d_max[2]*/;
+        pt_ud_max[0] = (w / 2 + std::abs(w / 2 - cx)) / fx;
+        pt_ud_max[1] = (h / 2 + std::abs(h / 2 - cy)) / fy;
+        float r2     = powf(pt_ud_max[0], 2) + powf(pt_ud_max[1], 2);
 
-		float half_r2 = 0.5f * r2;
-		float f2      = half_r2;
-		float f4 = f2 * f2, f6 = f4 * f2;
-		float half_r2_distort  = (1 + k1 * f2 + k2 * f4 + k3 * f6) / (1 + k4 * f2 + k5 * f4 + k6 * f6);
-		bool  polarity_half_r2 = true;
-		if(half_r2_distort < 1)
-			polarity_half_r2 = false;
+        float half_r2 = 0.5f * r2;
+        float f2      = half_r2;
+        float f4 = f2 * f2, f6 = f4 * f2;
+        float half_r2_distort  = (1 + k1 * f2 + k2 * f4 + k3 * f6) / (1 + k4 * f2 + k5 * f4 + k6 * f6);
+        bool  polarity_half_r2 = true;
+        if(half_r2_distort < 1)
+            polarity_half_r2 = false;
 
-		float kr_diff_cur = 0;
-		float delta       = 0.001f * r2;
-		while(f2 < r2) {
-			f4                = f2 * f2;
-			f6                = f4 * f2;
-			kr_diff_cur       = (1 + k1 * f2 + k2 * f4 + k3 * f6) / (1 + k4 * f2 + k5 * f4 + k6 * f6);
-			bool polarity_cur = kr_diff_cur > 1 ? true : false;
-			if(polarity_cur != polarity_half_r2) {
-				result = f2 - 10 * delta;
-				break;
-			}
-			f2 += delta;
-		}
-		if(f2 >= r2)
-			result = r2;
+        float kr_diff_cur = 0;
+        float delta       = 0.001f * r2;
+        while(f2 < r2) {
+            f4                = f2 * f2;
+            f6                = f4 * f2;
+            kr_diff_cur       = (1 + k1 * f2 + k2 * f4 + k3 * f6) / (1 + k4 * f2 + k5 * f4 + k6 * f6);
+            bool polarity_cur = kr_diff_cur > 1 ? true : false;
+            if(polarity_cur != polarity_half_r2) {
+                result = f2 - 10 * delta;
+                break;
+            }
+            f2 += delta;
+        }
+        if(f2 >= r2)
+            result = r2;
     }
     return result;
 }
@@ -185,7 +185,7 @@ void AlignImpl::prepareDepthResolution() {
 
     // There may be outliers due to possible inflection points of the calibrated K6 distortion curve;
     if(add_target_distortion_) {
-        r2_max_loc_ = estimateInflectionPoint(rgb_intric_, rgb_disto_);
+        r2_max_loc_     = estimateInflectionPoint(rgb_intric_, rgb_disto_);
         r2_max_loc_sse_ = _mm_set_ps1(r2_max_loc_);
     }
 
@@ -255,11 +255,10 @@ void AlignImpl::clearMatrixCache() {
     rot_coeff_ht_z.clear();
 }
 
-template<typename T>
-void fillPixelGap(const int *u, const int *v, const int width, const int height, const T val, T* buffer, bool copy = true){
+template <typename T> void fillPixelGap(const int *u, const int *v, const int width, const int height, const T val, T *buffer, bool copy = true) {
     // point index and output depth buffer should be checked outside
 
-	if(copy) {
+    if(copy) {
         int  pos         = v[0] * width + u[0];
         bool right_valid = (u[0] + 1) < width, bottom_valid = (v[0] + 1) < height;
         if(right_valid) {
@@ -298,12 +297,12 @@ void AlignImpl::transferDepth(const float *x, const float *y, const float *z, co
         int u_rgb[] = { -1, -1 };
         int v_rgb[] = { -1, -1 };
 
-        uint16_t cur_depth       = 65535;
+        uint16_t cur_depth     = 65535;
         bool     depth_invalid = false;
         for(int chl = 0; chl < nchannels; chl++) {
             int k = i + chl * npts;
             if(z[k] < EPSILON) {
-				depth_invalid = true;
+                depth_invalid = true;
                 break;
             }
 
@@ -318,8 +317,8 @@ void AlignImpl::transferDepth(const float *x, const float *y, const float *z, co
 
         if(map) {  // coordinates mapping for C2D
             if((u_rgb[0] >= 0) && (u_rgb[0] < rgb_intric_.width) && (v_rgb[0] >= 0) && (v_rgb[0] < rgb_intric_.height)) {
-				map[2 * (point_index + i)]     = u_rgb[0];
-				map[2 * (point_index + i) + 1] = v_rgb[0];
+                map[2 * (point_index + i)]     = u_rgb[0];
+                map[2 * (point_index + i) + 1] = v_rgb[0];
             }
         }
 
@@ -416,55 +415,55 @@ void AlignImpl::distortedWithSSE(__m128 &tx, __m128 &ty, const __m128 x2, const 
 void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_mat_x, const float *coeff_mat_y, const float *coeff_mat_z,
                               int *map) {
 
-    int channel = (gap_fill_copy_ ? 1 : 2);
+    int       channel     = (gap_fill_copy_ ? 1 : 2);
+    float *   ptr_coeff_x = (float *)coeff_mat_x;
+    float *   ptr_coeff_y = (float *)coeff_mat_y;
+    float *   ptr_coeff_z = (float *)coeff_mat_z;
+    uint16_t *ptr_depth   = (uint16_t *)depth_buffer;
 
     for(int v = 0; v < depth_intric_.height; v += 1) {
+        int depth_idx = v * depth_intric_.width;
         for(int u = 0; u < depth_intric_.width; u += 1) {
-            int      depth_idx = v * depth_intric_.width + u;
-            uint16_t depth     = depth_buffer[depth_idx];
-            if(depth < EPSILON)
+            uint16_t depth = *ptr_depth++;
+            depth_idx++;
+            if(depth < EPSILON) {
+                ptr_coeff_x += channel;
+                ptr_coeff_y += channel;
+                ptr_coeff_z += channel;
                 continue;
-            int      coeff_idx = depth_idx * channel;
-            int      u_rgb[] = { -1, -1 };
-            int      v_rgb[] = { -1, -1 };
+            }
+            int   u_rgb[] = { -1, -1 };
+            int   v_rgb[] = { -1, -1 };
             float pixelx_f[2], pixely_f[2], dst[2];
 
             bool skip_this_pixel = true;
             for(int k = 0; k < channel; k++) {
-                float dst_x = depth * coeff_mat_x[coeff_idx] + scaled_trans_[0];
-                float dst_y = depth * coeff_mat_y[coeff_idx] + scaled_trans_[1];
-                dst[k]      = depth * coeff_mat_z[coeff_idx] + scaled_trans_[2];
-                coeff_idx++;
+                float dst_x = depth * (*ptr_coeff_x++) + scaled_trans_[0];
+                float dst_y = depth * (*ptr_coeff_y++) + scaled_trans_[1];
+                dst[k]      = depth * (*ptr_coeff_z++) + scaled_trans_[2];
 
-                if(dst[k] < EPSILON) {
-                    break;
-                }
-                else {
-                    float tx = float(dst_x / dst[k]);
-                    float ty = float(dst_y / dst[k]);
+                float tx = float(dst_x / dst[k]);
+                float ty = float(dst_y / dst[k]);
 
-                    if(add_target_distortion_) {
-                        float pt_ud[2] = { tx, ty };
-                        float pt_d[2];
-                        float r2_cur = pt_ud[0] * pt_ud[0] + pt_ud[1] * pt_ud[1];
-                        if( (OB_DISTORTION_BROWN_CONRADY_K6 == rgb_disto_.model) && (r2_max_loc_ != 0) && (r2_cur > r2_max_loc_)) {
-                            break;
-                        }
-                        addDistortion(rgb_disto_, pt_ud, pt_d);
-                        tx = pt_d[0];
-                        ty = pt_d[1];
+                if(add_target_distortion_) {
+                    float pt_ud[2] = { tx, ty };
+                    float pt_d[2];
+                    float r2_cur = pt_ud[0] * pt_ud[0] + pt_ud[1] * pt_ud[1];
+                    if((OB_DISTORTION_BROWN_CONRADY_K6 == rgb_disto_.model) && (r2_max_loc_ != 0) && (r2_cur > r2_max_loc_)) {
+                        continue;  // break;
                     }
-
-                    pixelx_f[k] = tx * rgb_intric_.fx + rgb_intric_.cx;
-                    pixely_f[k] = ty * rgb_intric_.fy + rgb_intric_.cy;
-                    skip_this_pixel = false;
+                    addDistortion(rgb_disto_, pt_ud, pt_d);
+                    tx = pt_d[0];
+                    ty = pt_d[1];
                 }
+
+                pixelx_f[k]     = tx * rgb_intric_.fx + rgb_intric_.cx;
+                pixely_f[k]     = ty * rgb_intric_.fy + rgb_intric_.cy;
+                skip_this_pixel = false;
             }
 
-            if(skip_this_pixel)
-                continue;
-
-            transferDepth(pixelx_f, pixely_f, dst, 1, depth_idx, out_depth, map);
+            if(!skip_this_pixel)
+                transferDepth(pixelx_f, pixely_f, dst, 1, depth_idx - 1, out_depth, map);
         }
     }
 }

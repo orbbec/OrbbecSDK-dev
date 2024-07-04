@@ -49,7 +49,7 @@ int main(void) try {
         }
 
         // Render frame in the window.
-        app.renderFrameData(depthFrame);
+        app.renderFrame(depthFrame);
     }
 
     // Stop the pipeline

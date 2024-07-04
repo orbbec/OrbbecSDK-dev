@@ -36,19 +36,18 @@ private:
 
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
-    PointCloudFilter::OBPointCloudDistortionType getDistortionType(OBCameraDistortion colorDistortion,OBCameraDistortion depthDistortion);
+    PointCloudFilter::OBPointCloudDistortionType getDistortionType(OBCameraDistortion colorDistortion, OBCameraDistortion depthDistortion);
 
 protected:
     OBFormat               pointFormat_;
     float                  positionDataScale_;
-    int                    coordinateSystemCoefficient_;  // Coordinate system coefficient, default right-hand coordinate system
+    OBCoordinateSystemType coordinateSystemType_;
     bool                   isColorDataNormalization_;
 
     std::shared_ptr<FormatConverter> formatConverter_;
 
-    OBCoordinateSystemType     coordinateSystemType_;
-    std::shared_ptr<float>     tablesData_;
-    OBXYTables                 xyTables_;
+    std::shared_ptr<float> tablesData_;
+    OBXYTables             xyTables_;
 };
 
 }  // namespace libobsensor

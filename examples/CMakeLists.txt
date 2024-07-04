@@ -20,7 +20,7 @@ add_subdirectory(2.device.hot_plugin)
 # add_subdirectory(2.device.net_device)
 add_subdirectory(3.advanced.common_usages)
 add_subdirectory(3.advanced.sync_align)
-# add_subdirectory(3.advanced.point_cloud) # to do
+add_subdirectory(3.advanced.point_cloud)
 add_subdirectory(3.advanced.post_processing)
 # add_subdirectory(3.advanced.coordinate_convert)
 add_subdirectory(3.advanced.hdr)

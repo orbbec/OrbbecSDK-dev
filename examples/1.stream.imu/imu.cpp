@@ -5,19 +5,17 @@
 #include <mutex>
 #include <iostream>
 
-void printImuValue(OBFloat3D obFloat3d, uint64_t index, uint64_t timeStampUs, float temperature, OBFrameType type) {
+void printImuValue(OBFloat3D obFloat3d, uint64_t index, uint64_t timeStampUs, float temperature, OBFrameType type, const std::string &unitStr) {
     std::cout << index << std::endl;
     std::cout << type << " Frame: \n\r{\n\r"
               << "  tsp = " << timeStampUs << "\n\r"
               << "  temperature = " << temperature << "\n\r"
-              << "  " << type << ".x = " << obFloat3d.x << " m/s^2"
-              << "\n\r"
-              << "  " << type << ".y = " << obFloat3d.y << " m/s^2"
-              << "\n\r"
-              << "  " << type << ".z = " << obFloat3d.z << " m/s^2"
-              << "\n\r"
+              << "  " << type << ".x = " << obFloat3d.x << unitStr << "\n\r"
+              << "  " << type << ".y = " << obFloat3d.y << unitStr << "\n\r"
+              << "  " << type << ".z = " << obFloat3d.z << unitStr << "\n\r"
               << "}\n\r" << std::endl;
 }
+
 int main() try {
 
     // Create a pipeline with default device.
@@ -53,18 +51,18 @@ int main() try {
         auto accelType        = accelFrame->getType();
         if(accelIndex % 50 == 0) {  // print information every 50 frames.
             auto accelValue = accelFrame->getValue();
-            printImuValue(accelValue, accelIndex, accelTimeStampUs, accelTemperature, accelType);
+            printImuValue(accelValue, accelIndex, accelTimeStampUs, accelTemperature, accelType, "m/s^2");
         }
 
         auto gyroFrameRaw    = frameSet->getFrame(OB_FRAME_GYRO);
         auto gyroFrame       = gyroFrameRaw->as<ob::GyroFrame>();
         auto gyroIndex       = gyroFrame->getIndex();
-        auto gyrotimeStampUs = gyroFrame->getTimeStampUs();
+        auto gyroTimeStampUs = gyroFrame->getTimeStampUs();
         auto gyroTemperature = gyroFrame->getTemperature();
         auto gyroType        = gyroFrame->getType();
         if(gyroIndex % 50 == 0) {  // print information every 50 frames.
             auto gyroValue = gyroFrame->getValue();
-            printImuValue(gyroValue, gyroIndex, gyrotimeStampUs, gyroTemperature, gyroType);
+            printImuValue(gyroValue, gyroIndex, gyroTimeStampUs, gyroTemperature, gyroType, "rad/s");
         }
     }
 

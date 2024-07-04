@@ -98,7 +98,7 @@ int main(void) try {
         if(colorFrame == nullptr || depthFrame == nullptr){
             continue;
         }
-        app.renderFrameData({ colorFrame, depthFrame });
+        app.renderFrame({ colorFrame, depthFrame });
     }
     // Stop the Pipeline, no frame data will be generated
     pipe.stop();

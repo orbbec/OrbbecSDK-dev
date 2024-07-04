@@ -56,93 +56,88 @@ void saveRGBPointsToPly(std::shared_ptr<ob::Frame> frame, std::string fileName) 
     fclose(fp);
 }
 
-int main(int argc, char **argv) try {
-    // create pipeline
-    ob::Pipeline pipeline;
+int main(void) try {
+
+    // create config to configure the pipeline streams
+    auto config = std::make_shared<ob::Config>();
+
+    // enable depth and color streams
+    config->enableVideoStream(OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_Y16);
+    config->enableVideoStream(OB_STREAM_COLOR, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_YUYV);
+
+    // set frame aggregate output mode to all type frame require. therefor, the output frameset will contain all type of frames
+    config->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE);
+
+    // create pipeline to manage the streams
+    auto pipeline = std::make_shared<ob::Pipeline>();
 
     // Enable frame synchronization to ensure depth frame and color frame on output frameset are synchronized.
-    pipeline.enableFrameSync();
+    pipeline->enableFrameSync();
 
-    // start pipeline with config
-    pipeline.start();
+    // Start pipeline with config
+    pipeline->start(config);
 
-    // Create a point cloud Filter object (the device parameters will be obtained inside the Pipeline when the point cloud filter is created, so try to
-    // configure the device before creating the filter)
-    ob::PointCloudFilter pointCloud;
+    // Create a point cloud Filter, which will be used to generate pointcloud frame from depth and color frames.
+    auto pointCloud = std::make_shared<ob::PointCloudFilter>();
+
+    // Create a Align Filter, which will be used to align depth frame and color frame.
+    auto align = std::make_shared<ob::Align>(OB_STREAM_COLOR);  // align depth frame to color frame
 
     // operation prompt
+    std::cout << "Depth and Color stream are started!" << std::endl;
     std::cout << "Press R or r to create RGBD PointCloud and save to ply file! " << std::endl;
     std::cout << "Press D or d to create Depth PointCloud and save to ply file! " << std::endl;
     std::cout << "Press ESC to exit! " << std::endl;
 
-    int count = 0;
+    // int count = 0;
     while(true) {
-        auto frameset = pipeline.waitForFrameset(100);
-        if(kbhit()) {
-            int key = getch();
-            // Press the ESC key to exit
-            if(key == KEY_ESC) {
-                break;
-            }
-            if(key == 'R' || key == 'r') {
-                count = 0;
-                // Limit up to 10 repetitions
-                while(count++ < 10) {
-                    // Wait for a frame of data, the timeout is 100ms
-                    auto frameset = pipeline.waitForFrameset(100);
-                    if(frameset != nullptr && frameset->getFrame(OB_FRAME_COLOR)->as<ob::ColorFrame>() != nullptr && frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>() != nullptr) {
-                        // point position value multiply depth value scale to convert uint to millimeter (for some devices, the default depth value uint is not
-                        // millimeter)
-                        auto depthValueScale = frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>()->getValueScale();
-                        pointCloud.setPositionDataScaled(depthValueScale);
-                        try {
-                            // Generate a colored point cloud and save it
-                            std::cout << "Save RGBD PointCloud ply file..." << std::endl;
-                            pointCloud.setCreatePointFormat(OB_FORMAT_RGB_POINT);
-                            std::shared_ptr<ob::Frame> frame = pointCloud.process(frameset);
-                            saveRGBPointsToPly(frame, "RGBPoints.ply");
-                            std::cout << "RGBPoints.ply Saved" << std::endl;
-                        }
-                        catch(std::exception &e) {
-                            std::cout << "Get point cloud failed" << std::endl;
-                        }
-                        break;
-                    }
-                    else {
-                        std::cout << "Get color frame or depth frame failed!" << std::endl;
-                    }
-                }
-            }
-            else if(key == 'D' || key == 'd') {
-                count = 0;
-                // Limit up to 10 repetitions
-                while(count++ < 10) {
-                    // Wait for up to 100ms for a frameset in blocking mode.
-                    auto frameset = pipeline.waitForFrameset(100);
-                    if(frameset != nullptr && frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>() != nullptr) {
-                        // point position value multiply depth value scale to convert uint to millimeter (for some devices, the default depth value uint is not
-                        // millimeter)
-                        auto depthValueScale = frameset->getFrame(OB_FRAME_DEPTH)->as<ob::DepthFrame>()->getValueScale();
-                        pointCloud.setPositionDataScaled(depthValueScale);
-                        try {
-                            // generate point cloud and save
-                            std::cout << "Save Depth PointCloud to ply file..." << std::endl;
-                            pointCloud.setCreatePointFormat(OB_FORMAT_POINT);
-                            std::shared_ptr<ob::Frame> frame = pointCloud.process(frameset);
-                            savePointsToPly(frame, "DepthPoints.ply");
-                            std::cout << "DepthPoints.ply Saved" << std::endl;
-                        }
-                        catch(std::exception &e) {
-                            std::cout << "Get point cloud failed" << std::endl;
-                        }
-                        break;
-                    }
-                }
-            }
+        auto key = ob_sample_utils::waitForKeyPressed(5);
+        if(key == 27) {
+            break;
+        }
+
+        auto frameset = pipeline->waitForFrameset(1000);
+        if(!frameset) {
+            continue;
+        }
+
+        if(key == 'r' || key == 'R') {
+            std::cout << "Save RGBD PointCloud ply file, this will take some time..." << std::endl;
+
+            // align depth frame to color frame
+            auto alignedFrameset = align->process(frameset);
+
+            // set to create RGB point cloud format (will be effective only if color frame and depth frame are contained in the frameset)
+            pointCloud->setCreatePointFormat(OB_FORMAT_RGB_POINT);
+
+            // process the frameset to generate point cloud frame
+            std::shared_ptr<ob::Frame> frame = pointCloud->process(alignedFrameset);
+
+            // save point cloud data to ply file
+            saveRGBPointsToPly(frame, "RGBPoints.ply");
+
+            std::cout << "RGBPoints.ply Saved" << std::endl;
+        }
+        else if(key == 'd' || key == 'D') {
+            std::cout << "Save Depth PointCloud to ply file, this will take some time..." << std::endl;
+
+            // set to create depth point cloud format
+            auto alignedFrameset = align->process(frameset);
+
+            // set to create point cloud format
+            pointCloud->setCreatePointFormat(OB_FORMAT_POINT);
+
+            // process the frameset to generate point cloud frame (pass into a single depth frame to process is also valid)
+            std::shared_ptr<ob::Frame> frame = pointCloud->process(alignedFrameset);
+
+            // save point cloud data to ply file
+            savePointsToPly(frame, "DepthPoints.ply");
+
+            std::cout << "DepthPoints.ply Saved" << std::endl;
         }
     }
     // stop the pipeline
-    pipeline.stop();
+    pipeline->stop();
 
     return 0;
 }

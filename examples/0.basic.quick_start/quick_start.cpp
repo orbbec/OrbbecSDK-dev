@@ -3,7 +3,6 @@
 #include "utils_opencv.hpp"
 
 int main(void) try {
-
     // Create a pipeline.
     ob::Pipeline pipe;
 
@@ -11,36 +10,19 @@ int main(void) try {
     pipe.start();
 
     // Create a window for rendering, and set the size of the window.
-    Window app("quick start", 1280, 720, RENDER_ONE_ROW);
+    Window app("quick start", 1280, 480, RENDER_ONE_ROW);
 
     while(app) {
-        // Wait for frameSet from the pipeline.
+        // Wait for frameSet from the pipeline, the default timeout is 1000ms.
         auto frameSet = pipe.waitForFrameset();
 
+        // If timeout without getting frameSet, continue to wait for next frameSet.
         if(frameSet == nullptr) {
             continue;
         }
 
-        // Get the depth raw from the frameSet.
-        auto depthFrameRaw  = frameSet->getFrame(OB_FRAME_DEPTH);
-        // Get the color raw from the frameSet.
-        auto colorFrameRaw  = frameSet->getFrame(OB_FRAME_COLOR);
-
-        if(depthFrameRaw == nullptr || colorFrameRaw == nullptr){
-            continue;
-        }
-
-        // Get the depth frame from the depth raw.
-        auto depthFrame = depthFrameRaw->as<ob::DepthFrame>();
-        // Get the color frame from the color raw.
-        auto colorFrame = colorFrameRaw->as<ob::ColorFrame>();
-
-        if(depthFrame == nullptr || colorFrame == nullptr){
-            continue;
-        }
-
         // Rendering display
-        app.renderFrameData({colorFrame, depthFrame});
+        app.renderFrame(frameSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

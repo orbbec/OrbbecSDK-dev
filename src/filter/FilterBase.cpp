@@ -218,7 +218,7 @@ std::string filterConfigValueToString(double value, OBFilterConfigValueType valu
         return std::to_string(value);
     }
     else if(valueType == OB_FILTER_CONFIG_VALUE_TYPE_BOOLEAN) {
-        return value ? "true" : "false";
+        return value ? "1" : "0";
     }
     LOG_WARN("Invalid filter config value type: {}", valueType);
     return "";

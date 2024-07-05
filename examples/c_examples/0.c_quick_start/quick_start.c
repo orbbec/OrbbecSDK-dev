@@ -4,6 +4,7 @@
 #include <libobsensor/ObSensor.h>
 
 #include "utils_c.h"
+#include "utils_key.h"
 
 void calculate_and_print_frame_rate(const ob_frame *frameset) {
     // Initialize variables

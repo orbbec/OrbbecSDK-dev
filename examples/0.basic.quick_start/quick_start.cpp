@@ -10,7 +10,7 @@ int main(void) try {
     pipe.start();
 
     // Create a window for rendering, and set the size of the window.
-    Window app("quick start", 1280, 480, RENDER_ONE_ROW);
+    Window app("quick start", 1280, 720, RENDER_ONE_ROW);
 
     while(app) {
         // Wait for frameSet from the pipeline, the default timeout is 1000ms.

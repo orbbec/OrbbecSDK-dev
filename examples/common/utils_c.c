@@ -61,24 +61,24 @@ int kbhit(void) {
 }
 
 #include <sys/time.h>
-uint64_t ob_sample_utils_get_current_timestamp_ms() {
-    struct timeval te;
-    gettimeofday(&te, NULL);                                          // 获取当前时间
-    long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;  // 计算毫秒
-    return milliseconds;
-}
+// uint64_t ob_sample_utils_get_current_timestamp_ms() {
+//     struct timeval te;
+//     gettimeofday(&te, NULL);                                          // 获取当前时间
+//     long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;  // 计算毫秒
+//     return milliseconds;
+// }
 #else  // Windows
 #include <conio.h>
 #include <windows.h>
-uint64_t ob_sample_utils_get_current_timestamp_ms() {
-    FILETIME      ft;
-    LARGE_INTEGER li;
-    GetSystemTimeAsFileTime(&ft);
-    li.LowPart             = ft.dwLowDateTime;
-    li.HighPart            = ft.dwHighDateTime;
-    long long milliseconds = li.QuadPart / 10000LL;
-    return milliseconds;
-}
+// uint64_t ob_sample_utils_get_current_timestamp_ms() {
+//     FILETIME      ft;
+//     LARGE_INTEGER li;
+//     GetSystemTimeAsFileTime(&ft);
+//     li.LowPart             = ft.dwLowDateTime;
+//     li.HighPart            = ft.dwHighDateTime;
+//     long long milliseconds = li.QuadPart / 10000LL;
+//     return milliseconds;
+// }
 
 char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms) {
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
@@ -96,7 +96,7 @@ char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms) {
     DWORD start_time = GetTickCount();
     while(true) {
         if(_kbhit()) {
-            char ch = (char)getch();
+            char ch = (char)_getch();
             SetConsoleMode(hStdin, mode);
             return ch;
         }

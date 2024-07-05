@@ -7,101 +7,97 @@
 
 #include <functional>
 
-/**
- * @brief Convert OBFormat to " char* " type and then return.
- *
- * @param[in] type OBFormat type.
- * @return OBFormat of "char*" type.
- */
-std::ostream &operator<<(std::ostream &os, const OBFormat &type) {
-    os << ob_format_type_to_string(type);
-    return os;
-}
+namespace ob {
+class TypeHelper {
+public:
+    /**
+     * @brief Convert OBFormat to " string " type and then return.
+     *
+     * @param[in] type OBFormat type.
+     * @return OBFormat of "string" type.
+     */
+    static std::string convertOBFormatTypeToString(const OBFormat &type) {
+        return ob_format_type_to_string(type);
+    }
 
-/**
- * @brief Convert OBFrameType to " char* " type and then return.
- *
- * @param[in] type OBFrameType type.
- * @return OBFrameType of "char*" type.
- */
-std::ostream &operator<<(std::ostream &os, const OBFrameType &type) {
-    os << ob_frame_type_to_string(type);
-    return os;
-}
+    /**
+     * @brief Convert OBFrameType to " string " type and then return.
+     *
+     * @param[in] type OBFrameType type.
+     * @return OBFrameType of "string" type.
+     */
+    static std::string convertOBFrameTypeToString(const OBFrameType &type) {
+        return ob_frame_type_to_string(type);
+    }
 
-/**
- * @brief Convert OBStreamType to " char* " type and then return.
- *
- * @param[in] type OBStreamType type.
- * @return OBStreamType of "char*" type.
- */
-std::ostream &operator<<(std::ostream &os, const OBStreamType &type) {
-    os << ob_stream_type_to_string(type);
-    return os;
-}
+    /**
+     * @brief Convert OBStreamType to " string " type and then return.
+     *
+     * @param[in] type OBStreamType type.
+     * @return OBStreamType of "string" type.
+     */
+    static std::string convertOBStreamTypeToString(const OBStreamType &type) {
+        return ob_stream_type_to_string(type);
+    }
 
-/**
- * @brief Convert OBSensorType to " char* " type and then return.
- *
- * @param[in] type OBSensorType type.
- * @return OBSensorType of "char*" type.
- */
-std::ostream &operator<<(std::ostream &os, const OBSensorType &type) {
-    os << ob_sensor_type_to_string(type);
-    return os;
-}
+    /**
+     * @brief Convert OBSensorType to " string " type and then return.
+     *
+     * @param[in] type OBSensorType type.
+     * @return OBSensorType of "string" type.
+     */
+    static std::string convertOBSensorTypeToString(const OBSensorType &type) {
+        return ob_sensor_type_to_string(type);
+    }
 
-/**
- * @brief Convert OBIMUSampleRate to " char* " type and then return.
- *
- * @param[in] type OBIMUSampleRate type.
- * @return OBIMUSampleRate of "char*" type.
- */
-std::ostream &operator<<(std::ostream &os, const OBIMUSampleRate &type) {
-    os << ob_imu_rate_type_to_string(type);
-    return os;
-}
+    /**
+     * @brief Convert OBIMUSampleRate to " string " type and then return.
+     *
+     * @param[in] type OBIMUSampleRate type.
+     * @return OBIMUSampleRate of "string" type.
+     */
+    static std::string convertOBIMUSampleRateTypeToString(const OBIMUSampleRate &type) {
+        return ob_imu_rate_type_to_string(type);
+    }
 
-/**
- * @brief Convert OBGyroFullScaleRange to " char* " type and then return.
- *
- * @param[in] type OBGyroFullScaleRange type.
- * @return OBGyroFullScaleRange of "char*" type.
- */
-std::ostream &operator<<(std::ostream &os, const OBGyroFullScaleRange &type) {
-    os << ob_gyro_range_type_to_string(type);
-    return os;
-}
+    /**
+     * @brief Convert OBGyroFullScaleRange to " string " type and then return.
+     *
+     * @param[in] type OBGyroFullScaleRange type.
+     * @return OBGyroFullScaleRange of "string" type.
+     */
+    static std::string convertOBGyroFullScaleRangeTypeToString(const OBGyroFullScaleRange &type) {
+        return ob_gyro_range_type_to_string(type);
+    }
 
-/**
- * @brief Convert OBAccelFullScaleRange to " char* " type and then return.
- *
- * @param[in] type OBAccelFullScaleRange type.
- * @return OBAccelFullScaleRange of "char*" type.
- */
-std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &type) {
-    os << ob_accel_range_type_to_string(type);
-    return os;
-}
+    /**
+     * @brief Convert OBAccelFullScaleRange to " string " type and then return.
+     *
+     * @param[in] type OBAccelFullScaleRange type.
+     * @return OBAccelFullScaleRange of "string" type.
+     */
+    static std::string convertOBAccelFullScaleRangeTypeToString(const OBAccelFullScaleRange &type) {
+        return ob_accel_range_type_to_string(type);
+    }
 
-/**
- * @brief Convert OBFrameMetadataType to " char* " type and then return.
- *
- * @param[in] type OBFrameMetadataType type.
- * @return OBFrameMetadataType of "char*" type.
- */
-std::ostream &operator<<(std::ostream &os, const OBFrameMetadataType &type) {
-    os << ob_meta_data_type_to_string(type);
-    return os;
-}
+    /**
+     * @brief Convert OBFrameMetadataType to " string " type and then return.
+     *
+     * @param[in] type OBFrameMetadataType type.
+     * @return OBFrameMetadataType of "string" type.
+     */
+    static std::string convertOBFrameMetadataTypeToString(const OBFrameMetadataType &type) {
+        return ob_meta_data_type_to_string(type);
+    }
 
-
-/**
- * @brief Convert OBSensorType to OBStreamType type and then return.
- *
- * @param[in] type OBSensorType type.
- * @return OBStreamType type.
- */
-OBStreamType convertSensorTypeToStreamType(OBSensorType type) {
-    return ob_sensor_type_to_stream_type(type);
-}
+    /**
+     * @brief Convert OBSensorType to OBStreamType type and then return.
+     *
+     * @param[in] type OBSensorType type.
+     * @return OBStreamType type.
+     */
+    static OBStreamType convertSensorTypeToStreamType(OBSensorType type) {
+        return ob_sensor_type_to_stream_type(type);
+    }
+};
+}  // namespace ob

@@ -4,6 +4,7 @@
 #include <libobsensor/ObSensor.h>
 
 #include "utils_c.h"
+#include "utils_key.h"
 
 // helper function to check for errors and exit if there is one
 void check_ob_error(ob_error **err) {

@@ -1,8 +1,8 @@
 #include <libobsensor/ObSensor.hpp>
 
-#include <iostream>
-
 #include "utils.hpp"
+
+#include <iostream>
 
 int main() try {
     // Create a pipeline with default device.
@@ -27,9 +27,8 @@ int main() try {
         std::cout << "Enter index of preset to load: ";
 
         // Select preset to load.
-        int loadIndex;
-        std::cin >> loadIndex;
-        auto presetName = presetLists->getName(loadIndex);
+        int inputOption = ob_sample_utils::getInputOption();
+        auto presetName = presetLists->getName(inputOption);
 
         // Load preset.
         device->loadPreset(presetName);
@@ -40,6 +39,10 @@ int main() try {
 
     // Stop Pipeline.
     pipe.stop();
+
+    printf("\nProgram ended successfully. Press any key to exit.");
+    getchar();
+    getchar();
 
     return 0;
 }

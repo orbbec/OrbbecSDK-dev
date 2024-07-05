@@ -190,7 +190,6 @@ void G330Device::initProperties() {
             // propertyAccessor->registerProperty(OB_PROP_SDK_DEPTH_FRAME_UNPACK_BOOL, "rw", "rw", vendorPropertyPort);
 
             propertyAccessor->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_EXTERNAL_SIGNAL_RESET_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_GPM_BOOL, "rw", "rw", vendorPropertyPort);
@@ -515,14 +514,18 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
         }
 
         // frame preprocessor
-        std::shared_ptr<FrameProcessor> frameProcessor = nullptr;
         if(!frameProcessorFactory_) {
             TRY_EXECUTE(frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(this));
         }
         if(frameProcessorFactory_) {
-            frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
+            auto frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
             if(frameProcessor) {
                 videoSensor->setFrameProcessor(frameProcessor);
+
+                if(sensorType ==OB_SENSOR_DEPTH){
+                    auto propertyAccessor = getPropertyAccessor();
+                    propertyAccessor->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", frameProcessor);
+                }
             }
         }
 

@@ -45,12 +45,18 @@ std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSe
         return nullptr;
     }
 
+    auto iter    = frameProcessors_.find(sensorType);
+    if(iter != frameProcessors_.end()) {
+        return iter->second;
+    }
+
     std::shared_ptr<FrameProcessor> processor;
     TRY_EXECUTE({ processor = std::make_shared<FrameProcessor>(context_, sensorType); })
+    frameProcessors_.insert({sensorType, processor});
     return processor;
 }
 
-FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType) : context_(context), sensorType_(sensorType) {
+FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType) : context_(context), sensorType_(sensorType),FilterBase("FrameProcessor"){
     if(context_->context && context_->create_processor) {
         ob_error *error   = nullptr;
         privateProcessor_ = context_->create_processor(context_->context, sensorType, &error);
@@ -65,7 +71,6 @@ FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context, O
         ob_error   *error  = nullptr;
         const char *schema = context_->get_config_schema(privateProcessor_, &error);
         if(error) {
-            // TODO
             delete error;
         }
         if(schema) {
@@ -79,13 +84,12 @@ FrameProcessor::~FrameProcessor() noexcept {
         ob_error *error = nullptr;
         context_->destroy_processor(privateProcessor_, &error);
         if(error) {
-            // TODO
             delete error;
         }
     }
 }
 
-std::shared_ptr<Frame> FrameProcessor::process(std::shared_ptr<const Frame> frame) {
+std::shared_ptr<Frame> FrameProcessor::processFunc(std::shared_ptr<const Frame> frame) {
     if(context_->process_frame) {
         ob_frame              *c_frame = new ob_frame();
         ob_error              *error   = nullptr;
@@ -100,7 +104,6 @@ std::shared_ptr<Frame> FrameProcessor::process(std::shared_ptr<const Frame> fram
         delete c_frame;
 
         if(error) {
-            // TODO
             delete error;
             return FrameFactory::createFrameFromOtherFrame(frame, true);
         }
@@ -110,7 +113,7 @@ std::shared_ptr<Frame> FrameProcessor::process(std::shared_ptr<const Frame> fram
     return FrameFactory::createFrameFromOtherFrame(frame, true);
 }
 
-const std::string &FrameProcessor::getConfigSchema() {
+const std::string &FrameProcessor::getConfigSchema() const{
     return configSchema_;
 }
 
@@ -122,8 +125,45 @@ void FrameProcessor::updateConfig(std::vector<std::string> &params) {
     }
     context_->update_config(privateProcessor_, params.size(), c_params.data(), &error);
     if(error) {
-        // TODO
         delete error;
+    }
+}
+
+void FrameProcessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value){
+    switch(propertyId){
+        case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL:
+        {
+            setConfigValue("DisparityTransform#255",static_cast<double>(value.intValue));
+        }
+        break;
+    }
+}
+
+void FrameProcessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value){
+    double getValue = 0;
+    switch(propertyId){
+        case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL:
+        {
+            getValue = getConfigValue("DisparityTransform#255");
+            value->intValue = static_cast<int32_t>(getValue);
+        }
+        break;
+    }
+}
+
+void FrameProcessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range){
+    double value = 0.0f;
+    switch(propertyId){
+        case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL:
+        {
+            value = getConfigValue("DisparityTransform#255");
+            range->cur.intValue = static_cast<int32_t>(value);
+            range->def.intValue = 1;
+            range->max.intValue = 1;
+            range->min.intValue = 0;
+            range->step.intValue = 1;
+        }
+        break;
     }
 }
 

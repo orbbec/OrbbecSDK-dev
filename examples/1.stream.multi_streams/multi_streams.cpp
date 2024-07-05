@@ -26,7 +26,7 @@ int main(void) try {
             continue;
         }
         // Get frame type based on sensor type.
-        auto streamType = convertSensorTypeToStreamType(sensorType);
+        auto streamType = ob::TypeHelper::convertSensorTypeToStreamType(sensorType);
         // enable the stream.
         config->enableVideoStream(streamType);
     }

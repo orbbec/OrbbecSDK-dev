@@ -110,23 +110,23 @@ void handleDeviceConnected(std::shared_ptr<ob::DeviceList> devices) {
         pipeline = std::make_shared<ob::Pipeline>(device);
         std::cout << "Open device success, SN: " << devices->getSerialNumber(0) << std::endl;
 
-        // try to switch depth work mode
-        switchDepthWorkMode();
+        // // try to switch depth work mode
+        // switchDepthWorkMode();
 
-        // try turn off hardware disparity to depth converter (switch to software d2d)
-        turnOffHwD2d();
+        // // try turn off hardware disparity to depth converter (switch to software d2d)
+        // turnOffHwD2d();
 
-        // set depth unit
-        setDepthUnit();
+        // // set depth unit
+        // setDepthUnit();
 
-        // set depth value range
-        setDepthValueRange();
+        // // set depth value range
+        // setDepthValueRange();
 
-        // set depth soft filter
-        setDepthSoftFilter();
+        // // set depth soft filter
+        // setDepthSoftFilter();
 
         // start stream
-        // startStream();
+        startStream();
     }
 }
 
@@ -296,30 +296,6 @@ void startStream() {
             }
         }
     }
-
-    // // Configure which streams to enable or disable for the Pipeline by creating a Config.
-    // std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-
-    // // Get device from pipeline.
-    // device = pipeline->getDevice();
-
-    // // Get sensorList from device.
-    // auto sensorList = device->getSensorList();
-
-    // for(uint32_t index = 0; index < sensorList->getCount(); index++) {
-    //     // Query all supported infrared sensor type and enable the infrared stream.
-    //     // For dual infrared device, enable the left and right infrared streams.
-    //     // For single infrared device, enable the infrared stream.
-    //     OBSensorType sensorType = sensorList->getSensorType(index);
-    //     if(sensorType == OB_SENSOR_IR || sensorType == OB_SENSOR_IR_LEFT || sensorType == OB_SENSOR_IR_RIGHT || sensorType == OB_SENSOR_COLOR
-    //        || sensorType == OB_SENSOR_DEPTH) {
-    //         // Enable the stream with specified requirements.
-    //         config->enableVideoStream(convertSensorTypeToStreamType(sensorType));
-
-    //         // // colorProfile
-    //         // auto sensor = sensorList->getSensor();
-    //     }
-    // }
 
     // start pipeline
     pipeline->start(config, handleFrameset);
@@ -798,7 +774,6 @@ void setColorGainValue(bool increase) {
 
 void printUsage() {
     std::cout << "Support commands:" << std::endl;
-    std::cout << "    stream / s - (re)start stream" << std::endl;
     std::cout << "    info / i - get device information" << std::endl;
     std::cout << "    param / p - get camera parameter" << std::endl;
     std::cout << "    laser / l - on/off laser" << std::endl;
@@ -824,10 +799,7 @@ void printUsage() {
 }
 
 void commandProcess(std::string cmd) {
-    if(cmd == "stream" || cmd == "s") {
-        startStream();
-    }
-    else if(cmd == "info" || cmd == "i") {
+    if(cmd == "info" || cmd == "i") {
         getDeviceInformation();
     }
     else if(cmd == "param" || cmd == "p") {

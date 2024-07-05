@@ -1,17 +1,17 @@
 #include <libobsensor/ObSensor.hpp>
 
+#include "utils.hpp"
 #include "utils_opencv.hpp"
 
 #include <iostream>
 
 // get input option
 int getInputOption() {
-    std::string selected;
-    std::cin >> selected;
-    if(selected == "q" || selected == "Q") {
+    char inputOption = ob_sample_utils::waitForKeyPressed();
+    if(inputOption == ESC_KEY) {
         return -1;
     }
-    return std::stoul(selected);
+    return inputOption - '0';
 }
 
 // Print stream profile information.
@@ -27,7 +27,7 @@ void printStreamProfile(std::shared_ptr<ob::StreamProfile> profile, uint32_t ind
     // Get the fps.
     auto fps = videoProfile->getFps();
     std::cout << index << "."
-              << "format: " << formatName << ", "
+              << "format: " << ob::TypeHelper::convertOBFormatTypeToString(formatName) << ", "
               << "revolution: " << width << "*" << height << ", "
               << "fps: " << fps << std::endl;
 }
@@ -39,7 +39,7 @@ void printAccelProfile(std::shared_ptr<ob::StreamProfile> profile, uint32_t inde
     // Get the rate of accel.
     auto accRate = accProfile->getSampleRate();
     std::cout << index << "."
-              << "acc rate: " << accRate << std::endl;
+              << "acc rate: " << ob::TypeHelper::convertOBIMUSampleRateTypeToString(accRate) << std::endl;
 }
 
 // Print gyro profile information.
@@ -87,13 +87,13 @@ void enumerateSensors(std::shared_ptr<ob::Device> device) {
             // Get the sensor type.
             auto sensorType = sensorList->getSensorType(index);
             std::cout << " - " << index << "."
-                      << "sensor type: " << sensorType << std::endl;
+                      << "sensor type: " << ob::TypeHelper::convertOBSensorTypeToString(sensorType) << std::endl;
         }
 
-        std::cout << "Select a sensor to enumerate its streams(input sensor index or \'q\' to enumerate device): " << std::endl;
+        std::cout << "Select a sensor to enumerate its streams(input sensor index or \'ESC\' to enumerate device): " << std::endl;
 
         // Select a sensor.
-        int sensorSelected = getInputOption();
+        int sensorSelected = ob_sample_utils::getInputOption();
         if(sensorSelected == -1) {
             break;
         }
@@ -119,7 +119,7 @@ int main(void) try {
 
         std::cout << "enumerated devices: " << std::endl;
 
-        std::shared_ptr<ob::Device> device = nullptr;
+        std::shared_ptr<ob::Device>     device     = nullptr;
         std::shared_ptr<ob::DeviceInfo> deviceInfo = nullptr;
         for(uint32_t index = 0; index < deviceList->getCount(); index++) {
             // Get device from deviceList.
@@ -130,10 +130,10 @@ int main(void) try {
                       << std::endl;
         }
 
-        std::cout << "enumerate sensors of device (input device index or \'q\' to exit program):" << std::endl;
+        std::cout << "enumerate sensors of device (input device index or \'ESC\' to exit program):" <<std::endl;
 
         // select a device.
-        int deviceSelected = getInputOption();
+        int deviceSelected = ob_sample_utils::getInputOption();
         if(deviceSelected == -1) {
             break;
         }

@@ -28,7 +28,7 @@ int main() try {
         OBSensorType sensorType = sensorList->getSensorType(index);
         if(sensorType == OB_SENSOR_IR || sensorType == OB_SENSOR_IR_LEFT || sensorType == OB_SENSOR_IR_RIGHT) {
             // Enable the stream with specified requirements.
-            config->enableVideoStream(convertSensorTypeToStreamType(sensorType), OB_WIDTH_ANY, OB_HEIGHT_ANY, 30, OB_FORMAT_ANY);
+            config->enableVideoStream(ob::TypeHelper::convertSensorTypeToStreamType(sensorType), OB_WIDTH_ANY, OB_HEIGHT_ANY, 30, OB_FORMAT_ANY);
         }
     }
 

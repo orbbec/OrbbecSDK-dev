@@ -1,12 +1,13 @@
 #include <libobsensor/ObSensor.hpp>
 
 #include "utils.hpp"
+#include "utils_key.h"
 
 #include <mutex>
 #include <iostream>
 
 void printImuValue(OBFloat3D obFloat3d, uint64_t index, uint64_t timeStampUs, float temperature, OBFrameType type, const std::string &unitStr) {
-    std::cout << index << std::endl;
+    std::cout << "frame index: " <<index << std::endl;
     std::cout << type << " Frame: \n\r{\n\r"
               << "  tsp = " << timeStampUs << "\n\r"
               << "  temperature = " << temperature << "\n\r"
@@ -38,7 +39,7 @@ int main() try {
 
     while(true) {
         auto key = ob_sample_utils::waitForKeyPressed(1);
-        if(key == 27) {  // Esc key to exit.
+        if(key == ESC_KEY) {  // Esc key to exit.
             break;
         }
         auto frameSet = pipe.waitForFrameset();

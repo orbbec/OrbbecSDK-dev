@@ -535,7 +535,7 @@ std::ostream &operator<<(std::ostream &os, const OBCameraParam &params) {
        << ",p1:" << params.rgbDistortion.p1 << ",p2:" << params.rgbDistortion.p2 << "}\n"
        << "transform: rot:[" << params.transform.rot[0] << "," << params.transform.rot[1] << "," << params.transform.rot[2] << "," << params.transform.rot[3]
        << "," << params.transform.rot[4] << "," << params.transform.rot[5] << "," << params.transform.rot[6] << "," << params.transform.rot[7] << ","
-       << params.transform.rot[8] << "," << params.transform.rot[9] << "],trans:" << params.transform.trans[0] << "," << params.transform.trans[1] << ","
+       << params.transform.rot[8] <<  "],trans:" << params.transform.trans[0] << "," << params.transform.trans[1] << ","
        << params.transform.trans[2] << "}\n"
        << "isMirror:" << params.isMirrored << "\n"
        << "}";

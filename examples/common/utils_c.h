@@ -6,8 +6,6 @@
 extern "C" {
 #endif
 
-#define ESC_KEY 27
-
 /**
  * @brief Get the current system timestamp in milliseconds.
  *

@@ -35,7 +35,7 @@ int main() try {
     pipe.start(config);
 
     // Create a window for rendering, and set the resolution of the window
-    Window app("PostProcessing", 640, 480);
+    Window app("PostProcessing", 1280, 720);
 
     while(app) {
         // Wait for up to 1000ms for a frameset in blocking mode.

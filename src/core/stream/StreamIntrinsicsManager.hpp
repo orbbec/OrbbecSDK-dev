@@ -33,18 +33,18 @@ public:
     void               registerAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile, const OBAccelIntrinsic &intrinsics);
     OBAccelIntrinsic   getAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile);
     bool               containsAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile);
-    void             registerDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile, const OBDisparityParam &disparityParam);
-    OBDisparityParam getDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile);
+    void               registerDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile, const OBDisparityParam &disparityParam);
+    OBDisparityParam   getDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile);
     bool               containsDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile);
 
 private:
     std::mutex mutex_;
 
-    std::map<std::weak_ptr<const StreamProfile>, OBCameraIntrinsic, StreamProfileWeakPtrCompare>  videoStreamIntrinsicsMap_;
-    std::map<std::weak_ptr<const StreamProfile>, OBCameraDistortion, StreamProfileWeakPtrCompare> videoStreamDistortionMap_;
-    std::map<std::weak_ptr<const StreamProfile>, OBGyroIntrinsic, StreamProfileWeakPtrCompare>    gyroStreamIntrinsicsMap_;
-    std::map<std::weak_ptr<const StreamProfile>, OBAccelIntrinsic, StreamProfileWeakPtrCompare>   accelStreamIntrinsicsMap_;
-    std::map<std::weak_ptr<const StreamProfile>, OBDisparityParam, StreamProfileWeakPtrCompare>   disparityParamMap_;
+    std::map<std::weak_ptr<const StreamProfile>, OBCameraIntrinsic, std::owner_less<std::weak_ptr<const StreamProfile>>>  videoStreamIntrinsicsMap_;
+    std::map<std::weak_ptr<const StreamProfile>, OBCameraDistortion, std::owner_less<std::weak_ptr<const StreamProfile>>> videoStreamDistortionMap_;
+    std::map<std::weak_ptr<const StreamProfile>, OBGyroIntrinsic, std::owner_less<std::weak_ptr<const StreamProfile>>>    gyroStreamIntrinsicsMap_;
+    std::map<std::weak_ptr<const StreamProfile>, OBAccelIntrinsic, std::owner_less<std::weak_ptr<const StreamProfile>>>   accelStreamIntrinsicsMap_;
+    std::map<std::weak_ptr<const StreamProfile>, OBDisparityParam, std::owner_less<std::weak_ptr<const StreamProfile>>>   disparityParamMap_;
 };
 
 }  // namespace libobsensor

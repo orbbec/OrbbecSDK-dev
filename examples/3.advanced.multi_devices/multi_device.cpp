@@ -62,7 +62,7 @@ int main() try {
             }
         }
         if(frames.size() > 0){
-            app.renderFrameData(frames);
+            app.renderFrame(frames);
         }
     }
 

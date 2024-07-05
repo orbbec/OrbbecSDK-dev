@@ -64,8 +64,10 @@ void G330PresetManager::loadPreset(const std::string &presetName) {
         throw std::invalid_argument("Invalid preset name: " + presetName);
     }
 
-    // store current preset to as "Custom"
-    storeCustomPreset("Custom");
+    // store current parameters to  "Custom"
+    if(currentPreset_ == "Custom") {
+        storeCurrentParamsAsCustomPreset("Custom");
+    }
 
     auto iter = customPresets_.find(presetName);
     if(iter != customPresets_.end()) {
@@ -74,45 +76,11 @@ void G330PresetManager::loadPreset(const std::string &presetName) {
     }
     else {
         auto owner               = getOwner();
-        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
 
         depthAlgModeManager->switchDepthAlgMode(presetName.c_str());
         currentPreset_ = presetName;
     }
-}
-
-void G330PresetManager::loadCustomPreset(const std::string &presetName, const G330Preset &preset) {
-
-    auto owner = getOwner();
-    {
-        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-        depthAlgModeManager->switchDepthAlgMode(preset.depthAlgMode.c_str());
-    }
-
-    auto propAccessor = owner->getPropertyAccessor();
-    propAccessor->setPropertyValueT(OB_PROP_LASER_CONTROL_INT, preset.laserState);
-    propAccessor->setPropertyValueT(OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, preset.laserPowerLevel);
-    propAccessor->setPropertyValueT(OB_PROP_IR_EXPOSURE_INT,
-                                    preset.depthExposureTime);  // using ir exposures for depth due to access property manager directly
-    propAccessor->setPropertyValueT(OB_PROP_IR_GAIN_INT, preset.depthGain);
-    propAccessor->setPropertyValueT(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, (bool)preset.depthAutoExposure);
-    propAccessor->setPropertyValueT(OB_PROP_IR_BRIGHTNESS_INT, preset.depthBrightness);
-
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_EXPOSURE_INT, preset.colorExposureTime);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_GAIN_INT, preset.colorGain);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, (bool)preset.colorAutoExposure);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_WHITE_BALANCE_INT, preset.colorWhiteBalance);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, (bool)preset.colorAutoWhiteBalance);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_CONTRAST_INT, preset.colorContrast);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_SATURATION_INT, preset.colorSaturation);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_SHARPNESS_INT, preset.colorSharpness);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_BRIGHTNESS_INT, preset.colorBrightness);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_HUE_INT, preset.colorHue);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_GAMMA_INT, preset.colorGamma);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, (bool)preset.colorBacklightCompensation);
-    propAccessor->setPropertyValueT(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, (int)preset.colorPowerLineFrequency);
-
-    currentPreset_ = presetName;
 }
 
 const std::string &G330PresetManager::getCurrentPresetName() const {
@@ -129,7 +97,10 @@ void G330PresetManager::loadPresetFromJsonData(const std::string &presetName, co
     if(!reader.parse(std::string((const char *)jsonData.data(), jsonData.size()), root)) {
         throw std::invalid_argument("Invalid JSON data");
     }
-    storeCustomPreset("Custom");
+    // store current parameters to  "Custom"
+    if(currentPreset_ == "Custom") {
+        storeCurrentParamsAsCustomPreset("Custom");
+    }
     loadPresetFromJsonValue(presetName, root);
 }
 
@@ -137,7 +108,10 @@ void G330PresetManager::loadPresetFromJsonFile(const std::string &filePath) {
     Json::Value   root;
     std::ifstream ifs(filePath);
     ifs >> root;
-    storeCustomPreset("Custom");
+    // store current parameters to  "Custom"
+    if(currentPreset_ == "Custom") {
+        storeCurrentParamsAsCustomPreset("Custom");
+    }
     loadPresetFromJsonValue(filePath, root);
 }
 
@@ -173,44 +147,12 @@ void G330PresetManager::loadPresetFromJsonValue(const std::string &presetName, c
 }
 
 Json::Value G330PresetManager::exportSettingsAsPresetJsonValue(const std::string &presetName) {
-    G330Preset preset;
-
-    {
-        auto owner        = getOwner();
-        auto propAccessor = owner->getPropertyAccessor();
-
-        preset.laserState                 = propAccessor->getPropertyValueT<int>(OB_PROP_LASER_CONTROL_INT);
-        preset.laserPowerLevel            = propAccessor->getPropertyValueT<int>(OB_PROP_LASER_POWER_LEVEL_CONTROL_INT);
-        preset.depthAutoExposure          = propAccessor->getPropertyValueT<bool>(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
-        preset.depthExposureTime          = propAccessor->getPropertyValueT<int>(OB_PROP_IR_EXPOSURE_INT);
-        preset.depthGain                  = propAccessor->getPropertyValueT<int>(OB_PROP_IR_GAIN_INT);
-        preset.depthBrightness            = propAccessor->getPropertyValueT<int>(OB_PROP_IR_BRIGHTNESS_INT);
-        preset.colorAutoExposure          = propAccessor->getPropertyValueT<bool>(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL);
-        preset.colorExposureTime          = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_EXPOSURE_INT);
-        preset.colorAutoWhiteBalance      = propAccessor->getPropertyValueT<bool>(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL);
-        preset.colorWhiteBalance          = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_WHITE_BALANCE_INT);
-        preset.colorGain                  = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_GAIN_INT);
-        preset.colorContrast              = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_CONTRAST_INT);
-        preset.colorSaturation            = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_SATURATION_INT);
-        preset.colorSharpness             = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_SHARPNESS_INT);
-        preset.colorBrightness            = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_BRIGHTNESS_INT);
-        preset.colorHue                   = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_HUE_INT);
-        preset.colorGamma                 = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_GAMMA_INT);
-        preset.colorBacklightCompensation = propAccessor->getPropertyValueT<bool>(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT);
-        preset.colorPowerLineFrequency    = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT);
+    storeCurrentParamsAsCustomPreset(presetName);
+    auto iter = customPresets_.find(presetName);
+    if(iter == customPresets_.end()) {
+        throw std::invalid_argument("Invalid preset name: " + presetName);
     }
-
-    {
-        auto owner               = getOwner();
-        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-        preset.depthAlgMode      = depthAlgModeManager->getCurrentDepthAlgModeChecksum().name;
-    }
-
-    if(customPresets_.find(presetName) == customPresets_.end()) {
-        availablePresets_.emplace_back(presetName);
-    }
-    customPresets_[presetName] = preset;
-    currentPreset_             = presetName;
+    auto &preset = iter->second;
 
     Json::Value root;
     root["depth_alg_mode"]               = preset.depthAlgMode;
@@ -262,37 +204,84 @@ void G330PresetManager::exportSettingsAsPresetJsonFile(const std::string &filePa
     writer->write(root, &ofs);
 }
 
-void G330PresetManager::storeCustomPreset(std::string presetName) {
-    {
-        auto owner        = getOwner();
-        auto propAccessor = owner->getPropertyAccessor();
+template <typename T> void setPropertyValue(IDevice *dev, uint32_t propertyId, T value) {
+    // get and release property accessor on this scope to avoid handle device resource lock for an extended duration
+    auto propAccessor = dev->getPropertyAccessor();
+    return propAccessor->setPropertyValueT<T>(propertyId, value);
+}
 
-        customPresets_[presetName].laserState                 = propAccessor->getPropertyValueT<int>(OB_PROP_LASER_CONTROL_INT);
-        customPresets_[presetName].laserPowerLevel            = propAccessor->getPropertyValueT<int>(OB_PROP_LASER_POWER_LEVEL_CONTROL_INT);
-        customPresets_[presetName].depthAutoExposure          = propAccessor->getPropertyValueT<bool>(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
-        customPresets_[presetName].depthExposureTime          = propAccessor->getPropertyValueT<int>(OB_PROP_IR_EXPOSURE_INT);
-        customPresets_[presetName].depthGain                  = propAccessor->getPropertyValueT<int>(OB_PROP_IR_GAIN_INT);
-        customPresets_[presetName].depthBrightness            = propAccessor->getPropertyValueT<int>(OB_PROP_IR_BRIGHTNESS_INT);
-        customPresets_[presetName].colorAutoExposure          = propAccessor->getPropertyValueT<bool>(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL);
-        customPresets_[presetName].colorExposureTime          = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_EXPOSURE_INT);
-        customPresets_[presetName].colorAutoWhiteBalance      = propAccessor->getPropertyValueT<bool>(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL);
-        customPresets_[presetName].colorWhiteBalance          = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_WHITE_BALANCE_INT);
-        customPresets_[presetName].colorGain                  = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_GAIN_INT);
-        customPresets_[presetName].colorContrast              = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_CONTRAST_INT);
-        customPresets_[presetName].colorSaturation            = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_SATURATION_INT);
-        customPresets_[presetName].colorSharpness             = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_SHARPNESS_INT);
-        customPresets_[presetName].colorBrightness            = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_BRIGHTNESS_INT);
-        customPresets_[presetName].colorHue                   = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_HUE_INT);
-        customPresets_[presetName].colorGamma                 = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_GAMMA_INT);
-        customPresets_[presetName].colorBacklightCompensation = propAccessor->getPropertyValueT<bool>(OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT);
-        customPresets_[presetName].colorPowerLineFrequency    = propAccessor->getPropertyValueT<int>(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT);
-    }
+void G330PresetManager::loadCustomPreset(const std::string &presetName, const G330Preset &preset) {
+
+    auto owner = getOwner();
 
     {
-        auto owner                              = getOwner();
-        auto depthAlgModeManager                = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-        customPresets_[presetName].depthAlgMode = depthAlgModeManager->getCurrentDepthAlgModeChecksum().name;
+        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
+        depthAlgModeManager->switchDepthAlgMode(preset.depthAlgMode.c_str());
     }
+
+    setPropertyValue(owner, OB_PROP_LASER_CONTROL_INT, preset.laserState);
+    setPropertyValue(owner, OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, preset.laserPowerLevel);
+    setPropertyValue(owner, OB_PROP_IR_EXPOSURE_INT, preset.depthExposureTime);  // using ir exposures for depth due to access property manager directly
+    setPropertyValue(owner, OB_PROP_IR_GAIN_INT, preset.depthGain);
+    setPropertyValue(owner, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, (bool)preset.depthAutoExposure);
+    setPropertyValue(owner, OB_PROP_IR_BRIGHTNESS_INT, preset.depthBrightness);
+    setPropertyValue(owner, OB_PROP_COLOR_EXPOSURE_INT, preset.colorExposureTime);
+    setPropertyValue(owner, OB_PROP_COLOR_GAIN_INT, preset.colorGain);
+    setPropertyValue(owner, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, (bool)preset.colorAutoExposure);
+    setPropertyValue(owner, OB_PROP_COLOR_WHITE_BALANCE_INT, preset.colorWhiteBalance);
+    setPropertyValue(owner, OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, (bool)preset.colorAutoWhiteBalance);
+    setPropertyValue(owner, OB_PROP_COLOR_CONTRAST_INT, preset.colorContrast);
+    setPropertyValue(owner, OB_PROP_COLOR_SATURATION_INT, preset.colorSaturation);
+    setPropertyValue(owner, OB_PROP_COLOR_SHARPNESS_INT, preset.colorSharpness);
+    setPropertyValue(owner, OB_PROP_COLOR_BRIGHTNESS_INT, preset.colorBrightness);
+    setPropertyValue(owner, OB_PROP_COLOR_HUE_INT, preset.colorHue);
+    setPropertyValue(owner, OB_PROP_COLOR_GAMMA_INT, preset.colorGamma);
+    setPropertyValue(owner, OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, (bool)preset.colorBacklightCompensation);
+    setPropertyValue(owner, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, (int)preset.colorPowerLineFrequency);
+
+    currentPreset_ = presetName;
+}
+
+template <typename T> T getPropertyValue(IDevice *dev, uint32_t propertyId) {
+    // get and release property accessor on this scope to avoid handle device resource lock for an extended duration
+    auto propAccessor = dev->getPropertyAccessor();
+    return propAccessor->getPropertyValueT<T>(propertyId);
+}
+
+void G330PresetManager::storeCurrentParamsAsCustomPreset(const std::string &presetName) {
+    G330Preset preset;
+    auto       owner = getOwner();
+
+    preset.laserState                 = getPropertyValue<int>(owner, OB_PROP_LASER_CONTROL_INT);
+    preset.laserPowerLevel            = getPropertyValue<int>(owner, OB_PROP_LASER_POWER_LEVEL_CONTROL_INT);
+    preset.depthAutoExposure          = getPropertyValue<bool>(owner, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
+    preset.depthExposureTime          = getPropertyValue<int>(owner, OB_PROP_IR_EXPOSURE_INT);
+    preset.depthGain                  = getPropertyValue<int>(owner, OB_PROP_IR_GAIN_INT);
+    preset.depthBrightness            = getPropertyValue<int>(owner, OB_PROP_IR_BRIGHTNESS_INT);
+    preset.colorAutoExposure          = getPropertyValue<bool>(owner, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL);
+    preset.colorExposureTime          = getPropertyValue<int>(owner, OB_PROP_COLOR_EXPOSURE_INT);
+    preset.colorAutoWhiteBalance      = getPropertyValue<bool>(owner, OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL);
+    preset.colorWhiteBalance          = getPropertyValue<int>(owner, OB_PROP_COLOR_WHITE_BALANCE_INT);
+    preset.colorGain                  = getPropertyValue<int>(owner, OB_PROP_COLOR_GAIN_INT);
+    preset.colorContrast              = getPropertyValue<int>(owner, OB_PROP_COLOR_CONTRAST_INT);
+    preset.colorSaturation            = getPropertyValue<int>(owner, OB_PROP_COLOR_SATURATION_INT);
+    preset.colorSharpness             = getPropertyValue<int>(owner, OB_PROP_COLOR_SHARPNESS_INT);
+    preset.colorBrightness            = getPropertyValue<int>(owner, OB_PROP_COLOR_BRIGHTNESS_INT);
+    preset.colorHue                   = getPropertyValue<int>(owner, OB_PROP_COLOR_HUE_INT);
+    preset.colorGamma                 = getPropertyValue<int>(owner, OB_PROP_COLOR_GAMMA_INT);
+    preset.colorBacklightCompensation = getPropertyValue<bool>(owner, OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT);
+    preset.colorPowerLineFrequency    = getPropertyValue<int>(owner, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT);
+
+    {
+        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
+        preset.depthAlgMode      = depthAlgModeManager->getCurrentDepthAlgModeChecksum().name;
+    }
+
+    if(customPresets_.find(presetName) == customPresets_.end()) {
+        availablePresets_.emplace_back(presetName);
+    }
+    customPresets_[presetName] = preset;
+    currentPreset_             = presetName;
 }
 
 }  // namespace libobsensor

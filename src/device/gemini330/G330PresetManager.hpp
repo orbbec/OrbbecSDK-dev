@@ -67,8 +67,8 @@ public:
     void                            exportSettingsAsPresetJsonFile(const std::string &filePath) override;
 
 private:
+    void        storeCurrentParamsAsCustomPreset(const std::string &presetName);
     void        loadCustomPreset(const std::string &presetName, const G330Preset &preset);
-    void        storeCustomPreset(std::string presetName);
     void        loadPresetFromJsonValue(const std::string &presetName, const Json::Value &root);
     Json::Value exportSettingsAsPresetJsonValue(const std::string &presetName);
 

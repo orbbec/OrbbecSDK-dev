@@ -245,7 +245,7 @@ uint32_t ob_frame_get_metadata_size(const ob_frame *frame, ob_error **error) BEG
 }
 HANDLE_EXCEPTIONS_AND_RETURN(uint32_t(0), frame)
 
-void ob_frame_update_metadata(ob_frame *frame, const uint8_t *metadata, size_t metadata_size, ob_error **error) BEGIN_API_CALL {
+void ob_frame_update_metadata(ob_frame *frame, const uint8_t *metadata, uint32_t metadata_size, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     VALIDATE_NOT_NULL(metadata);
     auto innerFrame = frame->frame;

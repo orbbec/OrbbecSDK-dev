@@ -33,6 +33,18 @@ template <class T> static bool isMatchDeviceByPid(uint16_t pid, T &pids) {
     return std::any_of(pids.begin(), pids.end(), [pid](uint16_t pid_) { return pid_ == pid; });
 }
 
+std::weak_ptr<LinuxPal> LinuxPal::instanceWeakPtr_;
+std::mutex              LinuxPal::instanceMutex_;
+std::shared_ptr<ObPal>  ObPal::getInstance() {
+    std::lock_guard<std::mutex> lock(LinuxPal::instanceMutex_);
+    auto                        instance = LinuxPal::instanceWeakPtr_.lock();
+    if(instance == nullptr) {
+        instance                   = std::shared_ptr<LinuxPal>(new LinuxPal());
+        LinuxPal::instanceWeakPtr_ = instance;
+    }
+    return instance;
+}
+
 LinuxPal::LinuxPal() {
 #if defined(BUILD_USB_PORT)
     usbEnumerator_ = std::make_shared<UsbEnumerator>();

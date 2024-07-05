@@ -36,15 +36,15 @@ void calculate_and_print_frame_rate(const ob_frame *frameset) {
             uint64_t index = ob_frame_get_index(color_frame, &error);
             CHECK_OB_ERROR_EXIT(&error);
 
-            uint64_t width = ob_video_frame_get_width(color_frame, &error);
+            uint32_t width = ob_video_frame_get_width(color_frame, &error);
             CHECK_OB_ERROR_EXIT(&error);
 
-            uint64_t height = ob_video_frame_get_height(color_frame, &error);
+            uint32_t height = ob_video_frame_get_height(color_frame, &error);
             CHECK_OB_ERROR_EXIT(&error);
 
             double frame_rate = color_count / (duration / 1000.0);
 
-            printf("Color frame index: %lld, width: %lld, height: %lld, frame rate: %.2f\n", index, width, height, frame_rate);
+            printf("Color frame index: %lu, width: %d, height: %d, frame rate: %.2f\n", index, width, height, frame_rate);
 
             color_count          = 0;
             color_timestamp_last = color_timestamp_current;
@@ -69,15 +69,15 @@ void calculate_and_print_frame_rate(const ob_frame *frameset) {
             uint64_t index = ob_frame_get_index(depth_frame, &error);
             CHECK_OB_ERROR_EXIT(&error);
 
-            uint64_t width = ob_video_frame_get_width(depth_frame, &error);
+            uint32_t width = ob_video_frame_get_width(depth_frame, &error);
             CHECK_OB_ERROR_EXIT(&error);
 
-            uint64_t height = ob_video_frame_get_height(depth_frame, &error);
+            uint32_t height = ob_video_frame_get_height(depth_frame, &error);
             CHECK_OB_ERROR_EXIT(&error);
 
             double frame_rate = depth_count / (duration / 1000.0);
 
-            printf("Depth frame index: %lld, width: %lld, height: %lld, frame rate: %.2f\n", index, width, height, frame_rate);
+            printf("Depth frame index: %lu, width: %d, height: %d, frame rate: %.2f\n", index, width, height, frame_rate);
 
             depth_count          = 0;
             depth_timestamp_last = depth_timestamp_current;

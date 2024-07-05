@@ -6,7 +6,7 @@ project(libuvc
 # subdirectory_include(CORE_INC)
 # Additional search scripts path for libusb-1.0, libjpeg, OpenCV
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-include(${CMAKE_MODULE_PATH}/FindLibUSB.cmake)
+# include(${CMAKE_MODULE_PATH}/FindLibUSB.cmake)
 
 # Xcode and Visual Studio do not using CMAKE_BUILD_TYPE cache variable
 # so we use Release build type only with single configuration generators.
@@ -29,7 +29,7 @@ option(ENABLE_UVC_DEBUGGING "Enable UVC debugging" OFF)
 set(libuvc_DESCRIPTION "A cross-platform library for USB video devices")
 set(libuvc_URL "https://github.com/libuvc/libuvc")
 
-set(SOURCES 
+set(SOURCES
   src/ctrl.c
   src/ctrl-gen.c
   src/device.c
@@ -69,10 +69,10 @@ if(BUILD_UVC_SHARED)
     EXPORT_NAME UVCShared
   )
   list(APPEND UVC_TARGETS uvc)
-  if(NOT LibUVC_STATIC)  
+  if(NOT LibUVC_STATIC)
     add_library(LibUVC::UVC ALIAS uvc)
   endif()
-  # Aliases defined here available only if project included 
+  # Aliases defined here available only if project included
   # via addsubdirectory
   add_library(LibUVC::UVCShared ALIAS uvc)
 endif()
@@ -99,7 +99,7 @@ configure_file(include/libuvc/libuvc_config.h.in
 foreach(target_name IN LISTS UVC_TARGETS)
   target_include_directories(${target_name}
     PUBLIC
-      # Different paths for includes for build and install phase supported 
+      # Different paths for includes for build and install phase supported
       # via INSTALL_INTERFACE and BUILD_INTERFACE generator expressions.
       $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
       $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -114,7 +114,7 @@ foreach(target_name IN LISTS UVC_TARGETS)
      include_directories( ${CMAKE_CURRENT_BINARY_DIR}/../libjpeg/ )
     target_link_libraries(${target_name} turbojpeg_static)
   endif()
-  
+
   set_target_properties(${target_name} PROPERTIES
       PUBLIC_HEADER "include/libuvc/libuvc.h;${CMAKE_CURRENT_BINARY_DIR}/include/libuvc/libuvc_config.h"
   )
@@ -157,7 +157,7 @@ endif()
 # #   DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
 # # )
 
-# install(FILES 
+# install(FILES
 #     cmake/FindLibUSB.cmake
 #     cmake/FindJpegPkg.cmake
 #   DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
@@ -174,7 +174,7 @@ endif()
 # )
 
 # if(JPEG_FOUND)
-#   # If we have used JPEG library we need to 
+#   # If we have used JPEG library we need to
 #   # add linker flag for it in config file for pkgconfig
 #   set(PKGCONFIG_JPEG_LDFLAG "-ljpeg")
 # endif()

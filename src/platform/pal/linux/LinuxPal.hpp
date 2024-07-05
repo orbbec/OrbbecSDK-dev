@@ -18,8 +18,14 @@
 namespace libobsensor {
 
 class LinuxPal : public ObPal {
-public:
+private:
     LinuxPal();
+
+    static std::weak_ptr<LinuxPal> instanceWeakPtr_;
+    static std::mutex              instanceMutex_;
+    friend std::shared_ptr<ObPal>  ObPal::getInstance();
+
+public:
     ~LinuxPal() noexcept override;
 
     std::shared_ptr<ISourcePort> createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;

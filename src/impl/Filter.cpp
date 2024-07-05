@@ -84,7 +84,7 @@ ob_filter_config_schema_item ob_filter_config_schema_list_get_item(const ob_filt
 }
 HANDLE_EXCEPTIONS_AND_RETURN({}, config_schema_list, index)
 
-void ob_filter_update_config(ob_filter *filter, size_t argc, const char **argv, ob_error **error) BEGIN_API_CALL {
+void ob_filter_update_config(ob_filter *filter, uint8_t argc, const char **argv, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(filter);
     std::vector<std::string> args(argv, argv + argc);
     filter->filter->updateConfig(args);

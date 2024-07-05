@@ -27,14 +27,14 @@ public:
     // create a window with the specified name, width and height
     Window(std::string name, uint32_t width, uint32_t height, RenderType renderType_ = RENDER_SINGLE)
         : name_(std::move(name)),
+          renderType_(renderType_),
           width_(width),
           height_(height),
           windowClose_(false),
           threadExit_(false),
-          key_(-1),
           showInfo_(false),
-          renderType_(renderType_),
-          alpha_(0.6f) {
+          alpha_(0.6f),
+          key_(-1) {
         processThread_ = std::thread(&Window::processFrames, this);
 #ifndef __APPLE__
         renderThread_ = std::thread(&Window::renderMats, this);

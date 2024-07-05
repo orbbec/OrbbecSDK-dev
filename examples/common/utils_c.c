@@ -61,12 +61,42 @@ int kbhit(void) {
 }
 
 #include <sys/time.h>
-// uint64_t ob_sample_utils_get_current_timestamp_ms() {
-//     struct timeval te;
-//     gettimeofday(&te, NULL);                                          // 获取当前时间
-//     long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;  // 计算毫秒
-//     return milliseconds;
-// }
+uint64_t ob_sample_utils_get_current_timestamp_ms() {
+    struct timeval te;
+    gettimeofday(&te, NULL);                                          // 获取当前时间
+    long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;  // 计算毫秒
+    return milliseconds;
+}
+
+char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms) {
+    struct termios oldt, newt;
+    int            ch;
+    int            oldf;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+    if(timeout_ms > 0) {
+        struct timeval tv;
+        tv.tv_sec  = timeout_ms / 1000;
+        tv.tv_usec = (timeout_ms % 1000) * 1000;
+        select(STDIN_FILENO + 1, NULL, NULL, NULL, &tv);
+    }
+    else {
+        select(STDIN_FILENO + 1, NULL, NULL, NULL, NULL);
+    }
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+    if(ch != EOF) {
+        ungetc(ch, stdin);
+        return ch;
+    }
+    return 0;
+}
+
 #else  // Windows
 #include <conio.h>
 #include <windows.h>

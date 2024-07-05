@@ -1,4 +1,4 @@
-/* config.h.  Generated from config.h.in by configure.  */
+﻿/* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define to the attribute for default visibility. */
@@ -42,8 +42,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `udev' library (-ludev). */
-// @bajinsi remove libudev config
-// #define HAVE_LIBUDEV 1
+/* #define HAVE_LIBUDEV 1 */
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1

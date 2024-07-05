@@ -80,7 +80,7 @@ int main(void) try {
                     continue;
                 }
                 size_t size     = propertyList.size();
-                int selectId = std::atoi(controlVec.at(0).c_str());
+                size_t selectId = std::atoi(controlVec.at(0).c_str());
                 if(selectId >= size) {
                     std::cout << "Your selection is out of range, please reselect: " << std::endl;
                     continue;
@@ -143,7 +143,7 @@ void printfPropertyList(std::shared_ptr<ob::Device> device, const std::vector<OB
         std::cout << "No supported property!" << std::endl;
     }
     std::cout << "\n------------------------------------------------------------------------\n";
-    for(int i = 0; i < propertyList.size(); i++) {
+    for(size_t i = 0; i < propertyList.size(); i++) {
         auto        property_item = propertyList[i];
         std::string strRange      = "";
 

@@ -185,14 +185,6 @@ std::vector<std::shared_ptr<V4lDeviceInfo>> ObV4lUvcDevicePort::queryRelatedDevi
     return devs;
 }
 
-uint32_t ObV4lUvcDevicePort::sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) {
-    (void)sendData;
-    (void)sendLen;
-    (void)recvData;
-    (void)exceptedRecvLen;
-    return 0;
-}
-
 bool ObV4lUvcDevicePort::isContainedMetadataDevice(std::shared_ptr<const USBSourcePortInfo> portInfo) {
     auto devs = queryRelatedDevices(portInfo);
     for(auto &dev: devs) {
@@ -742,10 +734,10 @@ void ObV4lUvcDevicePort::stopAllStream() {
         }
     }
 }
+uint32_t ObV4lUvcDevicePort::sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) {
+    uint8_t ctrl = OB_VENDOR_XU_CTRL_ID_64;
 
-bool ObV4lUvcDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
-    uint8_t ctrl         = OB_VENDOR_XU_CTRL_ID_64;
-    auto    alignDataLen = dataLen;
+    auto alignDataLen = sendLen;
     if(alignDataLen <= 64) {
         ctrl         = OB_VENDOR_XU_CTRL_ID_64;
         alignDataLen = 64;
@@ -759,21 +751,25 @@ bool ObV4lUvcDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
         alignDataLen = 512;
     }
 
-    return setXu(ctrl, data, alignDataLen);
-}
+    if(!setXu(ctrl, sendData, alignDataLen)) {
+        return 0;
+    }
 
-bool ObV4lUvcDevicePort::recvData(uint8_t *data, uint32_t *dataLen) {
-    uint8_t ctrl = OB_VENDOR_XU_CTRL_ID_512;
-    if(*dataLen <= 64) {
+    ctrl = OB_VENDOR_XU_CTRL_ID_512;
+    if(exceptedRecvLen <= 64) {
         ctrl = OB_VENDOR_XU_CTRL_ID_64;
     }
-    else if(*dataLen > 512) {
+    else if(exceptedRecvLen > 512) {
         ctrl = OB_VENDOR_XU_CTRL_ID_1024;
     }
     else {
         ctrl = OB_VENDOR_XU_CTRL_ID_512;
     }
-    return getXu(ctrl, data, dataLen);
+
+    if(!getXu(ctrl, recvData, &exceptedRecvLen)) {
+        return 0;
+    }
+    return exceptedRecvLen;
 }
 
 bool ObV4lUvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {

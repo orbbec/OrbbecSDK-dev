@@ -1,7 +1,6 @@
 ﻿#include "AlignImpl.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
-#include <omp.h>
 #include <fstream>
 #include <iostream>
 #include <chrono>
@@ -75,11 +74,6 @@ const __m128i AlignImpl::ZERO       = _mm_setzero_si128();
 const __m128  AlignImpl::ZERO_F     = _mm_set_ps1(0.0);
 
 AlignImpl::AlignImpl() : initialized_(false) {
-#ifdef _WIN32
-    omp_set_dynamic(0);
-    int max_thread = omp_get_max_threads();
-    omp_set_num_threads(max_thread);
-#endif
     depth_unit_mm_ = 1.0;
     r2_max_loc_    = 0.0;
     memset(&depth_intric_, 0, sizeof(OBCameraIntrinsic));
@@ -435,8 +429,8 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
                 ptr_coeff_z += channel;
                 continue;
             }
-            int   u_rgb[] = { -1, -1 };
-            int   v_rgb[] = { -1, -1 };
+            // int   u_rgb[] = { -1, -1 };
+            // int   v_rgb[] = { -1, -1 };
             float pixelx_f[2], pixely_f[2], dst[2];
 
             bool skip_this_pixel = true;
@@ -475,10 +469,6 @@ void AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, co
                            int *map) {
 
     int channel = (gap_fill_copy_ ? 1 : 2);
-
-#if !defined(ANDROID) && !defined(__ANDROID__)
-#pragma omp parallel for
-#endif
     for(int i = 0; i < depth_intric_.width * depth_intric_.height; i += 8) {
         __m128i depth_i16 = _mm_loadu_si128((__m128i *)(depth_buffer + i));
         __m128i depth_i[] = { _mm_unpacklo_epi16(depth_i16, ZERO), _mm_unpackhi_epi16(depth_i16, ZERO) };

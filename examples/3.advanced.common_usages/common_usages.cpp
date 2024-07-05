@@ -161,6 +161,8 @@ void switchDepthWorkMode() {
 
     // Query the current camera depth mode
     auto curDepthMode = device->getCurrentDepthWorkMode();
+    std::cout << "current depth work mode: " << curDepthMode.name << std::endl;
+
     // Get the list of camera depth modes
     auto depthModeList = device->getDepthWorkModeList();
     std::cout << "depthModeList size: " << depthModeList->count() << std::endl;

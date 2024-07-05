@@ -80,14 +80,14 @@ void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
     auto format   = frame->getFormat();
 
 #ifdef OB_DEBUG
-    auto fsp   = frame->getStreamProfile();
-    auto owner = fsp->getOwner();
-    if(fsp.get() != currentBackendStreamProfile_.get()) {
-        throw invalid_value_exception("Frame's stream profile is not the same as activated stream profile");
-    }
-    if(owner.get() != static_cast<void *>(this)) {
-        throw invalid_value_exception("Frame's owner is not this VideoSensor");
-    }
+    // auto fsp   = frame->getStreamProfile();
+    // auto owner = fsp->getOwner();
+    // if(fsp.get() != currentBackendStreamProfile_.get()) {
+    //     throw invalid_value_exception("Frame's stream profile is not the same as activated stream profile");
+    // }
+    // if(owner.get() != static_cast<void *>(this)) {
+    //     throw invalid_value_exception("Frame's owner is not this VideoSensor");
+    // }
 #endif
 
     if(format == OB_FORMAT_MJPG && frame->getDataSize() < MIN_VIDEO_FRAME_DATA_SIZE) {

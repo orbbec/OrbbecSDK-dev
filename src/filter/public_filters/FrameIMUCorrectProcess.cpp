@@ -2,18 +2,19 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
+#include "InternalTypes.hpp"
 
 namespace libobsensor {
 
-IMUCalibrateParams IMUCorrecter::parserIMUCalibrationParamsRaw(uint8_t *filedata, uint32_t size) {
-    auto               singleIMUParamSize = sizeof(SingleIMUParams);
+OBIMUCalibrateParams IMUCorrecter::parserIMUCalibrationParamsRaw(uint8_t *filedata, uint32_t size) {
+    auto                 singleIMUParamSize = sizeof(OBSingleIMUParams);
     uint8_t            paramCount         = static_cast<uint8_t>(size / singleIMUParamSize);
-    IMUCalibrateParams params{};
+    OBIMUCalibrateParams    params{};
 
     params.validNum = (paramCount > 3) ? 3 : paramCount;
 
     for(int i = 0; i < params.validNum; i++) {
-        auto singleParam          = *((SingleIMUParams *)(filedata + (i * singleIMUParamSize)));
+        auto singleParam          = *((OBSingleIMUParams *)(filedata + (i * singleIMUParamSize)));
         params.singleIMUParams[i] = singleParam;
     }
     return params;
@@ -80,6 +81,31 @@ float IMUCorrecter::calculateRegisterTemperature(int16_t tempValue) {
 
 IMUCorrecter::IMUCorrecter(const std::string &name) : FilterBase(name) {}
 
+void IMUCorrecter::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+    if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL) {
+        throw invalid_value_exception("Not support this property");
+    }
+    FilterBase::enable(static_cast<bool>(value.intValue));
+}
+
+void IMUCorrecter::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+    if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL) {
+        throw invalid_value_exception("Not support this property");
+    }
+    value->intValue = static_cast<int32_t>(isEnabled());
+}
+
+void IMUCorrecter::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+    if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL) {
+        throw invalid_value_exception("Not support this property");
+    }
+    range->cur.intValue  = static_cast<int32_t>(isEnabled());
+    range->def.intValue  = 1;
+    range->max.intValue  = 1;
+    range->min.intValue  = 0;
+    range->step.intValue = 1;
+}
+
 void IMUCorrecter::updateConfig(std::vector<std::string> &params) {
     if(params.size() != 0) {
         throw unsupported_operation_exception("IMUCorrecter update config error: unsupported operation.");
@@ -104,68 +130,78 @@ std::shared_ptr<Frame> IMUCorrecter::processFunc(std::shared_ptr<const Frame> fr
     auto frameSet   = newFrame->as<FrameSet>();
     auto accelFrame = frameSet->getFrame(OB_FRAME_ACCEL);
     if(accelFrame) {
+        auto sp       = accelFrame->getStreamProfile();
+        auto accelSp  = sp->as<AccelStreamProfile>();
+        auto intrisic = accelSp->getIntrinsic();
+
         auto            frameData = (AccelFrame::OBAccelFrameData *)accelFrame->getData();
-        Eigen::Vector3d accelEigenVec(frameData->accelData[0], frameData->accelData[1], frameData->accelData[2]);
-        accelEigenVec           = correctAccel(accelEigenVec, &param_);
-        frameData->accelData[0] = static_cast<float>(accelEigenVec.x());
-        frameData->accelData[1] = static_cast<float>(accelEigenVec.y());
-        frameData->accelData[2] = static_cast<float>(accelEigenVec.z());
+        OBPoint3f       accelValue = { frameData->accelData[0], frameData->accelData[1], frameData->accelData[2] };
+        accelValue                 = correctAccel(accelValue, &intrisic);
+        frameData->accelData[0]    = accelValue.x;
+        frameData->accelData[1]    = accelValue.y;
+        frameData->accelData[2]    = accelValue.z;
         frameData->temp         = calculateRegisterTemperature(static_cast<int16_t>(frameData->temp));
     }
 
     auto gyroFrame = frameSet->getFrame(OB_FRAME_GYRO);
     if(gyroFrame) {
+        auto sp       = gyroFrame->getStreamProfile();
+        auto gyroSp   = sp->as<GyroStreamProfile>();
+        auto intrisic = gyroSp->getIntrinsic();
+
         auto            frameData = (GyroFrame::OBGyroFrameData *)gyroFrame->getData();
-        Eigen::Vector3d gyroEigenVec(frameData->gyroData[0], frameData->gyroData[1], frameData->gyroData[2]);
-        gyroEigenVec           = correctGyro(gyroEigenVec, &param_);
-        frameData->gyroData[0] = static_cast<float>(gyroEigenVec.x());
-        frameData->gyroData[1] = static_cast<float>(gyroEigenVec.y());
-        frameData->gyroData[2] = static_cast<float>(gyroEigenVec.z());
-        frameData->temp        = calculateRegisterTemperature(static_cast<int16_t>(frameData->temp));
+        OBPoint3f       gyroValue = { frameData->gyroData[0], frameData->gyroData[1], frameData->gyroData[2] };
+        gyroValue                 = correctGyro(gyroValue, &intrisic);
+        frameData->gyroData[0]    = gyroValue.x;
+        frameData->gyroData[1]    = gyroValue.y;
+        frameData->gyroData[2]    = gyroValue.z;
     }
 
     return newFrame;
 }
 
-Eigen::Vector3d IMUCorrecter::correctAccel(const Eigen::Vector3d &accelVec, IMUCalibrateParams *params) {
-    Eigen::Matrix3d M_acc;
-    Eigen::Vector3d bias_acc;
+OBPoint3f IMUCorrecter::correctAccel(const OBPoint3f &accelVec, OBAccelIntrinsic *intrinsic) {
+    float M_acc[3][3];
+    float bias_acc[3];
 
     for(int i = 0; i < 3; i++) {
-        M_acc(i, 0) = params->singleIMUParams->acc.scaleMisalignment[3 * i];
-        M_acc(i, 1) = params->singleIMUParams->acc.scaleMisalignment[3 * i + 1];
-        M_acc(i, 2) = params->singleIMUParams->acc.scaleMisalignment[3 * i + 2];
+        M_acc[i][0] = intrinsic->scaleMisalignment[3 * i];
+        M_acc[i][1] = intrinsic->scaleMisalignment[3 * i + 1];
+        M_acc[i][2] = intrinsic->scaleMisalignment[3 * i + 2];
     }
 
-    double bias0 = params->singleIMUParams->acc.bias[0];
-    double bias1 = params->singleIMUParams->acc.bias[1];
-    double bias2 = params->singleIMUParams->acc.bias[2];
-    bias_acc << Eigen::Vector3d(bias0, bias1, bias2);
+    bias_acc[0] = intrinsic->bias[0];
+    bias_acc[1] = intrinsic->bias[1];
+    bias_acc[2] = intrinsic->bias[2];
 
-    Eigen::Vector3d accE;
-    accE = M_acc * (accelVec - bias_acc);
+    float correctedAccel[3];
+    for(int i = 0; i < 3; i++) {
+        correctedAccel[i] = M_acc[i][0] * (accelVec.x - bias_acc[0]) + M_acc[i][1] * (accelVec.y - bias_acc[1]) + M_acc[i][2] * (accelVec.z - bias_acc[2]);
+    }
 
-    return accE;
+    return { correctedAccel[0], correctedAccel[1], correctedAccel[2] };
 }
 
-Eigen::Vector3d IMUCorrecter::correctGyro(const Eigen::Vector3d &gyroVec, IMUCalibrateParams *params) {
-    Eigen::Matrix3d M_gyr;
-    Eigen::Vector3d bias_gyr;
+OBPoint3f IMUCorrecter::correctGyro(const OBPoint3f &gyroVec, OBGyroIntrinsic *intrinsic) {
+    float M_gyro[3][3];
+    float bias_gyro[3];
 
     for(int i = 0; i < 3; i++) {
-        M_gyr(i, 0) = params->singleIMUParams->gyro.scaleMisalignment[3 * i];
-        M_gyr(i, 1) = params->singleIMUParams->gyro.scaleMisalignment[3 * i + 1];
-        M_gyr(i, 2) = params->singleIMUParams->gyro.scaleMisalignment[3 * i + 2];
+        M_gyro[i][0] = intrinsic->scaleMisalignment[3 * i];
+        M_gyro[i][1] = intrinsic->scaleMisalignment[3 * i + 1];
+        M_gyro[i][2] = intrinsic->scaleMisalignment[3 * i + 2];
     }
-    // gyr estimate
-    Eigen::Vector3d gyrE;
-    double          bias0 = params->singleIMUParams->gyro.bias[0];
-    double          bias1 = params->singleIMUParams->gyro.bias[1];
-    double          bias2 = params->singleIMUParams->gyro.bias[2];
-    bias_gyr << Eigen::Vector3d(bias0, bias1, bias2);
-    gyrE = M_gyr * (gyroVec - bias_gyr);
 
-    return gyrE;
+    bias_gyro[0] = intrinsic->bias[0];
+    bias_gyro[1] = intrinsic->bias[1];
+    bias_gyro[2] = intrinsic->bias[2];
+
+    float correctedGyro[3];
+    for(int i = 0; i < 3; i++) {
+        correctedGyro[i] = M_gyro[i][0] * (gyroVec.x - bias_gyro[0]) + M_gyro[i][1] * (gyroVec.y - bias_gyro[1]) + M_gyro[i][2] * (gyroVec.z - bias_gyro[2]);
+    }
+
+    return { correctedGyro[0], correctedGyro[1], correctedGyro[2] };
 }
 
 }  // namespace libobsensor

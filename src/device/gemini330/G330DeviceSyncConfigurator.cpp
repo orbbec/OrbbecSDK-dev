@@ -17,7 +17,7 @@ typedef struct {
 #pragma pack()
 
 G330DeviceSyncConfigurator::G330DeviceSyncConfigurator(IDevice *owner, const std::vector<OBMultiDeviceSyncMode> &supportedSyncModes)
-    : supportedSyncModes_(supportedSyncModes), DeviceComponentBase(owner), isSyncConfigInit_(false) {}
+    : DeviceComponentBase(owner), supportedSyncModes_(supportedSyncModes), isSyncConfigInit_(false) {}
 
 OBMultiDeviceSyncConfig G330DeviceSyncConfigurator::getSyncConfig() {
     if(isSyncConfigInit_) {

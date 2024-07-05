@@ -12,7 +12,7 @@
 
 #include "utils_opencv.hpp"
 
-#include "libobsensor/OBSensor.hpp"
+#include "libobsensor/ObSensor.hpp"
 #include <mutex>
 #include <thread>
 
@@ -21,7 +21,7 @@ float   alpha      = 0.5;
 uint8_t align_mode = 0;
 
 // key press event processing
-void handleKeyPress(Window &app, std::shared_ptr<ob::Pipeline> pipe, std::shared_ptr<ob::Config> config) {
+void handleKeyPress(Window &app, std::shared_ptr<ob::Pipeline> pipe /*, std::shared_ptr<ob::Config> config*/) {
     ////Get the key value
     int key = app.waitKey(10);
     if(key == '+' || key == '=') {
@@ -83,7 +83,7 @@ int main(void) try {
     Window app("sync_align", 1280, 720, RENDER_OVERLAY);
 
     while(app) {
-        handleKeyPress(app, pipe, config);
+        handleKeyPress(app, pipe);
 
         auto frameSet = pipe->waitForFrameset(100);
         if(frameSet == nullptr) {

@@ -91,7 +91,7 @@ OB_EXPORT ob_filter_config_schema_list *ob_filter_get_config_schema_list(const o
  * @param[in] argv An array of strings representing the configuration values
  * @param[out] error Pointer to an error object that will be set if an error occurs
  */
-OB_EXPORT void ob_filter_update_config(ob_filter *filter, size_t argc, const char **argv, ob_error **error);
+OB_EXPORT void ob_filter_update_config(ob_filter *filter, uint8_t argc, const char **argv, ob_error **error);
 
 /**
  * @brief Get the filter config value by name and cast to double.

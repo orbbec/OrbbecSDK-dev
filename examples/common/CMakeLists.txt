@@ -7,10 +7,14 @@ add_library(ob_examples_common STATIC
     ${CMAKE_CURRENT_LIST_DIR}/utils_c.h
     ${CMAKE_CURRENT_LIST_DIR}/utils.cpp
     ${CMAKE_CURRENT_LIST_DIR}/utils.hpp
-    ${CMAKE_CURRENT_LIST_DIR}/utils_opencv.hpp
 )
+
+if(${OpenCV_FOUND})
+    target_sources(ob_examples_common PRIVATE ${CMAKE_CURRENT_LIST_DIR}/utils_opencv.hpp)
+    target_link_libraries(ob_examples_common PUBLIC ${OpenCV_LIBS})
+endif()
 
 target_include_directories(ob_examples_common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(ob::examples::common ALIAS ob_examples_common)
-set_target_properties(ob_examples_common PROPERTIES FOLDER "Common")
+set_target_properties(ob_examples_common PROPERTIES FOLDER "examples")

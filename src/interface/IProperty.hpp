@@ -176,7 +176,7 @@ public:  // template functions to simplify the usage of IPropertyAccessor
             LOG_WARN("Firmware data size is not match with property type");
         }
         std::memcpy(&data, vec.data(), std::min(vec.size(), sizeof(T)));
-        return std::move(data);
+        return data;
     }
 
     template <typename T, uint32_t CMD_VER> T getStructureDataProtoV1_1_T(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
@@ -186,7 +186,7 @@ public:  // template functions to simplify the usage of IPropertyAccessor
             LOG_WARN("Firmware data size is not match with property type");
         }
         std::memcpy(&data, vec.data(), std::min(vec.size(), sizeof(T)));
-        return std::move(data);
+        return data;
     }
 
     template <typename T, uint32_t CMD_VER>
@@ -207,7 +207,7 @@ public:  // template functions to simplify the usage of IPropertyAccessor
             rst.emplace_back(item);
         }
 
-        return std::move(rst);
+        return rst;
     }
 };
 

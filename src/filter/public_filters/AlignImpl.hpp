@@ -7,11 +7,11 @@
 #include <memory>
 #include "libobsensor/h/ObTypes.h"
 
-#ifdef _WIN32
+#if(defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
+#include "SSE2NEON.h"
+#else
 #include <xmmintrin.h>
 #include <smmintrin.h>
-#elif defined(__linux__) && (defined(__ARM_NEON__) || defined(__aarch64__) || defined(__arm__))
-#include "SSE2NEON.h"
 #endif
 
 namespace libobsensor {

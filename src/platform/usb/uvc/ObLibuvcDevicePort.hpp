@@ -51,9 +51,6 @@ public:
     void                    stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void                    stopAllStream() override;
 
-    virtual bool sendData(const uint8_t *data, uint32_t dataLen);
-    virtual bool recvData(uint8_t *data, uint32_t *dataLen);
-
      uint32_t sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) override;
 
     bool            getPu(uint32_t propertyId, int32_t &value) override;

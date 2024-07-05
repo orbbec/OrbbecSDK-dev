@@ -310,7 +310,7 @@ OB_EXPORT uint32_t ob_frame_get_metadata_size(const ob_frame *frame, ob_error **
  * @param[in] metadata_size The size of the new metadata.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-OB_EXPORT void ob_frame_update_metadata(ob_frame *frame, const uint8_t *metadata, size_t metadata_size, ob_error **error);
+OB_EXPORT void ob_frame_update_metadata(ob_frame *frame, const uint8_t *metadata, uint32_t metadata_size, ob_error **error);
 
 /**
  * @brief check if the frame contains the specified metadata

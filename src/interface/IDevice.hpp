@@ -53,7 +53,7 @@ public:
         if(comp) {
             return comp.as<T>();
         }
-        return nullptr;
+        return DeviceComponentPtr<T>(nullptr);
     }
 };
 

@@ -4,7 +4,6 @@
 #include "IProperty.hpp"
 #include "InternalTypes.hpp"
 #include "libobsensor/h/ObTypes.h"
-#include "imu_calibration_params.h"
 #include "component/DeviceComponentBase.hpp"
 
 #include <vector>
@@ -31,7 +30,7 @@ public:
         return fixedCalibrationCameraParamList_;
     }
 
-    const IMUCalibrateParams &getIMUCalibrationParam() const {
+    const OBIMUCalibrateParams &getIMUCalibrationParam() const {
         return imuCalibParam_;
     }
 
@@ -52,7 +51,7 @@ private:
     std::shared_ptr<const StreamProfile> gyroEmptyStreamProfile_;
 
     std::vector<OBDepthCalibrationParam> depthCalibParamList_;
-    IMUCalibrateParams                   imuCalibParam_;
+    OBIMUCalibrateParams                 imuCalibParam_;
     std::vector<OBCameraParam>           calibrationCameraParamList_;
     std::vector<OBD2CProfile>            d2cProfileList_;
     std::vector<OBCameraParam>           fixedCalibrationCameraParamList_;

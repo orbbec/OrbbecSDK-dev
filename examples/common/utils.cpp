@@ -22,7 +22,3 @@ int getInputOption() {
 }
 
 }  // namespace ob_sample_utils
-
-uint64_t ob_sample_utils_get_current_timestamp_ms(){
-    return ob_sample_utils::getNowTimesMs();
-}

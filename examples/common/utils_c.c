@@ -100,15 +100,16 @@ char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms) {
 #else  // Windows
 #include <conio.h>
 #include <windows.h>
-// uint64_t ob_sample_utils_get_current_timestamp_ms() {
-//     FILETIME      ft;
-//     LARGE_INTEGER li;
-//     GetSystemTimeAsFileTime(&ft);
-//     li.LowPart             = ft.dwLowDateTime;
-//     li.HighPart            = ft.dwHighDateTime;
-//     long long milliseconds = li.QuadPart / 10000LL;
-//     return milliseconds;
-// }
+
+uint64_t ob_sample_utils_get_current_timestamp_ms() {
+    FILETIME      ft;
+    LARGE_INTEGER li;
+    GetSystemTimeAsFileTime(&ft);
+    li.LowPart             = ft.dwLowDateTime;
+    li.HighPart            = ft.dwHighDateTime;
+    long long milliseconds = li.QuadPart / 10000LL;
+    return milliseconds;
+}
 
 char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms) {
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);

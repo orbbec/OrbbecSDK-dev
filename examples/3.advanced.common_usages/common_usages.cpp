@@ -311,7 +311,7 @@ std::shared_ptr<ob::FrameSet> fileterAlign(std::shared_ptr<ob::FrameSet> framese
 }
 void handleFrameset(std::shared_ptr<ob::FrameSet> frameset) {
     auto alignFrameSet = fileterAlign(frameset);
-    win->renderFrame(alignFrameSet);
+    win->pushFramesToShow(alignFrameSet);
 }
 
 void getDeviceInformation() {

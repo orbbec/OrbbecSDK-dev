@@ -38,8 +38,8 @@ public:
     void reset();
 
     // add frames to the rendering
-    void renderFrame(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId = 0);
-    void renderFrame(std::shared_ptr<const ob::Frame> currentFrame, int groupId = 0);
+    void pushFramesToShow(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId = 0);
+    void pushFramesToShow(std::shared_ptr<const ob::Frame> currentFrame, int groupId = 0);
 
     // wait for the key to be pressed
     int waitKey(uint32_t timeoutMsec = 1);

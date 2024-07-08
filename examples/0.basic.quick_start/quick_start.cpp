@@ -22,7 +22,7 @@ int main(void) try {
         }
 
         // Rendering display
-        win.renderFrame(frameSet);
+        win.pushFramesToShow(frameSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

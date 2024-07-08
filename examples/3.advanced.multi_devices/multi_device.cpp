@@ -4,16 +4,38 @@
 
 #include <mutex>
 
-const int maxDeviceCount = 9;
+std::map<int, std::shared_ptr<const ob::Frame>> framesets;
+std::mutex                                      framesetMutex;
 
-std::vector<std::shared_ptr<const ob::Frame>> frames;
-std::shared_ptr<ob::Frame>                    colorFrames[maxDeviceCount];
-std::shared_ptr<ob::Frame>                    depthFrames[maxDeviceCount];
-std::shared_ptr<ob::Frame>                    irFrames[maxDeviceCount];
-std::mutex                                    frameMutex;
+void StartStream(std::map<int, std::shared_ptr<ob::Pipeline>> &pipes) {
 
-void StartStream(std::vector<std::shared_ptr<ob::Pipeline>> pipes);
-void StopStream(std::vector<std::shared_ptr<ob::Pipeline>> pipes);
+    for(auto &item: pipes) {
+        int   deviceIndex = item.first;
+        auto &pipe        = item.second;
+
+        // config to enable depth and color streams
+        std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
+        config->enableVideoStream(OB_STREAM_COLOR);
+        config->enableVideoStream(OB_STREAM_DEPTH);
+
+        // start pipeline and pass the callback function to receive the frames
+        pipe->start(config, [deviceIndex](std::shared_ptr<ob::FrameSet> frameSet) {
+            std::lock_guard<std::mutex> lock(framesetMutex);
+            framesets[deviceIndex] = frameSet;
+        });
+    }
+}
+
+void StopStream(std::map<int, std::shared_ptr<ob::Pipeline>> &pipes) {
+    for(auto &item: pipes) {
+        auto &pipe = item.second;
+        // stop the pipeline
+        pipe->stop();
+    }
+
+    std::lock_guard<std::mutex> lock(framesetMutex);
+    framesets.clear();
+}
 
 int main() try {
     // Create a Context
@@ -21,52 +43,43 @@ int main() try {
 
     // Query the list of connected devices
     auto devList = ctx.queryDeviceList();
+
     // Get the number of connected devices
     int devCount = devList->getCount();
 
-    // traverse the device list and create a pipe
-    std::vector<std::shared_ptr<ob::Pipeline>> pipes;
+    // Create a pipeline for each device
+    std::map<int, std::shared_ptr<ob::Pipeline>> pipes;
     for(int i = 0; i < devCount; i++) {
-        // Get the device and create the pipeline
+        // Get the device from device list
         auto dev  = devList->getDevice(i);
+
+        // Create a pipeline for the device
         auto pipe = std::make_shared<ob::Pipeline>(dev);
-        pipes.push_back(pipe);
+
+        // Add the pipeline to the map of pipelines
+        pipes.insert({ i, pipe });
     }
 
-    // Open depth and color streams for all devices
+    // Start the depth and color streams for all devices
     StartStream(pipes);
 
     // Create a window for rendering and set the resolution of the window
     ob_smpl::CVWindow win("MultiDeviceViewer", 1280, 720, ob_smpl::RENDER_GRID);
 
+    // Main loop to show the frames, press `ESC` to exit
     while(win.run()) {
-        // Render a set of frame in the window, here will render the depth, color or infrared frames of all devices, ob_smpl::RENDER_GRID
-        // means that all frames will be rendered in a grid arrangement
-        frames.clear();
-        {
-            std::lock_guard<std::mutex> lock(frameMutex);
-            int                         i = 0;
-            for(auto pipe: pipes) {
-                if(colorFrames[i] != nullptr) {
-                    frames.emplace_back(colorFrames[i]);
-                }
+        // Get the latest frames from all devices
+        for(auto &item: framesets) {
+            std::lock_guard<std::mutex> lock(framesetMutex);
+            auto                        deviceIndex = item.first;
+            auto                       &frameset    = item.second;
 
-                if(depthFrames[i] != nullptr) {
-                    frames.emplace_back(depthFrames[i]);
-                }
-
-                if(irFrames[i] != nullptr) {
-                    frames.emplace_back(irFrames[i]);
-                }
-                i++;
-            }
-        }
-        if(frames.size() > 0){
-            win.renderFrame(frames);
+            // push the frames to the window for show
+            win.pushFramesToShow(frameset, deviceIndex);
         }
     }
 
-    frames.clear();
+    // Stop all streams and clear the framesets
     StopStream(pipes);
 
     return 0;
@@ -74,64 +87,4 @@ int main() try {
 catch(ob::Error &e) {
     std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
     exit(EXIT_FAILURE);
-}
-
-void StartStream(std::vector<std::shared_ptr<ob::Pipeline>> pipes) {
-    int i = 0;
-    for(auto &&pipe: pipes) {
-        std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-        // Get the depth camera configuration list
-        auto                                    depthProfileList = pipe->getStreamProfileList(OB_SENSOR_DEPTH);
-        std::shared_ptr<ob::VideoStreamProfile> depthProfile     = nullptr;
-        if(depthProfileList) {
-            // Open the default profile of Depth Sensor, which can be configured through the configuration file
-            depthProfile = std::const_pointer_cast<ob::StreamProfile>(depthProfileList->getProfile(OB_PROFILE_DEFAULT))->as<ob::VideoStreamProfile>();
-        }
-        config->enableStream(depthProfile);
-
-        // Get the color camera configuration list
-        try {
-            auto                                    colorProfileList = pipe->getStreamProfileList(OB_SENSOR_COLOR);
-            std::shared_ptr<ob::VideoStreamProfile> colorProfile     = nullptr;
-            if(colorProfileList) {
-                // Open the default profile of Color Sensor, which can be configured through the configuration file
-                colorProfile = std::const_pointer_cast<ob::StreamProfile>(colorProfileList->getProfile(OB_PROFILE_DEFAULT))->as<ob::VideoStreamProfile>();
-            }
-            config->enableStream(colorProfile);
-        }
-        catch(ob::Error &e) {
-            std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType()
-                      << std::endl;
-            exit(EXIT_FAILURE);
-        }
-
-        // Start the pipeline and pass in the configuration
-        pipe->start(config, [i](std::shared_ptr<ob::FrameSet> frameSet) {
-            std::lock_guard<std::mutex> lock(frameMutex);
-            auto                        colorFrameRaw = frameSet->getFrame(OB_FRAME_COLOR);
-            auto                        depthFrameRaw = frameSet->getFrame(OB_FRAME_DEPTH);
-            if(colorFrameRaw && colorFrameRaw) {
-                auto colorFrame = colorFrameRaw->as<ob::VideoFrame>();
-                auto depthFrame = depthFrameRaw->as<ob::VideoFrame>();
-                colorFrames[i]  = colorFrame;
-                depthFrames[i]  = depthFrame;
-            }
-        });
-        i++;
-    }
-}
-
-void StopStream(std::vector<std::shared_ptr<ob::Pipeline>> pipes) {
-    int i = 0;
-    for(auto &&pipe: pipes) {
-        if(colorFrames[i])
-            colorFrames->reset();
-        if(depthFrames[i])
-            depthFrames->reset();
-        if(irFrames[i])
-            irFrames->reset();
-        // stop the pipeline
-        pipe->stop();
-        i++;
-    }
 }

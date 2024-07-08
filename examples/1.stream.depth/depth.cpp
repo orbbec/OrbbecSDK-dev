@@ -49,7 +49,7 @@ int main(void) try {
         }
 
         // Render frame in the window.
-        win.renderFrame(depthFrame);
+        win.pushFramesToShow(depthFrame);
     }
 
     // Stop the pipeline

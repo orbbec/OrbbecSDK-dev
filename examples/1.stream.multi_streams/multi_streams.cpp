@@ -66,7 +66,7 @@ int main(void) try {
             continue;
         }
         // Render camera and imu frameset.
-        win.renderFrame({ renderframeSet, renderImuFrameSet });
+        win.pushFramesToShow({ renderframeSet, renderImuFrameSet });
     }
 
     // Stop the Pipeline, no frame data will be generated.

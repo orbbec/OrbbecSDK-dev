@@ -93,8 +93,8 @@ void CVWindow::resize(int width, int height) {
     cv::resizeWindow(name_, width_, height_);
 }
 
-// add frames to the rendering
-void CVWindow::renderFrame(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId) {
+// add frames to the show
+void CVWindow::pushFramesToShow(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId) {
     if(frames.empty()) {
         return;
     }
@@ -124,8 +124,8 @@ void CVWindow::renderFrame(std::vector<std::shared_ptr<const ob::Frame>> frames,
     srcFrameGroupsCv_.notify_one();
 }
 
-void CVWindow::renderFrame(std::shared_ptr<const ob::Frame> currentFrame, int groupId) {
-    renderFrame(std::vector<std::shared_ptr<const ob::Frame>>{ currentFrame }, groupId);
+void CVWindow::pushFramesToShow(std::shared_ptr<const ob::Frame> currentFrame, int groupId) {
+    pushFramesToShow(std::vector<std::shared_ptr<const ob::Frame>>{ currentFrame }, groupId);
 }
 
 // wait for the key to be pressed

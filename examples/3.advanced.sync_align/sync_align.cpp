@@ -97,7 +97,7 @@ int main(void) try {
         auto alignedFrameSet = alignFilter->process(frameSet);
 
         // render and display
-        win.renderFrame(alignedFrameSet);
+        win.pushFramesToShow(alignedFrameSet);
     }
     // Stop the Pipeline, no frame data will be generated
     pipe->stop();

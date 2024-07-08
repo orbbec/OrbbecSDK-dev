@@ -7,7 +7,7 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *device) {
     dylib_ = std::make_shared<dylib>(moduleLoadPath_.c_str(), "ob_frame_processor");
 
     auto dylib = dylib_;
-    context_ = std::shared_ptr<FrameProcessorContext>(new FrameProcessorContext(), [dylib](FrameProcessorContext *context) {
+    context_   = std::shared_ptr<FrameProcessorContext>(new FrameProcessorContext(), [dylib](FrameProcessorContext *context) {
         if(context && context->destroy_context) {
             ob_error *error = nullptr;
             context->destroy_context(context->context, &error);
@@ -45,18 +45,19 @@ std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSe
         return nullptr;
     }
 
-    auto iter    = frameProcessors_.find(sensorType);
+    auto iter = frameProcessors_.find(sensorType);
     if(iter != frameProcessors_.end()) {
         return iter->second;
     }
 
     std::shared_ptr<FrameProcessor> processor;
     TRY_EXECUTE({ processor = std::make_shared<FrameProcessor>(context_, sensorType); })
-    frameProcessors_.insert({sensorType, processor});
+    frameProcessors_.insert({ sensorType, processor });
     return processor;
 }
 
-FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType) : context_(context), sensorType_(sensorType),FilterBase("FrameProcessor"){
+FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType)
+    : FilterBase("FrameProcessor"), context_(context), sensorType_(sensorType) {
     if(context_->context && context_->create_processor) {
         ob_error *error   = nullptr;
         privateProcessor_ = context_->create_processor(context_->context, sensorType, &error);
@@ -113,7 +114,7 @@ std::shared_ptr<Frame> FrameProcessor::processFunc(std::shared_ptr<const Frame> 
     return FrameFactory::createFrameFromOtherFrame(frame, true);
 }
 
-const std::string &FrameProcessor::getConfigSchema() const{
+const std::string &FrameProcessor::getConfigSchema() const {
     return configSchema_;
 }
 
@@ -129,41 +130,35 @@ void FrameProcessor::updateConfig(std::vector<std::string> &params) {
     }
 }
 
-void FrameProcessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value){
-    switch(propertyId){
-        case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL:
-        {
-            setConfigValue("DisparityTransform#255",static_cast<double>(value.intValue));
-        }
-        break;
+void FrameProcessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+    switch(propertyId) {
+    case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
+        setConfigValue("DisparityTransform#255", static_cast<double>(value.intValue));
+    } break;
     }
 }
 
-void FrameProcessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value){
+void FrameProcessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     double getValue = 0;
-    switch(propertyId){
-        case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL:
-        {
-            getValue = getConfigValue("DisparityTransform#255");
-            value->intValue = static_cast<int32_t>(getValue);
-        }
-        break;
+    switch(propertyId) {
+    case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
+        getValue        = getConfigValue("DisparityTransform#255");
+        value->intValue = static_cast<int32_t>(getValue);
+    } break;
     }
 }
 
-void FrameProcessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range){
+void FrameProcessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     double value = 0.0f;
-    switch(propertyId){
-        case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL:
-        {
-            value = getConfigValue("DisparityTransform#255");
-            range->cur.intValue = static_cast<int32_t>(value);
-            range->def.intValue = 1;
-            range->max.intValue = 1;
-            range->min.intValue = 0;
-            range->step.intValue = 1;
-        }
-        break;
+    switch(propertyId) {
+    case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
+        value                = getConfigValue("DisparityTransform#255");
+        range->cur.intValue  = static_cast<int32_t>(value);
+        range->def.intValue  = 1;
+        range->max.intValue  = 1;
+        range->min.intValue  = 0;
+        range->step.intValue = 1;
+    } break;
     }
 }
 

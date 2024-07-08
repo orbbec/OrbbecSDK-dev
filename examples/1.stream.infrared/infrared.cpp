@@ -44,7 +44,7 @@ int main() try {
         }
 
         // Render a set of frame in the window.
-        win.renderFrame(frameSet);
+        win.pushFramesToShow(frameSet);
     }
 
     // Stop the pipeline, no frame data will be generated

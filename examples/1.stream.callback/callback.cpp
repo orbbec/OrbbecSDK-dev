@@ -48,7 +48,7 @@ int main(void) try {
         }
 
         // Rendering display
-        win.renderFrame(renderframeSet);
+        win.pushFramesToShow(renderframeSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

@@ -54,18 +54,13 @@ public:
     void resize(int width, int height);
 
 private:
-    // show the frames/mats in the window
-    void showFrames();
+    // frames processing thread function
+    void processFrames();
+    void renderImages();
 
     // add info to mat
     static cv::Mat visualize(std::shared_ptr<const ob::Frame> frame);
     static void    drawInfo(cv::Mat &imageMat, std::shared_ptr<const ob::VideoFrame> &frame);
-
-    // frames processing thread
-    void processFrames();
-#ifndef __APPLE__
-    void show();
-#endif
 
 private:
     std::string name_;
@@ -86,13 +81,10 @@ private:
     std::condition_variable                                      srcFrameGroupsCv_;
 
     using StreamsMatMap = std::map<int, std::pair<std::shared_ptr<const ob::Frame>, cv::Mat>>;
-    std::mutex    renderMatsMtx_;
-    StreamsMatMap renderMats_;
-    cv::Mat       renderMat_;
+    StreamsMatMap mapGroups_;
 
-#ifndef __APPLE__
-    std::thread showThread_;
-#endif
+    std::mutex    renderMatsMtx_;
+    cv::Mat       renderMat_;
 };
 
 }  // namespace ob_smpl

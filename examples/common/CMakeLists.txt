@@ -15,6 +15,7 @@ if(${OpenCV_FOUND})
         ${CMAKE_CURRENT_LIST_DIR}/utils_opencv.hpp
     )
     target_link_libraries(ob_examples_common PUBLIC ${OpenCV_LIBS} ob::openobsdk)
+    target_include_directories(ob_examples_common PUBLIC ${OpenCV_INCLUDE_DIRS})
 endif()
 
 target_include_directories(ob_examples_common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

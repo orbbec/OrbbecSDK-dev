@@ -13,28 +13,23 @@ CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, RenderType
     // start processing thread
     processThread_ = std::thread(&CVWindow::processFrames, this);
 
-#ifndef __APPLE__
-    // start show thread
-    showThread_ = std::thread(&CVWindow::show, this);
-#else
-    // for macOS, show on main thread right now
     cv::namedWindow(name_, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     cv::resizeWindow(name_, width_, height_);
-#endif
 }
 
 CVWindow::~CVWindow() {
     close();
-#ifdef __APPLE__
     cv::destroyWindow(name_);
-#endif
 }
 
 // if window is closed
 bool CVWindow::run() {
-#ifdef __APPLE__
 
-    showFrames();
+    {
+        // show render mat
+        std::lock_guard<std::mutex> lock(renderMatsMtx_);
+        cv::imshow(name_, renderMat_);
+    }
 
     int key = cv::waitKey(1);
     if(key != -1) {
@@ -48,7 +43,6 @@ bool CVWindow::run() {
         }
     }
 
-#endif
     return !closed_;
 }
 
@@ -56,7 +50,7 @@ bool CVWindow::run() {
 void CVWindow::close() {
     {
         std::lock_guard<std::mutex> lock(renderMatsMtx_);
-        renderMats_.clear();
+        mapGroups_.clear();
         srcFrameGroups_.clear();
         srcFrameGroupsCv_.notify_all();
     }
@@ -66,12 +60,6 @@ void CVWindow::close() {
     if(processThread_.joinable()) {
         processThread_.join();
     }
-
-#ifndef __APPLE__
-    if(showThread_.joinable()) {
-        showThread_.join();
-    }
-#endif
 }
 
 void CVWindow::reset() {
@@ -81,9 +69,6 @@ void CVWindow::reset() {
     // restart thread
     closed_        = false;
     processThread_ = std::thread(&CVWindow::processFrames, this);
-#ifndef __APPLE__
-    showThread_ = std::thread(&CVWindow::show, this);
-#endif
 }
 
 // set the window size
@@ -170,29 +155,124 @@ void CVWindow::processFrames() {
             continue;
         }
 
-        StreamsMatMap mats;
-        {
-            std::lock_guard<std::mutex> lock(renderMatsMtx_);
-            mats = renderMats_;
-        }
-
         for(const auto &framesItem: frameGroups) {
             int         groupId = framesItem.first;
             const auto &frames  = framesItem.second;
             for(const auto &frame: frames) {
                 auto rstMat = visualize(frame);
                 if(!rstMat.empty()) {
-                    int uid   = groupId * OB_FRAME_TYPE_COUNT + static_cast<int>(frame->getType());
-                    mats[uid] = { frame, rstMat };
+                    int uid         = groupId * OB_FRAME_TYPE_COUNT + static_cast<int>(frame->getType());
+                    mapGroups_[uid] = { frame, rstMat };
+                }
+            }
+        }
+
+        if(mapGroups_.empty()) {
+            continue;
+        }
+
+        renderImages();
+    }
+}
+
+void CVWindow::renderImages() {
+    cv::Mat renderMat;
+    try {
+        if(renderType_ == ob_smpl::RENDER_SINGLE) {
+            auto &mat = mapGroups_.begin()->second.second;
+            cv::resize(mat, renderMat, cv::Size(static_cast<int>(width_), static_cast<int>(height_)));
+        }
+        else if(renderType_ == ob_smpl::RENDER_ONE_ROW) {
+            for(auto &item: mapGroups_) {
+                auto   &mat = item.second.second;
+                cv::Mat resizeMat;
+                cv::resize(mat, resizeMat, cv::Size(static_cast<int>(width_ / mapGroups_.size()), height_));
+                if(renderMat.dims > 0 && renderMat.cols > 0 && renderMat.rows > 0) {
+                    cv::hconcat(renderMat, resizeMat, renderMat);
+                }
+                else {
+                    renderMat = resizeMat;
+                }
+            }
+        }
+        else if(renderType_ == ob_smpl::RENDER_ONE_COLUMN) {
+            for(auto &item: mapGroups_) {
+                auto   &mat = item.second.second;
+                cv::Mat resizeMat;
+                cv::resize(mat, resizeMat, cv::Size(static_cast<int>(width_), static_cast<int>(height_ / mapGroups_.size())));
+                if(renderMat.dims > 0 && renderMat.cols > 0 && renderMat.rows > 0) {
+                    cv::vconcat(renderMat, resizeMat, renderMat);
+                }
+                else {
+                    renderMat = resizeMat;
+                }
+            }
+        }
+        else if(renderType_ == ob_smpl::RENDER_GRID) {
+            int count     = static_cast<int>(mapGroups_.size());
+            int idealSide = static_cast<int>(std::sqrt(count));
+            int rows      = idealSide;
+            int cols      = idealSide;
+            while(rows * cols < count) {  // find the best row and column count
+                cols++;
+                if(rows * cols < count) {
+                    rows++;
                 }
             }
 
-            if(!mats.empty()) {
-                std::lock_guard<std::mutex> lock(renderMatsMtx_);
-                renderMats_ = mats;
+            std::vector<cv::Mat> gridImages;  // store all images in grid
+            auto                 it = mapGroups_.begin();
+            for(int i = 0; i < rows; i++) {
+                std::vector<cv::Mat> rowImages;  // store images in the same row
+                for(int j = 0; j < cols; j++) {
+                    int     index = i * cols + j;
+                    cv::Mat resizeMat;
+                    if(index < count) {
+                        auto mat = it->second.second;
+                        cv::resize(mat, resizeMat, cv::Size(width_ / cols, height_ / rows));
+                        it++;
+                    }
+                    else {
+                        resizeMat = cv::Mat::zeros(height_ / rows, width_ / cols, CV_8UC3);  // fill with black
+                    }
+                    rowImages.push_back(resizeMat);
+                }
+                cv::Mat lineMat;
+                cv::hconcat(rowImages, lineMat);  // horizontal concat all images in the same row
+                gridImages.push_back(lineMat);
+            }
+
+            cv::vconcat(gridImages, renderMat);  // vertical concat all images in the grid
+        }
+        else if(renderType_ == ob_smpl::RENDER_OVERLAY && mapGroups_.size() >= 2) {
+            cv::Mat     overlayMat;
+            const auto &mat1 = mapGroups_.begin()->second.second;
+            const auto &mat2 = (mapGroups_.begin()++)->second.second;
+            cv::resize(mat1, renderMat, cv::Size(width_, height_));
+            cv::resize(mat2, overlayMat, cv::Size(width_, height_));
+            float alpha = alpha_;
+            for(int i = 0; i < renderMat.rows; i++) {
+                for(int j = 0; j < renderMat.cols; j++) {
+                    cv::Vec3b &outRgb     = renderMat.at<cv::Vec3b>(i, j);
+                    cv::Vec3b &overlayRgb = overlayMat.at<cv::Vec3b>(i, j);
+
+                    outRgb[0] = (uint8_t)(outRgb[0] * (1.0f - alpha) + overlayRgb[0] * alpha);
+                    outRgb[1] = (uint8_t)(outRgb[1] * (1.0f - alpha) + overlayRgb[1] * alpha);
+                    outRgb[2] = (uint8_t)(outRgb[2] * (1.0f - alpha) + overlayRgb[2] * alpha);
+                }
             }
         }
     }
+    catch(std::exception &e) {
+        std::cerr << e.what() << std::endl;
+    }
+
+    if(renderMat.empty()) {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(renderMatsMtx_);
+    renderMat_ = renderMat;
 }
 
 cv::Mat CVWindow::visualize(std::shared_ptr<const ob::Frame> frame) {
@@ -348,140 +428,5 @@ void CVWindow::drawInfo(cv::Mat &imageMat, std::shared_ptr<const ob::VideoFrame>
     putTextWithBackground("frame timestamp(ms):  " + std::to_string(frame->getTimeStampUs()), cv::Point(8, 40));
     putTextWithBackground("system timestamp(ms): " + std::to_string(frame->getSystemTimeStampUs()), cv::Point(8, 64));
 }
-
-void CVWindow::showFrames() {
-    StreamsMatMap mats;
-    {
-        std::lock_guard<std::mutex> lock(renderMatsMtx_);
-        mats = renderMats_;
-    }
-
-    if(!mats.empty()) {
-        renderMat_.release();
-        try {
-            if(renderType_ == ob_smpl::RENDER_SINGLE) {
-                auto &mat = mats.begin()->second.second;
-                cv::resize(mat, renderMat_, cv::Size(static_cast<int>(width_), static_cast<int>(height_)));
-            }
-            else if(renderType_ == ob_smpl::RENDER_ONE_ROW) {
-                for(auto &item: mats) {
-                    auto   &mat = item.second.second;
-                    cv::Mat resizeMat;
-                    cv::resize(mat, resizeMat, cv::Size(static_cast<int>(width_ / mats.size()), height_));
-                    if(renderMat_.dims > 0 && renderMat_.cols > 0 && renderMat_.rows > 0) {
-                        cv::hconcat(renderMat_, resizeMat, renderMat_);
-                    }
-                    else {
-                        renderMat_ = resizeMat;
-                    }
-                }
-                cv::imshow(name_, renderMat_);
-            }
-            else if(renderType_ == ob_smpl::RENDER_ONE_COLUMN) {
-                for(auto &item: mats) {
-                    auto   &mat = item.second.second;
-                    cv::Mat resizeMat;
-                    cv::resize(mat, resizeMat, cv::Size(static_cast<int>(width_), static_cast<int>(height_ / mats.size())));
-                    if(renderMat_.dims > 0 && renderMat_.cols > 0 && renderMat_.rows > 0) {
-                        cv::vconcat(renderMat_, resizeMat, renderMat_);
-                    }
-                    else {
-                        renderMat_ = resizeMat;
-                    }
-                }
-                cv::imshow(name_, renderMat_);
-            }
-            else if(renderType_ == ob_smpl::RENDER_GRID) {
-                int count     = static_cast<int>(mats.size());
-                int idealSide = static_cast<int>(std::sqrt(count));
-                int rows      = idealSide;
-                int cols      = idealSide;
-                while(rows * cols < count) {  // find the best row and column count
-                    cols++;
-                    if(rows * cols < count) {
-                        rows++;
-                    }
-                }
-
-                std::vector<cv::Mat> gridImages;  // store all images in grid
-                auto                 it = mats.begin();
-                for(int i = 0; i < rows; i++) {
-                    std::vector<cv::Mat> rowImages;  // store images in the same row
-                    for(int j = 0; j < cols; j++) {
-                        int     index = i * cols + j;
-                        cv::Mat resizeMat;
-                        if(index < count) {
-                            auto mat = it->second.second;
-                            cv::resize(mat, resizeMat, cv::Size(width_ / cols, height_ / rows));
-                            it++;
-                        }
-                        else {
-                            resizeMat = cv::Mat::zeros(height_ / rows, width_ / cols, CV_8UC3);  // fill with black
-                        }
-                        rowImages.push_back(resizeMat);
-                    }
-                    cv::Mat lineMat;
-                    cv::hconcat(rowImages, lineMat);  // horizontal concat all images in the same row
-                    gridImages.push_back(lineMat);
-                }
-
-                cv::vconcat(gridImages, renderMat_);  // vertical concat all images in the grid
-            }
-            else if(renderType_ == ob_smpl::RENDER_OVERLAY && mats.size() >= 2) {
-                cv::Mat     overlayMat;
-                const auto &mat1 = mats.begin()->second.second;
-                const auto &mat2 = (mats.begin()++)->second.second;
-                cv::resize(mat1, renderMat_, cv::Size(width_, height_));
-                cv::resize(mat2, overlayMat, cv::Size(width_, height_));
-                float alpha = alpha_;
-                for(int i = 0; i < renderMat_.rows; i++) {
-                    for(int j = 0; j < renderMat_.cols; j++) {
-                        cv::Vec3b &outRgb     = renderMat_.at<cv::Vec3b>(i, j);
-                        cv::Vec3b &overlayRgb = overlayMat.at<cv::Vec3b>(i, j);
-
-                        outRgb[0] = (uint8_t)(outRgb[0] * (1.0f - alpha) + overlayRgb[0] * alpha);
-                        outRgb[1] = (uint8_t)(outRgb[1] * (1.0f - alpha) + overlayRgb[1] * alpha);
-                        outRgb[2] = (uint8_t)(outRgb[2] * (1.0f - alpha) + overlayRgb[2] * alpha);
-                    }
-                }
-            }
-        }
-        catch(std::exception &e) {
-            std::cerr << e.what() << std::endl;
-        }
-    }
-
-    // show render mat
-    cv::imshow(name_, renderMat_);
-}
-
-#ifndef __APPLE__
-// render thread
-void CVWindow::show() {
-    // must create window in show thread
-    cv::namedWindow(name_, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    cv::resizeWindow(name_, width_, height_);
-
-    while(!closed_) {
-        // wait key and control show frequency
-        int key = cv::waitKey(20);
-        if(key != -1) {
-            std::unique_lock<std::mutex> lk(keyMtx_);
-            key_ = key;
-            keyCv_.notify_all();
-
-            if(key == ESC_KEY) {
-                closed_ = true;
-                srcFrameGroupsCv_.notify_all();
-            }
-        }
-
-        showFrames();
-    }
-    if(closed_) {
-        cv::destroyWindow(name_);
-    }
-}
-#endif
 
 }  // namespace ob_smpl

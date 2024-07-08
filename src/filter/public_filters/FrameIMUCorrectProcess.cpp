@@ -161,8 +161,8 @@ std::shared_ptr<Frame> IMUCorrecter::processFunc(std::shared_ptr<const Frame> fr
 }
 
 OBPoint3f IMUCorrecter::correctAccel(const OBPoint3f &accelVec, OBAccelIntrinsic *intrinsic) {
-    float M_acc[3][3];
-    float bias_acc[3];
+    double M_acc[3][3];
+    double bias_acc[3];
 
     for(int i = 0; i < 3; i++) {
         M_acc[i][0] = intrinsic->scaleMisalignment[3 * i];
@@ -174,17 +174,17 @@ OBPoint3f IMUCorrecter::correctAccel(const OBPoint3f &accelVec, OBAccelIntrinsic
     bias_acc[1] = intrinsic->bias[1];
     bias_acc[2] = intrinsic->bias[2];
 
-    float correctedAccel[3];
+    double correctedAccel[3];
     for(int i = 0; i < 3; i++) {
         correctedAccel[i] = M_acc[i][0] * (accelVec.x - bias_acc[0]) + M_acc[i][1] * (accelVec.y - bias_acc[1]) + M_acc[i][2] * (accelVec.z - bias_acc[2]);
     }
 
-    return { correctedAccel[0], correctedAccel[1], correctedAccel[2] };
+    return { static_cast<float>(correctedAccel[0]), static_cast<float>(correctedAccel[1]), static_cast<float>(correctedAccel[2]) };
 }
 
 OBPoint3f IMUCorrecter::correctGyro(const OBPoint3f &gyroVec, OBGyroIntrinsic *intrinsic) {
-    float M_gyro[3][3];
-    float bias_gyro[3];
+    double M_gyro[3][3];
+    double bias_gyro[3];
 
     for(int i = 0; i < 3; i++) {
         M_gyro[i][0] = intrinsic->scaleMisalignment[3 * i];
@@ -196,12 +196,12 @@ OBPoint3f IMUCorrecter::correctGyro(const OBPoint3f &gyroVec, OBGyroIntrinsic *i
     bias_gyro[1] = intrinsic->bias[1];
     bias_gyro[2] = intrinsic->bias[2];
 
-    float correctedGyro[3];
+    double correctedGyro[3];
     for(int i = 0; i < 3; i++) {
         correctedGyro[i] = M_gyro[i][0] * (gyroVec.x - bias_gyro[0]) + M_gyro[i][1] * (gyroVec.y - bias_gyro[1]) + M_gyro[i][2] * (gyroVec.z - bias_gyro[2]);
     }
 
-    return { correctedGyro[0], correctedGyro[1], correctedGyro[2] };
+    return { static_cast<float>(correctedGyro[0]), static_cast<float>(correctedGyro[1]), static_cast<float>(correctedGyro[2]) };
 }
 
 }  // namespace libobsensor

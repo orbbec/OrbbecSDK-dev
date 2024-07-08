@@ -132,8 +132,9 @@ public:
 
         m_handle = open((final_path + final_name).c_str());
 
-        if (!m_handle)
+        if(!m_handle) {
             throw load_error("Could not load library \"" + final_path + final_name + "\"\n" + get_error_description());
+        }
     }
 
     dylib(const std::string &dir_path, const std::string &lib_name, bool decorations = add_filename_decorations)

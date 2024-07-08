@@ -8,7 +8,7 @@ namespace libobsensor {
 
 DeviceBase::DeviceBase() : ctx_(Context::getInstance()), isDeactivated_(false) {}
 
-DeviceBase::~DeviceBase() {}
+DeviceBase::~DeviceBase() noexcept = default;
 
 void DeviceBase::deactivate() {
     clearComponents();

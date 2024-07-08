@@ -13,7 +13,7 @@ public:
     void start() override;
     void stop() override;
 
-    OBDeviceState getCurrentDeviceState() const;
+    OBDeviceState getCurrentDeviceState()  const override;
     int           registerStateChangedCallback(DeviceStateChangedCallback callback) override;
     void          unregisterStateChangedCallback(int callbackId) override;
     void          enableHeartbeat() override;

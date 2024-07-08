@@ -11,7 +11,7 @@ DeviceMonitor::DeviceMonitor(IDevice *owner, std::shared_ptr<ISourcePort> dataPo
     }
 }
 
-DeviceMonitor::~DeviceMonitor() {
+DeviceMonitor::~DeviceMonitor() noexcept {
     if(heartbeatEnabled_ && !heartbeatPaused_) {
         TRY_EXECUTE(disableHeartbeat());
     }
@@ -42,7 +42,6 @@ void DeviceMonitor::stop() {
 
 void DeviceMonitor::poll() {
     const uint32_t HEARTBEAT_INTERVAL_MS = 3000;
-    std::mutex     mutex;
     while(heartbeatAndFetchStateThreadStarted_) {
         std::unique_lock<std::mutex> lock(commMutex_);
         heartbeatAndFetchStateThreadCv_.wait_for(lock, std::chrono::milliseconds(HEARTBEAT_INTERVAL_MS),

@@ -367,7 +367,7 @@ void G330AlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const Stream
         else {
             OBCameraIntrinsic  intrinsic  = { 0 };
             OBCameraDistortion distortion = { 0 };
-            OBCameraParam      param      = { 0 };
+            OBCameraParam      param      {};
             auto               vsp        = sp->as<VideoStreamProfile>();
             if(!findBestMatchedCameraParam(calibrationCameraParamList_, vsp, param)) {
                 // throw libobsensor::unsupported_operation_exception("Can not find matched camera param!");

@@ -44,7 +44,7 @@ public:
 
     const std::string &getConfigSchema() const override;
 
-    void updateConfig(std::vector<std::string> &params);
+    void updateConfig(std::vector<std::string> &params) override;
 
     OBSensorType getSensorType() {
         return sensorType_;
@@ -57,7 +57,7 @@ public:
     void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
 
 protected:
-    std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame);
+    std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
 private:
     std::shared_ptr<FrameProcessorContext> context_;

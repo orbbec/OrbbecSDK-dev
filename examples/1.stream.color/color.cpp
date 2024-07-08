@@ -17,9 +17,9 @@ int main(void) try {
     pipe.start(config);
 
     // Create a window for rendering and set the resolution of the window.
-    Window app("ColorViewer", 1280, 720);
+    ob_smpl::CVWindow win("ColorViewer", 1280, 720);
 
-    while(app) {
+    while(win.run()) {
         // Wait for up to 100ms for a frameset in blocking mode.
         auto frameSet = pipe.waitForFrameset();
         if(frameSet == nullptr) {
@@ -29,7 +29,7 @@ int main(void) try {
         // get color frame from frameset.
         auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR);
         // Render colorFrame.
-        app.renderFrame(colorFrame);
+        win.renderFrame(colorFrame);
     }
 
     // Stop the Pipeline, no frame data will be generated

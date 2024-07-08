@@ -57,8 +57,8 @@ int main(void) try {
     });
 
     // Create a window for rendering and set the resolution of the window
-    Window app("MultiStream", 1280, 720, RENDER_GRID);
-    while(app) {
+    ob_smpl::CVWindow win("MultiStream", 1280, 720, ob_smpl::RENDER_GRID);
+    while(win.run()) {
         std::lock_guard<std::mutex> lockimu(imuFrameMutex);
         std::lock_guard<std::mutex> lock(frameMutex);
 
@@ -66,7 +66,7 @@ int main(void) try {
             continue;
         }
         // Render camera and imu frameset.
-        app.renderFrame({ renderframeSet, renderImuFrameSet });
+        win.renderFrame({ renderframeSet, renderImuFrameSet });
     }
 
     // Stop the Pipeline, no frame data will be generated.

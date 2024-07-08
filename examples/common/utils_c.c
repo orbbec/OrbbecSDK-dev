@@ -61,14 +61,14 @@ int kbhit(void) {
 }
 
 #include <sys/time.h>
-uint64_t ob_sample_utils_get_current_timestamp_ms() {
+uint64_t ob_smpl_get_current_timestamp_ms() {
     struct timeval te;
     gettimeofday(&te, NULL);                                          // 获取当前时间
     long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;  // 计算毫秒
     return milliseconds;
 }
 
-char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms) {
+char ob_smpl_wait_for_key_press(uint32_t timeout_ms) {
     struct termios oldt, newt;
     int            ch;
     int            oldf;
@@ -101,7 +101,7 @@ char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms) {
 #include <conio.h>
 #include <windows.h>
 
-uint64_t ob_sample_utils_get_current_timestamp_ms() {
+uint64_t ob_smpl_get_current_timestamp_ms() {
     FILETIME      ft;
     LARGE_INTEGER li;
     GetSystemTimeAsFileTime(&ft);
@@ -111,7 +111,7 @@ uint64_t ob_sample_utils_get_current_timestamp_ms() {
     return milliseconds;
 }
 
-char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms) {
+char ob_smpl_wait_for_key_press(uint32_t timeout_ms) {
     HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
     if(hStdin == INVALID_HANDLE_VALUE) {
         return 0;

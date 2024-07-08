@@ -166,7 +166,7 @@ std::shared_ptr<Frame> FrameFactory::createFrameFromStreamProfile(std::shared_pt
 
 std::shared_ptr<FrameSet> FrameFactory::createFrameSet() {
     auto memoryPool            = libobsensor::FrameMemoryPool::getInstance();
-    auto frameSetBufferManager = memoryPool->createFrameBufferManager(OB_FRAME_SET, OB_FRAME_COUNT * sizeof(std::shared_ptr<Frame>));
+    auto frameSetBufferManager = memoryPool->createFrameBufferManager(OB_FRAME_SET, OB_FRAME_TYPE_COUNT * sizeof(std::shared_ptr<Frame>));
 
     auto frame = frameSetBufferManager->acquireFrame();
     if(frame == nullptr) {

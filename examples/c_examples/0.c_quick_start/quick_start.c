@@ -4,7 +4,7 @@
 #include <libobsensor/ObSensor.h>
 
 #include "utils_c.h"
-#include "utils_key.h"
+#include "utils_types.h"
 
 void calculate_and_print_frame_rate(const ob_frame *frameset) {
     // Initialize variables
@@ -13,10 +13,10 @@ void calculate_and_print_frame_rate(const ob_frame *frameset) {
     static uint64_t color_timestamp_last = 0;
     static uint64_t depth_timestamp_last = 0;
     if(color_timestamp_last == 0) {
-        color_timestamp_last = ob_sample_utils_get_current_timestamp_ms();
+        color_timestamp_last = ob_smpl_get_current_timestamp_ms();
     }
     if(depth_timestamp_last == 0) {
-        depth_timestamp_last = ob_sample_utils_get_current_timestamp_ms();
+        depth_timestamp_last = ob_smpl_get_current_timestamp_ms();
     }
 
     ob_error *error = NULL;
@@ -29,7 +29,7 @@ void calculate_and_print_frame_rate(const ob_frame *frameset) {
     if(color_frame != NULL) {
         color_count++;
         // Get timestamp from color frame.
-        uint64_t color_timestamp_current = ob_sample_utils_get_current_timestamp_ms();
+        uint64_t color_timestamp_current = ob_smpl_get_current_timestamp_ms();
         uint64_t duration                = color_timestamp_current - color_timestamp_last;
         if(duration > 1000) {  // calculate frame rate every second
 
@@ -63,7 +63,7 @@ void calculate_and_print_frame_rate(const ob_frame *frameset) {
     if(depth_frame != NULL) {
         depth_count++;
         // Get timestamp from depth frame.
-        uint64_t depth_timestamp_current = ob_sample_utils_get_current_timestamp_ms();
+        uint64_t depth_timestamp_current = ob_smpl_get_current_timestamp_ms();
         uint64_t duration                = depth_timestamp_current - depth_timestamp_last;
         if(duration > 1000) {  // 1 seconds
             uint64_t index = ob_frame_get_index(depth_frame, &error);
@@ -105,7 +105,7 @@ int main(void) {
 
     // Main loop, continuously wait for frames and print their index and rate.
     while(true) {
-        char key = ob_sample_utils_wait_for_key_press(1);
+        char key = ob_smpl_wait_for_key_press(1);
         if(key == ESC_KEY) {
             break;
         }

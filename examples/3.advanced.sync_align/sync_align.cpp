@@ -21,16 +21,16 @@ float   alpha      = 0.5;
 uint8_t align_mode = 0;
 
 // key press event processing
-void handleKeyPress(Window &app, std::shared_ptr<ob::Pipeline> pipe /*, std::shared_ptr<ob::Config> config*/) {
+void handleKeyPress(ob_smpl::CVWindow &win, std::shared_ptr<ob::Pipeline> pipe /*, std::shared_ptr<ob::Config> config*/) {
     ////Get the key value
-    int key = app.waitKey(10);
+    int key = win.waitKey(10);
     if(key == '+' || key == '=') {
         // Press the + key to increase alpha
         alpha += 0.1f;
         if(alpha >= 1.0f) {
             alpha = 1.0f;
         }
-        app.setAlpha(alpha);
+        win.setAlpha(alpha);
     }
     else if(key == '-' || key == '_') {
         // press - key to decrease alpha
@@ -38,7 +38,7 @@ void handleKeyPress(Window &app, std::shared_ptr<ob::Pipeline> pipe /*, std::sha
         if(alpha <= 0.0f) {
             alpha = 0.0f;
         }
-        app.setAlpha(alpha);
+        win.setAlpha(alpha);
     }
     else if(key == 'F' || key == 'f') {
         // Press the F key to switch synchronization
@@ -80,10 +80,10 @@ int main(void) try {
     auto color2depthAlign = std::make_shared<ob::Align>(OB_STREAM_DEPTH);
 
     // Create a window for rendering and set the resolution of the window
-    Window app("sync_align", 1280, 720, RENDER_OVERLAY);
+    ob_smpl::CVWindow win("sync_align", 1280, 720, ob_smpl::RENDER_OVERLAY);
 
-    while(app) {
-        handleKeyPress(app, pipe);
+    while(win.run()) {
+        handleKeyPress(win, pipe);
 
         auto frameSet = pipe->waitForFrameset(100);
         if(frameSet == nullptr) {
@@ -97,7 +97,7 @@ int main(void) try {
         auto alignedFrameSet = alignFilter->process(frameSet);
 
         // render and display
-        app.renderFrame(alignedFrameSet);
+        win.renderFrame(alignedFrameSet);
     }
     // Stop the Pipeline, no frame data will be generated
     pipe->stop();

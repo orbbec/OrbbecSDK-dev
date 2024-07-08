@@ -4,7 +4,7 @@
 #include <libobsensor/ObSensor.h>
 
 #include "utils_c.h"
-#include "utils_key.h"
+#include "utils_types.h"
 
 // helper function to check for errors and exit if there is one
 void check_ob_error(ob_error **err) {
@@ -42,7 +42,7 @@ int main(void) {
     // Wait frameset in a loop, exit when ESC is pressed.
     while(true) {
         // Wait for a key press
-        char key = ob_sample_utils_wait_for_key_press(10);
+        char key = ob_smpl_wait_for_key_press(10);
         if(key == ESC_KEY) {  // ESC key
             printf("Exiting...\n");
             break;

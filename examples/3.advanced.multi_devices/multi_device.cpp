@@ -37,10 +37,10 @@ int main() try {
     StartStream(pipes);
 
     // Create a window for rendering and set the resolution of the window
-    Window app("MultiDeviceViewer", 1280, 720, RENDER_GRID);
+    ob_smpl::CVWindow win("MultiDeviceViewer", 1280, 720, ob_smpl::RENDER_GRID);
 
-    while(app) {
-        // Render a set of frame in the window, here will render the depth, color or infrared frames of all devices, RENDER_GRID
+    while(win.run()) {
+        // Render a set of frame in the window, here will render the depth, color or infrared frames of all devices, ob_smpl::RENDER_GRID
         // means that all frames will be rendered in a grid arrangement
         frames.clear();
         {
@@ -62,7 +62,7 @@ int main() try {
             }
         }
         if(frames.size() > 0){
-            app.renderFrame(frames);
+            win.renderFrame(frames);
         }
     }
 

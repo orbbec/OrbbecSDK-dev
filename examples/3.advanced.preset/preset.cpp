@@ -27,7 +27,7 @@ int main() try {
         std::cout << "Enter index of preset to load: ";
 
         // Select preset to load.
-        int inputOption = ob_sample_utils::getInputOption();
+        int  inputOption = ob_smpl::getInputOption();
         auto presetName = presetLists->getName(inputOption);
 
         // Load preset.

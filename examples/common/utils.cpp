@@ -1,12 +1,11 @@
 #include "utils.hpp"
 #include "utils_c.h"
-#include "utils_key.h"
 
 #include <chrono>
 
-namespace ob_sample_utils {
+namespace ob_smpl {
 char waitForKeyPressed(uint32_t timeout_ms) {
-    return ob_sample_utils_wait_for_key_press(timeout_ms);
+    return ob_smpl_wait_for_key_press(timeout_ms);
 }
 
 uint64_t getNowTimesMs() {
@@ -14,11 +13,11 @@ uint64_t getNowTimesMs() {
 }
 
 int getInputOption() {
-    char inputOption = ob_sample_utils::waitForKeyPressed();
+    char inputOption = ob_smpl::waitForKeyPressed();
     if(inputOption == ESC_KEY) {
         return -1;
     }
     return inputOption - '0';
 }
 
-}  // namespace ob_sample_utils
+}  // namespace ob_smpl

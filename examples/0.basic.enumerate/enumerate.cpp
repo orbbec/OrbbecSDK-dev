@@ -7,7 +7,7 @@
 
 // get input option
 int getInputOption() {
-    char inputOption = ob_sample_utils::waitForKeyPressed();
+    char inputOption = ob_smpl::waitForKeyPressed();
     if(inputOption == ESC_KEY) {
         return -1;
     }
@@ -93,7 +93,7 @@ void enumerateSensors(std::shared_ptr<ob::Device> device) {
         std::cout << "Select a sensor to enumerate its streams(input sensor index or \'ESC\' to enumerate device): " << std::endl;
 
         // Select a sensor.
-        int sensorSelected = ob_sample_utils::getInputOption();
+        int sensorSelected = ob_smpl::getInputOption();
         if(sensorSelected == -1) {
             break;
         }
@@ -133,7 +133,7 @@ int main(void) try {
         std::cout << "enumerate sensors of device (input device index or \'ESC\' to exit program):" <<std::endl;
 
         // select a device.
-        int deviceSelected = ob_sample_utils::getInputOption();
+        int deviceSelected = ob_smpl::getInputOption();
         if(deviceSelected == -1) {
             break;
         }

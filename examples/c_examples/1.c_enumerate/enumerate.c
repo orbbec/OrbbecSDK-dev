@@ -4,7 +4,7 @@
 #include <libobsensor/ObSensor.h>
 
 const char *sensor_types[] = { "OB_SENSOR_UNKNOWN", "OB_SENSOR_IR",      "OB_SENSOR_COLOR",    "OB_SENSOR_DEPTH",     "OB_SENSOR_ACCEL",
-                               "OB_SENSOR_GYRO",    "OB_SENSOR_IR_LEFT", "OB_SENSOR_IR_RIGHT", "OB_SENSOR_RAW_PHASE", "OB_SENSOR_COUNT" };
+                               "OB_SENSOR_GYRO",    "OB_SENSOR_IR_LEFT", "OB_SENSOR_IR_RIGHT", "OB_SENSOR_RAW_PHASE", "OB_SENSOR_TYPE_COUNT" };
 
 const char *stream_types[] = { "YUYV", "YUY2",       "UYVY", "NV12", "NV21",  "MJPG", "H264",  "H265",      "Y16",  "Y8",     "Y10",    "Y11",
                                "Y12",  "GRAY",       "HEVC", "I420", "ACCEL", "GYRO", "POINT", "RGB_POINT", "RLE",  "RGB",    "BGR",    "Y14",

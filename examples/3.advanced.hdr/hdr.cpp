@@ -40,12 +40,12 @@ int main(void) try {
     pipe.start(config);
 
     // Create a window for rendering and set the resolution of the window
-    Window app("HDR-Merge", 1280, 720);
+    ob_smpl::CVWindow win("HDR-Merge", 1280, 720);
     bool   mergeRequired = true;
 
     std::cout << "Press 'M' to toggle HDR merge." << std::endl;
-    while(app) {
-        auto key = app.waitKey(10);
+    while(win.run()) {
+        auto key = win.waitKey(1);
         if(key == 'M' || key == 'm') {
             mergeRequired = !mergeRequired;
             if(mergeRequired) {
@@ -74,11 +74,11 @@ int main(void) try {
             }
 
             // add merged depth frame to render queue
-            app.renderFrame(mergedDepthFrame);
+            win.renderFrame(mergedDepthFrame);
         }
         else {
             // add original depth frame to render queue
-            app.renderFrame(depthFrame);
+            win.renderFrame(depthFrame);
         }
     }
 

@@ -6,8 +6,7 @@
 #include <mutex>
 #include <string>
 
-std::shared_ptr<Window> win;
-
+std::shared_ptr<ob_smpl::CVWindow> win;
 std::shared_ptr<ob::Context> ctx;
 
 std::shared_ptr<ob::Device>   device;
@@ -41,10 +40,11 @@ void startStream();
 void inputWatcher();
 
 int main(void) try {
-    // create window for render
-    win = std::make_shared<Window>("CommonUsages", 1280, 720, RENDER_GRID);
 
-    // Set log severity, disable log, please set OB_LOG_SEVERITY_OFF.
+    // create window for render
+    win = std::make_shared<ob_smpl::CVWindow>("CommonUsages", 1280, 720, ob_smpl::RENDER_GRID);
+
+    // Set log severity. disable log, please set OB_LOG_SEVERITY_OFF.
     ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_ERROR);
 
     // Create ob:Context.
@@ -73,7 +73,7 @@ int main(void) try {
 
     inputWatchThread = std::thread(inputWatcher);
 
-    while(*win) {
+    while(win->run()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
@@ -343,14 +343,11 @@ void getCameraParams() {
                 auto type       = item.first;
                 auto intrinsics = profile->getIntrinsic();
                 auto distortion = profile->getDistortion();
-                std::cout << type << " intrinsics - "
-                          << "fx:" << intrinsics.fx << ", fy: " << intrinsics.fy << ", cx: " << intrinsics.cx << ", cy: " << intrinsics.cy
-                          << " ,width: " << intrinsics.width << ", height: " << intrinsics.height << std::endl;
+                std::cout << type << " intrinsics - " << "fx:" << intrinsics.fx << ", fy: " << intrinsics.fy << ", cx: " << intrinsics.cx
+                          << ", cy: " << intrinsics.cy << " ,width: " << intrinsics.width << ", height: " << intrinsics.height << std::endl;
 
-                std::cout << "rgbDistortion k1:" << distortion.k1 << ", k2:" << distortion.k2
-                          << ", k3:" << distortion.k3 << ", k4:" << distortion.k4 << ", k5:" << distortion.k5
-                          << ", k6:" << distortion.k6 << ", p1:" << distortion.p1 << ", p2:" << distortion.p2
-                          << std::endl;
+                std::cout << "rgbDistortion k1:" << distortion.k1 << ", k2:" << distortion.k2 << ", k3:" << distortion.k3 << ", k4:" << distortion.k4
+                          << ", k5:" << distortion.k5 << ", k6:" << distortion.k6 << ", p1:" << distortion.p1 << ", p2:" << distortion.p2 << std::endl;
             }
         }
         catch(ob::Error &e) {

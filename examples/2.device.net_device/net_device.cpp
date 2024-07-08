@@ -54,9 +54,9 @@ int main(void) try {
     });
 
     // Create a window for rendering and set the resolution of the window
-    Window app("MultiDeviceViewer", 1280, 720, RENDER_ONE_ROW);
+    ob_smpl::CVWindow win("MultiDeviceViewer", 1280, 720, ob_smpl::RENDER_ONE_ROW);
 
-    while(app) {
+    while(win.run()) {
         std::shared_ptr<ob::FrameSet> frameSet;
         {  // Define the scope through curly braces, and the lock will be automatically unlocked after exiting the scope. Unlocking in time can prevent the
            // frameset output thread of the pipeline from being blocked for too long, resulting in an increase in internal cache and an increase in data frame
@@ -75,10 +75,10 @@ int main(void) try {
                         // Print the Color data frame information every 30 frames
                         std::cout << "Color Frame: index=" << colorFrame->getIndex() << ", timestamp=" << colorFrame->getTimeStampUs();
                     }
-                    app.renderFrame(depthFrame);
+                    win.renderFrame(depthFrame);
                 }
                 else {
-                    app.renderFrame({ colorFrame, depthFrame });
+                    win.renderFrame({ colorFrame, depthFrame });
                 }
             }
         }

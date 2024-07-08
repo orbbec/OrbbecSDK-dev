@@ -38,9 +38,9 @@ int main(void) try {
     });
 
     // Create a window for rendering, and set the size of the window.
-    Window app("quick start", 1280, 720, RENDER_GRID);
+    ob_smpl::CVWindow win("quick start", 1280, 720, ob_smpl::RENDER_GRID);
 
-    while(app) {
+    while(win.run()) {
         std::lock_guard<std::mutex> lock(frameMutex);
 
         if(renderframeSet == nullptr) {
@@ -48,7 +48,7 @@ int main(void) try {
         }
 
         // Rendering display
-        app.renderFrame(renderframeSet);
+        win.renderFrame(renderframeSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

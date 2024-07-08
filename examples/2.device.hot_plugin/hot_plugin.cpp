@@ -50,7 +50,7 @@ int main(void) try {
 
     // main loop, wait for key press
     while(true) {
-        auto key = ob_sample_utils::waitForKeyPressed(100);
+        auto key = ob_smpl::waitForKeyPressed(100);
         // Press the esc key to exit
         if(key == 27) {
             break;

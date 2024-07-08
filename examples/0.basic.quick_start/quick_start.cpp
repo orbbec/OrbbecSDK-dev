@@ -10,9 +10,9 @@ int main(void) try {
     pipe.start();
 
     // Create a window for rendering, and set the size of the window.
-    Window app("quick start", 1280, 720, RENDER_ONE_ROW);
+    ob_smpl::CVWindow win("quick start", 1280, 720, ob_smpl::RENDER_ONE_ROW);
 
-    while(app) {
+    while(win.run()) {
         // Wait for frameSet from the pipeline, the default timeout is 1000ms.
         auto frameSet = pipe.waitForFrameset();
 
@@ -22,7 +22,7 @@ int main(void) try {
         }
 
         // Rendering display
-        app.renderFrame(frameSet);
+        win.renderFrame(frameSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

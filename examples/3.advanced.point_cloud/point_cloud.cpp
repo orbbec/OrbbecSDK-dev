@@ -111,7 +111,7 @@ int main(void) try {
 
     // int count = 0;
     while(true) {
-        auto key = ob_sample_utils::waitForKeyPressed(5);
+        auto key = ob_smpl::waitForKeyPressed(5);
         if(key == 27) {
             break;
         }

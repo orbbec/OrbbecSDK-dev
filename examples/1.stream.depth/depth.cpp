@@ -17,9 +17,9 @@ int main(void) try {
     pipe.start(config);
 
     // Create a window for rendering, and set the resolution of the window.
-    Window app("DepthViewer", 1280, 720);
+    ob_smpl::CVWindow win("DepthViewer", 1280, 720);
 
-    while(app) {
+    while(win.run()) {
         // Wait for up to 100ms for a frameset in blocking mode.
         auto frameSet = pipe.waitForFrameset(100);
         if(frameSet == nullptr) {
@@ -49,7 +49,7 @@ int main(void) try {
         }
 
         // Render frame in the window.
-        app.renderFrame(depthFrame);
+        win.renderFrame(depthFrame);
     }
 
     // Stop the pipeline

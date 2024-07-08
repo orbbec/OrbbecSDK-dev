@@ -1,7 +1,7 @@
 #include <libobsensor/ObSensor.hpp>
 
 #include "utils.hpp"
-#include "utils_key.h"
+#include "utils_types.h"
 
 #include <mutex>
 #include <iostream>
@@ -38,7 +38,7 @@ int main() try {
     pipe.start(config);
 
     while(true) {
-        auto key = ob_sample_utils::waitForKeyPressed(1);
+        auto key = ob_smpl::waitForKeyPressed(1);
         if(key == ESC_KEY) {  // Esc key to exit.
             break;
         }

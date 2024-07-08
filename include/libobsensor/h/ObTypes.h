@@ -126,7 +126,7 @@ typedef enum {
     OB_SENSOR_IR_LEFT   = 6, /**< left IR for stereo camera*/
     OB_SENSOR_IR_RIGHT  = 7, /**< Right IR for stereo camera*/
     OB_SENSOR_RAW_PHASE = 8, /**< Raw Phase */
-    OB_SENSOR_COUNT,         /**The total number of sensor types, is not a valid sensor type */
+    OB_SENSOR_TYPE_COUNT,    /**The total number of sensor types, is not a valid sensor type */
 } OBSensorType,
     ob_sensor_type;
 
@@ -144,7 +144,7 @@ typedef enum {
     OB_STREAM_IR_LEFT   = 6,  /**< Left IR stream for stereo camera */
     OB_STREAM_IR_RIGHT  = 7,  /**< Right IR stream for stereo camera */
     OB_STREAM_RAW_PHASE = 8,  /**< RawPhase Stream */
-    OB_STREAM_COUNT,          /**< The total number of stream type,is not a valid stream type */
+    OB_STREAM_TYPE_COUNT,     /**< The total number of stream type,is not a valid stream type */
 } OBStreamType,
     ob_stream_type;
 
@@ -164,7 +164,7 @@ typedef enum {
     OB_FRAME_IR_LEFT   = 8,  /**< Left IR frame for stereo camera */
     OB_FRAME_IR_RIGHT  = 9,  /**< Right IR frame for stereo camera */
     OB_FRAME_RAW_PHASE = 10, /**< Raw Phase frame*/
-    OB_FRAME_COUNT,          /**< The total number of frame types, is not a valid frame type */
+    OB_FRAME_TYPE_COUNT,     /**< The total number of frame types, is not a valid frame type */
 } OBFrameType,
     ob_frame_type;
 
@@ -429,10 +429,11 @@ typedef struct {
  * @brief calibration parameters
  */
 typedef struct {
-    OBCameraIntrinsic  intrinsics[OB_SENSOR_COUNT];            ///< Sensor internal parameters
-    OBCameraDistortion distortion[OB_SENSOR_COUNT];            ///< Sensor distortion
-    OBExtrinsic extrinsics[OB_SENSOR_COUNT][OB_SENSOR_COUNT];  ///< The extrinsic parameters allow 3D coordinate conversions between sensor.To transform from a
-                                                               ///< source to a target 3D coordinate system,under extrinsics[source][target].
+    OBCameraIntrinsic  intrinsics[OB_SENSOR_TYPE_COUNT];  ///< Sensor internal parameters
+    OBCameraDistortion distortion[OB_SENSOR_TYPE_COUNT];  ///< Sensor distortion
+    OBExtrinsic        extrinsics[OB_SENSOR_TYPE_COUNT]
+                          [OB_SENSOR_TYPE_COUNT];  ///< The extrinsic parameters allow 3D coordinate conversions between sensor.To transform from a
+                                                   ///< source to a target 3D coordinate system,under extrinsics[source][target].
 } OBCalibrationParam, ob_calibration_param;
 
 /**
@@ -581,7 +582,7 @@ typedef struct {
     float x;  ///< X-direction component
     float y;  ///< Y-direction component
     float z;  ///< Z-direction component
-} OBAccelValue, OBGyroValue, OBFloat3D,ob_accel_value, ob_gyro_value, ob_float_3d;
+} OBAccelValue, OBGyroValue, OBFloat3D, ob_accel_value, ob_gyro_value, ob_float_3d;
 
 /**
  * @brief Device state

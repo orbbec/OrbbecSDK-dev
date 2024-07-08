@@ -10,7 +10,7 @@ extern "C" {
  * @brief Get the current system timestamp in milliseconds.
  *
  */
-uint64_t ob_sample_utils_get_current_timestamp_ms();
+uint64_t ob_smpl_get_current_timestamp_ms();
 
 /**
  * @brief Wait for key press.
@@ -19,7 +19,7 @@ uint64_t ob_sample_utils_get_current_timestamp_ms();
  *
  * @return char The key that was pressed.
  */
-char ob_sample_utils_wait_for_key_press(uint32_t timeout_ms);
+char ob_smpl_wait_for_key_press(uint32_t timeout_ms);
 
 // Macro to check for error and exit program if there is one.
 #define CHECK_OB_ERROR_EXIT(error)                                \

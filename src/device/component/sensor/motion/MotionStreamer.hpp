@@ -56,7 +56,7 @@ private:
     std::shared_ptr<IDataStreamPort> backend_;
     std::shared_ptr<IFilter> dataPhaser_;
 
-    std::mutex mtx_;
+    std::mutex                                                    cbMtx_;
     std::map<std::shared_ptr<const StreamProfile>, FrameCallback> callbacks_;
 
     std::atomic_bool running_;

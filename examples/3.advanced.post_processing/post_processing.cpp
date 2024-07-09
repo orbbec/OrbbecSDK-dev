@@ -58,7 +58,7 @@ int main() try {
         }
 
         // Render frame in the window
-        win.pushFramesToShow(depthFrame);
+        win.pushFramesToView(depthFrame);
     }
 
     // Stop the pipeline

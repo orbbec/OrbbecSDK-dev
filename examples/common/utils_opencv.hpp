@@ -14,18 +14,19 @@
 
 namespace ob_smpl {
 
+// arrange type
 typedef enum {
-    RENDER_SINGLE,      // only render the first frame in the array
-    RENDER_ONE_ROW,     // Render the frames in the array as a row
-    RENDER_ONE_COLUMN,  // render the frames in the array as a column
-    RENDER_GRID,        // Render the frames in the array as a grid
-    RENDER_OVERLAY      // Render the frames in the array as an overlay
-} RenderType;
+    ARRANGE_SINGLE,      // Only show the first frame
+    ARRANGE_ONE_ROW,     // Arrange the frames in the array as a row
+    ARRANGE_ONE_COLUMN,  // Arrange the frames in the array as a column
+    ARRANGE_GRID,        // Arrange the frames in the array as a grid
+    ARRANGE_OVERLAY      // Overlay the first two frames in the array
+} ArrangeType;
 
 class CVWindow {
 public:
     // create a window with the specified name, width and height
-    CVWindow(std::string name, uint32_t width, uint32_t height, RenderType renderType_ = RENDER_SINGLE);
+    CVWindow(std::string name, uint32_t width = 1280, uint32_t height = 720, ArrangeType arrangeType = ARRANGE_SINGLE);
     ~CVWindow() noexcept;
 
     // run the window loop
@@ -37,9 +38,9 @@ public:
     // clear cached frames and mats
     void reset();
 
-    // add frames to the rendering
-    void pushFramesToShow(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId = 0);
-    void pushFramesToShow(std::shared_ptr<const ob::Frame> currentFrame, int groupId = 0);
+    // add frames to view
+    void pushFramesToView(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId = 0);
+    void pushFramesToView(std::shared_ptr<const ob::Frame> currentFrame, int groupId = 0);
 
     // wait for the key to be pressed
     int waitKey(uint32_t timeoutMsec = 1);
@@ -47,24 +48,36 @@ public:
     // set show frame info
     void setShowInfo(bool show);
 
-    // set alpha, only valid when renderType_ is RENDER_OVERLAY
+    // set alpha, only valid when arrangeType_ is ARRANGE_OVERLAY
     void setAlpha(float alpha);
 
     // set the window size
     void resize(int width, int height);
 
+    // set the key prompt
+    void setKeyPrompt(const std::string &prompt);
+
+    // set the log message
+    void addLog(const std::string &log);
+
 private:
     // frames processing thread function
     void processFrames();
-    void renderImages();
+
+    // arrange frames in the renderMat_ according to the arrangeType_
+    void arrangeFrames();
 
     // add info to mat
     static cv::Mat visualize(std::shared_ptr<const ob::Frame> frame);
-    static void    drawInfo(cv::Mat &imageMat, std::shared_ptr<const ob::VideoFrame> &frame);
+
+    // draw info to mat
+    static void drawInfo(cv::Mat &imageMat, std::shared_ptr<const ob::VideoFrame> &frame);
+
+    static cv::Mat resizeMatKeepAspectRatio(const cv::Mat &mat, int width, int height);
 
 private:
     std::string name_;
-    RenderType  renderType_;
+    ArrangeType arrangeType_;
     uint32_t    width_;
     uint32_t    height_;
     bool        closed_;
@@ -82,9 +95,15 @@ private:
 
     using StreamsMatMap = std::map<int, std::pair<std::shared_ptr<const ob::Frame>, cv::Mat>>;
     StreamsMatMap mapGroups_;
-
     std::mutex    renderMatsMtx_;
     cv::Mat       renderMat_;
+
+    std::string prompt_;
+    bool        showPrompt_;
+    uint64      winCreatedTime_;
+
+    std::string log_;
+    uint64      logCreatedTime_;
 };
 
 }  // namespace ob_smpl

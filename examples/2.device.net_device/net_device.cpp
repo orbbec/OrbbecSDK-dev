@@ -54,7 +54,7 @@ int main(void) try {
     });
 
     // Create a window for rendering and set the resolution of the window
-    ob_smpl::CVWindow win("MultiDeviceViewer", 1280, 720, ob_smpl::RENDER_ONE_ROW);
+    ob_smpl::CVWindow win("NetDevice", 1280, 720, ob_smpl::ARRANGE_ONE_ROW);
 
     while(win.run()) {
         std::shared_ptr<ob::FrameSet> frameSet;
@@ -75,10 +75,10 @@ int main(void) try {
                         // Print the Color data frame information every 30 frames
                         std::cout << "Color Frame: index=" << colorFrame->getIndex() << ", timestamp=" << colorFrame->getTimeStampUs();
                     }
-                    win.pushFramesToShow(depthFrame);
+                    win.pushFramesToView(depthFrame);
                 }
                 else {
-                    win.pushFramesToShow({ colorFrame, depthFrame });
+                    win.pushFramesToView({ colorFrame, depthFrame });
                 }
             }
         }

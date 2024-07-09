@@ -74,11 +74,11 @@ int main(void) try {
             }
 
             // add merged depth frame to render queue
-            win.pushFramesToShow(mergedDepthFrame);
+            win.pushFramesToView(mergedDepthFrame);
         }
         else {
             // add original depth frame to render queue
-            win.pushFramesToShow(depthFrame);
+            win.pushFramesToView(depthFrame);
         }
     }
 

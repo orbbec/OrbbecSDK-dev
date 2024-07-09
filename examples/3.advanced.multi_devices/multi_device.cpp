@@ -64,7 +64,7 @@ int main() try {
     StartStream(pipes);
 
     // Create a window for rendering and set the resolution of the window
-    ob_smpl::CVWindow win("MultiDeviceViewer", 1280, 720, ob_smpl::RENDER_GRID);
+    ob_smpl::CVWindow win("MultiDevice", 1280, 720, ob_smpl::ARRANGE_GRID);
 
     // Main loop to show the frames, press `ESC` to exit
     while(win.run()) {
@@ -75,7 +75,7 @@ int main() try {
             auto                       &frameset    = item.second;
 
             // push the frames to the window for show
-            win.pushFramesToShow(frameset, deviceIndex);
+            win.pushFramesToView(frameset, deviceIndex);
         }
     }
 

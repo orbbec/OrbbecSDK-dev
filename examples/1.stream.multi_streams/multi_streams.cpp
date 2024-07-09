@@ -33,10 +33,10 @@ int main(void) try {
 
     // Start the pipeline with config
     std::mutex                          frameMutex;
-    std::shared_ptr<const ob::FrameSet> renderframeSet;
+    std::shared_ptr<const ob::FrameSet> renderFrameSet;
     pipe.start(config, [&](std::shared_ptr<ob::FrameSet> frameSet) {
         std::lock_guard<std::mutex> lock(frameMutex);
-        renderframeSet = frameSet;
+        renderFrameSet = frameSet;
     });
 
     // The IMU frame rate is much faster than the video, so it is advisable to use a separate pipeline to obtain IMU data.
@@ -52,21 +52,21 @@ int main(void) try {
     imuConfig->enableAccelStream();
     // start the imu pipeline.
     imuPipeline->start(imuConfig, [&](std::shared_ptr<ob::FrameSet> frameSet) {
-        std::lock_guard<std::mutex> lockimu(imuFrameMutex);
+        std::lock_guard<std::mutex> lockImu(imuFrameMutex);
         renderImuFrameSet = frameSet;
     });
 
     // Create a window for rendering and set the resolution of the window
-    ob_smpl::CVWindow win("MultiStream", 1280, 720, ob_smpl::RENDER_GRID);
+    ob_smpl::CVWindow win("MultiStream", 1280, 720, ob_smpl::ARRANGE_GRID);
     while(win.run()) {
-        std::lock_guard<std::mutex> lockimu(imuFrameMutex);
+        std::lock_guard<std::mutex> lockImu(imuFrameMutex);
         std::lock_guard<std::mutex> lock(frameMutex);
 
-        if(renderframeSet == nullptr || renderImuFrameSet == nullptr) {
+        if(renderFrameSet == nullptr || renderImuFrameSet == nullptr) {
             continue;
         }
         // Render camera and imu frameset.
-        win.pushFramesToShow({ renderframeSet, renderImuFrameSet });
+        win.pushFramesToView({ renderFrameSet, renderImuFrameSet });
     }
 
     // Stop the Pipeline, no frame data will be generated.

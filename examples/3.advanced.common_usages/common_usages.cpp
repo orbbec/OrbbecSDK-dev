@@ -42,7 +42,7 @@ void inputWatcher();
 int main(void) try {
 
     // create window for render
-    win = std::make_shared<ob_smpl::CVWindow>("CommonUsages", 1280, 720, ob_smpl::RENDER_GRID);
+    win = std::make_shared<ob_smpl::CVWindow>("CommonUsages", 1280, 720, ob_smpl::ARRANGE_GRID);
 
     // Set log severity. disable log, please set OB_LOG_SEVERITY_OFF.
     ob::Context::setLoggerSeverity(OB_LOG_SEVERITY_ERROR);
@@ -311,7 +311,7 @@ std::shared_ptr<ob::FrameSet> fileterAlign(std::shared_ptr<ob::FrameSet> framese
 }
 void handleFrameset(std::shared_ptr<ob::FrameSet> frameset) {
     auto alignFrameSet = fileterAlign(frameset);
-    win->pushFramesToShow(alignFrameSet);
+    win->pushFramesToView(alignFrameSet);
 }
 
 void getDeviceInformation() {

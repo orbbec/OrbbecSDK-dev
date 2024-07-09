@@ -24,23 +24,7 @@ uint8_t align_mode = 0;
 void handleKeyPress(ob_smpl::CVWindow &win, std::shared_ptr<ob::Pipeline> pipe /*, std::shared_ptr<ob::Config> config*/) {
     ////Get the key value
     int key = win.waitKey(10);
-    if(key == '+' || key == '=') {
-        // Press the + key to increase alpha
-        alpha += 0.1f;
-        if(alpha >= 1.0f) {
-            alpha = 1.0f;
-        }
-        win.setAlpha(alpha);
-    }
-    else if(key == '-' || key == '_') {
-        // press - key to decrease alpha
-        alpha -= 0.1f;
-        if(alpha <= 0.0f) {
-            alpha = 0.0f;
-        }
-        win.setAlpha(alpha);
-    }
-    else if(key == 'F' || key == 'f') {
+    if(key == 'F' || key == 'f') {
         // Press the F key to switch synchronization
         sync = !sync;
 
@@ -52,10 +36,12 @@ void handleKeyPress(ob_smpl::CVWindow &win, std::shared_ptr<ob::Pipeline> pipe /
             // turn off sync
             pipe->disableFrameSync();
         }
+        win.addLog("Sync: " + std::string(sync ? "On" : "Off"));
     }
     else if(key == 't' || key == 'T') {
         // Press the T key to switch align mode
         align_mode = (align_mode + 1) % 2;
+        win.addLog("Align Mode: " + std::string(align_mode == 0 ? "Depth to Color" : "Color to Depth"));
     }
 }
 
@@ -80,7 +66,9 @@ int main(void) try {
     auto color2depthAlign = std::make_shared<ob::Align>(OB_STREAM_DEPTH);
 
     // Create a window for rendering and set the resolution of the window
-    ob_smpl::CVWindow win("sync_align", 1280, 720, ob_smpl::RENDER_OVERLAY);
+    ob_smpl::CVWindow win("Sync&Align", 1280, 720, ob_smpl::ARRANGE_OVERLAY);
+
+    win.setKeyPrompt("'T': Switch Align Mode, 'F': Toggle Synchronization");
 
     while(win.run()) {
         handleKeyPress(win, pipe);
@@ -97,7 +85,7 @@ int main(void) try {
         auto alignedFrameSet = alignFilter->process(frameSet);
 
         // render and display
-        win.pushFramesToShow(alignedFrameSet);
+        win.pushFramesToView(alignedFrameSet);
     }
     // Stop the Pipeline, no frame data will be generated
     pipe->stop();

@@ -10,7 +10,7 @@ int main(void) try {
     pipe.start();
 
     // Create a window for rendering, and set the size of the window.
-    ob_smpl::CVWindow win("quick start", 1280, 720, ob_smpl::RENDER_ONE_ROW);
+    ob_smpl::CVWindow win("QuickStart", 1280, 720, ob_smpl::ARRANGE_ONE_ROW);
 
     while(win.run()) {
         // Wait for frameSet from the pipeline, the default timeout is 1000ms.
@@ -22,7 +22,7 @@ int main(void) try {
         }
 
         // Rendering display
-        win.pushFramesToShow(frameSet);
+        win.pushFramesToView(frameSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

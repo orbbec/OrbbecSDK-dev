@@ -38,7 +38,7 @@ int main(void) try {
     });
 
     // Create a window for rendering, and set the size of the window.
-    ob_smpl::CVWindow win("quick start", 1280, 720, ob_smpl::RENDER_GRID);
+    ob_smpl::CVWindow win("Callback", 1280, 720, ob_smpl::ARRANGE_GRID);
 
     while(win.run()) {
         std::lock_guard<std::mutex> lock(frameMutex);
@@ -48,7 +48,7 @@ int main(void) try {
         }
 
         // Rendering display
-        win.pushFramesToShow(renderframeSet);
+        win.pushFramesToView(renderframeSet);
     }
 
     // Stop the Pipeline, no frame data will be generated

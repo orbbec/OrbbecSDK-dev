@@ -1,13 +1,25 @@
 #include "utils_opencv.hpp"
+#include "utils.hpp"
 #include "utils_types.h"
 
 namespace ob_smpl {
 
-CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, RenderType renderType_)
-    : name_(std::move(name)), renderType_(renderType_), width_(width), height_(height), closed_(false), showInfo_(true), alpha_(0.6f), key_(-1) {
+const std::string defaultKeyMapPrompt = "'1~5': Switch Arrange Type, '+'/'-': Adjust Alpha, 'Esc': Exit Window, '?': Show Key Map";
+CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeType arrangeType)
+    : name_(std::move(name)),
+      arrangeType_(arrangeType),
+      width_(width),
+      height_(height),
+      closed_(false),
+      showInfo_(true),
+      alpha_(0.6f),
+      key_(-1),
+      showPrompt_(false) {
+
+    prompt_ = defaultKeyMapPrompt;
 
     renderMat_ = cv::Mat::zeros(height_, width_, CV_8UC3);
-    cv::putText(renderMat_, "Waiting for streams...", cv::Point(8, 16), cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 255), 1);
+    cv::putText(renderMat_, "Waiting for streams...", cv::Point(8, 16), cv::FONT_HERSHEY_DUPLEX, 0.5, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
     cv::imshow(name_, renderMat_);
 
     // start processing thread
@@ -15,6 +27,8 @@ CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, RenderType
 
     cv::namedWindow(name_, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     cv::resizeWindow(name_, width_, height_);
+
+    winCreatedTime_ = getNowTimesMs();
 }
 
 CVWindow::~CVWindow() {
@@ -41,8 +55,44 @@ bool CVWindow::run() {
             closed_ = true;
             srcFrameGroupsCv_.notify_all();
         }
+        else if(key == '1') {
+            arrangeType_ = ARRANGE_SINGLE;
+            addLog("Switch to SINGLE arrange mode");
+        }
+        else if(key == '2') {
+            arrangeType_ = ARRANGE_ONE_ROW;
+            addLog("Switch to ONE_ROW arrange mode");
+        }
+        else if(key == '3') {
+            arrangeType_ = ARRANGE_ONE_COLUMN;
+            addLog("Switch to ONE_COLUMN arrange mode");
+        }
+        else if(key == '4') {
+            arrangeType_ = ARRANGE_GRID;
+            addLog("Switch to GRID arrange mode");
+        }
+        else if(key == '5') {
+            arrangeType_ = ARRANGE_OVERLAY;
+            addLog("Switch to OVERLAY arrange mode");
+        }
+        else if(key == '?' || key == '/') {
+            showPrompt_ = !showPrompt_;
+        }
+        else if(key == '+' || key == '=') {
+            alpha_ += 0.1f;
+            if(alpha_ > 1) {
+                alpha_ = 1;
+            }
+            addLog("Adjust alpha to " + std::to_string(static_cast<int>(alpha_*10)) + " (Only valid in OVERLAY arrange mode)");
+        }
+        else if(key == '-' || key == '_') {
+            alpha_ -= 0.1f;
+            if(alpha_ < 0) {
+                alpha_ = 0;
+            }
+            addLog("Adjust alpha to " + std::to_string(static_cast<int>(alpha_*10)) + " (Only valid in OVERLAY arrange mode)");
+        }
     }
-
     return !closed_;
 }
 
@@ -78,8 +128,17 @@ void CVWindow::resize(int width, int height) {
     cv::resizeWindow(name_, width_, height_);
 }
 
+void CVWindow::setKeyPrompt(const std::string &prompt) {
+    prompt_ = defaultKeyMapPrompt + ", " + prompt;
+}
+
+void CVWindow::addLog(const std::string &log) {
+    log_            = log;
+    logCreatedTime_ = getNowTimesMs();
+}
+
 // add frames to the show
-void CVWindow::pushFramesToShow(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId) {
+void CVWindow::pushFramesToView(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId) {
     if(frames.empty()) {
         return;
     }
@@ -109,8 +168,8 @@ void CVWindow::pushFramesToShow(std::vector<std::shared_ptr<const ob::Frame>> fr
     srcFrameGroupsCv_.notify_one();
 }
 
-void CVWindow::pushFramesToShow(std::shared_ptr<const ob::Frame> currentFrame, int groupId) {
-    pushFramesToShow(std::vector<std::shared_ptr<const ob::Frame>>{ currentFrame }, groupId);
+void CVWindow::pushFramesToView(std::shared_ptr<const ob::Frame> currentFrame, int groupId) {
+    pushFramesToView(std::vector<std::shared_ptr<const ob::Frame>>{ currentFrame }, groupId);
 }
 
 // wait for the key to be pressed
@@ -171,22 +230,21 @@ void CVWindow::processFrames() {
             continue;
         }
 
-        renderImages();
+        arrangeFrames();
     }
 }
 
-void CVWindow::renderImages() {
+void CVWindow::arrangeFrames() {
     cv::Mat renderMat;
     try {
-        if(renderType_ == ob_smpl::RENDER_SINGLE) {
+        if(arrangeType_ == ARRANGE_SINGLE) {
             auto &mat = mapGroups_.begin()->second.second;
-            cv::resize(mat, renderMat, cv::Size(static_cast<int>(width_), static_cast<int>(height_)));
+            renderMat = resizeMatKeepAspectRatio(mat, width_, height_);
         }
-        else if(renderType_ == ob_smpl::RENDER_ONE_ROW) {
+        else if(arrangeType_ == ARRANGE_ONE_ROW) {
             for(auto &item: mapGroups_) {
-                auto   &mat = item.second.second;
-                cv::Mat resizeMat;
-                cv::resize(mat, resizeMat, cv::Size(static_cast<int>(width_ / mapGroups_.size()), height_));
+                auto   &mat       = item.second.second;
+                cv::Mat resizeMat = resizeMatKeepAspectRatio(mat, static_cast<int>(width_ / mapGroups_.size()), height_);
                 if(renderMat.dims > 0 && renderMat.cols > 0 && renderMat.rows > 0) {
                     cv::hconcat(renderMat, resizeMat, renderMat);
                 }
@@ -195,11 +253,10 @@ void CVWindow::renderImages() {
                 }
             }
         }
-        else if(renderType_ == ob_smpl::RENDER_ONE_COLUMN) {
+        else if(arrangeType_ == ARRANGE_ONE_COLUMN) {
             for(auto &item: mapGroups_) {
-                auto   &mat = item.second.second;
-                cv::Mat resizeMat;
-                cv::resize(mat, resizeMat, cv::Size(static_cast<int>(width_), static_cast<int>(height_ / mapGroups_.size())));
+                auto   &mat       = item.second.second;
+                cv::Mat resizeMat = resizeMatKeepAspectRatio(mat, width_, static_cast<int>(height_ / mapGroups_.size()));
                 if(renderMat.dims > 0 && renderMat.cols > 0 && renderMat.rows > 0) {
                     cv::vconcat(renderMat, resizeMat, renderMat);
                 }
@@ -208,7 +265,7 @@ void CVWindow::renderImages() {
                 }
             }
         }
-        else if(renderType_ == ob_smpl::RENDER_GRID) {
+        else if(arrangeType_ == ARRANGE_GRID) {
             int count     = static_cast<int>(mapGroups_.size());
             int idealSide = static_cast<int>(std::sqrt(count));
             int rows      = idealSide;
@@ -228,8 +285,8 @@ void CVWindow::renderImages() {
                     int     index = i * cols + j;
                     cv::Mat resizeMat;
                     if(index < count) {
-                        auto mat = it->second.second;
-                        cv::resize(mat, resizeMat, cv::Size(width_ / cols, height_ / rows));
+                        auto mat  = it->second.second;
+                        resizeMat = resizeMatKeepAspectRatio(mat, width_ / cols, height_ / rows);
                         it++;
                     }
                     else {
@@ -244,12 +301,13 @@ void CVWindow::renderImages() {
 
             cv::vconcat(gridImages, renderMat);  // vertical concat all images in the grid
         }
-        else if(renderType_ == ob_smpl::RENDER_OVERLAY && mapGroups_.size() >= 2) {
+        else if(arrangeType_ == ARRANGE_OVERLAY && mapGroups_.size() >= 2) {
             cv::Mat     overlayMat;
             const auto &mat1 = mapGroups_.begin()->second.second;
-            const auto &mat2 = (mapGroups_.begin()++)->second.second;
-            cv::resize(mat1, renderMat, cv::Size(width_, height_));
-            cv::resize(mat2, overlayMat, cv::Size(width_, height_));
+            const auto &mat2 = mapGroups_.rbegin()->second.second;
+            renderMat        = resizeMatKeepAspectRatio(mat1, width_, height_);
+            overlayMat       = resizeMatKeepAspectRatio(mat2, width_, height_);
+
             float alpha = alpha_;
             for(int i = 0; i < renderMat.rows; i++) {
                 for(int j = 0; j < renderMat.cols; j++) {
@@ -269,6 +327,14 @@ void CVWindow::renderImages() {
 
     if(renderMat.empty()) {
         return;
+    }
+
+    if(showPrompt_ || getNowTimesMs() - winCreatedTime_ < 5000) {
+        cv::putText(renderMat, prompt_, cv::Point(8, 16), cv::FONT_HERSHEY_DUPLEX, 0.5, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+    }
+
+    if(!log_.empty() && getNowTimesMs() - logCreatedTime_ < 3000) {
+        cv::putText(renderMat, log_, cv::Point(8, height_ - 16), cv::FONT_HERSHEY_DUPLEX, 0.5, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
     }
 
     std::lock_guard<std::mutex> lock(renderMatsMtx_);
@@ -344,43 +410,43 @@ cv::Mat CVWindow::visualize(std::shared_ptr<const ob::Frame> frame) {
         }
         else if(videoFrame->getFormat() == OB_FORMAT_Y8) {
             cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC1, videoFrame->getData());
-            cv::cvtColor(rawMat * 2, rstMat, cv::COLOR_GRAY2RGB);
+            cv::cvtColor(rawMat, rstMat, cv::COLOR_GRAY2RGB);
         }
         else if(videoFrame->getFormat() == OB_FORMAT_MJPG) {
             cv::Mat rawMat(1, videoFrame->getDataSize(), CV_8UC1, videoFrame->getData());
             rstMat = cv::imdecode(rawMat, 1);
-            cv::cvtColor(rstMat * 2, rstMat, cv::COLOR_GRAY2RGB);
+            cv::cvtColor(rstMat, rstMat, cv::COLOR_GRAY2RGB);
         }
     }
     else if(frame->getType() == OB_FRAME_ACCEL) {
-        rstMat                 = cv::Mat::zeros(640, 360, CV_8UC3);
+        rstMat                 = cv::Mat::zeros(320, 240, CV_8UC3);
         auto        accelFrame = frame->as<ob::AccelFrame>();
         auto        value      = accelFrame->getValue();
         std::string str        = "Accel:";
         cv::putText(rstMat, str.c_str(), cv::Point(8, 60), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
         str = std::string(" timestamp=") + std::to_string(accelFrame->getTimeStampUs()) + "us";
-        cv::putText(rstMat, str.c_str(), cv::Point(8, 120), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+        cv::putText(rstMat, str.c_str(), cv::Point(8, 100), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
         str = std::string(" x=") + std::to_string(value.x) + "m/s^2";
-        cv::putText(rstMat, str.c_str(), cv::Point(8, 180), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+        cv::putText(rstMat, str.c_str(), cv::Point(8, 140), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
         str = std::string(" y=") + std::to_string(value.y) + "m/s^2";
-        cv::putText(rstMat, str.c_str(), cv::Point(8, 240), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+        cv::putText(rstMat, str.c_str(), cv::Point(8, 180), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
         str = std::string(" z=") + std::to_string(value.z) + "m/s^2";
-        cv::putText(rstMat, str.c_str(), cv::Point(8, 300), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+        cv::putText(rstMat, str.c_str(), cv::Point(8, 220), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
     }
     else if(frame->getType() == OB_FRAME_GYRO) {
-        rstMat                = cv::Mat::zeros(640, 360, CV_8UC3);
+        rstMat                = cv::Mat::zeros(320, 240, CV_8UC3);
         auto        gyroFrame = frame->as<ob::GyroFrame>();
         auto        value     = gyroFrame->getValue();
         std::string str       = "Gyro:";
         cv::putText(rstMat, str.c_str(), cv::Point(8, 60), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
         str = std::string(" timestamp=") + std::to_string(gyroFrame->getTimeStampUs()) + "us";
-        cv::putText(rstMat, str.c_str(), cv::Point(8, 120), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+        cv::putText(rstMat, str.c_str(), cv::Point(8, 100), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
         str = std::string(" x=") + std::to_string(value.x) + "rad/s";
-        cv::putText(rstMat, str.c_str(), cv::Point(8, 180), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+        cv::putText(rstMat, str.c_str(), cv::Point(8, 140), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
         str = std::string(" y=") + std::to_string(value.y) + "rad/s";
-        cv::putText(rstMat, str.c_str(), cv::Point(8, 240), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+        cv::putText(rstMat, str.c_str(), cv::Point(8, 180), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
         str = std::string(" z=") + std::to_string(value.z) + "rad/s";
-        cv::putText(rstMat, str.c_str(), cv::Point(8, 300), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
+        cv::putText(rstMat, str.c_str(), cv::Point(8, 220), cv::FONT_HERSHEY_DUPLEX, 0.6, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
     }
     return rstMat;
 }
@@ -427,6 +493,35 @@ void CVWindow::drawInfo(cv::Mat &imageMat, std::shared_ptr<const ob::VideoFrame>
     // Timestamp information with background
     putTextWithBackground("frame timestamp(ms):  " + std::to_string(frame->getTimeStampUs()), cv::Point(8, 40));
     putTextWithBackground("system timestamp(ms): " + std::to_string(frame->getSystemTimeStampUs()), cv::Point(8, 64));
+}
+
+cv::Mat CVWindow::resizeMatKeepAspectRatio(const cv::Mat &mat, int width, int height) {
+    auto    hScale    = static_cast<double>(width) / mat.cols;
+    auto    vScale    = static_cast<double>(height) / mat.rows;
+    auto    scale     = std::min(hScale, vScale);
+    auto    newWidth  = static_cast<int>(mat.cols * scale);
+    auto    newHeight = static_cast<int>(mat.rows * scale);
+    cv::Mat resizeMat;
+    cv::resize(mat, resizeMat, cv::Size(newWidth, newHeight));
+
+    if(newWidth == width && newHeight == height) {
+        return resizeMat;
+    }
+
+    // padding the resized mat to target width and height
+    cv::Mat paddedMat;
+    if(newWidth < width) {
+        auto paddingLeft  = (width - newWidth) / 2;
+        auto paddingRight = width - newWidth - paddingLeft;
+        cv::copyMakeBorder(resizeMat, paddedMat, 0, 0, paddingLeft, paddingRight, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+    }
+
+    if(newHeight < height) {
+        auto paddingTop    = (height - newHeight) / 2;
+        auto paddingBottom = height - newHeight - paddingTop;
+        cv::copyMakeBorder(resizeMat, paddedMat, paddingTop, paddingBottom, 0, 0, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
+    }
+    return paddedMat;
 }
 
 }  // namespace ob_smpl

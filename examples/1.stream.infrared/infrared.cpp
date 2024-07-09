@@ -35,7 +35,7 @@ int main() try {
     pipe.start(config);
 
     // Create a window for rendering and set the resolution of the window
-    ob_smpl::CVWindow win("InfraredViewer", 1280, 720, ob_smpl::RENDER_ONE_ROW);
+    ob_smpl::CVWindow win("Infrared", 1280, 720, ob_smpl::ARRANGE_ONE_ROW);
     while(win.run()) {
         // Wait for up to 100ms for a frameset in blocking mode.
         auto frameSet = pipe.waitForFrameset(100);
@@ -44,7 +44,7 @@ int main() try {
         }
 
         // Render a set of frame in the window.
-        win.pushFramesToShow(frameSet);
+        win.pushFramesToView(frameSet);
     }
 
     // Stop the pipeline, no frame data will be generated

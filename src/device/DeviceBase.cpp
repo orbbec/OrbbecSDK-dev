@@ -104,7 +104,13 @@ DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string 
         }
         if(!it->component) {
             it->initialized = true;
-            it->component   = it->creator();
+            BEGIN_TRY_EXECUTE({ it->component = it->creator(); })
+            CATCH_EXCEPTION_AND_EXECUTE({
+                if(throwExIfNotFound) {
+                    throw;
+                }
+                return DeviceComponentPtr<IDeviceComponent>();
+            })
         }
 
         if(!it->lockRequired) {

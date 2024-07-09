@@ -114,7 +114,8 @@ const std::string &PrivFilterCreator::getVendorSpecificCode() const {
 
 namespace PrivFilterCreatorLoader {
 
-#define DEFAULT_PRIVATE_FILTERS_ROOT_DIR "./filter/"
+#define DEFAULT_PRIVATE_FILTERS_ROOT_DIR "./extensions/filters/"
+
 std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
     // todo: get filters root dir from config file
     std::string filtersRootDir = DEFAULT_PRIVATE_FILTERS_ROOT_DIR;
@@ -126,6 +127,7 @@ std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
         pkgCtx_->dir         = dir;
         pkgCtx_->package_name = packageName;
         auto fileName         = utils::removeExtensionOfFileName(packageName);
+        fileName              = utils::string::replaceFirst(fileName, "lib", "");
         try {
             pkgCtx_->dynamic_library          = std::make_shared<dylib>(dir, fileName);
             pkgCtx_->get_filter_count         = pkgCtx_->dynamic_library->get_function<size_t(ob_error **)>("ob_get_filter_count");

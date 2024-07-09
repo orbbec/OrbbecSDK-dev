@@ -22,4 +22,4 @@ void DeviceComponentPropertyPortWrapper::getPropertyRange(uint32_t propertyId, O
     propertyPort->getPropertyRange(propertyId, range);
 }
 
-};  // namespace libobsensor
+}  // namespace libobsensor

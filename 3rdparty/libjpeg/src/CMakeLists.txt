@@ -724,12 +724,12 @@ if(WITH_TURBOJPEG)
     # add_executable(tjunittest-static tjunittest.c tjutil.c md5/md5.c
     # md5/md5hl.c)
     # target_link_libraries(tjunittest-static turbojpeg_static)
-    add_executable(tjbench-static tjbench.c tjutil.c)
-    target_link_libraries(tjbench-static turbojpeg_static)
+    # add_executable(tjbench-static tjbench.c tjutil.c)
+    # target_link_libraries(tjbench-static turbojpeg_static)
 
-    if(UNIX)
-      target_link_libraries(tjbench-static m)
-    endif()
+    # if(UNIX)
+    #   target_link_libraries(tjbench-static m)
+    # endif()
   endif()
 endif()
 

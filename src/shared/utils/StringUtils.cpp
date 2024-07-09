@@ -60,6 +60,15 @@ std::string replace(const std::string &s, const std::string &src, const std::str
     return outStr;
 }
 
+std::string replaceFirst(const std::string &s, const std::string &src, const std::string &rep) {
+    std::string outStr = s;
+    auto        place  = outStr.find(src);
+    if(place < outStr.length()) {
+        outStr = outStr.replace(place, src.length(), rep);
+    }
+    return outStr;
+}
+
 char my_tolower(char ch) {
     return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 }

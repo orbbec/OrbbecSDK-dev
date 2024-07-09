@@ -26,3 +26,8 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         ${CMAKE_BINARY_DIR}/install
         CACHE PATH "default install path" FORCE)
 endif()
+
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy" QUIET)
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+endif()

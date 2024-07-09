@@ -28,7 +28,7 @@ public:
     std::shared_ptr<FrameProcessor> createFrameProcessor(OBSensorType sensorType);
 
 private:
-    std::string moduleLoadPath_ = "./frameprocessor/";
+    std::string moduleLoadPath_ = "./extensions/frameprocessor/";
 
     std::shared_ptr<dylib> dylib_;
 

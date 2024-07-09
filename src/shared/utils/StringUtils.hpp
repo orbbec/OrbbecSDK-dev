@@ -76,6 +76,7 @@ std::vector<std::string> tokenize(const std::string &s, char separator = ',');
 std::vector<std::string> split(const std::string &s, const std::string &separator);
 std::string              remove(const std::string &s, const std::string &rm);
 std::string              replace(const std::string &s, const std::string &src, const std::string &rep);
+std::string              replaceFirst(const std::string &s, const std::string &src, const std::string &rep);
 std::string              toLower(const std::string &s);
 std::string              toUpper(const std::string &s);
 

@@ -16,7 +16,7 @@ if(OB_BUILD_NET_PORT)
 endif()
 
 # load macros
-include(cmake/macros.cmake)
+include(cmake/macro.cmake)
 
 # set compiler flags
 include(cmake/compiler_flags.cmake)
@@ -32,20 +32,16 @@ elseif(UNIX)
     include(cmake/linux_config.cmake)
 endif()
 
-# configure global settings: install rules, output directories, global variables, etc.
+# configure global settings: install rules, output directories, global variables, clang-tidy, etc.
 include(cmake/global_config.cmake)
-
-find_program(CLANG_TIDY_EXE NAMES "clang-tidy" QUIET)
-
-if(CLANG_TIDY_EXE)
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
-endif()
 
 # configure global directories variables
 set(OB_PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include/)
 set(OB_3RDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/3rdparty)
 set(OB_PROJECT_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+
+add_subdirectory(extensions)
 add_subdirectory(src)
 
 if(OB_BUILD_EXAMPLES)

@@ -175,16 +175,11 @@ void forEachFileInDirectory(const std::string &directory, const std::function<vo
 #else
     DIR           *dir;
     struct dirent *ent;
-    if((dir = opendir(directory.c_str())) != nullptr) {
+    dir = opendir(directory.c_str());
+    if(dir != nullptr) {
         while((ent = readdir(dir)) != nullptr) {
-            if(ent->d_type == DT_DIR) {
-                if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
-                    std::string subDir = joinPaths(directory, ent->d_name);
-                }
-            }
-            else if(ent->d_type == DT_REG) {
-                std::string fileName = joinPaths(directory, ent->d_name);
-                callback(fileName);
+            if(ent->d_type == DT_REG) {
+                callback(ent->d_name);
             }
         }
         closedir(dir);
@@ -217,12 +212,11 @@ void forEachSubDirInDirectory(const std::string &directory, const std::function<
         while((ent = readdir(dir)) != NULL) {
             if(ent->d_type == DT_DIR) {
                 if(strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
-                    std::string subDir = joinPaths(directory, ent->d_name);
-                    callback(subDir);
+                    callback(ent->d_name);
                 }
             }
-            closedir(dir);
         }
+        closedir(dir);
     }
 #endif
 }

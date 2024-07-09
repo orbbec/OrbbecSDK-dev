@@ -503,9 +503,9 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
 
-            auto comp           = getComponent(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
-            auto frameProcessor = comp.as<FrameProcessor>();
-            if(frameProcessor) {
+            auto comp = getComponent(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+            if(comp) {
+                auto frameProcessor = comp.as<FrameProcessor>();
                 videoSensor->setFrameProcessor(frameProcessor.get());
             }
         }
@@ -518,7 +518,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
                 { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
                 { FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y12, nullptr },
             };
-            auto formatConverter = getSensorFrameFilter("FrameUnpacker", sensorType);
+            auto formatConverter = getSensorFrameFilter("FrameUnpacker", sensorType, false);
             if(formatConverter) {
                 formatFilterConfigs.push_back({ FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y16, formatConverter });
             }
@@ -527,9 +527,9 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
 
-            auto comp           = getComponent(OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR);
-            auto frameProcessor = comp.as<FrameProcessor>();
-            if(frameProcessor) {
+            auto comp = getComponent(OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR, false);
+            if(comp) {
+                auto frameProcessor = comp.as<FrameProcessor>();
                 videoSensor->setFrameProcessor(frameProcessor.get());
             }
         }
@@ -545,7 +545,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
                 { FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y12, nullptr },
             };
 
-            auto formatConverter = getSensorFrameFilter("FrameUnpacker", sensorType);
+            auto formatConverter = getSensorFrameFilter("FrameUnpacker", sensorType, false);
             if(formatConverter) {
                 formatFilterConfigs.push_back({ FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y16, formatConverter });
             }
@@ -554,9 +554,9 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
 
-            auto comp           = getComponent(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR);
-            auto frameProcessor = comp.as<FrameProcessor>();
-            if(frameProcessor) {
+            auto comp = getComponent(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR, false);
+            if(comp) {
+                auto frameProcessor = comp.as<FrameProcessor>();
                 videoSensor->setFrameProcessor(frameProcessor.get());
             }
         }
@@ -568,7 +568,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
                 { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr },
             };
 
-            auto formatConverter = getSensorFrameFilter("FormatConverter", sensorType);
+            auto formatConverter = getSensorFrameFilter("FormatConverter", sensorType, false);
             if(formatConverter) {
                 formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGB, formatConverter });
                 formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGBA, formatConverter });
@@ -582,9 +582,9 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->setFrameMetadataParserContainer(colorMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
 
-            auto comp           = getComponent(OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR);
-            auto frameProcessor = comp.as<FrameProcessor>();
-            if(frameProcessor) {
+            auto comp = getComponent(OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR, false);
+            if(comp) {
+                auto frameProcessor = comp.as<FrameProcessor>();
                 videoSensor->setFrameProcessor(frameProcessor.get());
             }
         }

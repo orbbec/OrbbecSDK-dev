@@ -24,7 +24,7 @@ message(-- " Kernel version: " ${UNAME_RESULT})
 string(REGEX MATCH "[0-9]+.[0-9]+" LINUX_KERNEL_VERSION ${UNAME_RESULT})
 message(STATUS "linux version ${LINUX_KERNEL_VERSION}")
 
-set(OB_CURRENT_OS "linux")
+set(OB_CURRENT_OS "linux_x64")
 set(BUILD_LINUX_ARM OFF)
 
 if(OB_BUILD_LINUX_ARM64 AND OB_BUILD_LINUX_ARM32)

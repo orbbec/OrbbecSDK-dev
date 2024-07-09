@@ -1,18 +1,7 @@
-/**
- *Synchronous alignment example
- *
- * In this example, the mirror status of the depth and the color may be inconsistent because the depth or color sensor does not support mirroring.
- * As a result, the images displayed by the depth  and the color are reversed. If this happens, just set the mirror interface to keep the two mirror states
- * consistent.
- * In addition, the resolution obtained by some devices may not support the D2C function, so the resolutions that support D2C, please refer to the
- * product manual.
- * For example: the D2C resolution supported by DaBai DCW is 640x360, but the actual resolution obtained in this example may be 640x480, at this time the user
- * must refer to the product manual to select 640x360 resolution.
- */
+#include <libobsensor/ObSensor.hpp>
 
 #include "utils_opencv.hpp"
 
-#include "libobsensor/ObSensor.hpp"
 #include <mutex>
 #include <thread>
 
@@ -23,13 +12,13 @@ uint8_t align_mode = 0;
 // key press event processing
 void handleKeyPress(ob_smpl::CVWindow &win, std::shared_ptr<ob::Pipeline> pipe /*, std::shared_ptr<ob::Config> config*/) {
     ////Get the key value
-    int key = win.waitKey(10);
+    int key = win.waitKey(1);
     if(key == 'F' || key == 'f') {
         // Press the F key to switch synchronization
         sync = !sync;
 
         if(sync) {
-            // enable synchronization
+            // enable frame sync inside the pipeline, which is synchronized by frame timestamp
             pipe->enableFrameSync();
         }
         else {
@@ -59,34 +48,41 @@ int main(void) try {
     // Start the pipeline with config
     pipe->start(config);
 
-    // Create a Align Filter to align depth frame to color frame
+    // Create a window for rendering and set the resolution of the window
+    ob_smpl::CVWindow win("Sync&Align", 1280, 720, ob_smpl::ARRANGE_OVERLAY);
+    win.setKeyPrompt("'T': Switch Align Mode, 'F': Toggle Synchronization");
+
+    // Create a filter to align depth frame to color frame
     auto depth2colorAlign = std::make_shared<ob::Align>(OB_STREAM_COLOR);
 
     // create a filter to align color frame to depth frame
     auto color2depthAlign = std::make_shared<ob::Align>(OB_STREAM_DEPTH);
 
-    // Create a window for rendering and set the resolution of the window
-    ob_smpl::CVWindow win("Sync&Align", 1280, 720, ob_smpl::ARRANGE_OVERLAY);
-
-    win.setKeyPrompt("'T': Switch Align Mode, 'F': Toggle Synchronization");
+    // Set the callback function for the Align Filter to display the aligned frames in the window
+    depth2colorAlign->setCallBack([&win](std::shared_ptr<ob::Frame> frame) { win.pushFramesToView(frame); });
+    color2depthAlign->setCallBack([&win](std::shared_ptr<ob::Frame> frame) { win.pushFramesToView(frame); });
 
     while(win.run()) {
+        // Handle key press event
         handleKeyPress(win, pipe);
 
+        // Wait for a frameset from the pipeline
         auto frameSet = pipe->waitForFrameset(100);
         if(frameSet == nullptr) {
             continue;
         }
+
+        // Get filter according to the align mode
         std::shared_ptr<ob::Filter> alignFilter = depth2colorAlign;
         if(align_mode % 2 == 0) {
             alignFilter = color2depthAlign;
         }
 
-        auto alignedFrameSet = alignFilter->process(frameSet);
-
-        // render and display
-        win.pushFramesToView(alignedFrameSet);
+        // push the frameset to the Align Filter to align the frames.
+        // The frameset will be processed in an internal thread, and the resulting frames will be asynchronously output via the callback function.
+        alignFilter->pushFrame(frameSet);
     }
+
     // Stop the Pipeline, no frame data will be generated
     pipe->stop();
 

@@ -6,10 +6,11 @@ int main(void) try {
     // Create a pipeline.
     ob::Pipeline pipe;
 
-    // Start the pipeline with default config, more info please refer to the `misc/config/OrbbecSDKConfig_v1.0.xml`.
+    // Start the pipeline with default config.
+    // Modify the default configuration by the configuration file: "OrbbecSDKConfig.xml"
     pipe.start();
 
-    // Create a window for rendering, and set the size of the window.
+    // Create a window for showing the frames, and set the size of the window.
     ob_smpl::CVWindow win("QuickStart", 1280, 720, ob_smpl::ARRANGE_ONE_ROW);
 
     while(win.run()) {
@@ -21,7 +22,7 @@ int main(void) try {
             continue;
         }
 
-        // Rendering display
+        // Push the frames to the window for showing.
         win.pushFramesToView(frameSet);
     }
 

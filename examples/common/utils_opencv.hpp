@@ -11,6 +11,7 @@
 #include <map>
 
 #include "utils_types.h"
+#include "utils.hpp"
 
 namespace ob_smpl {
 
@@ -21,12 +22,12 @@ typedef enum {
     ARRANGE_ONE_COLUMN,  // Arrange the frames in the array as a column
     ARRANGE_GRID,        // Arrange the frames in the array as a grid
     ARRANGE_OVERLAY      // Overlay the first two frames in the array
-} ArrangeType;
+} ArrangeMode;
 
 class CVWindow {
 public:
     // create a window with the specified name, width and height
-    CVWindow(std::string name, uint32_t width = 1280, uint32_t height = 720, ArrangeType arrangeType = ARRANGE_SINGLE);
+    CVWindow(std::string name, uint32_t width = 1280, uint32_t height = 720, ArrangeMode arrangeMode = ARRANGE_SINGLE);
     ~CVWindow() noexcept;
 
     // run the window loop
@@ -48,7 +49,7 @@ public:
     // set show frame info
     void setShowInfo(bool show);
 
-    // set alpha, only valid when arrangeType_ is ARRANGE_OVERLAY
+    // set alpha, only valid when arrangeMode_ is ARRANGE_OVERLAY
     void setAlpha(float alpha);
 
     // set the window size
@@ -64,7 +65,7 @@ private:
     // frames processing thread function
     void processFrames();
 
-    // arrange frames in the renderMat_ according to the arrangeType_
+    // arrange frames in the renderMat_ according to the arrangeMode_
     void arrangeFrames();
 
     // add info to mat
@@ -77,7 +78,7 @@ private:
 
 private:
     std::string name_;
-    ArrangeType arrangeType_;
+    ArrangeMode arrangeMode_;
     uint32_t    width_;
     uint32_t    height_;
     bool        closed_;
@@ -94,7 +95,7 @@ private:
     std::condition_variable                                      srcFrameGroupsCv_;
 
     using StreamsMatMap = std::map<int, std::pair<std::shared_ptr<const ob::Frame>, cv::Mat>>;
-    StreamsMatMap mapGroups_;
+    StreamsMatMap matGroups_;
     std::mutex    renderMatsMtx_;
     cv::Mat       renderMat_;
 

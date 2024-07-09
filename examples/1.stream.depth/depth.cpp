@@ -44,8 +44,8 @@ int main(void) try {
             // pixel value multiplied by scale is the actual distance value in millimeters.
             float centerDistance = data[width * height / 2 + width / 2] * scale;
 
-            // attention: if the distance is 0, it means that the depth camera cannot detect the object (may be out of detection range).
-            std::cout << "Facing an object " << centerDistance << " mm away. " << std::endl;
+            // // attention: if the distance is 0, it means that the depth camera cannot detect the object (may be out of detection range).
+            win.addLog("Facing an object at a distance of " + ob_smpl::toString(centerDistance, 3) + " mm. ");
         }
 
         // Render frame in the window.

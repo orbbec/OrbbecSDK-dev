@@ -87,7 +87,7 @@ int main(void) {
             float center_distance = data[width * height / 2 + width / 2] * scale;
 
             // attention: if the distance is 0, it means that the depth camera cannot detect the object（may be out of detection range）
-            printf("Facing an object %.2f mm away.\n", center_distance);
+            printf("Facing an object at a distance of %.3f mm away.\n", center_distance);
         }
 
         // delete the depth frame

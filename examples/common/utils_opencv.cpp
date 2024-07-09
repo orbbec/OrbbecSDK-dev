@@ -4,10 +4,10 @@
 
 namespace ob_smpl {
 
-const std::string defaultKeyMapPrompt = "'1~5': Switch Arrange Type, '+'/'-': Adjust Alpha, 'Esc': Exit Window, '?': Show Key Map";
-CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeType arrangeType)
+const std::string defaultKeyMapPrompt = "'1~5': Switch Arrange Mode, '+'/'-': Adjust Alpha, 'Esc': Exit Window, '?': Show Key Map";
+CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeMode arrangeMode)
     : name_(std::move(name)),
-      arrangeType_(arrangeType),
+      arrangeMode_(arrangeMode),
       width_(width),
       height_(height),
       closed_(false),
@@ -15,8 +15,10 @@ CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeTyp
       alpha_(0.6f),
       key_(-1),
       showPrompt_(false) {
-
     prompt_ = defaultKeyMapPrompt;
+
+    cv::namedWindow(name_, cv::WINDOW_NORMAL);
+    cv::resizeWindow(name_, width_, height_);
 
     renderMat_ = cv::Mat::zeros(height_, width_, CV_8UC3);
     cv::putText(renderMat_, "Waiting for streams...", cv::Point(8, 16), cv::FONT_HERSHEY_DUPLEX, 0.5, cv::Scalar(255, 255, 255), 1, cv::LINE_AA);
@@ -24,9 +26,6 @@ CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeTyp
 
     // start processing thread
     processThread_ = std::thread(&CVWindow::processFrames, this);
-
-    cv::namedWindow(name_, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    cv::resizeWindow(name_, width_, height_);
 
     winCreatedTime_ = getNowTimesMs();
 }
@@ -56,23 +55,23 @@ bool CVWindow::run() {
             srcFrameGroupsCv_.notify_all();
         }
         else if(key == '1') {
-            arrangeType_ = ARRANGE_SINGLE;
+            arrangeMode_ = ARRANGE_SINGLE;
             addLog("Switch to SINGLE arrange mode");
         }
         else if(key == '2') {
-            arrangeType_ = ARRANGE_ONE_ROW;
+            arrangeMode_ = ARRANGE_ONE_ROW;
             addLog("Switch to ONE_ROW arrange mode");
         }
         else if(key == '3') {
-            arrangeType_ = ARRANGE_ONE_COLUMN;
+            arrangeMode_ = ARRANGE_ONE_COLUMN;
             addLog("Switch to ONE_COLUMN arrange mode");
         }
         else if(key == '4') {
-            arrangeType_ = ARRANGE_GRID;
+            arrangeMode_ = ARRANGE_GRID;
             addLog("Switch to GRID arrange mode");
         }
         else if(key == '5') {
-            arrangeType_ = ARRANGE_OVERLAY;
+            arrangeMode_ = ARRANGE_OVERLAY;
             addLog("Switch to OVERLAY arrange mode");
         }
         else if(key == '?' || key == '/') {
@@ -83,14 +82,14 @@ bool CVWindow::run() {
             if(alpha_ > 1) {
                 alpha_ = 1;
             }
-            addLog("Adjust alpha to " + std::to_string(static_cast<int>(alpha_*10)) + " (Only valid in OVERLAY arrange mode)");
+            addLog("Adjust alpha to " + ob_smpl::toString(alpha_, 1) + " (Only valid in OVERLAY arrange mode)");
         }
         else if(key == '-' || key == '_') {
             alpha_ -= 0.1f;
             if(alpha_ < 0) {
                 alpha_ = 0;
             }
-            addLog("Adjust alpha to " + std::to_string(static_cast<int>(alpha_*10)) + " (Only valid in OVERLAY arrange mode)");
+            addLog("Adjust alpha to " + ob_smpl::toString(alpha_, 1) + " (Only valid in OVERLAY arrange mode)");
         }
     }
     return !closed_;
@@ -100,7 +99,7 @@ bool CVWindow::run() {
 void CVWindow::close() {
     {
         std::lock_guard<std::mutex> lock(renderMatsMtx_);
-        mapGroups_.clear();
+        matGroups_.clear();
         srcFrameGroups_.clear();
         srcFrameGroupsCv_.notify_all();
     }
@@ -221,12 +220,12 @@ void CVWindow::processFrames() {
                 auto rstMat = visualize(frame);
                 if(!rstMat.empty()) {
                     int uid         = groupId * OB_FRAME_TYPE_COUNT + static_cast<int>(frame->getType());
-                    mapGroups_[uid] = { frame, rstMat };
+                    matGroups_[uid] = { frame, rstMat };
                 }
             }
         }
 
-        if(mapGroups_.empty()) {
+        if(matGroups_.empty()) {
             continue;
         }
 
@@ -237,14 +236,14 @@ void CVWindow::processFrames() {
 void CVWindow::arrangeFrames() {
     cv::Mat renderMat;
     try {
-        if(arrangeType_ == ARRANGE_SINGLE) {
-            auto &mat = mapGroups_.begin()->second.second;
+        if(arrangeMode_ == ARRANGE_SINGLE || matGroups_.size() == 1) {
+            auto &mat = matGroups_.begin()->second.second;
             renderMat = resizeMatKeepAspectRatio(mat, width_, height_);
         }
-        else if(arrangeType_ == ARRANGE_ONE_ROW) {
-            for(auto &item: mapGroups_) {
+        else if(arrangeMode_ == ARRANGE_ONE_ROW) {
+            for(auto &item: matGroups_) {
                 auto   &mat       = item.second.second;
-                cv::Mat resizeMat = resizeMatKeepAspectRatio(mat, static_cast<int>(width_ / mapGroups_.size()), height_);
+                cv::Mat resizeMat = resizeMatKeepAspectRatio(mat, static_cast<int>(width_ / matGroups_.size()), height_);
                 if(renderMat.dims > 0 && renderMat.cols > 0 && renderMat.rows > 0) {
                     cv::hconcat(renderMat, resizeMat, renderMat);
                 }
@@ -253,10 +252,10 @@ void CVWindow::arrangeFrames() {
                 }
             }
         }
-        else if(arrangeType_ == ARRANGE_ONE_COLUMN) {
-            for(auto &item: mapGroups_) {
+        else if(arrangeMode_ == ARRANGE_ONE_COLUMN) {
+            for(auto &item: matGroups_) {
                 auto   &mat       = item.second.second;
-                cv::Mat resizeMat = resizeMatKeepAspectRatio(mat, width_, static_cast<int>(height_ / mapGroups_.size()));
+                cv::Mat resizeMat = resizeMatKeepAspectRatio(mat, width_, static_cast<int>(height_ / matGroups_.size()));
                 if(renderMat.dims > 0 && renderMat.cols > 0 && renderMat.rows > 0) {
                     cv::vconcat(renderMat, resizeMat, renderMat);
                 }
@@ -265,8 +264,8 @@ void CVWindow::arrangeFrames() {
                 }
             }
         }
-        else if(arrangeType_ == ARRANGE_GRID) {
-            int count     = static_cast<int>(mapGroups_.size());
+        else if(arrangeMode_ == ARRANGE_GRID) {
+            int count     = static_cast<int>(matGroups_.size());
             int idealSide = static_cast<int>(std::sqrt(count));
             int rows      = idealSide;
             int cols      = idealSide;
@@ -278,7 +277,7 @@ void CVWindow::arrangeFrames() {
             }
 
             std::vector<cv::Mat> gridImages;  // store all images in grid
-            auto                 it = mapGroups_.begin();
+            auto                 it = matGroups_.begin();
             for(int i = 0; i < rows; i++) {
                 std::vector<cv::Mat> rowImages;  // store images in the same row
                 for(int j = 0; j < cols; j++) {
@@ -301,10 +300,10 @@ void CVWindow::arrangeFrames() {
 
             cv::vconcat(gridImages, renderMat);  // vertical concat all images in the grid
         }
-        else if(arrangeType_ == ARRANGE_OVERLAY && mapGroups_.size() >= 2) {
+        else if(arrangeMode_ == ARRANGE_OVERLAY && matGroups_.size() >= 2) {
             cv::Mat     overlayMat;
-            const auto &mat1 = mapGroups_.begin()->second.second;
-            const auto &mat2 = mapGroups_.rbegin()->second.second;
+            const auto &mat1 = matGroups_.begin()->second.second;
+            const auto &mat2 = matGroups_.rbegin()->second.second;
             renderMat        = resizeMatKeepAspectRatio(mat1, width_, height_);
             overlayMat       = resizeMatKeepAspectRatio(mat2, width_, height_);
 
@@ -394,9 +393,19 @@ cv::Mat CVWindow::visualize(std::shared_ptr<const ob::Frame> frame) {
             // depth frame pixel value multiply scale to get distance in millimeter
             float scale = videoFrame->as<ob::DepthFrame>()->getValueScale();
 
-            // threshold to 5.12m
-            cv::threshold(rawMat, cvtMat, 5120.0f / scale, 0, cv::THRESH_TRUNC);
-            cvtMat.convertTo(cvtMat, CV_8UC1, scale * 0.05);
+            // threshold to 8 meters, as is a common range for depth camera
+            cv::threshold(rawMat, cvtMat, 8000.0f / scale, 0, cv::THRESH_TRUNC);
+
+            // normalization to 0-255, 0.032f is 256/8000
+            cvtMat.convertTo(cvtMat, CV_32F, scale * 0.032f);
+
+            // apply gamma correction
+            cv::pow(cvtMat, 1.2f, cvtMat);
+
+            //  convert to 8-bit
+            cvtMat.convertTo(cvtMat, CV_8UC1, 1);
+
+            // apply colormap
             cv::applyColorMap(cvtMat, rstMat, cv::COLORMAP_JET);
         }
     }

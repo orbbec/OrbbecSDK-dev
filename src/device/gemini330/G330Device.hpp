@@ -1,7 +1,6 @@
 #pragma once
 #include "DeviceBase.hpp"
 #include "IDeviceEnumerator.hpp"
-
 #include "frameprocessor/FrameProcessor.hpp"
 
 #include <map>
@@ -32,8 +31,6 @@ private:
     void initProperties();
     void initFrameMetadataParserContainer();
 
-    std::shared_ptr<IFilter> getSpecifyFilter(const std::string &name, OBSensorType type, bool createIfNotExist = true);
-
 private:
     const std::shared_ptr<const IDeviceEnumInfo> enumInfo_;
     std::shared_ptr<DeviceInfo>                  deviceInfo_;
@@ -44,12 +41,6 @@ private:
     std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
     // std::shared_ptr<IFrameTimestampCalculator>     imuFrameTimestampCalculator_;
-
-    std::map<OBSensorType, std::shared_ptr<IFilter>> filters_;
-
-    std::shared_ptr<FrameProcessorFactory> frameProcessorFactory_ = nullptr;
-    std::vector<uint8_t>                   receivedData_;
 };
-/* #endregion ------------G330Device declare end---------------- */
 
 }  // namespace libobsensor

@@ -7,6 +7,8 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/VendorPropertyPort.hpp
             ${CMAKE_CURRENT_LIST_DIR}/PropertyAccessor.cpp
             ${CMAKE_CURRENT_LIST_DIR}/PropertyAccessor.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/CommonPropertyPorts.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/CommonPropertyPorts.hpp
             ${CMAKE_CURRENT_LIST_DIR}/InternalProperty.hpp
 )
 

@@ -2,6 +2,7 @@
 #include "IDevice.hpp"
 #include "filter/FilterBase.hpp"
 #include "PrivFrameProcessorTypes.h"
+#include "DeviceComponentBase.hpp"
 #include <dylib.hpp>
 #include <map>
 
@@ -19,9 +20,9 @@ struct FrameProcessorContext {
     pfunc_ob_destroy_frame_processor_context   destroy_context   = nullptr;
 };
 
-class FrameProcessorFactory final {
+class FrameProcessorFactory : public DeviceComponentBase {
 public:
-    explicit FrameProcessorFactory(IDevice *device);
+    explicit FrameProcessorFactory(IDevice *owner);
     ~FrameProcessorFactory() noexcept;
 
     std::shared_ptr<FrameProcessor> createFrameProcessor(OBSensorType sensorType);
@@ -36,9 +37,9 @@ private:
     std::map<OBSensorType,std::shared_ptr<FrameProcessor>> frameProcessors_;
 };
 
-class FrameProcessor : public FilterBase,public IPropertyPort {
+class FrameProcessor : public FilterBase, public IPropertyPort, public DeviceComponentBase {
 public:
-    FrameProcessor(std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType);
+    FrameProcessor(IDevice *owner, std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType);
 
     ~FrameProcessor() noexcept;
 
@@ -53,7 +54,7 @@ public:
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
 
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
-    
+
     void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
 
 protected:

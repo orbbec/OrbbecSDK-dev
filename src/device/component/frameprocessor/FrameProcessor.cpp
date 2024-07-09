@@ -3,7 +3,7 @@
 #include "shared/utils/Utils.hpp"
 
 namespace libobsensor {
-FrameProcessorFactory::FrameProcessorFactory(IDevice *device) {
+FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBase(owner) {
     dylib_ = std::make_shared<dylib>(moduleLoadPath_.c_str(), "ob_frame_processor");
 
     auto dylib = dylib_;
@@ -28,7 +28,7 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *device) {
 
     if(context_->create_context && !context_->context) {
         ob_device cDevice;
-        cDevice.device    = device->shared_from_this();
+        cDevice.device    = std::move(owner->shared_from_this());
         ob_error *error   = nullptr;
         context_->context = context_->create_context(&cDevice, &error);
         if(error) {
@@ -50,14 +50,15 @@ std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSe
         return iter->second;
     }
 
+    auto                            owner = getOwner();
     std::shared_ptr<FrameProcessor> processor;
-    TRY_EXECUTE({ processor = std::make_shared<FrameProcessor>(context_, sensorType); })
+    TRY_EXECUTE({ processor = std::make_shared<FrameProcessor>(owner, context_, sensorType); })
     frameProcessors_.insert({ sensorType, processor });
     return processor;
 }
 
-FrameProcessor::FrameProcessor(std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType)
-    : FilterBase("FrameProcessor"), context_(context), sensorType_(sensorType) {
+FrameProcessor::FrameProcessor(IDevice *owner, std::shared_ptr<FrameProcessorContext> context, OBSensorType sensorType)
+    : FilterBase("FrameProcessor"), DeviceComponentBase(owner), context_(context), sensorType_(sensorType) {
     if(context_->context && context_->create_processor) {
         ob_error *error   = nullptr;
         privateProcessor_ = context_->create_processor(context_->context, sensorType, &error);

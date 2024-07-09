@@ -3,14 +3,15 @@
 #include <memory>
 
 #include "utils/Utils.hpp"
+#include "exception/ObException.hpp"
 
 namespace libobsensor {
 class IDevice;
 
 class IDeviceComponent {
 public:
-    virtual ~IDeviceComponent()                       = default;
-    virtual IDevice *getOwner() const                 = 0;
+    virtual ~IDeviceComponent()       = default;
+    virtual IDevice *getOwner() const = 0;
 };
 
 typedef std::unique_lock<std::recursive_timed_mutex> DeviceComponentLock;
@@ -47,11 +48,14 @@ public:
     template <typename U> DeviceComponentPtr<U> as() {
         auto uPtr = std::dynamic_pointer_cast<U>(ptr_);
         if(uPtr == nullptr) {
-            //TODO:Linux compile error
-            // throw invalid_value_exception(utils::string::to_string() << "DeviceComponentPtr is not of type " << typeid(U).name());
+            throw invalid_value_exception(utils::string::to_string() << "DeviceComponentPtr is not of type " << typeid(U).name());
         }
         ptr_ = nullptr;
         return DeviceComponentPtr<U>(uPtr, std::move(lock_));
+    }
+
+    std::shared_ptr<T> get() const {
+        return ptr_;
     }
 
 private:
@@ -61,10 +65,15 @@ private:
 
 #define OB_DEV_COMPONENT_PROP_ACCESSOR "PropertyAccessor"
 #define OB_DEV_COMPONENT_DEPTH_SENSOR "DepthSensor"
+#define OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR "DepthFrameProcessor"
 #define OB_DEV_COMPONENT_IR_SENSOR "InfraredSensor"
+#define OB_DEV_COMPONENT_IR_FRAME_PROCESSOR "InfraredFrameProcessor"
 #define OB_DEV_COMPONENT_LEFT_IR_SENSOR "LeftInfraredSensor"
+#define OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR "LeftInfraredFrameProcessor"
 #define OB_DEV_COMPONENT_RIGHT_IR_SENSOR "RightInfraredSensor"
+#define OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR "RightInfraredFrameProcessor"
 #define OB_DEV_COMPONENT_COLOR_SENSOR "ColorSensor"
+#define OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR "ColorFrameProcessor"
 #define OB_DEV_COMPONENT_GYRO_SENSOR "GyroSensor"
 #define OB_DEV_COMPONENT_ACCEL_SENSOR "AccelSensor"
 #define OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY "SensorStreamStrategy"
@@ -74,5 +83,6 @@ private:
 #define OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER "DepthAlgorithmModeManager"
 #define OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR "DeviceSyncConfigurator"
 #define OB_DEV_COMPONENT_DEVICE_MONITOR "DeviceMonitor"
+#define OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY "FrameProcessorFactory"
 
 }  // namespace libobsensor

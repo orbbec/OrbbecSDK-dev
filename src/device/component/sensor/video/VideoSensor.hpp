@@ -29,7 +29,7 @@ class VideoSensor : public SensorBase {
 public:
     VideoSensor(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend);
 
-    ~VideoSensor() noexcept override = default;
+    virtual ~VideoSensor() noexcept;
 
     void start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) override;
     void stop() override;

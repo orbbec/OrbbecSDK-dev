@@ -26,9 +26,26 @@ DeviceComponentLock DeviceBase::tryLockResource() {
     return resLock;
 }
 
+void DeviceBase::registerComponent(const std::string &name, std::function<std::shared_ptr<IDeviceComponent>()> creator, bool lockRequired) {
+    DeviceComponentLock resLock = tryLockResource();
+    ComponentItem       item;
+    item.name         = name;
+    item.component    = nullptr;
+    item.lockRequired = lockRequired;
+    item.initialized  = false;
+    item.creator      = creator;
+    components_.emplace_back(item);
+}
+
 void DeviceBase::registerComponent(const std::string &name, std::shared_ptr<IDeviceComponent> component, bool lockRequired) {
     DeviceComponentLock resLock = tryLockResource();
-    components_.push_back({ name, component, lockRequired });
+    ComponentItem       item;
+    item.name         = name;
+    item.component    = component;
+    item.lockRequired = lockRequired;
+    item.initialized  = true;
+    item.creator      = nullptr;
+    components_.emplace_back(item);
 }
 
 void DeviceBase::clearComponents() {
@@ -76,13 +93,26 @@ DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string 
     }
 
     auto it = std::find_if(components_.begin(), components_.end(), [name](const ComponentItem &item) { return item.name == name; });
-    if(it != components_.end()) {
+
+    do {
+        if(it == components_.end()) {
+            break;
+        }
+
+        if(!it->component && (it->initialized || !it->creator)) {
+            break;
+        }
+        if(!it->component) {
+            it->initialized = true;
+            it->component   = it->creator();
+        }
+
         if(!it->lockRequired) {
             return DeviceComponentPtr<IDeviceComponent>(it->component);
         }
         DeviceComponentLock resLock = tryLockResource();
         return DeviceComponentPtr<IDeviceComponent>(it->component, std::move(resLock));
-    }
+    } while(false);
 
     if(throwExIfNotFound) {
         throw invalid_value_exception(utils::string::to_string() << "Component " << name << " not found!");
@@ -92,6 +122,35 @@ DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string 
 
 DeviceComponentPtr<IPropertyAccessor> DeviceBase::getPropertyAccessor() {
     return getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_PROP_ACCESSOR, true);
+}
+
+std::shared_ptr<IFilter> DeviceBase::getSensorFrameFilter(const std::string &name, OBSensorType type, bool throwIfNotFound) {
+    auto filterIter =
+        std::find_if(sensorFrameFilters_.begin(), sensorFrameFilters_.end(), [name, type](const std::pair<OBSensorType, std::shared_ptr<IFilter>> &pair) {
+            if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
+                return (pair.first == OB_SENSOR_ACCEL || pair.first == OB_SENSOR_GYRO) && (pair.second->getName() == name);
+            }
+            else {
+                return (pair.first == type) && (pair.second->getName() == name);
+            }
+        });
+
+    if(filterIter != sensorFrameFilters_.end()) {
+        return filterIter->second;
+    }
+
+    auto filterFactory = FilterFactory::getInstance();
+    TRY_EXECUTE({
+        auto filter               = filterFactory->createFilter(name);
+        sensorFrameFilters_[type] = filter;
+        return filter;
+    });
+
+    if(throwIfNotFound) {
+        throw invalid_value_exception(utils::string::to_string() << "Filter " << name << " not found!");
+    }
+
+    return nullptr;
 }
 
 }  // namespace libobsensor

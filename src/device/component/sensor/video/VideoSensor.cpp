@@ -28,6 +28,25 @@ VideoSensor::VideoSensor(IDevice *owner, OBSensorType sensorType, const std::sha
         backendStreamProfileList_.push_back(sp);
     }
 
+    std::sort(backendStreamProfileList_.begin(), backendStreamProfileList_.end(),
+              [](const std::shared_ptr<const StreamProfile> &a, const std::shared_ptr<const StreamProfile> &b) {
+                  auto aVsp = a->as<VideoStreamProfile>();
+                  auto bVsp = b->as<VideoStreamProfile>();
+                  auto aRes = aVsp->getWidth() * aVsp->getHeight();
+                  auto bRes = bVsp->getWidth() * bVsp->getHeight();
+                  if(aRes != bRes) {
+                      return aRes > bRes;
+                  }
+                  else if(aVsp->getHeight() != bVsp->getHeight()) {
+                      return aVsp->getHeight() > bVsp->getHeight();
+                  }
+                  else if(aVsp->getFps() != bVsp->getFps()) {
+                      return aVsp->getFps() > bVsp->getFps();
+                  }
+                  return aVsp->getFormat() > bVsp->getFormat();
+              });
+
+    // The stream profile list is same as the backend stream profile list at default.
     for(auto &backendSp: backendStreamProfileList_) {
         auto sp = backendSp->clone();
         sp->bindOwner(lazySelf);
@@ -35,6 +54,18 @@ VideoSensor::VideoSensor(IDevice *owner, OBSensorType sensorType, const std::sha
         streamProfileList_.push_back(sp);
         streamProfileBackendMap_[sp] = { backendSp, nullptr };
     }
+
+    LOG_DEBUG("VideoSensor created @{}", sensorType_);
+}
+
+VideoSensor::~VideoSensor() noexcept {
+    try {
+        stop();
+    }
+    catch(const std::exception &e) {
+        LOG_ERROR("Exception occurred while destroying VideoSensor: {}", e.what());
+    }
+    LOG_DEBUG("VideoSensor destroyed @{}", sensorType_);
 }
 
 #define MIN_VIDEO_FRAME_DATA_SIZE 1024

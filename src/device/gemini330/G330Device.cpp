@@ -22,6 +22,7 @@
 #include "component/property/VendorPropertyPort.hpp"
 #include "component/property/UvcPropertyPort.hpp"
 #include "component/property/PropertyAccessor.hpp"
+#include "component/property/CommonPropertyPorts.hpp"
 #include "component/monitor/DeviceMonitor.hpp"
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
@@ -60,6 +61,7 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
         deviceInfo_->uid_                 = enumInfo_->getUid();
         deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
 
+        // add prefix "Orbbec " to device name if it doesn't have it
         if(deviceInfo_->name_.find("Orbbec") == std::string::npos) {
             deviceInfo_->name_ = "Orbbec " + deviceInfo_->name_;
         }
@@ -68,7 +70,7 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
     auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(this);
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER, globalTimestampFitter);
 
-    // todo： make timestamp calculator as a component
+    // todo: make timestamp calculator as a component
     auto iter = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo_->pid_);
     if(iter != gG330LPids.end()) {
         videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
@@ -95,6 +97,41 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
     };
     auto deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
+
+    // lazy create components
+    registerComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY, [this]() {
+        std::shared_ptr<FrameProcessorFactory> factory;
+        TRY_EXECUTE({ factory = std::make_shared<FrameProcessorFactory>(this); })
+        return factory;
+    });
+
+    registerComponent(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, [this]() {
+        auto comp           = getComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
+        auto factory        = comp.as<FrameProcessorFactory>();
+        auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_DEPTH);
+        return frameProcessor;
+    });
+
+    registerComponent(OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR, [this]() {
+        auto comp           = getComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
+        auto factory        = comp.as<FrameProcessorFactory>();
+        auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_COLOR);
+        return frameProcessor;
+    });
+
+    registerComponent(OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR, [this]() {
+        auto comp           = getComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
+        auto factory        = comp.as<FrameProcessorFactory>();
+        auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR_LEFT);
+        return frameProcessor;
+    });
+
+    registerComponent(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR, [this]() {
+        auto comp           = getComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
+        auto factory        = comp.as<FrameProcessorFactory>();
+        auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR_RIGHT);
+        return frameProcessor;
+    });
 }
 
 G330Device::~G330Device() noexcept {}
@@ -219,23 +256,27 @@ void G330Device::initProperties() {
             registerComponent(OB_DEV_COMPONENT_DEVICE_MONITOR, devMonitor);
         }
         else if(sensor.first == OB_SENSOR_ACCEL) {
-            auto imuCorrecterFilter = getSpecifyFilter("IMUCorrecter", sensor.first);
+            auto imuCorrecterFilter = getSensorFrameFilter("IMUCorrecter", sensor.first);
             if(imuCorrecterFilter) {
                 auto filter = std::dynamic_pointer_cast<IMUCorrecter>(imuCorrecterFilter);
                 propertyAccessor->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", filter);
             }
         }
         else if(sensor.first == OB_SENSOR_GYRO) {
-            auto imuCorrecterFilter = getSpecifyFilter("IMUCorrecter", sensor.first);
+            auto imuCorrecterFilter = getSensorFrameFilter("IMUCorrecter", sensor.first);
             if(imuCorrecterFilter) {
                 auto filter = std::dynamic_pointer_cast<IMUCorrecter>(imuCorrecterFilter);
                 propertyAccessor->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", filter);
             }
         }
     }
+
     propertyAccessor->aliasProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
     propertyAccessor->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
     propertyAccessor->aliasProperty(OB_PROP_IR_GAIN_INT, OB_PROP_DEPTH_GAIN_INT);
+
+    auto depthFrameProcessorPortWrapper = std::make_shared<DeviceComponentPropertyPortWrapper>(this, OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
+    propertyAccessor->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", depthFrameProcessorPortWrapper);
 
     registerComponent(OB_DEV_COMPONENT_PROP_ACCESSOR, propertyAccessor, true);
 }
@@ -334,14 +375,15 @@ bool G330Device::hasAnySensorStreamActivated() const {
 }
 
 std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessingFilters(OBSensorType type) {
+    auto filterFactory = FilterFactory::getInstance();
     if(type == OB_SENSOR_DEPTH) {
         std::vector<std::shared_ptr<IFilter>> depthFilterList;
-        depthFilterList.push_back(getSpecifyFilter("DecimationFilter", type));
-        depthFilterList.push_back(getSpecifyFilter("HdrMerge", type));
-        depthFilterList.push_back(getSpecifyFilter("SequenceIdFilter", type));
-        depthFilterList.push_back(getSpecifyFilter("PixelValueCutOff", type));
+        depthFilterList.push_back(filterFactory->createFilter("DecimationFilter"));
+        depthFilterList.push_back(filterFactory->createFilter("HdrMerge"));
+        depthFilterList.push_back(filterFactory->createFilter("SequenceIdFilter"));
+        depthFilterList.push_back(filterFactory->createFilter("PixelValueCutOff"));
 
-        auto noiseFilter = getSpecifyFilter("NoiseRemovalFilter", type);
+        auto noiseFilter = filterFactory->createFilter("NoiseRemovalFilter");
         if(noiseFilter) {
             // max_size, min_diff, width, height
             std::vector<std::string> params = { "80", "256", "848", "480" };
@@ -349,7 +391,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(noiseFilter);
         }
 
-        auto spatFilter = getSpecifyFilter("SpatialAdvancedFilter", type);
+        auto spatFilter = filterFactory->createFilter("SpatialAdvancedFilter");
         if(spatFilter) {
             // magnitude, alpha, disp_diff, radius
             std::vector<std::string> params = { "1", "0.5", "160", "1" };
@@ -357,7 +399,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(spatFilter);
         }
 
-        auto tempFilter = getSpecifyFilter("TemporalFilter", type);
+        auto tempFilter = filterFactory->createFilter("TemporalFilter");
         if(tempFilter) {
             // diff_scale, weight
             std::vector<std::string> params = { "0.1", "0.4" };
@@ -365,12 +407,12 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(tempFilter);
         }
 
-        auto hfFilter = getSpecifyFilter("HoleFillingFilter", type);
+        auto hfFilter = filterFactory->createFilter("HoleFillingFilter");
         if(hfFilter) {
             depthFilterList.push_back(hfFilter);
         }
 
-        auto dtFilter = getSpecifyFilter("DisparityTransform", type);
+        auto dtFilter = filterFactory->createFilter("DisparityTransform");
         if(dtFilter) {
             depthFilterList.push_back(dtFilter);
         }
@@ -385,7 +427,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     }
     else if(type == OB_SENSOR_COLOR) {
         std::vector<std::shared_ptr<IFilter>> colorFilterList;
-        auto                                  decFilter = getSpecifyFilter("DecimationFilter", type);
+        auto                                  decFilter = filterFactory->createFilter("DecimationFilter");
         decFilter->enable(false);
         colorFilterList.push_back(decFilter);
         return colorFilterList;
@@ -409,7 +451,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
     if(sensorType == OB_SENSOR_ACCEL || sensorType == OB_SENSOR_GYRO) {
         auto                            dataStreamPort     = std::dynamic_pointer_cast<IDataStreamPort>(iter->second.backend);
         std::shared_ptr<MotionStreamer> motionStreamer     = nullptr;
-        auto                            imuCorrecterFilter = getSpecifyFilter("IMUCorrecter", sensorType);
+        auto                            imuCorrecterFilter = getSensorFrameFilter("IMUCorrecter", sensorType);
         if(imuCorrecterFilter) {
             motionStreamer = std::make_shared<MotionStreamer>(dataStreamPort, imuCorrecterFilter);
         }
@@ -460,6 +502,12 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
 
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+            auto comp           = getComponent(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
+            auto frameProcessor = comp.as<FrameProcessor>();
+            if(frameProcessor) {
+                videoSensor->setFrameProcessor(frameProcessor.get());
+            }
         }
         else if(sensorType == OB_SENSOR_IR_LEFT) {
             videoSensor = std::make_shared<VideoSensor>(this, sensorType, iter->second.backend);
@@ -470,7 +518,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
                 { FormatFilterPolicy::REMOVE, OB_FORMAT_YV12, OB_FORMAT_ANY, nullptr },
                 { FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y12, nullptr },
             };
-            auto formatConverter = getSpecifyFilter("FrameUnpacker", sensorType);
+            auto formatConverter = getSensorFrameFilter("FrameUnpacker", sensorType);
             if(formatConverter) {
                 formatFilterConfigs.push_back({ FormatFilterPolicy::REPLACE, OB_FORMAT_NV12, OB_FORMAT_Y16, formatConverter });
             }
@@ -478,6 +526,12 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->updateFormatFilterConfig(formatFilterConfigs);
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+            auto comp           = getComponent(OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR);
+            auto frameProcessor = comp.as<FrameProcessor>();
+            if(frameProcessor) {
+                videoSensor->setFrameProcessor(frameProcessor.get());
+            }
         }
         else if(sensorType == OB_SENSOR_IR_RIGHT) {
             videoSensor = std::make_shared<VideoSensor>(this, sensorType, iter->second.backend);
@@ -490,7 +544,8 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
                 { FormatFilterPolicy::REPLACE, OB_FORMAT_BA81, OB_FORMAT_Y8, nullptr },  //
                 { FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y12, nullptr },
             };
-            auto formatConverter = getSpecifyFilter("FrameUnpacker", sensorType);
+
+            auto formatConverter = getSensorFrameFilter("FrameUnpacker", sensorType);
             if(formatConverter) {
                 formatFilterConfigs.push_back({ FormatFilterPolicy::REPLACE, OB_FORMAT_YV12, OB_FORMAT_Y16, formatConverter });
             }
@@ -498,6 +553,12 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->updateFormatFilterConfig(formatFilterConfigs);
             videoSensor->setFrameMetadataParserContainer(depthMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+            auto comp           = getComponent(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR);
+            auto frameProcessor = comp.as<FrameProcessor>();
+            if(frameProcessor) {
+                videoSensor->setFrameProcessor(frameProcessor.get());
+            }
         }
         else if(sensorType == OB_SENSOR_COLOR) {
             videoSensor = std::make_shared<VideoSensor>(this, sensorType, iter->second.backend);
@@ -507,7 +568,7 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
                 { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr },
             };
 
-            auto formatConverter = getSpecifyFilter("FormatConverter", sensorType);
+            auto formatConverter = getSensorFrameFilter("FormatConverter", sensorType);
             if(formatConverter) {
                 formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGB, formatConverter });
                 formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGBA, formatConverter });
@@ -520,27 +581,17 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
             videoSensor->updateFormatFilterConfig(formatFilterConfigs);
             videoSensor->setFrameMetadataParserContainer(colorMdParserContainer_);
             videoSensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+            auto comp           = getComponent(OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR);
+            auto frameProcessor = comp.as<FrameProcessor>();
+            if(frameProcessor) {
+                videoSensor->setFrameProcessor(frameProcessor.get());
+            }
         }
 
         auto defaultStreamProfile = StreamProfileFactory::getDefaultStreamProfileFormEnvConfig(deviceInfo_->name_, sensorType);
         if(defaultStreamProfile) {
             videoSensor->updateDefaultStreamProfile(defaultStreamProfile);
-        }
-
-        // frame preprocessor
-        if(!frameProcessorFactory_) {
-            TRY_EXECUTE(frameProcessorFactory_ = std::make_shared<FrameProcessorFactory>(this));
-        }
-        if(frameProcessorFactory_) {
-            auto frameProcessor = frameProcessorFactory_->createFrameProcessor(sensorType);
-            if(frameProcessor) {
-                videoSensor->setFrameProcessor(frameProcessor);
-
-                if(sensorType ==OB_SENSOR_DEPTH){
-                    auto propertyAccessor = getPropertyAccessor();
-                    propertyAccessor->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", frameProcessor);
-                }
-            }
         }
 
         iter->second.sensor = videoSensor;  // store
@@ -587,34 +638,6 @@ void G330Device::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUp
     utils::unusedVar(updateCallback);
     utils::unusedVar(async);
     throw not_implemented_exception("Not implemented!");
-}
-
-std::shared_ptr<IFilter> G330Device::getSpecifyFilter(const std::string &name, OBSensorType type, bool throwIfNotFound) {
-    auto filterIter = std::find_if(filters_.begin(), filters_.end(), [name, type](const std::pair<OBSensorType, std::shared_ptr<IFilter>> &pair) {
-        if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {
-            return (pair.first == OB_SENSOR_ACCEL || pair.first == OB_SENSOR_GYRO) && (pair.second->getName() == name);
-        }
-        else {
-            return (pair.first == type) && (pair.second->getName() == name);
-        }
-    });
-
-    if(filterIter != filters_.end()) {
-        return filterIter->second;
-    }
-
-    auto filterFactory = FilterFactory::getInstance();
-    TRY_EXECUTE({
-        auto filter    = filterFactory->createFilter(name);
-        filters_[type] = filter;
-        return filter;
-    });
-
-    if(throwIfNotFound) {
-        throw invalid_value_exception(utils::string::to_string() << "Filter " << name << " not found!");
-    }
-
-    return nullptr;
 }
 
 }  // namespace libobsensor

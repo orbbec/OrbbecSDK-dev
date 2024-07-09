@@ -36,11 +36,12 @@ public:
     virtual bool                                  isComponentExists(const std::string &name) const                     = 0;
     virtual DeviceComponentPtr<IDeviceComponent>  getComponent(const std::string &name, bool throwExIfNotFound = true) = 0;
     virtual DeviceComponentPtr<IPropertyAccessor> getPropertyAccessor()                                                = 0;
-    virtual DeviceComponentPtr<ISensor>           getSensor(OBSensorType type)                                         = 0;
 
-    virtual std::vector<OBSensorType>             getSensorTypeList() const                                 = 0;
-    virtual bool                                  hasAnySensorStreamActivated() const                       = 0;
-    virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) = 0;
+    virtual DeviceComponentPtr<ISensor>           getSensor(OBSensorType type)                                                                  = 0;
+    virtual std::vector<OBSensorType>             getSensorTypeList() const                                                                     = 0;
+    virtual bool                                  hasAnySensorStreamActivated() const                                                           = 0;
+    virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type)                                     = 0;
+    virtual std::shared_ptr<IFilter>              getSensorFrameFilter(const std::string &name, OBSensorType type, bool throwIfNotFound = true) = 0;
 
     virtual void reboot()     = 0;
     virtual void deactivate() = 0;

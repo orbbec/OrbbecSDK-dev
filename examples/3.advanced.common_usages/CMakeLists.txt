@@ -1,6 +1,4 @@
-#  minimum required cmake version: 3.1.15 support vs2019
-
-cmake_minimum_required(VERSION 3.1.15)
+cmake_minimum_required(VERSION 3.5)
 project(ob_common_usages)
 
 add_executable(${PROJECT_NAME} common_usages.cpp)

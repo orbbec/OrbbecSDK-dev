@@ -1,4 +1,3 @@
-#  minimum required cmake version: 3.5 support vs2019
 cmake_minimum_required(VERSION 3.5)
 
 file(GLOB PAL_SOURCES ${CMAKE_CURRENT_LIST_DIR}/WinPal.*)

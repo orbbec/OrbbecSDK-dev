@@ -11,7 +11,7 @@ public:
     explicit FrameQueue(size_t capacity) : capacity_(capacity), stoped_(true), stopping_(false), callback_(nullptr), flushing_(false) {}
 
     ~FrameQueue() noexcept {
-        clear();
+        reset();
     }
 
     size_t capacity() const {
@@ -116,8 +116,9 @@ public:
         }
     }
 
-    void clear() {  // clear all frames in queue, flags, and callback. Stop dequeue thread
-        stop();     // try stop if it's running, clear all frames on queue
+    // clear all frames in queue, flags, and callback. Stop dequeue thread. reset to initial state.
+    void reset() {
+        stop();  // try stop if it's running, clear all frames on queue
         callback_ = nullptr;
         stopping_ = false;
         flushing_ = false;

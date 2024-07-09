@@ -68,7 +68,7 @@ void FilterBase::setCallback(FilterCallback cb) {
 
 void FilterBase::reset() {
     srcFrameQueue_->flush();
-    srcFrameQueue_->clear();
+    srcFrameQueue_->reset();
     LOG_DEBUG("Filter {}: reset frame queue", name_);
 }
 

@@ -39,7 +39,7 @@ Pipeline::~Pipeline() noexcept {
         TRY_EXECUTE(stop());
     }
 
-    outputFrameQueue_->clear();
+    outputFrameQueue_->reset();
     LOG_INFO("Pipeline destroyed! @0x{:X}", (uint64_t)this);
 }
 
@@ -228,6 +228,9 @@ std::shared_ptr<const Config> Pipeline::getConfig() {
 
 void Pipeline::startStream() {
     LOG_INFO("Try to start streams!");
+
+    outputFrameQueue_->reset();  // reset output frame queue before restart streams
+
     auto spList = config_->getEnabledStreamProfileList();
     for(const auto &sp: spList) {
         auto streamType = sp->getType();
@@ -318,7 +321,7 @@ void Pipeline::stop() {
         frameAggregator_->clearAllFrameQueue();
     }
 
-    // clear frameset
+    // flush output frame queue
     outputFrameQueue_->flush();
 
     // clear callback

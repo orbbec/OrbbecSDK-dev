@@ -74,7 +74,7 @@ int main(void) try {
 
         // Get filter according to the align mode
         std::shared_ptr<ob::Filter> alignFilter = depth2colorAlign;
-        if(align_mode % 2 == 0) {
+        if(align_mode % 2 == 1) {
             alignFilter = color2depthAlign;
         }
 

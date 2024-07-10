@@ -1,6 +1,125 @@
 #include "utils_opencv.hpp"
 
 #include <libobsensor/ObSensor.h>
+#include <thread>
+
+bool quit_program = false;
+
+void printFiltersInfo(const std::vector<std::shared_ptr<ob::Filter>> &filterList) {
+    std::cout << filterList.size() << " post processing filters recommended:" << std::endl;
+    for(auto &filter: filterList) {
+        std::cout << " - " << filter->getName() << ": " << (filter->isEnabled() ? "enabled" : "disabled") << std::endl;
+        auto configSchemaVec = filter->getConfigSchemaVec();
+
+        // Print the config schema for each filter
+        for(auto &configSchema: configSchemaVec) {
+            std::cout << "    - {" << configSchema.name << ", " << configSchema.type << ", " << configSchema.min << ", " << configSchema.max << ", "
+                      << configSchema.step << ", " << configSchema.def << ", " << configSchema.desc << "}" << std::endl;
+        }
+        filter->enable(false);  // Disable the filter
+    }
+}
+
+void filterControl(const std::vector<std::shared_ptr<ob::Filter>> &filterList) {
+    auto printHelp = [&]() {
+        std::cout << "Available commands:" << std::endl;
+        std::cout << "- Enter `[Filter]` to list the config values for the filter" << std::endl;
+        std::cout << "- Enter `[Filter] on` or `[Filter] off` to enable/disable the filter" << std::endl;
+        std::cout << "- Enter `[Filter] list` to list the config schema for the filter" << std::endl;
+        std::cout << "- Enter `[Filter] [Config]` to show the config values for the filter" << std::endl;
+        std::cout << "- Enter `[Filter] [Config] [Value]` to set a config value" << std::endl;
+        std::cout << "- Enter `L`or `l` to list all available filters" << std::endl;
+        std::cout << "- Enter `H` or `h` to print this help message" << std::endl;
+        std::cout << "- Enter `Q` or `q` to quit" << std::endl;
+    };
+    printHelp();
+    while(!quit_program) {
+        std::cout << "---------------------------" << std::endl;
+        std::cout << "Enter your input (h for help): ";
+
+        std::string input;
+        std::getline(std::cin, input);
+        if(input == "q") {
+            quit_program = true;
+            break;
+        }
+        else if(input == "l" || input == "L") {
+            printFiltersInfo(filterList);
+            continue;
+        }
+        else if(input == "h" || input == "H") {
+            printHelp();
+            continue;
+        }
+
+        // Parse the input
+        std::vector<std::string> tokens;
+        std::istringstream       iss(input);
+        for(std::string token; iss >> token;) {
+            tokens.push_back(token);
+        }
+        if(tokens.empty()) {
+            continue;
+        }
+
+        bool foundFilter = false;
+        for(auto &filter: filterList) {
+            if(filter->getName() == tokens[0]) {
+                foundFilter = true;
+                if(tokens.size() == 1) {  // print list of configs for the filter
+                    auto configSchemaVec = filter->getConfigSchemaVec();
+                    std::cout << "Config values for " << filter->getName() << ":" << std::endl;
+                    for(auto &configSchema: configSchemaVec) {
+                        std::cout << " - " << configSchema.name << ": " << filter->getConfigValue(configSchema.name) << std::endl;
+                    }
+                }
+                else if(tokens.size() == 2 && (tokens[1] == "on" || tokens[1] == "off")) {  // Enable/disable the filter
+                    filter->enable(tokens[1] == "on");
+                    std::cout << "Success: Filter " << filter->getName() << " is now " << (filter->isEnabled() ? "enabled" : "disabled") << std::endl;
+                }
+                else if(tokens.size() == 2 && tokens[1] == "list") {  // List the config values for the filter
+                    auto configSchemaVec = filter->getConfigSchemaVec();
+                    std::cout << "Config schema for " << filter->getName() << ":" << std::endl;
+                    for(auto &configSchema: configSchemaVec) {
+                        std::cout << " - {" << configSchema.name << ", " << configSchema.type << ", " << configSchema.min << ", " << configSchema.max << ", "
+                                  << configSchema.step << ", " << configSchema.def << ", " << configSchema.desc << "}" << std::endl;
+                    }
+                }
+                else if(tokens.size() == 2) {  // Print the config schema for the filter
+                    auto configSchemaVec = filter->getConfigSchemaVec();
+                    bool foundConfig     = false;
+                    for(auto &configSchema: configSchemaVec) {
+                        if(configSchema.name == tokens[1]) {
+                            foundConfig = true;
+                            std::cout << "Config values for " << filter->getName() << "@" << configSchema.name << ":"
+                                      << filter->getConfigValue(configSchema.name) << std::endl;
+                            break;
+                        }
+                    }
+                    if(!foundConfig) {
+                        std::cerr << "Error: Config " << tokens[1] << " not found for filter " << filter->getName() << std::endl;
+                    }
+                }
+                else if(tokens.size() == 3) {  // Set a config value
+                    try {
+                        double value = std::stod(tokens[2]);
+                        filter->setConfigValue(tokens[1], value);
+                    }
+                    catch(const std::exception &e) {
+                        std::cerr << "Error: " << e.what() << std::endl;
+                        continue;
+                    }
+                    std::cout << "Success: Config value of " << tokens[1] << " for filter " << filter->getName() << " is set to " << tokens[2] << std::endl;
+                }
+                break;
+            }
+        }
+        if(!foundFilter) {
+            std::cerr << "Error: Filter " << tokens[0] << " not found" << std::endl;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+}
 
 int main() try {
     // Create a pipeline with default device
@@ -11,21 +130,8 @@ int main() try {
     auto sensor     = device->getSensor(OB_SENSOR_DEPTH);
     auto filterList = sensor->getRecommendedFilters();
 
-    // Print the list of recommended filters
-    std::cout << filterList.size() << " post processing filters recommended:" << std::endl;
-    for(auto &filter: filterList) {
-        std::cout << "\t - " << filter->getName() << ": " << (filter->isEnabled() ? "enabled" : "disabled") << std::endl;
-        auto configSchemaVec = filter->getConfigSchemaVec();
-        // Print the config schema for each filter
-        for(auto &configSchema: configSchemaVec) {
-            std::cout << "\t\t - {" << configSchema.name << ", " << configSchema.type << ", " << configSchema.min << ", " << configSchema.max << ", "
-                      << configSchema.step << ", " << configSchema.def << ", " << configSchema.desc << "}" << std::endl;
-        }
-        if(filter->getName() == "DecimationFilter") {
-            filter->setConfigValue("decimate", 2.1);
-            filter->enable(true);
-        }
-    }
+    // Print the recommended filters
+    printFiltersInfo(filterList);
 
     // Create a config with depth stream enabled
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
@@ -34,10 +140,14 @@ int main() try {
     // Start the pipeline with config
     pipe.start(config);
 
-    // Create a window for rendering, and set the resolution of the window
-    ob_smpl::CVWindow win("PostProcessing", 1280, 720);
+    // Start the filter control loop on sub thread
+    std::thread filterControlThread(filterControl, filterList);
+    filterControlThread.detach();
 
-    while(win.run()) {
+    // Create a window for rendering, and set the resolution of the window
+    ob_smpl::CVWindow win("PostProcessing", 1280, 720, ob_smpl::ARRANGE_ONE_ROW);
+
+    while(win.run() && !quit_program) {
         // Wait for up to 1000ms for a frameset in blocking mode.
         auto frameSet = pipe.waitForFrameset(1000);
         if(frameSet == nullptr) {
@@ -50,19 +160,24 @@ int main() try {
             continue;
         }
 
+        auto processedFrame = depthFrame;
         // Apply the recommended filters to the depth frame
         for(auto &filter: filterList) {
             if(filter->isEnabled()) {  // Only apply enabled filters
-                depthFrame = filter->process(depthFrame);
+                processedFrame = filter->process(processedFrame);
             }
         }
 
-        // Render frame in the window
-        win.pushFramesToView(depthFrame);
+        // Push the frames to the window for showing
+        // Due to processedFrame type is same as the depthFrame, we should push it with different group id.
+        win.pushFramesToView(depthFrame, 0);
+        win.pushFramesToView(processedFrame, 1);
     }
 
     // Stop the pipeline
     pipe.stop();
+
+    quit_program = true;
 
     return 0;
 }

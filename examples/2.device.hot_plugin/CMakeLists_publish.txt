@@ -1,9 +1,0 @@
-
-cmake_minimum_required(VERSION 3.5)
-project(Sample-HotPlugin)
-
-add_executable(HotPlugin HotPlugin.cpp)
-
-set_property(TARGET HotPlugin PROPERTY CXX_STANDARD 11)
-target_link_libraries(HotPlugin OrbbecSDK   )
-

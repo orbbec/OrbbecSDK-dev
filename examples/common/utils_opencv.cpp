@@ -2,6 +2,8 @@
 #include "utils.hpp"
 #include "utils_types.h"
 
+#include <opencv2/core/utils/logger.hpp>
+
 namespace ob_smpl {
 
 const std::string defaultKeyMapPrompt = "'1~5': Switch Arrange Mode, '+'/'-': Adjust Alpha, 'Esc': Exit Window, '?': Show Key Map";
@@ -15,6 +17,10 @@ CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeMod
       alpha_(0.6f),
       key_(-1),
       showPrompt_(false) {
+
+    // disable opencv log
+    cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
+
     prompt_ = defaultKeyMapPrompt;
 
     cv::namedWindow(name_, cv::WINDOW_NORMAL);
@@ -99,16 +105,16 @@ bool CVWindow::run() {
 void CVWindow::close() {
     {
         std::lock_guard<std::mutex> lock(renderMatsMtx_);
-        matGroups_.clear();
-        srcFrameGroups_.clear();
+        closed_ = true;
         srcFrameGroupsCv_.notify_all();
     }
-
-    closed_ = true;
 
     if(processThread_.joinable()) {
         processThread_.join();
     }
+
+    matGroups_.clear();
+    srcFrameGroups_.clear();
 }
 
 void CVWindow::reset() {

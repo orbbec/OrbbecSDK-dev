@@ -1,8 +1,0 @@
-
-cmake_minimum_required(VERSION 3.5)
-project(Sample-ImuReader)
-
-add_executable(ImuReader ImuReader.cpp)
-
-set_property(TARGET ImuReader PROPERTY CXX_STANDARD 11)
-target_link_libraries(ImuReader OrbbecSDK)

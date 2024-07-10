@@ -10,10 +10,9 @@ The libraries included in this folder are:
 | libuvc         | A cross-platform library for USB video device access                          | BSD          | <https://github.com/ktossell/libuvc>              |
 | spdlog v1.11.0 | A fast C++ logging library                                                    | MIT          | <https://github.com/gabime/spdlog>                |
 | dylib v2.2.1   | A cross-platform shared library loader                                        | MIT          | <https://github.com/martin-olivier/dylib>         |
-| libjpeg v2.0   | A C/C++ library designed for efficient manipulation of YUV image data         | BSD-3-Clause | <https://github.com/libjpeg-turbo/libjpeg-turbo>  |
+| libjpeg-turbo v2.0   | A JPEG image codec library         | BSD-3-Clause | <https://github.com/libjpeg-turbo/libjpeg-turbo>  |
 | libyuv         | An open source project that includes YUV scaling and conversion functionality | BSD-3-Clause | <https://chromium.googlesource.com/libyuv/libyuv> |
 | live555        | A library for streaming media over the network                                | LGPL         | <http://www.live555.com/>                           |
 | tinyxml2       | A simple, small, efficient, C++ XML parser                                    | Zlib         | <https://github.com/leethomason/tinyxml2>           |
 | cmrc           | A Resource Compiler in a Single CMake Script                                  | MIT          | <https://github.com/vector-of-bool/cmrc>          |
 | josncpp        | A C++ library for interacting with JSON.                                      | MIT          | <https://github.com/open-source-parsers/jsoncpp>   |
-| OpenCV | A library of programming functions mainly aimed at real-time computer vision and image processing | Apache-2.0  | <https://github.com/opencv/opencv> |

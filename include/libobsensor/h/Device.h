@@ -150,7 +150,7 @@ OB_EXPORT void ob_device_set_structured_data(ob_device *device, ob_property_id p
  * @param[out] data_size The size of the obtained property data.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
-OB_EXPORT void ob_device_get_structured_data(ob_device *device, ob_property_id property_id, const uint8_t *data, uint32_t *data_size, ob_error **error);
+OB_EXPORT void ob_device_get_structured_data(ob_device *device, ob_property_id property_id, uint8_t *data, uint32_t *data_size, ob_error **error);
 
 /**
  * @brief Get the number of properties supported by the device.

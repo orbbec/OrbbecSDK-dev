@@ -311,7 +311,7 @@ public:
      * @param type The coordinate system type.
      */
     void setCoordinateSystem(OBCoordinateSystemType type) {
-        setConfigValue("coordinateSystem", static_cast<double>(type));
+        setConfigValue("coordinateSystemType", static_cast<double>(type));
     }
 };
 

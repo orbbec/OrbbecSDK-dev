@@ -114,8 +114,8 @@ int main(void) {
         ob_frame *frameset = ob_pipeline_wait_for_frameset(pipe, 1000, &error);
         CHECK_OB_ERROR_EXIT(&error);
 
+        // If frameset is NULL, timeout occurred, continue to next iteration.
         if(frameset == NULL) {
-            // frameset is NULL, timeout occurred, continue to next iteration.
             continue;
         }
 

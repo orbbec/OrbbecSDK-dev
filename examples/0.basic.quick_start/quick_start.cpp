@@ -17,11 +17,6 @@ int main(void) try {
         // Wait for frameSet from the pipeline, the default timeout is 1000ms.
         auto frameSet = pipe.waitForFrameset();
 
-        // If timeout without getting frameSet, continue to wait for next frameSet.
-        if(frameSet == nullptr) {
-            continue;
-        }
-
         // Push the frames to the window for showing.
         win.pushFramesToView(frameSet);
     }

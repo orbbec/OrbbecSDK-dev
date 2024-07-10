@@ -17,7 +17,7 @@ private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
     bool isFrameFormatTypeSupported(OBFormat type);
-    void updateOutputProfile(const std::shared_ptr<Frame> frame);
+    void updateOutputProfile(const std::shared_ptr<const Frame> frame);
     void decimateDepth(uint16_t *frame_data_in, uint16_t *frame_data_out, size_t width_in, size_t scale);
     void decimateOthers(OBFormat format, void *frame_data_in, void *frame_data_out, size_t width_in, size_t scale);
 

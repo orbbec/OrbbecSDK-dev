@@ -227,39 +227,35 @@ std::shared_ptr<Frame> DecimationFilter::processFunc(std::shared_ptr<const Frame
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
-    if(outFrame->is<FrameSet>()) {
+    if(frame->is<FrameSet>()) {
         LOG_WARN_INTVL("The Frame processed by DecimationFilter cannot be FrameSet!");
+        auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
         return outFrame;
     }
 
-    if(!isFrameFormatTypeSupported(outFrame->getFormat())) {
-        LOG_WARN_INTVL("Unsupported decimation filter processing frame format @{}.", outFrame->getFormat());
+    if(!isFrameFormatTypeSupported(frame->getFormat())) {
+        LOG_WARN_INTVL("Unsupported decimation filter processing frame format @{}.", frame->getFormat());
+        auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
         return outFrame;
     }
 
-    {
-        std::lock_guard<std::recursive_mutex> lk(scaleChangedMutex_);
-        updateOutputProfile(outFrame);
+    std::lock_guard<std::recursive_mutex> lk(scaleChangedMutex_);
+    updateOutputProfile(frame);
 
-        OBFormat    frameFormat = outFrame->getFormat();
-        auto        newOutFrame = FrameFactory::createFrameFromStreamProfile(target_stream_profile_);
-        if(newOutFrame) {
-            newOutFrame->copyInfoFromOther(outFrame);
-            auto oldVideoFrame = outFrame->as<VideoFrame>();
-            auto newViodeFrame = newOutFrame->as<VideoFrame>();
-            if(outFrame->getType() == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16 || frameFormat == OB_FORMAT_DISP16)) {
-                decimateDepth((uint16_t *)outFrame->getData(), (uint16_t *)newViodeFrame->getData(), oldVideoFrame->getWidth(), patch_size_);
-            }
-            else {
-                decimateOthers(frameFormat, (void *)outFrame->getData(), (void *)newViodeFrame->getData(), oldVideoFrame->getWidth(), patch_size_);
-            }
+    OBFormat frameFormat = frame->getFormat();
+    auto     newOutFrame = FrameFactory::createFrameFromStreamProfile(target_stream_profile_);
 
-            return newOutFrame;
-        }
+    newOutFrame->copyInfoFromOther(frame);
+    auto srcVideosFrame = frame->as<VideoFrame>();
+    auto newVideoFrame  = newOutFrame->as<VideoFrame>();
+    if(frame->getType() == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16 || frameFormat == OB_FORMAT_DISP16)) {
+        decimateDepth((uint16_t *)frame->getData(), (uint16_t *)newVideoFrame->getData(), srcVideosFrame->getWidth(), patch_size_);
+    }
+    else {
+        decimateOthers(frameFormat, (void *)frame->getData(), (void *)newVideoFrame->getData(), srcVideosFrame->getWidth(), patch_size_);
     }
 
-    return outFrame;
+    return newOutFrame;
 }
 
 bool DecimationFilter::isFrameFormatTypeSupported(OBFormat type) {
@@ -281,7 +277,7 @@ bool DecimationFilter::isFrameFormatTypeSupported(OBFormat type) {
     return false;
 }
 
-void DecimationFilter::updateOutputProfile(const std::shared_ptr<Frame> frame) {
+void DecimationFilter::updateOutputProfile(const std::shared_ptr<const Frame> frame) {
     auto streamProfile = frame->getStreamProfile();
     if(options_changed_ || streamProfile.get() != source_stream_profile_.get()) {
         options_changed_       = false;

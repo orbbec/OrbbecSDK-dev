@@ -2,7 +2,6 @@
 #include "utils.hpp"
 #include "utils_types.h"
 
-#include <opencv2/core/utils/logger.hpp>
 
 namespace ob_smpl {
 
@@ -19,7 +18,7 @@ CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeMod
       showPrompt_(false) {
 
     // disable opencv log
-    cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
+   // cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
 
     prompt_ = defaultKeyMapPrompt;
 
@@ -36,7 +35,7 @@ CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeMod
     winCreatedTime_ = getNowTimesMs();
 }
 
-CVWindow::~CVWindow() {
+CVWindow::~CVWindow() noexcept{
     close();
     cv::destroyWindow(name_);
 }

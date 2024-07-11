@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 # add the core library with version number
 add_library(core STATIC)
-set_target_properties(core PROPERTIES VERSION ${CMAKE_PROJECT_VERSION})
+set_target_properties(core PROPERTIES VERSION ${PROJECT_VERSION})
 
 # add the core library sources
 file(GLOB_RECURSE SOURCE_FILES "*.cpp" EXCLUDE unittest)

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 # add the pipeline library with version number
 add_library(pipeline STATIC)
-set_target_properties(pipeline PROPERTIES VERSION ${CMAKE_PROJECT_VERSION})
+set_target_properties(pipeline PROPERTIES VERSION ${PROJECT_VERSION})
 
 # add the pipeline library sources
 file(GLOB_RECURSE SOURCE_FILES "*.cpp" EXCLUDE unittest)

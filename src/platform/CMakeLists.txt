@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 set(OB_TARGET_PAL platform)
 add_library(${OB_TARGET_PAL} STATIC)
-set_target_properties(${OB_TARGET_PAL} PROPERTIES VERSION ${CMAKE_PROJECT_VERSION})
+set_target_properties(${OB_TARGET_PAL} PROPERTIES VERSION ${PROJECT_VERSION})
 
 target_link_libraries(${OB_TARGET_PAL} PUBLIC ob::shared ob::core)
 target_include_directories(${OB_TARGET_PAL} PUBLIC

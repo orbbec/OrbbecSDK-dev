@@ -9,4 +9,5 @@ for x in /opt/*; do
 	source "$x/.env.sh"
     fi
 done
-
+## go home
+cd $HOME

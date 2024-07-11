@@ -111,7 +111,7 @@ private:
     void D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z, int *map = nullptr);
     void D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, const float *coeff_x, const float *coeff_y, const float *coeff_z, int *map = nullptr);
     /** SSE speed-ed depth to color alignment with different distortion model */
-	void distortedWithSSE(__m128 &nx, __m128 &ny, const __m128 x2, const __m128 y2, const __m128 r2);
+    void distortedWithSSE(__m128 &nx, __m128 &ny, const __m128 x2, const __m128 y2, const __m128 r2);
     void KBDistortedWithSSE(__m128 &nx, __m128 &ny, const __m128 r2);
     void BMDistortedWithSSE(__m128 &nx, __m128 &ny, const __m128 x2, const __m128 y2, const __m128 r2);
 
@@ -140,18 +140,18 @@ private:
     float              depth_unit_mm_;          // depth scale
     bool               add_target_distortion_;  // distort align frame with target coefficent
     bool               gap_fill_copy_;          // filling cracks with copy
-    OBCameraIntrinsic  depth_intric_;
-    OBCameraIntrinsic  rgb_intric_;
-    OBCameraDistortion depth_disto_;
-    OBCameraDistortion rgb_disto_;
-    OBExtrinsic        transform_;        // should be depth-to-rgb all the time
-    float              scaled_trans_[3];  // scaled translation
+    OBCameraIntrinsic  depth_intric_{};
+    OBCameraIntrinsic  rgb_intric_{};
+    OBCameraDistortion depth_disto_{};
+    OBCameraDistortion rgb_disto_{};
+    OBExtrinsic        transform_{};              // should be depth-to-rgb all the time
+    float              scaled_trans_[3] = { 0 };  // scaled translation
 
     // possible inflection point of the calibrated K6 distortion curve
     float r2_max_loc_;
 
     // members for SSE
-	__m128 color_cx_;
+    __m128 color_cx_;
     __m128 color_cy_;
     __m128 color_fx_;
     __m128 color_fy_;
@@ -168,7 +168,7 @@ private:
     __m128 scaled_trans_3_;
     __m128 r2_max_loc_sse_;
 
-	const static __m128  POINT_FIVE;
+    const static __m128  POINT_FIVE;
     const static __m128  TWO;
     const static __m128i ZERO;
     const static __m128  ZERO_F;

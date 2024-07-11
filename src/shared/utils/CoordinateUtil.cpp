@@ -376,7 +376,7 @@ bool CoordinateUtil::tranformationColor2dToDepth2d(const OBCameraIntrinsic color
         float depth = depthScalemm * depthMap[index];
         
         // depth pixel to color pixel 
-        OBPoint2f curColorPixel;
+        OBPoint2f curColorPixel{};
         transformation2dTo2d(depthIntrinsic, depthDistortion, curPixel, depth, colorIntrinsic, colorDistortion, transDepthToColor, &curColorPixel);
         float errDist = (float)(pow((curColorPixel.x - colorPixel.x), 2) + pow((curColorPixel.y - colorPixel.y), 2));
         if(errDist < minDist) {

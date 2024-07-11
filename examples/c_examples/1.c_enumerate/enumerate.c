@@ -31,7 +31,8 @@ int select_index(const char *prompt, int min_value, int max_value) {  // todo: t
     printf("\n%s (Input a number between %d and %d or \'q\' to exit program): ", prompt, min_value, max_value);
     while(true) {
         char input;
-        scanf("%c", &input);
+        int ret = scanf("%c", &input);
+        (void)ret;
         getchar();
 
         if(input == 'q' || input == 'Q') {
@@ -194,10 +195,10 @@ void print_device_info(ob_device *device, int index) {
     printf("  %d - device name: %s, device pid: %d, device sn: %s, connection type: %s\n", index, dev_name, dev_pid, dev_sn, conn_type);
 }
 
-int main(){
+int main(void) {
 
     // Used to return SDK interface error information.
-    ob_error    *error = NULL;
+    ob_error *error = NULL;
 
     // Get OpenOrbbecSDK version.
     int major_version = ob_get_major_version();

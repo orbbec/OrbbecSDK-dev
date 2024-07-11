@@ -48,6 +48,7 @@ static inline void removeDistortion(const OBCameraDistortion &distort_param, con
     const float epsilon       = 1e-6f;
     const int   max_iteration = 20;
     float       tmp_p_ud[2]   = { pt_d[0], pt_d[1] };
+    memset(pt_ud, 0, sizeof(float) * 2);
     addDistortion(distort_param, tmp_p_ud, pt_ud);
 
     pt_ud[0]  = pt_ud[0] - tmp_p_ud[0];
@@ -413,9 +414,9 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
                               int *map) {
 
     int       channel     = (gap_fill_copy_ ? 1 : 2);
-    float *   ptr_coeff_x = (float *)coeff_mat_x;
-    float *   ptr_coeff_y = (float *)coeff_mat_y;
-    float *   ptr_coeff_z = (float *)coeff_mat_z;
+    float    *ptr_coeff_x = (float *)coeff_mat_x;
+    float    *ptr_coeff_y = (float *)coeff_mat_y;
+    float    *ptr_coeff_z = (float *)coeff_mat_z;
     uint16_t *ptr_depth   = (uint16_t *)depth_buffer;
 
     for(int v = 0; v < depth_intric_.height; v += 1) {
@@ -444,8 +445,8 @@ void AlignImpl::D2CWithoutSSE(const uint16_t *depth_buffer, uint16_t *out_depth,
 
                 if(add_target_distortion_) {
                     float pt_ud[2] = { tx, ty };
-                    float pt_d[2];
-                    float r2_cur = pt_ud[0] * pt_ud[0] + pt_ud[1] * pt_ud[1];
+                    float pt_d[2]  = { 0 };
+                    float r2_cur   = pt_ud[0] * pt_ud[0] + pt_ud[1] * pt_ud[1];
                     if((OB_DISTORTION_BROWN_CONRADY_K6 == rgb_disto_.model) && (r2_max_loc_ != 0) && (r2_cur > r2_max_loc_)) {
                         continue;  // break;
                     }
@@ -493,11 +494,11 @@ void AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, co
                 // int coeff_idx = half_idx + fold * 2 * channel;
                 int    coeff_idx  = half_idx;
                 float  coeff_x[4] = { coeff_mat_x[coeff_idx + fold], coeff_mat_x[coeff_idx + 1 * channel + fold], coeff_mat_x[coeff_idx + 2 * channel + fold],
-                                     coeff_mat_x[coeff_idx + 3 * channel + fold] };
+                                      coeff_mat_x[coeff_idx + 3 * channel + fold] };
                 float  coeff_y[4] = { coeff_mat_y[coeff_idx + fold], coeff_mat_y[coeff_idx + 1 * channel + fold], coeff_mat_y[coeff_idx + 2 * channel + fold],
-                                     coeff_mat_y[coeff_idx + 3 * channel + fold] };
+                                      coeff_mat_y[coeff_idx + 3 * channel + fold] };
                 float  coeff_z[4] = { coeff_mat_z[coeff_idx + fold], coeff_mat_z[coeff_idx + 1 * channel + fold], coeff_mat_z[coeff_idx + 2 * channel + fold],
-                                     coeff_mat_z[coeff_idx + 3 * channel + fold] };
+                                      coeff_mat_z[coeff_idx + 3 * channel + fold] };
                 __m128 coeff_sse1 = _mm_loadu_ps(coeff_x);
                 __m128 coeff_sse2 = _mm_loadu_ps(coeff_y);
                 __m128 coeff_sse3 = _mm_loadu_ps(coeff_z);
@@ -603,7 +604,7 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
 
     // rgb x-y coordinates for each depth pixel
     unsigned long long size     = static_cast<unsigned long long>(depth_width) * depth_height * 2;
-    int *              depth_xy = new int[size];
+    int               *depth_xy = new int[size];
     memset(depth_xy, -1, size * sizeof(int));
 
     int ret = -1;

@@ -28,7 +28,7 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBa
 
     if(context_->create_context && !context_->context) {
         ob_device cDevice;
-        cDevice.device    = std::move(owner->shared_from_this());
+        cDevice.device    = owner->shared_from_this();
         ob_error *error   = nullptr;
         context_->context = context_->create_context(&cDevice, &error);
         if(error) {

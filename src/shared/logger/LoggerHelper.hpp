@@ -8,7 +8,16 @@ struct ObLogRecord {
 };
 
 #define LOG_FREQ_CALC_OBJECT_TAG std::string(__FILE__) + std::to_string(__LINE__) + std::to_string((uint64_t)this)
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#endif
+
 #define VA_ARGS(...) , ##__VA_ARGS__
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 // 统计调用频率，然后输出日志
 #define LOG_FREQ_CALC(level, duration, msg, ...)                                                                                           \
     do {                                                                                                                                   \

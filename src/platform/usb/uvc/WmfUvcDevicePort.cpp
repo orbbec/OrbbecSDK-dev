@@ -170,7 +170,7 @@ size_t try_read_metadata(IMFSample *pSample, UvcMetadata *metadata) {
 
 bool WmfUvcDevicePort::isConnected(std::shared_ptr<const USBSourcePortInfo> info) {
     auto result = false;
-    foreachUvcDevice([&](const UsbDeviceInfo &devInfo, IMFActivate *) {
+    foreachUvcDevice([&](const UsbInterfaceInfo &devInfo, IMFActivate *) {
         if(devInfo.infUrl == info->infUrl) {
             result = true;
         }
@@ -600,7 +600,7 @@ void WmfUvcDevicePort::foreachUvcDevice(const USBDeviceInfoEnumCallback &action)
             uint16_t    vid, pid, infIndex;
             std::string uid, guid;
             if(parse_usb_path_multiple_interface(vid, pid, infIndex, uid, symbolicLink, guid) && vid == ORBBEC_USB_VID) {
-                UsbDeviceInfo info;
+                UsbInterfaceInfo info;
                 // info.url = ""
                 info.uid      = uid;
                 info.vid      = vid;
@@ -632,7 +632,7 @@ WmfUvcDevicePort::WmfUvcDevicePort(std::shared_ptr<const USBSourcePortInfo> port
     })
     CATCH_EXCEPTION_AND_EXECUTE({ LOG_WARN("Accessing USB info failed for{0:x}:{1:x} , url:{2}", portInfo->vid, portInfo->pid, portInfo->url); })
 
-    foreachUvcDevice([&](const UsbDeviceInfo &devInfo, IMFActivate *device) {
+    foreachUvcDevice([&](const UsbInterfaceInfo &devInfo, IMFActivate *device) {
         if(devInfo.infUrl == portInfo->infUrl && device) {
             deviceId_.resize(DEVICE_ID_MAX_SIZE);
             CHECK_HR(device->GetString(did_guid, const_cast<LPWSTR>(deviceId_.c_str()), static_cast<UINT32>(deviceId_.size()), nullptr));

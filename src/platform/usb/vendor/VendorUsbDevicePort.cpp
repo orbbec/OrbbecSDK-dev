@@ -5,46 +5,31 @@
 #include <sstream>
 #include <algorithm>
 
-#ifdef __ANDROID__
-#include "usb/backend/DeviceLibusb.hpp"
-#include <libusb.h>
-#endif
-
 #include "utils/Utils.hpp"
+#include "exception/ObException.hpp"
 
 namespace libobsensor {
 
-
 VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
-    : portInfo_(portInfo), usbDev_(usbDevice) {
-    auto vendorIntf = usbDev_->getInterface(portInfo->infIndex);
-    if(!vendorIntf || vendorIntf->getClass() != OB_USB_CLASS_VENDOR_SPECIFIC) {
-        throw std::runtime_error("can't find VENDOR_SPECIFIC interface of device.");
-    }
-    usbMessenger_ = usbDev_->open(vendorIntf->getNumber());
-    if(usbMessenger_ == nullptr) {
-        throw std::runtime_error("failed to open usb");
-    }
-    bulkWriteEndpoint_ = vendorIntf->firstEndpoint(OB_USB_ENDPOINT_DIRECTION_WRITE);
-}
+    : portInfo_(portInfo), usbDev_(usbDevice) {}
 
 VendorUsbDevicePort::~VendorUsbDevicePort() noexcept = default;
 
-uint32_t VendorUsbDevicePort::sendAndReceive(const uint8_t* sendData, uint32_t sendLen, uint8_t* recvData, uint32_t exceptedRecvLen) {
+uint32_t VendorUsbDevicePort::sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) {
+    utils::unusedVar(sendData);
+    utils::unusedVar(sendLen);
+    utils::unusedVar(recvData);
+    utils::unusedVar(exceptedRecvLen);
     std::unique_lock<std::mutex> lock(mutex_);
-    uint32_t transferred = 0;
-    auto     sendBuf     = const_cast<uint8_t *>(sendData);
-    auto     ret         = usbMessenger_->controlTransfer(0x40, 0, 0, 0, sendBuf, sendLen, transferred, 5000);
-    if(ret != OB_USB_STATUS_SUCCESS) {
-        LOG_WARN("control transfer send data failed: {}", ret);
-        return 0;
-    }
-    ret = usbMessenger_->controlTransfer(0xc0, 0, 0, 0, recvData, exceptedRecvLen, transferred, 5000);
-    if(ret != OB_USB_STATUS_SUCCESS) {
-        LOG_WARN("control transfer recv data failed: {}", ret);
-        return 0;
-    }
-    return transferred;
+    return 0;
+    // auto                         sendBuf = const_cast<uint8_t *>(sendData);
+
+    // todo: implement vendor specific control transfer and handle exceptions
+
+    // auto transferred = libusb_control_transfer(usbDev_->devHandle.get(), 0x40, 0, 0, 0, sendBuf, sendLen, 5000);
+    // transferred      = libusb_control_transfer(usbDev_->devHandle.get(), 0xc0, 0, 0, 0, recvData, exceptedRecvLen, 5000);
+
+    // return transferred;
 }
 
 bool VendorUsbDevicePort::readFromBulkEndPoint(std::vector<uint8_t> &data) {
@@ -54,10 +39,9 @@ bool VendorUsbDevicePort::readFromBulkEndPoint(std::vector<uint8_t> &data) {
 }
 
 bool VendorUsbDevicePort::writeToBulkEndPoint(std::vector<uint8_t> &data) {
+    utils::unusedVar(data);
     std::unique_lock<std::mutex> lock(mutex_);
-    uint32_t transferred = 0;
-    auto     ret         = usbMessenger_->bulkTransfer(bulkWriteEndpoint_, data.data(), (uint32_t)data.size(), transferred, 5000);
-    return ret == OB_USB_STATUS_SUCCESS;
+    return false;
 }
 
 std::shared_ptr<const SourcePortInfo> VendorUsbDevicePort::getSourcePortInfo() const {
@@ -72,6 +56,5 @@ std::string VendorUsbDevicePort::getUsbConnectType() {
     return usb_spec_names.find(UsbSpec(desc.bcdUSB))->second;
 }
 #endif
-
 
 }  // namespace libobsensor

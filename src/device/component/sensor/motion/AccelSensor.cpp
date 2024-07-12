@@ -24,7 +24,6 @@ AccelSensor::AccelSensor(IDevice *owner, const std::shared_ptr<ISourcePort> &bac
     auto accelSampleRateList     = propAccessor->getStructureDataT<AccelSampleRateList>(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST);
     auto accelFullScaleRangeList = propAccessor->getStructureDataT<AccelFullScaleRangeList>(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST);
 
-
     auto lazySensor = std::make_shared<LazySensor>(owner, OB_SENSOR_ACCEL);
     for(uint32_t i = 0; i < accelSampleRateList.num; i++) {
         for(uint32_t j = 0; j < accelFullScaleRangeList.num; j++) {
@@ -70,6 +69,9 @@ void AccelSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
 
 void AccelSensor::stop() {
     updateStreamState(STREAM_STATE_STOPPING);
+    auto owner        = getOwner();
+    auto propAccessor = owner->getPropertyAccessor();
+    propAccessor->setPropertyValueT(OB_PROP_ACCEL_SWITCH_BOOL, false);
     streamer_->stop(activatedStreamProfile_);
     updateStreamState(STREAM_STATE_STOPED);
 }

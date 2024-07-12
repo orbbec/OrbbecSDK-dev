@@ -61,9 +61,9 @@ std::shared_ptr<ISourcePort> MacPal::createSourcePort(std::shared_ptr<const Sour
     switch(portInfo->portType) {
 #if defined(BUILD_USB_PORT)
     case SOURCE_PORT_USB_VENDOR: {
-        auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
+        auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         port = std::make_shared<VendorUsbDevicePort>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
         break;
@@ -71,18 +71,18 @@ std::shared_ptr<ISourcePort> MacPal::createSourcePort(std::shared_ptr<const Sour
     case SOURCE_PORT_USB_UVC: {
         auto usbPortInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo);
 
-        auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
+        auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         port = std::make_shared<ObLibuvcDevicePort>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
         break;
     }
     case SOURCE_PORT_USB_HID: {
         auto usbPortInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo);
-        auto usbDev      = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
+        auto usbDev      = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         port = std::make_shared<HidDevicePort>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
         break;
@@ -122,7 +122,7 @@ std::shared_ptr<DeviceWatcher> MacPal::createUsbDeviceWatcher() const {
 SourcePortInfoList MacPal::queryUsbSourcePort() {
     SourcePortInfoList portInfoList;
 
-    const auto &usbInfoList = usbEnumerator_->queryDevicesInfo();
+    const auto &usbInfoList = usbEnumerator_->queryUsbInterfaces();
     for(const auto &info: usbInfoList) {
         auto portInfo      = std::make_shared<USBSourcePortInfo>(cvtUsbClassToPortType(info.cls));
         portInfo->url      = info.url;
@@ -144,9 +144,9 @@ SourcePortInfoList MacPal::queryUsbSourcePort() {
 
 std::shared_ptr<ISourcePort> MacPal::createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     if(portInfo->portType == SOURCE_PORT_USB_VENDOR) {
-        auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
+        auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         return std::make_shared<OpenNIDevicePortLinux>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
     }
@@ -167,7 +167,7 @@ std::shared_ptr<ISourcePort> MacPal::createRawPhaseConverterDevicePort(RawPhaseC
             }
         }
 
-        auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
+        auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
             throw libobsensor::camera_disconnected_exception("usbEnumerator create UnpackDevicePort failed!");
         }
@@ -182,9 +182,9 @@ std::shared_ptr<ISourcePort> MacPal::createRawPhaseConverterDevicePort(RawPhaseC
 }
 
 std::shared_ptr<ISourcePort> MacPal::createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
-    auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
+    auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
     if(usbDev == nullptr) {
-        throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+        throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
     }
     return std::make_shared<ObMultiUvcDevice>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
 }

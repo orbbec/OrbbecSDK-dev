@@ -1,7 +1,7 @@
 #pragma once
 #include "ISourcePort.hpp"
-#include "usb/backend/Device.hpp"
-
+#include "usb/enumerator/UsbTypes.hpp"
+#include <mutex>
 namespace libobsensor {
 
 class VendorUsbDevicePort : public IVendorDataPort {
@@ -24,9 +24,6 @@ protected:
     std::mutex                               mutex_;
     std::shared_ptr<const USBSourcePortInfo> portInfo_;
     std::shared_ptr<UsbDevice>               usbDev_;
-
-    std::shared_ptr<UsbMessenger> usbMessenger_;
-    std::shared_ptr<UsbEndpoint>  bulkWriteEndpoint_;
 };
 
 }  // namespace libobsensor

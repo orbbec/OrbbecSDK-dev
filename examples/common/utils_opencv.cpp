@@ -5,7 +5,7 @@
 
 namespace ob_smpl {
 
-const std::string defaultKeyMapPrompt = "'1~5': Switch Arrange Mode, '+'/'-': Adjust Alpha, 'Esc': Exit Window, '?': Show Key Map";
+const std::string defaultKeyMapPrompt = "'Esc': Exit Window, '?': Show Key Map, '1~5': Switch Arrange Mode, '+'/'-': Adjust Alpha";
 CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeMode arrangeMode)
     : name_(std::move(name)),
       arrangeMode_(arrangeMode),

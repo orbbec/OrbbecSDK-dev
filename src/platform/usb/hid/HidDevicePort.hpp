@@ -3,10 +3,8 @@
 
 #pragma once
 #include "ISourcePort.hpp"
-#include "usb/backend/Enumerator.hpp"
-#include "usb/backend/Messenger.hpp"
-#include "usb/backend/Device.hpp"
 #include "frame/FrameQueue.hpp"
+#include "usb/enumerator/UsbTypes.hpp"
 
 namespace libobsensor {
 
@@ -19,19 +17,17 @@ public:
     void startStream(FrameCallbackUnsafe callback) override;
     void stopStream() override;
 
-     std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override;
+    std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override;
 
 private:
-    std::shared_ptr<const USBSourcePortInfo>      portInfo_;
-    std::shared_ptr<UsbDevice>                    usbDevice_ = nullptr;
-    std::mutex                                    messengerMutex_;
-    std::shared_ptr<UsbMessenger>                 messenger_;
-    obUsbRequest                                  interruptRequest_;
-    obUsbRequestCallback                          interruptCallback_;
-    std::shared_ptr<UsbEndpoint>                  readEndpoint_;
+    std::shared_ptr<const USBSourcePortInfo> portInfo_;
+    std::shared_ptr<UsbDevice>               usbDevice_;
+    libusb_endpoint_descriptor               endpoint_;
 
-    std::atomic_bool                              isStreaming_;
-    FrameQueue<Frame>                            frameQueue_;
+    std::atomic_bool  isStreaming_;
+    FrameQueue<Frame> frameQueue_;
+
+    std::thread streamThread_;
 };
 
 }  // namespace libobsensor

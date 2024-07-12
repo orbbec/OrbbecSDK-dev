@@ -73,6 +73,7 @@ DeviceManager::~DeviceManager() noexcept {
     if(multiDeviceSyncThread_.joinable()) {
         multiDeviceSyncThread_.join();
     }
+
     LOG_DEBUG("DeviceManager Destructors done");
 }
 

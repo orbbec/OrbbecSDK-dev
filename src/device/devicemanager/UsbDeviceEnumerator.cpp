@@ -48,7 +48,6 @@ UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal
 
 UsbDeviceEnumerator::~UsbDeviceEnumerator() noexcept {
     destroy_ = true;
-    obPal_   = nullptr;
 
     newUsbPortArrivalCV_.notify_all();
     if(deviceArrivalHandleThread_.joinable()) {
@@ -58,6 +57,8 @@ UsbDeviceEnumerator::~UsbDeviceEnumerator() noexcept {
     if(devChangedCallbackThread_.joinable()) {
         devChangedCallbackThread_.join();
     }
+    deviceWatcher_.reset();  // deviceWatcher should be released before obPal_
+    obPal_.reset();
 }
 
 void UsbDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {

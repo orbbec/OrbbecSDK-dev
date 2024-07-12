@@ -6,8 +6,7 @@
 #define NOMINMAX
 #endif
 
-#include "usb/backend/UsbTypes.hpp"
-
+#include "usb/enumerator/UsbTypes.hpp"
 
 #include <string>
 #include <vector>

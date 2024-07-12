@@ -55,8 +55,8 @@ void GyroSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback ca
     auto propAccessor = owner->getPropertyAccessor();
 
     auto gyroSp = sp->as<GyroStreamProfile>();
-    propAccessor->setPropertyValueT(OB_PROP_GYRO_ODR_INT, static_cast<int>( gyroSp->getSampleRate()));
-    propAccessor->setPropertyValueT(OB_PROP_GYRO_FULL_SCALE_INT,   static_cast<int>(gyroSp->getFullScaleRange()) );
+    propAccessor->setPropertyValueT(OB_PROP_GYRO_ODR_INT, static_cast<int>(gyroSp->getSampleRate()));
+    propAccessor->setPropertyValueT(OB_PROP_GYRO_FULL_SCALE_INT, static_cast<int>(gyroSp->getFullScaleRange()));
     propAccessor->setPropertyValueT(OB_PROP_GYRO_SWITCH_BOOL, true);
 
     streamer_->start(sp, [this](std::shared_ptr<const Frame> frame) {
@@ -69,6 +69,9 @@ void GyroSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback ca
 
 void GyroSensor::stop() {
     updateStreamState(STREAM_STATE_STOPPING);
+    auto owner        = getOwner();
+    auto propAccessor = owner->getPropertyAccessor();
+    propAccessor->setPropertyValueT(OB_PROP_GYRO_SWITCH_BOOL, false);
     streamer_->stop(activatedStreamProfile_);
     updateStreamState(STREAM_STATE_STOPED);
 }

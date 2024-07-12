@@ -6,8 +6,8 @@
 
 #include "libobsensor/h/ObTypes.h"
 #include "ObPal.hpp"
-#include "usb/backend/Enumerator.hpp"
-#include "usb/backend/UsbTypes.hpp"
+#include "usb/enumerator/Enumerator.hpp"
+#include "usb/enumerator/UsbTypes.hpp"
 #include "UvcDevicePort.hpp"
 #include "stream/StreamProfile.hpp"
 
@@ -48,7 +48,7 @@ struct StreamObject {
     FrameCallbackUnsafe                       callback = nullptr;
 };
 
-typedef std::function<void(const UsbDeviceInfo &, IMFActivate *)> USBDeviceInfoEnumCallback;
+typedef std::function<void(const UsbInterfaceInfo &, IMFActivate *)> USBDeviceInfoEnumCallback;
 
 typedef struct FrameRate {
     unsigned int denominator;

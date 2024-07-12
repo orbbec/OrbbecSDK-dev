@@ -52,7 +52,9 @@ public:
     uint64_t       getNumber() const;
     void           setNumber(const uint64_t number);
     size_t         getDataSize() const;
+    void           setDataSize(size_t dataSize);
     const uint8_t *getData() const;
+    uint8_t       *getDataMutable() const;
     void           updateData(const uint8_t *data, size_t dataSize);
     uint64_t       getTimeStampUsec() const;
     void           setTimeStampUsec(uint64_t ts);
@@ -66,7 +68,7 @@ public:
     void           appendMetadata(const uint8_t *metadata, size_t metadataSize);
     const uint8_t *getMetadata() const;
 
-    uint8_t *getMetadataUnsafe() const;  // use with caution, metadata may be changed while other threads are using it
+    uint8_t *getMetadataMutable() const;  // use with caution, metadata may be changed while other threads are using it
     void     setMetadataSize(size_t metadataSize);
 
     void    registerMetadataParsers(std::shared_ptr<IFrameMetadataParserContainer> parsers);

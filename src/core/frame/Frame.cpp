@@ -30,8 +30,7 @@ Frame::Frame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferRec
       dataBufSize_(dataBufSize),
       bufferReclaimFunc_(bufferReclaimFunc) {}
 
-Frame::Frame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc) : Frame(data,dataBufSize,OB_FRAME_UNKNOWN,bufferReclaimFunc) {}
-
+Frame::Frame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc) : Frame(data, dataBufSize, OB_FRAME_UNKNOWN, bufferReclaimFunc) {}
 
 Frame::~Frame() noexcept {
     if(bufferReclaimFunc_) {
@@ -65,8 +64,16 @@ size_t Frame::getDataSize() const {
     return dataSize_;
 }
 
+void Frame::setDataSize(size_t dataSize) {
+    dataSize_ = dataSize;
+}
+
 const uint8_t *Frame::getData() const {
     return frameData_;
+}
+
+uint8_t *Frame::getDataMutable() const {
+    return const_cast<uint8_t *>(frameData_);
 }
 
 void Frame::updateData(const uint8_t *data, size_t dataSize) {
@@ -180,7 +187,7 @@ const uint8_t *Frame::getMetadata() const {
     return metadata_;
 }
 
-uint8_t *Frame::getMetadataUnsafe() const {
+uint8_t *Frame::getMetadataMutable() const {
     return const_cast<uint8_t *>(metadata_);
 }
 

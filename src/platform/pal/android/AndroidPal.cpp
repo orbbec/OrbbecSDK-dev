@@ -60,7 +60,7 @@ std::shared_ptr<ISourcePort> AndroidPal::createSourcePort(std::shared_ptr<const 
     case SOURCE_PORT_USB_VENDOR: {
         auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         port = std::make_shared<VendorUsbDevicePort>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
         break;
@@ -68,7 +68,7 @@ std::shared_ptr<ISourcePort> AndroidPal::createSourcePort(std::shared_ptr<const 
     case SOURCE_PORT_USB_UVC: {
         auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         port = std::make_shared<ObLibuvcDevicePort>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
         break;
@@ -76,7 +76,7 @@ std::shared_ptr<ISourcePort> AndroidPal::createSourcePort(std::shared_ptr<const 
     case SOURCE_PORT_USB_HID: {
         auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         port = std::make_shared<HidDevicePort>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
         break;
@@ -136,7 +136,7 @@ std::shared_ptr<ISourcePort> AndroidPal::createOpenNIDevicePort(std::shared_ptr<
     if(portInfo->portType == SOURCE_PORT_USB_VENDOR) {
         auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         return std::make_shared<OpenNIDevicePortLinux>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
     }
@@ -173,7 +173,7 @@ std::shared_ptr<ISourcePort> AndroidPal::createRawPhaseConverterDevicePort(RawPh
 std::shared_ptr<ISourcePort> AndroidPal::createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
     if(usbDev == nullptr) {
-        throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+        throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
     }
     return std::make_shared<ObMultiUvcDevice>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
 }

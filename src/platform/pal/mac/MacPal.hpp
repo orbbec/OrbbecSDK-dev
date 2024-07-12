@@ -12,7 +12,7 @@
 #include "exception/ObException.hpp"
 
 #if defined(BUILD_USB_PORT)
-#include "usb/backend/Enumerator.hpp"
+#include "usb/enumerator/Enumerator.hpp"
 #include <libusb.h>
 #endif
 namespace libobsensor {

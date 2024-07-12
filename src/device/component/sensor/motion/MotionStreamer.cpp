@@ -157,15 +157,16 @@ void MotionStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
         }
 
         uint64_t timestamp = ((uint64_t)imuData->timestamp[0] | ((uint64_t)imuData->timestamp[1] << 32));
+        auto     frameIndex = frameIndex_++;
         if(accelFrame) {
-            accelFrame->setNumber(frameIndex_++);
+            accelFrame->setNumber(frameIndex);
             accelFrame->setTimeStampUsec(timestamp);
             accelFrame->setSystemTimeStampUsec(nowTimeUs);
             frameSet->pushFrame(accelFrame);
         }
 
         if(gyroFrame) {
-            gyroFrame->setNumber(frameIndex_++);
+            gyroFrame->setNumber(frameIndex);
             gyroFrame->setTimeStampUsec(timestamp);
             gyroFrame->setSystemTimeStampUsec(nowTimeUs);
             frameSet->pushFrame(gyroFrame);

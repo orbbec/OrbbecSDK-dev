@@ -5,9 +5,6 @@
 #include <sys/mman.h>
 
 #include "UvcDevicePort.hpp"
-#include "usb/backend/Enumerator.hpp"
-#include "usb/backend/Messenger.hpp"
-#include "usb/backend/Device.hpp"
 #include "stream/StreamProfile.hpp"
 
 #include <linux/uvcvideo.h>

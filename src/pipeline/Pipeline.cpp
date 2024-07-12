@@ -193,8 +193,8 @@ void Pipeline::start(std::shared_ptr<const Config> cfg) {
     else {
         LOG_DEBUG("start pipeline with default config");
         auto defConfig = std::make_shared<Config>();
-        defConfig->enableStream(OB_STREAM_COLOR);
         defConfig->enableStream(OB_STREAM_DEPTH);
+        defConfig->enableStream(OB_STREAM_COLOR);
         config_ = checkAndSetConfig(defConfig);
     }
 
@@ -284,7 +284,6 @@ std::shared_ptr<const Frame> Pipeline::waitForFrame(uint32_t timeout_ms) {
 }
 
 void Pipeline::stopStream() {
-    // Femto设备内RGB-TOF主从模式时，关流顺序和开流顺序相反
     LOG_INFO("Try to stop streams!");
     if(!config_) {
         LOG_WARN("The config is null!");

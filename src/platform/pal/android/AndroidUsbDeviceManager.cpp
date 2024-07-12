@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "core/Context.hpp"
-#include "usb/backend/DeviceLibusb.hpp"
+#include "usb/enumerator/DeviceLibusb.hpp"
 #include "pal/android/AndroidPal.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
@@ -67,7 +67,7 @@ AndroidUsbDeviceManager::~AndroidUsbDeviceManager() {
     LOG_INFO("Destroyed");
 }
 
-void AndroidUsbDeviceManager::onDeviceChanged(OBDeviceChangedType changedType, const UsbDeviceInfo &usbDevInfo) {
+void AndroidUsbDeviceManager::onDeviceChanged(OBDeviceChangedType changedType, const UsbInterfaceInfo &usbDevInfo) {
     std::lock_guard<std::recursive_mutex> lk(mutex_);
     LOG_DEBUG("AndroidUsbDeviceManager::notify");
     if(changedType == OB_DEVICE_ARRIVAL) {
@@ -76,7 +76,7 @@ void AndroidUsbDeviceManager::onDeviceChanged(OBDeviceChangedType changedType, c
     }
     else {
         LOG_DEBUG("Device Removed event occurred");
-        auto tarDevIter = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [=](const UsbDeviceInfo &devInfoItem) {
+        auto tarDevIter = std::find_if(deviceInfoList_.begin(), deviceInfoList_.end(), [=](const UsbInterfaceInfo &devInfoItem) {
             //
             return devInfoItem == usbDevInfo;
         });
@@ -90,7 +90,7 @@ void AndroidUsbDeviceManager::onDeviceChanged(OBDeviceChangedType changedType, c
     }
 }
 
-std::vector<UsbDeviceInfo> AndroidUsbDeviceManager::getDeviceInfoList() {
+std::vector<UsbInterfaceInfo> AndroidUsbDeviceManager::getDeviceInfoList() {
     std::lock_guard<std::recursive_mutex> lk(mutex_);
     return deviceInfoList_;
 }
@@ -227,7 +227,7 @@ void AndroidUsbDeviceManager::registerDeviceWatcher(JNIEnv *env, jclass typeDevi
 }
 
 void AndroidUsbDeviceManager::addUsbDevice(JNIEnv *env, jobject usbDevInfo) {
-    libobsensor::UsbDeviceInfo usbDeviceInfo;
+    libobsensor::UsbInterfaceInfo   usbDeviceInfo;
     jclass                          jcUsbDevInfo = env->GetObjectClass(usbDevInfo);
     jfieldID                        jfUid        = env->GetFieldID(jcUsbDevInfo, "mUid", "I");
     jfieldID                        jfVid        = env->GetFieldID(jcUsbDevInfo, "mVid", "I");
@@ -254,7 +254,7 @@ void AndroidUsbDeviceManager::addUsbDevice(JNIEnv *env, jobject usbDevInfo) {
 }
 
 void AndroidUsbDeviceManager::removeUsbDevice(JNIEnv *env, jobject usbDevInfo) {
-    libobsensor::UsbDeviceInfo usbDeviceInfo;
+    libobsensor::UsbInterfaceInfo   usbDeviceInfo;
     jclass                          jcUsbDevInfo = env->GetObjectClass(usbDevInfo);
     jfieldID                        jfUid        = env->GetFieldID(jcUsbDevInfo, "mUid", "I");
     jfieldID                        jfVid        = env->GetFieldID(jcUsbDevInfo, "mVid", "I");
@@ -311,7 +311,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nRegist
 /*
  * Class:     com_orbbec_internal_DeviceWatcher
  * Method:    nAddUsbDevice
- * Signature: (Lcom/orbbec/internal/UsbDeviceInfo;)V
+ * Signature: (Lcom/orbbec/internal/UsbInterfaceInfo;)V
  */
 extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nAddUsbDevice(JNIEnv *env, jobject jDeviceWatcher, jobject usbDevInfo) {
     jclass   clsDeviceWatcher  = env->GetObjectClass(jDeviceWatcher);
@@ -333,7 +333,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nAddUsb
 /*
  * Class:     com_orbbec_internal_DeviceWatcher
  * Method:    nRemoveUsbDevice
- * Signature: (Lcom/orbbec/internal/UsbDeviceInfo;)V
+ * Signature: (Lcom/orbbec/internal/UsbInterfaceInfo;)V
  */
 extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nRemoveUsbDevice(JNIEnv *env, jobject jDeviceWatcher, jobject usbDevInfo) {
     jclass   clsDeviceWatcher  = env->GetObjectClass(jDeviceWatcher);

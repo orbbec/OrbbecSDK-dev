@@ -5,17 +5,15 @@
 #include "UvcTypes.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
+#include "utils/Utils.hpp"
 #include "utils/PublicTypeHelper.hpp"
 #include "frame/FrameFactory.hpp"
 #include "stream/StreamProfileFactory.hpp"
-
-#include "usb/backend/DeviceLibusb.hpp"
 #include "stream/StreamProfile.hpp"
+
 #include <utlist.h>
 #include <libuvc/libuvc_internal.h>
 #include <algorithm>
-#include <utils/Utils.hpp>
-#include <utils/PublicTypeHelper.hpp>
 
 #define UVC_AE_MODE_D0_MANUAL (1 << 0)
 #define UVC_AE_MODE_D1_AUTO (1 << 1)
@@ -54,16 +52,14 @@ uvc_frame_format fourCC2UvcFormat(int32_t fourccCode) {
 
 ObLibuvcDevicePort::ObLibuvcDevicePort(std::shared_ptr<UsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo)
     : usbDev_(usbDev), portInfo_(portInfo) {
-    auto libusbDev = std::static_pointer_cast<UsbDeviceLibusb>(usbDev_);
 
-    uvc_init(&uvcCtx_, libusbDev->getContext());
+    uvc_init(&uvcCtx_, usbDev->context);
     uvcDev_          = (uvc_device_t *)malloc(sizeof(*uvcDev_));
     uvcDev_->ctx     = uvcCtx_;
     uvcDev_->ref     = 0;
-    uvcDev_->usb_dev = libusbDev->getDevice();
-    usbDevH_         = libusbDev->getDeviceHandle();
+    uvcDev_->usb_dev = libusb_get_device(usbDev->devHandle.get());
 
-    auto res = uvc_open(uvcDev_, portInfo->infIndex, &devHandle_, usbDevH_);
+    auto res = uvc_open(uvcDev_, portInfo->infIndex, &uvcDevHandle_, usbDev->devHandle.get());
     if(res < 0) {
         LOG_WARN("uvc_open  path={} already opened", portInfo->infUrl);
         std::stringstream ss;
@@ -81,7 +77,7 @@ ObLibuvcDevicePort::~ObLibuvcDevicePort() noexcept {
     stopAllStream();
 
     // free(uvcDev_); // free in uvc_exit()
-    uvc_close(devHandle_);
+    uvc_close(uvcDevHandle_);
     uvc_exit(uvcCtx_);
 
     LOG_INFO("uvc_close done.");
@@ -113,10 +109,10 @@ void ObLibuvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profil
         throw std::runtime_error("Failed to find supported format!");
     }
 
-    // libusb_clear_halt(devHandle_->usb_devh, selectedUvcProfile.endpointAddress);
+    // libusb_clear_halt(uvcDevHandle_->usb_devh, selectedUvcProfile.endpointAddress);
 
     uvc_stream_ctrl_t ctrl;
-    auto              res = uvc_get_stream_ctrl_format_size(devHandle_, &ctrl, fourCC2UvcFormat(selectedUvcProfile.fourcc), videoProfile->getWidth(),
+    auto              res = uvc_get_stream_ctrl_format_size(uvcDevHandle_, &ctrl, fourCC2UvcFormat(selectedUvcProfile.fourcc), videoProfile->getWidth(),
                                                             videoProfile->getHeight(), videoProfile->getFps());
     if(res < 0) {
         LOG_ERROR("uvc_get_stream_ctrl_format_size failed!");
@@ -124,7 +120,7 @@ void ObLibuvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profil
     }
 
     uvc_stream_handle_t *uvcStreamHandle = nullptr;
-    uvc_error_t          ret             = uvc_stream_open_ctrl(devHandle_, &uvcStreamHandle, &ctrl);
+    uvc_error_t          ret             = uvc_stream_open_ctrl(uvcDevHandle_, &uvcStreamHandle, &ctrl);
     if(ret != UVC_SUCCESS) {
         throw std::runtime_error("uvc_stream_open_ctrl failed!");
     }
@@ -182,13 +178,13 @@ void ObLibuvcDevicePort::stopStream(std::shared_ptr<const StreamProfile> profile
     uvc_stream_handle_t *uvcStreamHandle = (*it)->streamHandle;
     auto                 endpointAddr    = uvcStreamHandle->stream_if->bEndpointAddress;
 #ifdef OS_MACOS
-    libusb_clear_halt(devHandle_->usb_devh, endpointAddr);
+    libusb_clear_halt(uvcDevHandle_->usb_devh, endpointAddr);
 #endif
     uvc_stream_stop(uvcStreamHandle);
     uvc_stream_close(uvcStreamHandle);
 
 #ifndef OS_MACOS
-    libusb_clear_halt(devHandle_->usb_devh, endpointAddr);
+    libusb_clear_halt(uvcDevHandle_->usb_devh, endpointAddr);
 #endif
 
     streamHandles_.erase(it);
@@ -205,7 +201,7 @@ void ObLibuvcDevicePort::stopAllStream() {
         auto                 endpointAddr    = uvcStreamHandle->stream_if->bEndpointAddress;
         uvc_stream_stop(uvcStreamHandle);
         uvc_stream_close(uvcStreamHandle);
-        auto ret = libusb_clear_halt(devHandle_->usb_devh, endpointAddr);
+        auto ret = libusb_clear_halt(uvcDevHandle_->usb_devh, endpointAddr);
         if(ret != LIBUSB_SUCCESS) {
             LOG_ERROR("libusb_clear_halt failed, error code={}", ret);
         }
@@ -215,7 +211,7 @@ void ObLibuvcDevicePort::stopAllStream() {
 }
 
 bool ObLibuvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {
-    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    std::lock_guard<std::recursive_mutex> lock(ctrlMutex_);
     int                                   unit    = 0;
     int                                   control = obPropToUvcCS(static_cast<OBPropertyID>(propertyId), unit);
     value                                         = getCtrl(UVC_GET_CUR, control, unit);
@@ -225,7 +221,7 @@ bool ObLibuvcDevicePort::getPu(uint32_t propertyId, int32_t &value) {
 }
 
 bool ObLibuvcDevicePort::setPu(uint32_t propertyId, int32_t value) {
-    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    std::lock_guard<std::recursive_mutex> lock(ctrlMutex_);
     int                                   unit;
     int                                   control = obPropToUvcCS(static_cast<OBPropertyID>(propertyId), unit);
     value                                         = uvcCtrlValueTranslate(UVC_SET_CUR, static_cast<OBPropertyID>(propertyId), value);
@@ -235,7 +231,7 @@ bool ObLibuvcDevicePort::setPu(uint32_t propertyId, int32_t value) {
 }
 
 UvcControlRange ObLibuvcDevicePort::getPuRange(uint32_t propertyId) {
-    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    std::lock_guard<std::recursive_mutex> lock(ctrlMutex_);
     int                                   unit = 0;
     int                                   min, max, step, def;
 
@@ -275,8 +271,8 @@ UvcControlRange ObLibuvcDevicePort::getPuRange(uint32_t propertyId) {
 }
 
 bool ObLibuvcDevicePort::setXu(uint8_t ctrl, const uint8_t *data, uint32_t len) {
-    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
-    auto                                  recv = uvc_set_ctrl(devHandle_, xuUnit_.unit, ctrl, const_cast<uint8_t *>(data), len);
+    std::lock_guard<std::recursive_mutex> lock(ctrlMutex_);
+    auto                                  recv = uvc_set_ctrl(uvcDevHandle_, xuUnit_.unit, ctrl, const_cast<uint8_t *>(data), len);
     if(recv <= 0) {
         LOG_ERROR("setXu failed, error code={}", recv);
         return false;
@@ -285,7 +281,7 @@ bool ObLibuvcDevicePort::setXu(uint8_t ctrl, const uint8_t *data, uint32_t len) 
 }
 
 bool ObLibuvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {
-    std::lock_guard<std::recursive_mutex> lock(ctrlTransferMutex_);
+    std::lock_guard<std::recursive_mutex> lock(ctrlMutex_);
     switch((ObVendorXuCtrlId)ctrl) {
     case OB_VENDOR_XU_CTRL_ID_512:
         *len = 512;
@@ -300,7 +296,7 @@ bool ObLibuvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {
     default:
         return false;
     }
-    int recv = uvc_get_ctrl(devHandle_, xuUnit_.unit, ctrl, data, *len, UVC_GET_CUR);
+    int recv = uvc_get_ctrl(uvcDevHandle_, xuUnit_.unit, ctrl, data, *len, UVC_GET_CUR);
     *len     = recv;
     if(recv <= 0) {
         LOG_ERROR("getXu failed, error code={}", recv);
@@ -310,6 +306,8 @@ bool ObLibuvcDevicePort::getXu(uint8_t ctrl, uint8_t *data, uint32_t *len) {
 }
 
 uint32_t ObLibuvcDevicePort::sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) {
+    std::lock_guard<std::recursive_mutex> lock(ctrlMutex_);
+
     uint8_t ctrl = OB_VENDOR_XU_CTRL_ID_64;
 
     auto alignDataLen = sendLen;
@@ -371,7 +369,7 @@ int32_t ObLibuvcDevicePort::uvcCtrlValueTranslate(uvc_req_code action, OBPropert
     switch(action) {
     case UVC_GET_CUR:  // Translating from UVC 1.5 Spec up to RS
         if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL) {
-            auto res = getCtrl(UVC_GET_RES, UVC_CT_AE_MODE_CONTROL, uvc_get_input_terminals(devHandle_)->bTerminalID);
+            auto res = getCtrl(UVC_GET_RES, UVC_CT_AE_MODE_CONTROL, uvc_get_input_terminals(uvcDevHandle_)->bTerminalID);
             LOG_DEBUG("UVC_GET_CUR:getAERes:{}.", res);
             if(res & UVC_AE_MODE_D0_MANUAL) {
                 translated_value = (value == UVC_AE_MODE_D0_MANUAL) ? 0 : 1;
@@ -389,7 +387,7 @@ int32_t ObLibuvcDevicePort::uvcCtrlValueTranslate(uvc_req_code action, OBPropert
 
     case UVC_SET_CUR:  // Translating from RS down to UVC 1.5 Spec
         if(propertyId == OB_PROP_COLOR_AUTO_EXPOSURE_BOOL) {
-            auto res = getCtrl(UVC_GET_RES, UVC_CT_AE_MODE_CONTROL, uvc_get_input_terminals(devHandle_)->bTerminalID);
+            auto res = getCtrl(UVC_GET_RES, UVC_CT_AE_MODE_CONTROL, uvc_get_input_terminals(uvcDevHandle_)->bTerminalID);
             LOG_DEBUG("UVC_SET_CUR: getAERes:{}.", res);
             if(res & UVC_AE_MODE_D0_MANUAL) {
                 auto autoValue   = (res & (~UVC_AE_MODE_D0_MANUAL));
@@ -463,7 +461,7 @@ int32_t ObLibuvcDevicePort::getCtrl(uvc_req_code action, uint8_t control, uint8_
 
     uint32_t transferred;
 
-    transferred = uvc_get_ctrl(devHandle_, unit, control, buffer, sizeof(buffer), action);
+    transferred = uvc_get_ctrl(uvcDevHandle_, unit, control, buffer, sizeof(buffer), action);
 
     if(control == UVC_PU_BRIGHTNESS_CONTROL || control == UVC_PU_HUE_CONTROL) {
         ret = (short)SW_TO_SHORT(buffer);
@@ -489,7 +487,7 @@ int32_t ObLibuvcDevicePort::getCtrl(uvc_req_code action, uint8_t control, uint8_
 
 int ObLibuvcDevicePort::obPropToUvcCS(OBPropertyID propertyId, int &unit) const {
 
-    unit = uvc_get_processing_units(devHandle_)->bUnitID;
+    unit = uvc_get_processing_units(uvcDevHandle_)->bUnitID;
 
     switch(propertyId) {
     case OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT:
@@ -499,7 +497,7 @@ int ObLibuvcDevicePort::obPropToUvcCS(OBPropertyID propertyId, int &unit) const 
     case OB_PROP_COLOR_CONTRAST_INT:
         return UVC_PU_CONTRAST_CONTROL;
     case OB_PROP_COLOR_EXPOSURE_INT:
-        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        unit = uvc_get_input_terminals(uvcDevHandle_)->bTerminalID;
         return UVC_CT_EXPOSURE_TIME_ABSOLUTE_CONTROL;
     case OB_PROP_COLOR_GAIN_INT:
         return UVC_PU_GAIN_CONTROL;
@@ -514,20 +512,20 @@ int ObLibuvcDevicePort::obPropToUvcCS(OBPropertyID propertyId, int &unit) const 
     case OB_PROP_COLOR_WHITE_BALANCE_INT:
         return UVC_PU_WHITE_BALANCE_TEMPERATURE_CONTROL;
     case OB_PROP_COLOR_AUTO_EXPOSURE_BOOL:
-        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        unit = uvc_get_input_terminals(uvcDevHandle_)->bTerminalID;
         return UVC_CT_AE_MODE_CONTROL;  // Automatic gain/exposure control
     case OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL:
         return UVC_PU_WHITE_BALANCE_TEMPERATURE_AUTO_CONTROL;
     case OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT:
         return UVC_PU_POWER_LINE_FREQUENCY_CONTROL;
     case OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT:
-        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        unit = uvc_get_input_terminals(uvcDevHandle_)->bTerminalID;
         return UVC_CT_AE_PRIORITY_CONTROL;
     case OB_PROP_COLOR_ROLL_INT:
-        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        unit = uvc_get_input_terminals(uvcDevHandle_)->bTerminalID;
         return UVC_CT_ROLL_ABSOLUTE_CONTROL;
     case OB_PROP_COLOR_FOCUS_INT:
-        unit = uvc_get_input_terminals(devHandle_)->bTerminalID;
+        unit = uvc_get_input_terminals(uvcDevHandle_)->bTerminalID;
         return UVC_CT_FOCUS_ABSOLUTE_CONTROL;
     default:
         throw linux_pal_exception(utils::string::to_string() << "invalid propertyId : " << propertyId);
@@ -540,7 +538,7 @@ void ObLibuvcDevicePort::setCtrl(uvc_req_code action, uint8_t control, uint8_t u
     INT_TO_DW(value, buffer);
 
     uint32_t transferred;
-    transferred = uvc_set_ctrl(devHandle_, unit, control, buffer, sizeof(int32_t));
+    transferred = uvc_set_ctrl(uvcDevHandle_, unit, control, buffer, sizeof(int32_t));
     (void)transferred;
 }
 
@@ -548,7 +546,7 @@ std::vector<ObLibuvcDevicePort::uvcProfile> ObLibuvcDevicePort::queryAvailableUv
     std::vector<uvcProfile> rv;
 
     uvc_streaming_interface_t *stream_if;
-    DL_FOREACH(devHandle_->info->stream_ifs, stream_if) {
+    DL_FOREACH(uvcDevHandle_->info->stream_ifs, stream_if) {
         uvc_format_desc_t *fmt_desc;
         // LOG(INFO)<<"stream_if.interfaceNumber ="<<(int)(stream_if->bInterfaceNumber);
 

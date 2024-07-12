@@ -2,7 +2,7 @@
 
 #include "ISourcePort.hpp"
 #include "UvcTypes.hpp"
-#include "usb/backend/UsbTypes.hpp"
+#include "usb/enumerator/UsbTypes.hpp"
 #include "libobsensor/h/Property.h"
 
 namespace libobsensor {

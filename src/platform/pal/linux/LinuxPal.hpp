@@ -6,14 +6,15 @@
 #include "ObPal.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
-#include <iostream>
-#include <vector>
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 
+#include <iostream>
+#include <vector>
+#include <map>
+
 #if defined(BUILD_USB_PORT)
-#include "usb/backend/Enumerator.hpp"
-#include <libusb.h>
+#include "usb/enumerator/Enumerator.hpp"
 #endif
 namespace libobsensor {
 
@@ -77,6 +78,7 @@ public:
             LOG_WARN("register libusb hotplug failed!");
         }
     }
+
     void stop() override {
         libusb_hotplug_deregister_callback(NULL, hp[0]);
         libusb_hotplug_deregister_callback(NULL, hp[1]);

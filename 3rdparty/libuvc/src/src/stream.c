@@ -1342,9 +1342,9 @@ void _uvc_populate_frame(uvc_stream_handle_t *strmh) {
         frame->payload_header_bytes = strmh->payload_header_hold_bytes;
         memcpy(frame->payload_header, strmh->payload_header_holdbuf, frame->payload_header_bytes);
     }
-    else {
-        printf("strmh->payload_header_hold_bytes is invalid,size:%ld\n", strmh->payload_header_hold_bytes);
-    }
+    // else {
+    //     printf("strmh->payload_header_hold_bytes is invalid,size:%ld\n", strmh->payload_header_hold_bytes);
+    // }
 }
 
 /** Poll for a frame

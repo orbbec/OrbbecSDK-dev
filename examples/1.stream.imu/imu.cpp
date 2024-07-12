@@ -43,6 +43,9 @@ int main() try {
             break;
         }
         auto frameSet = pipe.waitForFrameset();
+        if(frameSet == nullptr) {
+            continue;
+        }
 
         auto accelFrameRaw    = frameSet->getFrame(OB_FRAME_ACCEL);
         auto accelFrame       = accelFrameRaw->as<ob::AccelFrame>();

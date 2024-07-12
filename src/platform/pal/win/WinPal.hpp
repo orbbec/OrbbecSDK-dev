@@ -6,7 +6,7 @@
 #include <Windows.h>
 #include <map>
 
-#include "usb/backend/Enumerator.hpp"
+#include "usb/enumerator/Enumerator.hpp"
 
 namespace libobsensor {
 

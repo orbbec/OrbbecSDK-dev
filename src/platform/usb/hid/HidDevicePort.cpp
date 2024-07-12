@@ -5,64 +5,32 @@
 
 #include "frame/FrameFactory.hpp"
 #include "logger/Logger.hpp"
+#include "logger/LoggerInterval.hpp"
 #include "utils/Utils.hpp"
+#include "usb/enumerator/Enumerator.hpp"
 
 namespace libobsensor {
 HidDevicePort::HidDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
     : portInfo_(portInfo), usbDevice_(usbDevice), isStreaming_(false), frameQueue_(10) {
-    LOG_DEBUG("obHid Device open info_.infIndex={}", static_cast<uint32_t>(portInfo_->infIndex));
-
-    auto intf = usbDevice_->getInterface(portInfo_->infIndex);
-    if(!intf) {
-        LOG_ERROR("interface not found!");
-        return;
-    }
-
-    readEndpoint_ = intf->firstEndpoint(OB_USB_ENDPOINT_DIRECTION_READ, OB_USB_ENDPOINT_INTERRUPT);
-    if(!readEndpoint_) {
-        LOG_ERROR("read endpoint not found!");
-        return;
-    }
-
-    messenger_ = usbDevice_->open(portInfo_->infIndex);
-    if(!messenger_) {
-        LOG_ERROR("open hid device failed!");
-        return;
-    }
-
-    interruptCallback_ = std::make_shared<UsbRequestCallback>([&](obUsbRequest response) {
-        if(isStreaming_) {
-            auto datasize = response->getActualLength();
-            if(response->getActualLength() > 0) {
-                auto frame = FrameFactory::createFrame(OB_FRAME_UNKNOWN, OB_FORMAT_UNKNOWN, datasize);
-                frame->updateData(response->getBuffer().data(), datasize);
-                frameQueue_.enqueue(frame);
-            }
-            std::unique_lock<std::mutex> lock(messengerMutex_);
-            messenger_->submitRequest(interruptRequest_);
+    endpoint_ = UsbEnumerator::getEndpointAddress(usbDevice, portInfo->infIndex, LIBUSB_ENDPOINT_TRANSFER_TYPE_INTERRUPT, LIBUSB_ENDPOINT_IN);
+    if(libusb_kernel_driver_active(usbDevice->devHandle.get(), portInfo->infIndex) == 1) {
+        auto res = libusb_detach_kernel_driver(usbDevice->devHandle.get(), portInfo->infIndex);
+        if(res != LIBUSB_SUCCESS) {
+            throw io_exception("detach kernel driver failed, error: " + std::string(libusb_strerror(res)));
         }
-    });
-
-    std::unique_lock<std::mutex> lock(messengerMutex_);
-    interruptRequest_ = messenger_->createRequest(readEndpoint_);
-    interruptRequest_->setBuffer(std::vector<uint8_t>(readEndpoint_->getMaxPacketSize()));
-    interruptRequest_->setCallback(interruptCallback_);
+    }
+    auto res = libusb_claim_interface(usbDevice->devHandle.get(), portInfo->infIndex);
+    if(res != LIBUSB_SUCCESS) {
+        throw io_exception("claim interface failed, error: " + std::string(libusb_strerror(res)));
+    }
+    LOG_DEBUG("HidDevicePort::HidDevicePort done");
 }
 
 HidDevicePort::~HidDevicePort() noexcept {
-    LOG_DEBUG("HidDevicePort::~HidDevicePort()");
     if(isStreaming_) {
-        isStreaming_ = false;
-        std::unique_lock<std::mutex> lock(messengerMutex_);
-        messenger_->cancelRequest(interruptRequest_);
-        utils::sleepMs(100);  // todo: wait for cancel request to complete
+        frameQueue_.stop();
+        stopStream();
     }
-    interruptCallback_->cancel();
-    interruptRequest_.reset();
-    messenger_.reset();
-
-    frameQueue_.stop();
-    LOG_DEBUG("obHidDevice destroy");
 }
 
 void HidDevicePort::startStream(FrameCallbackUnsafe callback) {
@@ -70,17 +38,22 @@ void HidDevicePort::startStream(FrameCallbackUnsafe callback) {
         throw wrong_api_call_sequence_exception("HidDevicePort::startStream() called while streaming");
     }
     isStreaming_ = true;
-
     frameQueue_.start(callback);
 
-    auto sts = messenger_->submitRequest(interruptRequest_);
-    if(sts != OB_USB_STATUS_SUCCESS) {
-        frameQueue_.stop();
-        isStreaming_ = false;
-        throw std::runtime_error("failed to submit interrupt request, error: " + usbStatusToString.at(sts));
-    }
-
-    LOG_DEBUG("HidDevicePort::stopCapture done");
+    streamThread_ = std::thread([this]() {
+        while(isStreaming_) {
+            auto frame = FrameFactory::createFrame(OB_FRAME_UNKNOWN, OB_FORMAT_UNKNOWN, endpoint_.wMaxPacketSize);
+            int  transferred;
+            auto res = libusb_interrupt_transfer(usbDevice_->devHandle.get(), endpoint_.bEndpointAddress, frame->getDataMutable(), frame->getDataSize(),
+                                                 &transferred, 1000);
+            if(res != LIBUSB_SUCCESS && isStreaming_) {
+                LOG_WARN_INTVL(utils::string::to_string() << "interrupt transfer failed, error: " << libusb_strerror(res));
+                continue;
+            }
+            frameQueue_.enqueue(frame);
+        }
+    });
+    LOG_DEBUG("HidDevicePort::startStream done");
 }
 
 void HidDevicePort::stopStream() {
@@ -88,9 +61,25 @@ void HidDevicePort::stopStream() {
         throw wrong_api_call_sequence_exception("HidDevicePort::stopStream() called while not streaming");
     }
     isStreaming_ = false;
-    std::unique_lock<std::mutex> lock(messengerMutex_);
-    messenger_->cancelRequest(interruptRequest_);
+    auto res     = libusb_interrupt_transfer(usbDevice_->devHandle.get(), endpoint_.bEndpointAddress, nullptr, 0, nullptr, 0);
+    if(res != LIBUSB_SUCCESS) {
+        LOG_WARN("interrupt transfer failed, error: {}", libusb_strerror(res));
+    }
+
+    streamThread_.join();
     frameQueue_.flush();
+
+    res = libusb_release_interface(usbDevice_->devHandle.get(), portInfo_->infIndex);
+    if(res != LIBUSB_SUCCESS) {
+        LOG_WARN("release interface failed, error: {}", libusb_strerror(res));
+    }
+    if(libusb_kernel_driver_active(usbDevice_->devHandle.get(), portInfo_->infIndex) == 1) {
+        res = libusb_attach_kernel_driver(usbDevice_->devHandle.get(), portInfo_->infIndex);
+        if(res != LIBUSB_SUCCESS) {
+            LOG_WARN("attach kernel driver failed, error: {}", libusb_strerror(res));
+        }
+    }
+    LOG_DEBUG("HidDevicePort::stopStream done");
 }
 
 std::shared_ptr<const SourcePortInfo> HidDevicePort::getSourcePortInfo() const {

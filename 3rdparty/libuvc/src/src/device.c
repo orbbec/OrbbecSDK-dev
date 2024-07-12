@@ -230,19 +230,16 @@ uint8_t uvc_get_device_address(uvc_device_t *dev) {
  *
  * @param dev Device to open
  * @param[out] devh Handle on opened device
+ * @param[in] usb_devh Optional USB device handle to use or create a new one if NULL
  * @return Error opening device or SUCCESS
  */
-uvc_error_t uvc_open(uvc_device_t *dev, uint16_t mi, uvc_device_handle_t **devh, libusb_device_handle *usbHandle) {
-    (void)usbHandle;
+uvc_error_t uvc_open(uvc_device_t *dev, uint16_t mi, uvc_device_handle_t **devh, libusb_device_handle *usb_devh) {
     uvc_error_t                     ret;
-    struct libusb_device_handle    *usb_devh;
     uvc_device_handle_t            *internal_devh;
     struct libusb_device_descriptor desc;
 
     UVC_ENTER();
-#ifdef __ANDROID__
-    usb_devh = usbHandle;
-#else
+#ifndef __ANDROID__
     ret = libusb_open(dev->usb_dev, &usb_devh);
     UVC_DEBUG("libusb_open() = %d", ret);
 

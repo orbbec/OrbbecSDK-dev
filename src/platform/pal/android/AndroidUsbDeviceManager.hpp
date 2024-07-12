@@ -4,8 +4,8 @@
 #pragma once
 
 #include "ObPal.hpp"
-#include "usb/backend/Device.hpp"
-#include "usb/backend/ContextLibusb.hpp"
+#include "usb/enumerator/Device.hpp"
+#include "usb/enumerator/ContextLibusb.hpp"
 
 #include <string>
 #include <map>
@@ -31,8 +31,8 @@ public:
 
     virtual void               start(deviceChangedCallback callback) override;
     virtual void               stop() override;
-    void                       onDeviceChanged(OBDeviceChangedType changeType_, const UsbDeviceInfo &usbDevInfo);
-    std::vector<UsbDeviceInfo> getDeviceInfoList();
+    void                          onDeviceChanged(OBDeviceChangedType changeType_, const UsbInterfaceInfo &usbDevInfo);
+    std::vector<UsbInterfaceInfo> getDeviceInfoList();
 
     std::shared_ptr<UsbDevice> openUsbDevice(const std::string &devUrl);
     void                       closeUsbDevice(const std::string &devUrl);
@@ -46,7 +46,7 @@ public:
 private:
     std::recursive_mutex                          mutex_;
     deviceChangedCallback                         callback_ = nullptr;
-    std::vector<UsbDeviceInfo>                    deviceInfoList_;
+    std::vector<UsbInterfaceInfo>                 deviceInfoList_;
     std::shared_ptr<UsbContext>                   usbCtx_;
     std::map<std::string, AndroidUsbDeviceHandle> deviceHandleMap_;
 

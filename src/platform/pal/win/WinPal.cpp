@@ -133,9 +133,9 @@ std::shared_ptr<ISourcePort> WinPal::createSourcePort(std::shared_ptr<const Sour
 
     switch(portInfo->portType) {
     case SOURCE_PORT_USB_VENDOR: {
-        auto usbDev = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
+        auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         port = std::make_shared<VendorUsbDevicePort>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
         break;
@@ -145,9 +145,9 @@ std::shared_ptr<ISourcePort> WinPal::createSourcePort(std::shared_ptr<const Sour
         break;
     case SOURCE_PORT_USB_HID: {
         auto usbPortInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo);
-        auto usbDev      = usbEnumerator_->createUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
+        auto usbDev      = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
-            throw libobsensor::camera_disconnected_exception("usbEnumerator createUsbDevice failed!");
+            throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
         }
         port = std::make_shared<HidDevicePort>(usbDev, std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo));
 
@@ -170,7 +170,7 @@ std::shared_ptr<DeviceWatcher> WinPal::createUsbDeviceWatcher() const {
 SourcePortInfoList WinPal::queryUsbSourcePort() {
     SourcePortInfoList portInfoList;
 
-    auto action = [&](const UsbDeviceInfo &info, IMFActivate *) {
+    auto action = [&](const UsbInterfaceInfo &info, IMFActivate *) {
         UsbSpec     usbSpec;
         std::string hubId, serial, url;
         if(getUsbDescriptors(info.vid, info.pid, info.uid, hubId, usbSpec, serial, url)) {
@@ -193,7 +193,7 @@ SourcePortInfoList WinPal::queryUsbSourcePort() {
 
     WmfUvcDevicePort::foreachUvcDevice(action);
 
-    const auto &usbInfoList = usbEnumerator_->queryDevicesInfo();
+    const auto &usbInfoList = usbEnumerator_->queryUsbInterfaces();
     for(const auto &info: usbInfoList) {
         if(info.vid == 0x2bc5 && (info.cls == OB_USB_CLASS_HID || info.cls == OB_USB_CLASS_VENDOR_SPECIFIC)) {
             // 1. Filter non-Obi devices 2. Filter uvc class

@@ -3,7 +3,7 @@
 #include <libobsensor/ObSensor.h>
 #include <thread>
 
-bool quit_program = false;
+bool quit_program = false;  // Flag to signal the program to quit
 
 void printFiltersInfo(const std::vector<std::shared_ptr<ob::Filter>> &filterList) {
     std::cout << filterList.size() << " post processing filters recommended:" << std::endl;

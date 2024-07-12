@@ -28,3 +28,15 @@ docker build \
     -f ${ARCH}.dockerfile . -t openorbbecsdk-env:${ARCH}_${DATE} \
     --label ade_image_commit_sha="$(git rev-parse HEAD)" \
     --label ade_image_commit_tag="$(date +'%Y%m%d.%H%M%S')"
+
+# Check for dangling images and remove them if present
+dangling_images=$(docker images -f "dangling=true" -q)
+if [ -n "$dangling_images" ]; then
+    docker rmi -f $dangling_images
+fi
+
+if [ $? -eq 0 ]; then
+    echo "Docker image built successfully"
+else
+    echo "Docker image build failed"
+fi

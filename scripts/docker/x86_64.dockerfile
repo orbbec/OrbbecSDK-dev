@@ -29,6 +29,7 @@ RUN apt-get update -o Acquire::http::proxy=false -o Acquire::https::proxy=false 
     ca-certificates \
     zip \
     tzdata \
+    libopencv-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ADD 10_nvidia.json /etc/glvnd/egl_vendor.d/10_nvidia.json

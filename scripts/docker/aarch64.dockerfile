@@ -31,6 +31,7 @@ RUN apt-get update -o Acquire::http::proxy=false -o Acquire::https::proxy=false 
     ca-certificates \
     zip \
     tzdata \
+    libopencv-dev \
     && rm -rf /var/lib/apt/lists/*
 
 

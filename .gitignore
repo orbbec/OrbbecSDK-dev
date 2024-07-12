@@ -8,7 +8,8 @@
 
 # Java class files
 *.class
-
+build-release*/
+*.zip
 # Generated files
 # bin/
 gen/

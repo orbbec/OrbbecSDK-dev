@@ -1,12 +1,12 @@
 #pragma once
 #include "ISourcePort.hpp"
-#include "usb/enumerator/UsbTypes.hpp"
+#include "usb/enumerator/IUsbEnumerator.hpp"
 #include <mutex>
 namespace libobsensor {
 
 class VendorUsbDevicePort : public IVendorDataPort {
 public:
-    VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo);
+    VendorUsbDevicePort(const std::shared_ptr<IUsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~VendorUsbDevicePort() noexcept override;
 
     uint32_t sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) override;
@@ -23,7 +23,7 @@ public:
 protected:
     std::mutex                               mutex_;
     std::shared_ptr<const USBSourcePortInfo> portInfo_;
-    std::shared_ptr<UsbDevice>               usbDev_;
+    std::shared_ptr<IUsbDevice>              usbDev_;
 };
 
 }  // namespace libobsensor

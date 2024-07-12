@@ -7,19 +7,25 @@
 #include "logger/Logger.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "utils/Utils.hpp"
-#include "usb/enumerator/Enumerator.hpp"
+#include "usb/enumerator/UsbEnumeratorLibusb.hpp"
 
 namespace libobsensor {
-HidDevicePort::HidDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
+HidDevicePort::HidDevicePort(const std::shared_ptr<IUsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
     : portInfo_(portInfo), usbDevice_(usbDevice), isStreaming_(false), frameQueue_(10) {
-    endpoint_ = UsbEnumerator::getEndpointAddress(usbDevice, portInfo->infIndex, LIBUSB_ENDPOINT_TRANSFER_TYPE_INTERRUPT, LIBUSB_ENDPOINT_IN);
-    if(libusb_kernel_driver_active(usbDevice->devHandle.get(), portInfo->infIndex) == 1) {
-        auto res = libusb_detach_kernel_driver(usbDevice->devHandle.get(), portInfo->infIndex);
+
+    auto libusbDevice = std::dynamic_pointer_cast<UsbDeviceLibusb>(usbDevice_);
+    auto epDesc       = libusbDevice->getEndpointDesc(portInfo->infIndex, LIBUSB_ENDPOINT_TRANSFER_TYPE_INTERRUPT, LIBUSB_ENDPOINT_IN);
+    endpointAddress_  = epDesc.bEndpointAddress;
+    maxPacketSize_    = epDesc.wMaxPacketSize;
+
+    auto libusbDevHandle = libusbDevice->getLibusbDeviceHandle();
+    if(libusb_kernel_driver_active(libusbDevHandle, portInfo->infIndex) == 1) {
+        auto res = libusb_detach_kernel_driver(libusbDevHandle, portInfo->infIndex);
         if(res != LIBUSB_SUCCESS) {
             throw io_exception("detach kernel driver failed, error: " + std::string(libusb_strerror(res)));
         }
     }
-    auto res = libusb_claim_interface(usbDevice->devHandle.get(), portInfo->infIndex);
+    auto res = libusb_claim_interface(libusbDevHandle, portInfo->infIndex);
     if(res != LIBUSB_SUCCESS) {
         throw io_exception("claim interface failed, error: " + std::string(libusb_strerror(res)));
     }
@@ -41,10 +47,12 @@ void HidDevicePort::startStream(FrameCallbackUnsafe callback) {
     frameQueue_.start(callback);
 
     streamThread_ = std::thread([this]() {
+        auto libusbDevice    = std::dynamic_pointer_cast<UsbDeviceLibusb>(usbDevice_);
+        auto libusbDevHandle = libusbDevice->getLibusbDeviceHandle();
         while(isStreaming_) {
-            auto frame = FrameFactory::createFrame(OB_FRAME_UNKNOWN, OB_FORMAT_UNKNOWN, endpoint_.wMaxPacketSize);
+            auto frame = FrameFactory::createFrame(OB_FRAME_UNKNOWN, OB_FORMAT_UNKNOWN, maxPacketSize_);
             int  transferred;
-            auto res = libusb_interrupt_transfer(usbDevice_->devHandle.get(), endpoint_.bEndpointAddress, frame->getDataMutable(), frame->getDataSize(),
+            auto res = libusb_interrupt_transfer(libusbDevHandle, endpointAddress_, frame->getDataMutable(), static_cast<int>(frame->getDataSize()),
                                                  &transferred, 1000);
             if(res != LIBUSB_SUCCESS && isStreaming_) {
                 LOG_WARN_INTVL(utils::string::to_string() << "interrupt transfer failed, error: " << libusb_strerror(res));
@@ -60,8 +68,10 @@ void HidDevicePort::stopStream() {
     if(!isStreaming_) {
         throw wrong_api_call_sequence_exception("HidDevicePort::stopStream() called while not streaming");
     }
-    isStreaming_ = false;
-    auto res     = libusb_interrupt_transfer(usbDevice_->devHandle.get(), endpoint_.bEndpointAddress, nullptr, 0, nullptr, 0);
+    isStreaming_         = false;
+    auto libusbDevice    = std::dynamic_pointer_cast<UsbDeviceLibusb>(usbDevice_);
+    auto libusbDevHandle = libusbDevice->getLibusbDeviceHandle();
+    auto res             = libusb_interrupt_transfer(libusbDevHandle, endpointAddress_, nullptr, 0, nullptr, 0);
     if(res != LIBUSB_SUCCESS) {
         LOG_WARN("interrupt transfer failed, error: {}", libusb_strerror(res));
     }
@@ -69,12 +79,12 @@ void HidDevicePort::stopStream() {
     streamThread_.join();
     frameQueue_.flush();
 
-    res = libusb_release_interface(usbDevice_->devHandle.get(), portInfo_->infIndex);
+    res = libusb_release_interface(libusbDevHandle, portInfo_->infIndex);
     if(res != LIBUSB_SUCCESS) {
         LOG_WARN("release interface failed, error: {}", libusb_strerror(res));
     }
-    if(libusb_kernel_driver_active(usbDevice_->devHandle.get(), portInfo_->infIndex) == 1) {
-        res = libusb_attach_kernel_driver(usbDevice_->devHandle.get(), portInfo_->infIndex);
+    if(libusb_kernel_driver_active(libusbDevHandle, portInfo_->infIndex) == 1) {
+        res = libusb_attach_kernel_driver(libusbDevHandle, portInfo_->infIndex);
         if(res != LIBUSB_SUCCESS) {
             LOG_WARN("attach kernel driver failed, error: {}", libusb_strerror(res));
         }

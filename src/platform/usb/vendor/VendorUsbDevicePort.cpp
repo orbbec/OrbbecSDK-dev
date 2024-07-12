@@ -7,10 +7,11 @@
 
 #include "utils/Utils.hpp"
 #include "exception/ObException.hpp"
+#include "usb/enumerator/UsbEnumeratorLibusb.hpp"
 
 namespace libobsensor {
 
-VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
+VendorUsbDevicePort::VendorUsbDevicePort(const std::shared_ptr<IUsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo)
     : portInfo_(portInfo), usbDev_(usbDevice) {}
 
 VendorUsbDevicePort::~VendorUsbDevicePort() noexcept = default;

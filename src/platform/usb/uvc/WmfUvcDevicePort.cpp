@@ -1,5 +1,3 @@
-// License: Apache 2.0. See LICENSE file in root directory.
-// Copyright(c) 2015 Intel Corporation. All Rights Reserved.
 #if(_MSC_FULL_VER < 180031101)
 #error At least Visual Studio 2013 Update 4 is required to compile this backend
 #endif
@@ -27,6 +25,9 @@ The library will be compiled without the metadata support!\n")
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
+#include "WmfUvcDevicePort.hpp"
+#include "frame/FrameFactory.hpp"
+#include "stream/StreamProfileFactory.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -38,11 +39,6 @@ The library will be compiled without the metadata support!\n")
 #include <Shlwapi.h>
 #include <Mferror.h>
 #include <vidcap.h>
-#include "WmfUvcDevicePort.hpp"
-
-#include "frame/FrameFactory.hpp"
-#include "stream/StreamProfileFactory.hpp"
-
 #include <ksmedia.h>  // Metadata Extension
 
 #pragma comment(lib, "Shlwapi.lib")
@@ -1094,7 +1090,7 @@ STDMETHODIMP WmfUvcDevicePort::OnReadSample(HRESULT hrStatus, DWORD streamIndex,
                     auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
                     vsp->setSystemTimeStampUsec(realtime);
 
-                    auto metadata                     = frame->getMetadataUnsafe();
+                    auto metadata                     = frame->getMetadataMutable();
                     auto uvcMetadata                  = reinterpret_cast<UvcMetadata *>(metadata);
                     uvcMetadata->header.bHeaderLength = 12;
                     uvcMetadata->header.bmHeaderInfo  = 0;  // not used

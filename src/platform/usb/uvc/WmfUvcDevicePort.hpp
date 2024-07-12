@@ -2,25 +2,18 @@
 // Copyright(c) 2020 Orbbec  Corporation. All Rights Reserved.
 
 #pragma once
-#include "WinHelpers.hpp"
-
-#include "libobsensor/h/ObTypes.h"
-#include "ObPal.hpp"
-#include "usb/enumerator/Enumerator.hpp"
-#include "usb/enumerator/UsbTypes.hpp"
 #include "UvcDevicePort.hpp"
 #include "stream/StreamProfile.hpp"
+#include "usb/enumerator/IUsbEnumerator.hpp"
+
+#include "WinHelpers.hpp"
 
 #include <mfapi.h>
 #include <Ks.h>
 #include <atlcomcli.h>
-#include <atomic>
 #include <ksproxy.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
-#include <mutex>
-#include <strmif.h>
-#include <unordered_map>
 #include <vidcap.h>
 #include <wrl.h>
 
@@ -28,6 +21,9 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+
+#include <mutex>
+#include <atomic>
 
 static const std::vector<std::vector<std::pair<GUID, GUID>>> attributes_params = {
     { { MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE, MF_DEVSOURCE_ATTRIBUTE_SOURCE_TYPE_VIDCAP_GUID },

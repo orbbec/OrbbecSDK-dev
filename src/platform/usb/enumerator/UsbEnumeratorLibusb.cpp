@@ -2,7 +2,7 @@
 // Copyright(c) 2020 Orbbec  Corporation. All Rights Reserved.
 #ifndef __ANDROID__
 
-#include "Enumerator.hpp"
+#include "UsbEnumeratorLibusb.hpp"
 
 #include "logger/Logger.hpp"
 #include "logger/LoggerInterval.hpp"
@@ -254,7 +254,70 @@ std::vector<UsbInterfaceInfo> queryInterfaces(libusb_device *device, libusb_devi
     return rv;
 }
 
-UsbEnumerator::UsbEnumerator() {
+UsbDeviceLibusb::UsbDeviceLibusb(libusb_context *libusbCtx, std::shared_ptr<libusb_device_handle> handle) : libusbCtx_(libusbCtx), handle_(handle) {}
+
+libusb_device_handle *UsbDeviceLibusb::getLibusbDeviceHandle() const {
+    return handle_.get();
+}
+
+libusb_context *UsbDeviceLibusb::getLibusbContext() const {
+    return libusbCtx_;
+}
+
+libusb_endpoint_descriptor UsbDeviceLibusb::getEndpointDesc(int interfaceIndex, libusb_endpoint_transfer_type transferType,
+                                                            libusb_endpoint_direction direction) const {
+    libusb_device_handle    *handle = getLibusbDeviceHandle();
+    libusb_device           *device = libusb_get_device(handle);
+    libusb_device_descriptor desc;
+    auto                     ret = libusb_get_device_descriptor(device, &desc);
+    if(ret != LIBUSB_SUCCESS) {
+        throw io_exception(utils::string::to_string() << "Failed to read USB device descriptor: error=" << libusb_strerror(ret));
+    }
+
+    libusb_endpoint_descriptor ep    = { 0 };
+    bool                       found = false;
+    for(uint8_t c = 0; c < desc.bNumConfigurations; ++c) {
+        libusb_config_descriptor *config = nullptr;
+        ret                              = libusb_get_config_descriptor(device, c, &config);
+        if(ret != LIBUSB_SUCCESS) {
+            LOG_WARN("Failed to read USB config descriptor: error={}", libusb_strerror(ret));
+        }
+
+        if(config->bNumInterfaces <= interfaceIndex) {
+            continue;
+        }
+
+        auto inf = config->interface[interfaceIndex].altsetting;
+
+        for(uint8_t i = 0; i < inf->bNumEndpoints; ++i) {
+            ep = inf->endpoint[i];
+            if((ep.bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == transferType && (ep.bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK) == direction) {
+                found = true;
+                break;
+            }
+        }
+        libusb_free_config_descriptor(config);
+    }
+    if(!found) {
+        throw io_exception("Can not find interface to get endpoint address");
+    }
+    return ep;
+}
+
+std::weak_ptr<IUsbEnumerator> IUsbEnumerator::instanceWeakPtr_;
+std::mutex                    IUsbEnumerator::instanceMutex_;
+
+std::shared_ptr<IUsbEnumerator> IUsbEnumerator::getInstance() {
+    std::lock_guard<std::mutex> lock(instanceMutex_);
+    auto                        instance = instanceWeakPtr_.lock();
+    if(!instance) {
+        instance         = std::shared_ptr<UsbEnumeratorLibusb>(new UsbEnumeratorLibusb());
+        instanceWeakPtr_ = instance;
+    }
+    return instance;
+}
+
+UsbEnumeratorLibusb::UsbEnumeratorLibusb() {
 #ifdef __ANDROID__
     auto rc = libusb_set_option(ctx_, LIBUSB_OPTION_WEAK_AUTHORITY, NULL);
     if(rc != LIBUSB_SUCCESS) {
@@ -269,16 +332,16 @@ UsbEnumerator::UsbEnumerator() {
     }
 
     startEventHandleThread();
-    LOG_DEBUG("UsbEnumerator created");
+    LOG_DEBUG("UsbEnumeratorLibusb created");
 }
 
-UsbEnumerator::~UsbEnumerator() noexcept {
+UsbEnumeratorLibusb::~UsbEnumeratorLibusb() noexcept {
     stopEventHandleThread();
     libusb_exit(libusbCtx_);
-    LOG_DEBUG("UsbEnumerator destroyed");
+    LOG_DEBUG("UsbEnumeratorLibusb destroyed");
 }
 
-const std::vector<UsbInterfaceInfo> &UsbEnumerator::queryUsbInterfaces() {
+const std::vector<UsbInterfaceInfo> &UsbEnumeratorLibusb::queryUsbInterfaces() {
     std::vector<UsbInterfaceInfo> tempInfoList;
     libusb_device               **devList;
     auto                          count = libusb_get_device_list(libusbCtx_, &devList);
@@ -320,7 +383,7 @@ const std::vector<UsbInterfaceInfo> &UsbEnumerator::queryUsbInterfaces() {
 #ifdef WIN32
             if(serial.empty()) {
                 std::string toupperSNStr;
-                if(findSN2Toupper(subDev.url, toupperSNStr)) {
+                if(findSN2Toupper(inf.url, toupperSNStr)) {
                     serial = toupperSNStr;
                 }
             }
@@ -341,21 +404,24 @@ const std::vector<UsbInterfaceInfo> &UsbEnumerator::queryUsbInterfaces() {
     return devInterfaceList_;
 }
 
-std::shared_ptr<UsbDevice> UsbEnumerator::openUsbDevice(const std::string &devUrl, uint8_t retry) {
-    while(retry--) {
+std::shared_ptr<IUsbDevice> UsbEnumeratorLibusb::openUsbDevice(const std::string &devUrl) {
+    uint8_t retry = 1;
+    do {
         std::shared_ptr<libusb_device_handle> devHandle;
         BEGIN_TRY_EXECUTE({ devHandle = openLibusbDevice(devUrl); })
         CATCH_EXCEPTION_AND_EXECUTE({ continue; })
-        auto dev       = std::make_shared<UsbDevice>();
-        dev->context   = libusbCtx_;
-        dev->devHandle = devHandle;
+        auto dev = std::make_shared<UsbDeviceLibusb>(libusbCtx_, devHandle);
         return dev;
+    } while(retry--);
+
+    if(retry == 0) {
+        throw io_exception(utils::string::to_string() << "Can not open device: " << devUrl);
     }
-    throw io_exception(utils::string::to_string() << "Can not open device: " << devUrl);
+
     return nullptr;
 }
 
-void UsbEnumerator::startEventHandleThread() {
+void UsbEnumeratorLibusb::startEventHandleThread() {
     LOG_DEBUG("UsbContext::startEventHandler()");
     libusbEventHandlerExit_   = 0;
     libusbEventHandlerThread_ = std::thread([&]() {
@@ -368,7 +434,7 @@ void UsbEnumerator::startEventHandleThread() {
     });
 }
 
-void UsbEnumerator::stopEventHandleThread() {
+void UsbEnumeratorLibusb::stopEventHandleThread() {
     LOG_DEBUG("UsbContext::stopEventHandler()");
     libusbEventHandlerExit_ = 1;
     libusb_interrupt_event_handler(libusbCtx_);
@@ -377,7 +443,7 @@ void UsbEnumerator::stopEventHandleThread() {
     }
 }
 
-std::shared_ptr<libusb_device_handle> UsbEnumerator::openLibusbDevice(const std::string &devUrl) {
+std::shared_ptr<libusb_device_handle> UsbEnumeratorLibusb::openLibusbDevice(const std::string &devUrl) {
     std::shared_ptr<libusb_device_handle> devHandle;
     std::unique_lock<std::mutex>          lock(libusbDeviceHandleMutex_);
 
@@ -439,44 +505,5 @@ std::shared_ptr<libusb_device_handle> UsbEnumerator::openLibusbDevice(const std:
     return devHandle;
 }
 
-libusb_endpoint_descriptor UsbEnumerator::getEndpointAddress(std::shared_ptr<UsbDevice> dev, int interfaceIndex, libusb_endpoint_transfer_type transferType,
-                                                             libusb_endpoint_direction direction) {
-    libusb_device_handle    *handle = dev->devHandle.get();
-    libusb_device           *device = libusb_get_device(handle);
-    libusb_device_descriptor desc;
-    auto                     ret = libusb_get_device_descriptor(device, &desc);
-    if(ret != LIBUSB_SUCCESS) {
-        throw io_exception(utils::string::to_string() << "Failed to read USB device descriptor: error=" << libusb_strerror(ret));
-    }
-
-    libusb_endpoint_descriptor ep;
-    bool                       found = false;
-    for(uint8_t c = 0; c < desc.bNumConfigurations; ++c) {
-        libusb_config_descriptor *config = nullptr;
-        ret                              = libusb_get_config_descriptor(device, c, &config);
-        if(ret != LIBUSB_SUCCESS) {
-            LOG_WARN("Failed to read USB config descriptor: error={}", libusb_strerror(ret));
-        }
-
-        if(config->bNumInterfaces <= interfaceIndex) {
-            continue;
-        }
-
-        auto inf = config->interface[interfaceIndex].altsetting;
-
-        for(uint8_t i = 0; i < inf->bNumEndpoints; ++i) {
-            ep = inf->endpoint[i];
-            if((ep.bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == transferType && (ep.bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK) == direction) {
-                found = true;
-                break;
-            }
-        }
-        libusb_free_config_descriptor(config);
-    }
-    if(!found) {
-        throw io_exception("Can not find interface to get endpoint address");
-    }
-    return ep;
-}
 }  // namespace libobsensor
 #endif  // __ANDROID__

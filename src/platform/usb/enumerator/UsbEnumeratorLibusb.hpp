@@ -13,21 +13,32 @@
 #include <mutex>
 
 #include <libusb.h>
+#include "IUsbEnumerator.hpp"
 
 namespace libobsensor {
 
-class UsbEnumerator {
-
+class UsbDeviceLibusb : public IUsbDevice {
 public:
-    UsbEnumerator();
-    ~UsbEnumerator() noexcept;
+    UsbDeviceLibusb(libusb_context *libusbCtx, std::shared_ptr<libusb_device_handle> handle);
+    virtual ~UsbDeviceLibusb() noexcept = default;
 
-    const std::vector<UsbInterfaceInfo> &queryUsbInterfaces();
+    libusb_device_handle *getLibusbDeviceHandle() const;
+    libusb_context *getLibusbContext() const;
+    libusb_endpoint_descriptor getEndpointDesc(int interfaceIndex, libusb_endpoint_transfer_type transferType, libusb_endpoint_direction direction) const;
 
-    std::shared_ptr<UsbDevice> openUsbDevice(const std::string &devUrl, uint8_t retry = 1);
+private:
+    std::shared_ptr<libusb_device_handle> handle_;
+    libusb_context                       *libusbCtx_;
+};
 
-    static libusb_endpoint_descriptor getEndpointAddress(std::shared_ptr<UsbDevice> dev, int interfaceIndex, libusb_endpoint_transfer_type transferType,
-                                                         libusb_endpoint_direction direction);
+class UsbEnumeratorLibusb : public IUsbEnumerator {
+public:
+    UsbEnumeratorLibusb();
+    ~UsbEnumeratorLibusb() noexcept;
+
+    const std::vector<UsbInterfaceInfo> &queryUsbInterfaces() override;
+
+    std::shared_ptr<IUsbDevice> openUsbDevice(const std::string &devUrl) override;
 
 private:
     void                                  startEventHandleThread();

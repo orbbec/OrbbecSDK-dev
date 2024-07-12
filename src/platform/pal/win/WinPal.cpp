@@ -1,13 +1,24 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec  Corporation. All Rights Reserved.
 
+#include "WinPal.hpp"
+
 #if(_MSC_FULL_VER < 180031101)
 #error At least Visual Studio 2013 Update 4 is required to compile this backend
 #endif
-#include "WinPal.hpp"
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <Windows.h>
 
 #include <dbt.h>
 #include <mfapi.h>
+#include <ks.h>
+#pragma comment(lib, "mf.lib")
+#pragma comment(lib, "mfreadwrite")
+#pragma comment(lib, "mfplat.lib")
+#pragma comment(lib, "mfreadwrite.lib")
+#pragma comment(lib, "mfuuid.lib")
 
 #include <cctype>  //Std::tolower
 #include <chrono>
@@ -26,6 +37,35 @@ constexpr GUID     GUID_DEVINTERFACE_USB_DEVICE = { 0xA5DCBF10, 0x6530, 0x11D2, 
 constexpr uint16_t PID_BOOTLOADER_UVC           = 0x0501;
 namespace libobsensor {
 
+class WinUsbDeviceWatcher : public DeviceWatcher {
+public:
+    WinUsbDeviceWatcher(const ObPal *backend);
+    ~WinUsbDeviceWatcher() noexcept override;
+
+    void start(deviceChangedCallback callback) override;
+    void stop() override;
+
+private:
+    void                    run();
+    static LRESULT CALLBACK onWinEvent(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+    static bool             registerDeviceInterfaceToHwnd(HWND hWnd);
+
+private:
+    std::thread eventThread_;
+    std::mutex  mutex_;
+    struct extra_data {
+        const ObPal          *backend_;
+        deviceChangedCallback callback_;
+        bool                  stopped_;
+        HWND                  hWnd;
+        HDEVNOTIFY            hDevNotifyHW;
+        HDEVNOTIFY            hDevNotifyUVC;
+        HDEVNOTIFY            hDevNotifySensor;
+        HDEVNOTIFY            hDevNotifyHID;
+        HDEVNOTIFY            hDevNotifyUSB;
+        HDEVNOTIFY            hDevNotifyOpenNI;
+    } extraData_;
+};
 
 std::vector<std::string> stringSplit(const std::string &string, char separator) {
     std::vector<std::string> tokens;
@@ -76,13 +116,13 @@ bool parseSymbolicLink(const std::string &symbolicLink, uint16_t &vid, uint16_t 
     return true;
 }
 
-std::weak_ptr<WinPal> WinPal::instanceWeakPtr_;
-std::mutex               WinPal::instanceMutex_;
-std::shared_ptr<ObPal>   ObPal::getInstance() {
+std::weak_ptr<WinPal>  WinPal::instanceWeakPtr_;
+std::mutex             WinPal::instanceMutex_;
+std::shared_ptr<ObPal> ObPal::getInstance() {
     std::lock_guard<std::mutex> lock(WinPal::instanceMutex_);
     auto                        instance = WinPal::instanceWeakPtr_.lock();
     if(instance == nullptr) {
-        instance                    = std::shared_ptr<WinPal>(new WinPal());
+        instance                 = std::shared_ptr<WinPal>(new WinPal());
         WinPal::instanceWeakPtr_ = instance;
     }
     return instance;
@@ -94,7 +134,7 @@ WinPal::WinPal() {
     CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
 
-    usbEnumerator_ = std::make_shared<UsbEnumerator>();
+    usbEnumerator_ = IUsbEnumerator::getInstance();
     LOG_DEBUG("WinPal created!");
 }
 
@@ -104,12 +144,11 @@ WinPal::~WinPal() noexcept {
         CoUninitialize();
     });
     LOG_DEBUG("WinPal destroyed!");
-    // usbEnumerator_.reset(); //Will be automatically released during destruction
 }
 
 std::shared_ptr<ISourcePort> WinPal::createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
-    std::shared_ptr<ISourcePort>  port;
+    std::shared_ptr<ISourcePort> port;
 
     // clear expired weak_ptr
     for(auto it = sourcePortMap_.begin(); it != sourcePortMap_.end();) {
@@ -181,7 +220,7 @@ SourcePortInfoList WinPal::queryUsbSourcePort() {
             portInfo->vid      = info.vid;
             portInfo->pid      = info.pid;
             portInfo->serial   = serial;
-            portInfo->connSpec = usb_spec_names.find(usbSpec)->second;
+            portInfo->connSpec = usbSpecToString(static_cast<UsbSpec>(info.conn_spec));
             portInfo->infUrl   = info.infUrl;
             portInfo->infIndex = info.infIndex;
             portInfo->infName  = info.infName;
@@ -204,7 +243,7 @@ SourcePortInfoList WinPal::queryUsbSourcePort() {
             portInfo->vid      = info.vid;
             portInfo->pid      = info.pid;
             portInfo->serial   = info.serial;
-            portInfo->connSpec = usb_spec_names.find(info.conn_spec)->second;
+            portInfo->connSpec = usbSpecToString(static_cast<UsbSpec>(info.conn_spec));
             portInfo->infUrl   = info.infUrl;
             portInfo->infIndex = info.infIndex;
             portInfo->infName  = info.infName;
@@ -260,7 +299,7 @@ void WinUsbDeviceWatcher::run() {
 
     extraData_.hWnd = CreateWindow(winClassName, nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, nullptr, &extraData_);
     if(!extraData_.hWnd)
-        throw winapi_error("CreateWindow failed");
+        throw wrong_api_call_sequence_exception("CreateWindow failed");
 
     MSG msg;
 
@@ -287,7 +326,7 @@ std::string wideCharToUTF8(const wchar_t *wStr) {
     if(size <= 0) {
         return "";
     }
-    std::string result(size-1, '\0');
+    std::string result(size - 1, '\0');
     if(WideCharToMultiByte(CP_UTF8, 0, wStr, -1, &result[0], size, nullptr, nullptr) != size) {
         return "";
     }

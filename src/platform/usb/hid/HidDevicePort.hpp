@@ -4,13 +4,13 @@
 #pragma once
 #include "ISourcePort.hpp"
 #include "frame/FrameQueue.hpp"
-#include "usb/enumerator/UsbTypes.hpp"
+#include "usb/enumerator/IUsbEnumerator.hpp"
 
 namespace libobsensor {
 
 class HidDevicePort : public IDataStreamPort {
 public:
-    HidDevicePort(const std::shared_ptr<UsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo);
+    HidDevicePort(const std::shared_ptr<IUsbDevice> &usbDevice, std::shared_ptr<const USBSourcePortInfo> portInfo);
 
     ~HidDevicePort() noexcept override;
 
@@ -21,8 +21,9 @@ public:
 
 private:
     std::shared_ptr<const USBSourcePortInfo> portInfo_;
-    std::shared_ptr<UsbDevice>               usbDevice_;
-    libusb_endpoint_descriptor               endpoint_;
+    std::shared_ptr<IUsbDevice>              usbDevice_;
+    uint8_t                                  endpointAddress_;
+    uint16_t                                 maxPacketSize_;
 
     std::atomic_bool  isStreaming_;
     FrameQueue<Frame> frameQueue_;

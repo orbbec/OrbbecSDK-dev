@@ -55,6 +55,10 @@ std::shared_ptr<IFilter> FilterFactory::createPrivateFilter(const std::string &f
     return privFilterCreator->create(activationKey);
 }
 
+bool FilterFactory::isFilterCreatorExists(const std::string &filterName) {
+    return filterCreators_.find(filterName) != filterCreators_.end();
+}
+
 std::shared_ptr<IFilterCreator> FilterFactory::getFilterCreator(const std::string &filterName) {
     auto iter = filterCreators_.find(filterName);
     if(iter == filterCreators_.end()) {

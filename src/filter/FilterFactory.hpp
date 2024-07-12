@@ -22,6 +22,7 @@ public:
     std::shared_ptr<IFilter>        createFilter(const std::string &filterName);
     std::shared_ptr<IFilter>        createPrivateFilter(const std::string &filterName, const std::string &activationKey);
     std::shared_ptr<IFilterCreator> getFilterCreator(const std::string &filterName);
+    bool                            isFilterCreatorExists(const std::string &filterName);
 
 private:
     std::map<std::string, std::shared_ptr<IFilterCreator>> filterCreators_;

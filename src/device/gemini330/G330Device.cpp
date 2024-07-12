@@ -378,48 +378,64 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     auto filterFactory = FilterFactory::getInstance();
     if(type == OB_SENSOR_DEPTH) {
         std::vector<std::shared_ptr<IFilter>> depthFilterList;
-        depthFilterList.push_back(filterFactory->createFilter("DecimationFilter"));
-        depthFilterList.push_back(filterFactory->createFilter("HdrMerge"));
-        depthFilterList.push_back(filterFactory->createFilter("SequenceIdFilter"));
-        depthFilterList.push_back(filterFactory->createFilter("PixelValueCutOff"));
 
-        auto noiseFilter = filterFactory->createFilter("NoiseRemovalFilter");
-        if(noiseFilter) {
+        if(filterFactory->isFilterCreatorExists("DecimationFilter")) {
+            auto decimationFilter = filterFactory->createFilter("DecimationFilter");
+            depthFilterList.push_back(decimationFilter);
+        }
+
+        if(filterFactory->isFilterCreatorExists("HdrMerge")) {
+            auto hdrMergeFilter = filterFactory->createFilter("HdrMerge");
+            depthFilterList.push_back(hdrMergeFilter);
+        }
+
+        if(filterFactory->isFilterCreatorExists("SequenceIdFilter")) {
+            auto sequenceIdFilter = filterFactory->createFilter("SequenceIdFilter");
+            depthFilterList.push_back(sequenceIdFilter);
+        }
+
+        if(filterFactory->isFilterCreatorExists("PixelValueCutOff")) {
+            auto pixelValueCutOffFilter = filterFactory->createFilter("PixelValueCutOff");
+            depthFilterList.push_back(pixelValueCutOffFilter);
+        }
+
+        if(filterFactory->isFilterCreatorExists("NoiseRemovalFilter")) {
+            auto noiseFilter = filterFactory->createFilter("NoiseRemovalFilter");
             // max_size, min_diff, width, height
             std::vector<std::string> params = { "80", "256", "848", "480" };
             noiseFilter->updateConfig(params);
             depthFilterList.push_back(noiseFilter);
         }
 
-        auto spatFilter = filterFactory->createFilter("SpatialAdvancedFilter");
-        if(spatFilter) {
+        if(filterFactory->isFilterCreatorExists("SpatialAdvancedFilter")) {
+            auto spatFilter = filterFactory->createFilter("SpatialAdvancedFilter");
             // magnitude, alpha, disp_diff, radius
             std::vector<std::string> params = { "1", "0.5", "160", "1" };
             spatFilter->updateConfig(params);
             depthFilterList.push_back(spatFilter);
         }
 
-        auto tempFilter = filterFactory->createFilter("TemporalFilter");
-        if(tempFilter) {
+        if(filterFactory->isFilterCreatorExists("TemporalFilter")) {
+            auto tempFilter = filterFactory->createFilter("TemporalFilter");
             // diff_scale, weight
             std::vector<std::string> params = { "0.1", "0.4" };
             tempFilter->updateConfig(params);
             depthFilterList.push_back(tempFilter);
         }
 
-        auto hfFilter = filterFactory->createFilter("HoleFillingFilter");
-        if(hfFilter) {
+        if(filterFactory->isFilterCreatorExists("HoleFillingFilter")) {
+            auto hfFilter = filterFactory->createFilter("HoleFillingFilter");
             depthFilterList.push_back(hfFilter);
         }
 
-        auto dtFilter = filterFactory->createFilter("DisparityTransform");
-        if(dtFilter) {
+        if(filterFactory->isFilterCreatorExists("DisparityTransform")) {
+            auto dtFilter = filterFactory->createFilter("DisparityTransform");
             depthFilterList.push_back(dtFilter);
         }
 
         for(size_t i = 0; i < depthFilterList.size(); i++) {
             auto filter = depthFilterList[i];
-            if(filter != dtFilter) {
+            if(filter->getName() != "DisparityTransform") {
                 filter->enable(false);
             }
         }
@@ -427,9 +443,11 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     }
     else if(type == OB_SENSOR_COLOR) {
         std::vector<std::shared_ptr<IFilter>> colorFilterList;
-        auto                                  decFilter = filterFactory->createFilter("DecimationFilter");
-        decFilter->enable(false);
-        colorFilterList.push_back(decFilter);
+        if(filterFactory->isFilterCreatorExists("DecimationFilter")) {
+            auto decimationFilter = filterFactory->createFilter("DecimationFilter");
+            decimationFilter->enable(false);
+            colorFilterList.push_back(decimationFilter);
+        }
         return colorFilterList;
     }
 

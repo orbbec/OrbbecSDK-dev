@@ -27,8 +27,8 @@ public:
     libusb_endpoint_descriptor getEndpointDesc(int interfaceIndex, libusb_endpoint_transfer_type transferType, libusb_endpoint_direction direction) const;
 
 private:
-    std::shared_ptr<libusb_device_handle> handle_;
     libusb_context                       *libusbCtx_;
+    std::shared_ptr<libusb_device_handle> handle_;
 };
 
 class UsbEnumeratorLibusb : public IUsbEnumerator {

@@ -14,7 +14,7 @@
 #include <map>
 
 #if defined(BUILD_USB_PORT)
-#include "usb/enumerator/Enumerator.hpp"
+#include "usb/enumerator/IUsbEnumerator.hpp"
 #endif
 namespace libobsensor {
 
@@ -39,7 +39,7 @@ public:
 private:
     void loadXmlConfig();
 
-    std::shared_ptr<UsbEnumerator> usbEnumerator_;
+    std::shared_ptr<IUsbEnumerator> usbEnumerator_;
 
     typedef enum {
         UVC_BACKEND_TYPE_AUTO,  // if support v4l2 metadata, use v4l2, else use libusb. default is auto
@@ -54,48 +54,5 @@ private:
     std::mutex                                                                  sourcePortMapMutex_;
     std::map<std::shared_ptr<const SourcePortInfo>, std::weak_ptr<ISourcePort>> sourcePortMap_;
 };
-
-#if defined(BUILD_USB_PORT)
-int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-class LibusbDeviceWatcher : public DeviceWatcher {
-public:
-    LibusbDeviceWatcher() =default;
-    ~LibusbDeviceWatcher() noexcept override {
-        TRY_EXECUTE(stop());
-        // libusb_exit();
-    }
-    void start(deviceChangedCallback callback) override {
-        callback_ = callback;
-        auto rc   = libusb_hotplug_register_callback(NULL, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, 0, 0x2BC5, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY,
-                                                     deviceArrivalCallback, this, &hp[0]);
-        if(LIBUSB_SUCCESS != rc) {
-            LOG_WARN("register libusb hotplug failed!");
-        }
-        rc = libusb_hotplug_register_callback(NULL, LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, 0, 0x2BC5, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY,
-                                              deviceRemovedCallback, this, &hp[1]);
-        if(LIBUSB_SUCCESS != rc) {
-            LOG_WARN("register libusb hotplug failed!");
-        }
-    }
-
-    void stop() override {
-        libusb_hotplug_deregister_callback(NULL, hp[0]);
-        libusb_hotplug_deregister_callback(NULL, hp[1]);
-    }
-
-    static bool hasCapability() {
-        return libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG);
-    }
-
-private:
-    libusb_hotplug_callback_handle hp[2];
-    deviceChangedCallback          callback_;
-
-    friend int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-    friend int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-};
-#endif
-
 
 }  // namespace libobsensor

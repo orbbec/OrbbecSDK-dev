@@ -10,6 +10,7 @@
 #include "frame/FrameFactory.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "stream/StreamProfile.hpp"
+#include "usb/enumerator/UsbEnumeratorLibusb.hpp"
 
 #include <utlist.h>
 #include <libuvc/libuvc_internal.h>
@@ -50,16 +51,18 @@ uvc_frame_format fourCC2UvcFormat(int32_t fourccCode) {
     return uvcFormat;
 }
 
-ObLibuvcDevicePort::ObLibuvcDevicePort(std::shared_ptr<UsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo)
+ObLibuvcDevicePort::ObLibuvcDevicePort(std::shared_ptr<IUsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo)
     : usbDev_(usbDev), portInfo_(portInfo) {
-
-    uvc_init(&uvcCtx_, usbDev->context);
+    auto libusbDev       = std::dynamic_pointer_cast<UsbDeviceLibusb>(usbDev_);
+    auto libusbCtx       = libusbDev->getLibusbContext();
+    auto libusbDevHandle = libusbDev->getLibusbDeviceHandle();
+    uvc_init(&uvcCtx_, libusbCtx);
     uvcDev_          = (uvc_device_t *)malloc(sizeof(*uvcDev_));
     uvcDev_->ctx     = uvcCtx_;
     uvcDev_->ref     = 0;
-    uvcDev_->usb_dev = libusb_get_device(usbDev->devHandle.get());
+    uvcDev_->usb_dev = libusb_get_device(libusbDevHandle);
 
-    auto res = uvc_open(uvcDev_, portInfo->infIndex, &uvcDevHandle_, usbDev->devHandle.get());
+    auto res = uvc_open(uvcDev_, portInfo->infIndex, &uvcDevHandle_, libusbDevHandle);
     if(res < 0) {
         LOG_WARN("uvc_open  path={} already opened", portInfo->infUrl);
         std::stringstream ss;

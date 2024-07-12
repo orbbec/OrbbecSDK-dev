@@ -6,6 +6,7 @@
 #include "UvcTypes.hpp"
 #include "UvcDevicePort.hpp"
 #include "stream/StreamProfile.hpp"
+#include "usb/enumerator/IUsbEnumerator.hpp"
 
 #include <libuvc/libuvc.h>
 #include <libusb.h>
@@ -40,7 +41,7 @@ private:
     } uvcProfile;
 
 public:
-    ObLibuvcDevicePort(std::shared_ptr<UsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo);
+    ObLibuvcDevicePort(std::shared_ptr<IUsbDevice> usbDev, std::shared_ptr<const USBSourcePortInfo> portInfo);
     ~ObLibuvcDevicePort() noexcept override;
 
     StreamProfileList getStreamProfileList() override;
@@ -74,7 +75,7 @@ private:
     void    setCtrl(uvc_req_code action, uint8_t control, uint8_t unit, int32_t value) const;
 
 private:
-    std::shared_ptr<UsbDevice>               usbDev_;
+    std::shared_ptr<IUsbDevice>              usbDev_;
     std::shared_ptr<const USBSourcePortInfo> portInfo_;
 
     uvc_context_t       *uvcCtx_;

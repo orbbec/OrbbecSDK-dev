@@ -11,6 +11,7 @@
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
 #include "usb/uvc/ObV4lUvcDevicePort.hpp"
+#include "usb/enumerator/UsbEnumeratorLibusb.hpp"
 #endif
 
 #if defined(BUILD_NET_PORT)
@@ -23,7 +24,6 @@
 
 namespace libobsensor {
 
-
 const std::vector<uint16_t> gFemtoMegaPids = {
     0x0669,  // Femto Mega
     0x06c0,  // Femto Mega i
@@ -32,6 +32,83 @@ const std::vector<uint16_t> gFemtoMegaPids = {
 template <class T> static bool isMatchDeviceByPid(uint16_t pid, T &pids) {
     return std::any_of(pids.begin(), pids.end(), [pid](uint16_t pid_) { return pid_ == pid; });
 }
+
+#if defined(BUILD_USB_PORT)
+int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+class LibusbDeviceWatcher : public DeviceWatcher {
+public:
+    LibusbDeviceWatcher() = default;
+    ~LibusbDeviceWatcher() noexcept override {
+        TRY_EXECUTE(stop());
+        // libusb_exit();
+    }
+    void start(deviceChangedCallback callback) override {
+        callback_ = callback;
+        auto rc   = libusb_hotplug_register_callback(NULL, LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED, 0, 0x2BC5, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY,
+                                                     deviceArrivalCallback, this, &hp[0]);
+        if(LIBUSB_SUCCESS != rc) {
+            LOG_WARN("register libusb hotplug failed!");
+        }
+        rc = libusb_hotplug_register_callback(NULL, LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT, 0, 0x2BC5, LIBUSB_HOTPLUG_MATCH_ANY, LIBUSB_HOTPLUG_MATCH_ANY,
+                                              deviceRemovedCallback, this, &hp[1]);
+        if(LIBUSB_SUCCESS != rc) {
+            LOG_WARN("register libusb hotplug failed!");
+        }
+    }
+
+    void stop() override {
+        libusb_hotplug_deregister_callback(NULL, hp[0]);
+        libusb_hotplug_deregister_callback(NULL, hp[1]);
+    }
+
+    static bool hasCapability() {
+        return libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG);
+    }
+
+private:
+    libusb_hotplug_callback_handle hp[2];
+    deviceChangedCallback          callback_;
+
+    friend int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+    friend int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
+};
+
+std::string parseDevicePath(libusb_device *usbDevice) {
+    auto usb_bus = std::to_string(libusb_get_bus_number(usbDevice));
+    // As per the USB 3.0 specs, the current maximum limit for the depth is 7.
+    const auto               max_usb_depth            = 8;
+    uint8_t                  usb_ports[max_usb_depth] = {};
+    std::stringstream        port_path;
+    auto                     port_count = libusb_get_port_numbers(usbDevice, usb_ports, max_usb_depth);
+    auto                     usb_dev    = std::to_string(libusb_get_device_address(usbDevice));
+    libusb_device_descriptor dev_desc{};
+    auto                     r = libusb_get_device_descriptor(usbDevice, &dev_desc);
+    (void)r;
+    for(int i = 0; i < port_count; ++i) {
+        port_path << std::to_string(usb_ports[i]) << (((i + 1) < port_count) ? "." : "");
+    }
+    return usb_bus + "-" + port_path.str() + "-" + usb_dev;
+}
+
+int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+    (void)ctx;
+    (void)event;
+    auto watcher = (LibusbDeviceWatcher *)user_data;
+    LOG_DEBUG("Device arrival event occurred");
+    watcher->callback_(OB_DEVICE_ARRIVAL, parseDevicePath(device));
+    return 0;
+}
+
+int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
+    (void)ctx;
+    (void)event;
+    auto watcher = (LibusbDeviceWatcher *)user_data;
+    LOG_DEBUG("Device removed event occurred");
+    watcher->callback_(OB_DEVICE_REMOVED, parseDevicePath(device));
+    return 0;
+}
+#endif
 
 std::weak_ptr<LinuxPal> LinuxPal::instanceWeakPtr_;
 std::mutex              LinuxPal::instanceMutex_;
@@ -47,7 +124,7 @@ std::shared_ptr<ObPal>  ObPal::getInstance() {
 
 LinuxPal::LinuxPal() {
 #if defined(BUILD_USB_PORT)
-    usbEnumerator_ = std::make_shared<UsbEnumerator>();
+    usbEnumerator_ = IUsbEnumerator::getInstance();
 #endif
 }
 
@@ -172,7 +249,7 @@ SourcePortInfoList LinuxPal::queryUsbSourcePort() {
         portInfo->vid      = info.vid;
         portInfo->pid      = info.pid;
         portInfo->serial   = info.serial;
-        portInfo->connSpec = usb_spec_names.find(info.conn_spec)->second;
+        portInfo->connSpec = usbSpecToString(static_cast<UsbSpec>(info.conn_spec));
         portInfo->infUrl   = info.infUrl;
         portInfo->infIndex = info.infIndex;
         portInfo->infName  = info.infName;
@@ -181,41 +258,6 @@ SourcePortInfoList LinuxPal::queryUsbSourcePort() {
         portInfoList.push_back(portInfo);
     }
     return portInfoList;
-}
-
-std::string parseDevicePath(libusb_device *usbDevice) {
-    auto usb_bus = std::to_string(libusb_get_bus_number(usbDevice));
-    // As per the USB 3.0 specs, the current maximum limit for the depth is 7.
-    const auto               max_usb_depth            = 8;
-    uint8_t                  usb_ports[max_usb_depth] = {};
-    std::stringstream        port_path;
-    auto                     port_count = libusb_get_port_numbers(usbDevice, usb_ports, max_usb_depth);
-    auto                     usb_dev    = std::to_string(libusb_get_device_address(usbDevice));
-    libusb_device_descriptor dev_desc{};
-    auto                     r = libusb_get_device_descriptor(usbDevice, &dev_desc);
-    (void)r;
-    for(int i = 0; i < port_count; ++i) {
-        port_path << std::to_string(usb_ports[i]) << (((i + 1) < port_count) ? "." : "");
-    }
-    return usb_bus + "-" + port_path.str() + "-" + usb_dev;
-}
-
-int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
-    (void)ctx;
-    (void)event;
-    auto watcher = (LibusbDeviceWatcher *)user_data;
-    LOG_DEBUG("Device arrival event occurred");
-    watcher->callback_(OB_DEVICE_ARRIVAL, parseDevicePath(device));
-    return 0;
-}
-
-int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data) {
-    (void)ctx;
-    (void)event;
-    auto watcher = (LibusbDeviceWatcher *)user_data;
-    LOG_DEBUG("Device removed event occurred");
-    watcher->callback_(OB_DEVICE_REMOVED, parseDevicePath(device));
-    return 0;
 }
 
 #if defined(BUILD_USB_PORT)
@@ -258,6 +300,5 @@ void LinuxPal::loadXmlConfig() {
 #endif
 
 #endif
-
 
 }  // namespace libobsensor

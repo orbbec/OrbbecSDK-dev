@@ -1,10 +1,16 @@
 
 cmake_minimum_required(VERSION 3.5)
+project(OpenOrbbecSDK VERSION 2.0.0 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-project(OpenOrbbecSDK VERSION 2.0.0 LANGUAGES CXX C)
+# check if current project is a sub project of other project
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(OB_IS_MAIN_PROJECT TRUE)
+else()
+    set(OB_IS_MAIN_PROJECT FALSE)
+endif()
 
 # load project options
 include(cmake/options.cmake)

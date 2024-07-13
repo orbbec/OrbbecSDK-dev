@@ -22,7 +22,7 @@ protected:
     // selected id; 0 for all
     uint32_t             selectedID_ = 0;
 
-    std::map<std::pair<int, OBFrameType>, std::shared_ptr<Frame>> recentFrames_;
+    std::map<std::pair<int64_t, OBFrameType>, std::shared_ptr<Frame>> recentFrames_;
 };
 
 }  // namespace libobsensor

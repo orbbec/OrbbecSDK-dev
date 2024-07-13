@@ -8,7 +8,6 @@ namespace libobsensor {
 DisparityBasedSensor::DisparityBasedSensor(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)
     : VideoSensor(owner, sensorType, backend) {
     convertProfileAsDisparityBasedProfile();
-    syncDisparityToDepthModeStatus(); 
 }
 
 void DisparityBasedSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) {
@@ -28,8 +27,8 @@ void DisparityBasedSensor::convertProfileAsDisparityBasedProfile() {
     }
 }
 
-void DisparityBasedSensor::enableConvertOutputFrameAsDisparityFrame(bool enable) {
-    convertOutputFrameAsDisparityFrame = enable;
+void DisparityBasedSensor::markOutputDisparityFrame(bool enable) {
+    outputDisparityFrame_ = enable;
 }
 
 void DisparityBasedSensor::setDepthUnit(float unit){
@@ -37,7 +36,7 @@ void DisparityBasedSensor::setDepthUnit(float unit){
 }
 
 void DisparityBasedSensor::outputFrame(std::shared_ptr<Frame> frame) {
-    if(convertOutputFrameAsDisparityFrame) {
+    if(outputDisparityFrame_) {
         auto sp    = frame->getStreamProfile();
         auto newSp = sp->clone();
         newSp->setFormat(OB_FORMAT_DISP16);
@@ -48,21 +47,7 @@ void DisparityBasedSensor::outputFrame(std::shared_ptr<Frame> frame) {
     if(depthFrame) {
         depthFrame->setValueScale(depthUnit_);
     }
-    
+
     VideoSensor::outputFrame(frame);
 }
-
-void DisparityBasedSensor::syncDisparityToDepthModeStatus(){
-    OBPropertyValue hwDisparityValue;
-    OBPropertyValue swDisparityValue;
-    auto commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
-    commandPort->getPropertyValue(OB_PROP_DISPARITY_TO_DEPTH_BOOL,&hwDisparityValue);
-    auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
-    processor->getPropertyValue(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, &swDisparityValue);
-    if(hwDisparityValue.intValue == 1 && swDisparityValue.intValue == 1){
-        swDisparityValue.intValue = 0;
-        processor->setPropertyValue(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, swDisparityValue);
-    }
-}
-
 }  // namespace libobsensor

@@ -16,8 +16,8 @@ void SequenceIdFilter::updateConfig(std::vector<std::string> &params) {
     try {
 
         uint32_t select_sequence_id = std::stoi(params[0]);
-        if (select_sequence_id >= 0 && select_sequence_id <= 2) {
-            if (select_sequence_id != selectedID_) {
+        if(select_sequence_id >= 0 && select_sequence_id <= 2) {
+            if(select_sequence_id != selectedID_) {
                 std::lock_guard<std::recursive_mutex> lk(valueUpdateMutex_);
                 selectedID_ = select_sequence_id;
             }
@@ -30,7 +30,7 @@ void SequenceIdFilter::updateConfig(std::vector<std::string> &params) {
 
 const std::string &SequenceIdFilter::getConfigSchema() const {
     // csv format: name，type， min，max，step，default，description
-    static const std::string schema = "sequenceid, int, 0, 2, 1, 0, frame data sequence id value";
+    static const std::string schema = "sequenceid, integer, 0, 2, 1, 0, frame data sequence id value";
     return schema;
 }
 
@@ -45,24 +45,24 @@ std::shared_ptr<Frame> SequenceIdFilter::processFunc(std::shared_ptr<const Frame
         return outFrame;
     }
 
-    int64_t     seqID  = outFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+    int64_t seq = selectedID_ == 0 ? 1 : 0;
+    TRY_EXECUTE({ seq = outFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX); });
     OBFrameType type = outFrame->getType();
-    auto ID = std::make_pair(seqID, type);
+    auto        key  = std::make_pair(seq, type);
 
     std::lock_guard<std::recursive_mutex> lk(valueUpdateMutex_);
-
     // should filter but the current frame id does not matched
-    if((selectedID_ != 0) && (seqID + 1) != selectedID_) {
-        ID.first = (seqID == 0) ? 1 : 0;
-        if(recentFrames_[ID])
-            return recentFrames_[ID];
-        return outFrame;
+    if((selectedID_ != 0) && (seq + 1) != selectedID_) {
+        key.first = (seq == 0) ? 1 : 0;
+        if(recentFrames_[key]) {
+            outFrame = recentFrames_[key];
+        }
     }
     else {
-        // should not filter, or the current frame id matches
-        recentFrames_[ID] = outFrame;
-        return outFrame;
+        recentFrames_[key] = outFrame;
     }
+    // should not filter, or the current frame id matches
+    return outFrame;
 }
 
 }  // namespace libobsensor

@@ -13,9 +13,12 @@ public:
     virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range)  override;
 
 private:
-    void enableConvertOutputFrameAsDisparityFrame(bool enable);
+    void markOutputDisparityFrame(bool enable);
 
 private:
     IDevice *owner_;
+
+    bool hwDisparityToDepthEnabled_;
+    bool swDisparityToDepthEnabled_;
 };
 }

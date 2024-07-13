@@ -513,7 +513,8 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
     else {  // type == OB_SENSOR_COLOR || type == OB_SENSOR_DEPTH || type == OB_SENSOR_IR_LEFT || type == OB_SENSOR_IR_RIGHT
         std::shared_ptr<VideoSensor> videoSensor;
         if(sensorType == OB_SENSOR_DEPTH) {
-            videoSensor = std::make_shared<DisparityBasedSensor>(this, sensorType, iter->second.backend);
+            auto disparityBasedSensor = std::make_shared<DisparityBasedSensor>(this, sensorType, iter->second.backend);
+            videoSensor               = disparityBasedSensor;
 
             videoSensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
                                                     { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
@@ -530,6 +531,13 @@ DeviceComponentPtr<ISensor> G330Device::getSensor(OBSensorType sensorType) {
                 auto frameProcessor = comp.as<FrameProcessor>();
                 videoSensor->setFrameProcessor(frameProcessor.get());
             }
+
+            auto propAccessor = getPropertyAccessor();
+            auto depthUnit    = propAccessor->getPropertyValueT<float>(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT);
+            disparityBasedSensor->setDepthUnit(depthUnit);
+
+            auto hwD2D = propAccessor->getPropertyValueT<bool>(OB_PROP_DISPARITY_TO_DEPTH_BOOL);
+            disparityBasedSensor->markOutputDisparityFrame(!hwD2D);
         }
         else if(sensorType == OB_SENSOR_IR_LEFT) {
             videoSensor = std::make_shared<VideoSensor>(this, sensorType, iter->second.backend);

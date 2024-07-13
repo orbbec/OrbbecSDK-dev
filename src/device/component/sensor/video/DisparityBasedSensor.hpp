@@ -11,7 +11,7 @@ public:
 
     void updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) override;
 
-    void enableConvertOutputFrameAsDisparityFrame(bool enable);
+    void markOutputDisparityFrame(bool enable);
 
     void setDepthUnit(float unit);
 private:
@@ -22,7 +22,7 @@ private:
     void syncDisparityToDepthModeStatus();
 
 private:
-    bool convertOutputFrameAsDisparityFrame = false;
+    bool outputDisparityFrame_ = false;
 
     float depthUnit_ = 1.0f;
 };

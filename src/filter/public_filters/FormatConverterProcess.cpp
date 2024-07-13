@@ -37,6 +37,9 @@ void FormatConverter::setConversion(OBFormat srcFormat, OBFormat dstFormat) {
         case OB_FORMAT_RGB:
             convertType_ = FORMAT_YUYV_TO_RGB;
             break;
+        case OB_FORMAT_RGBA:
+            convertType_ = FORMAT_YUYV_TO_RGBA;
+            break;
         case OB_FORMAT_BGR:
             convertType_ = FORMAT_YUYV_TO_BGR;
             break;

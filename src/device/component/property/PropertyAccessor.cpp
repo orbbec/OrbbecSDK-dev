@@ -75,6 +75,20 @@ void PropertyAccessor::aliasProperty(uint32_t aliasId, uint32_t propertyId) {
         throw invalid_value_exception("Property not found for aliasing");
     }
     properties_[aliasId] = it->second;
+
+    auto infoIter = OBPropertyBaseInfoMap.find(propertyId);
+    if(infoIter == OBPropertyBaseInfoMap.end()) {
+        std::string msg = ", id=";
+        msg += std::to_string(propertyId);
+        throw not_implemented_exception(msg);
+    }
+
+    if(it->second.userPermission & 0x3) {
+        addProperty(userPropertiesVec_, aliasId, infoIter->second.name, infoIter->second.type, it->second.userPermission);
+    }
+    if(it->second.InternalPermission & 0x3) {
+        addProperty(innerPropertiesVec_, aliasId, infoIter->second.name, infoIter->second.type, it->second.InternalPermission);
+    }
 }
 
 bool PropertyAccessor::checkProperty(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const {

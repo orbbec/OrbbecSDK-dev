@@ -177,7 +177,7 @@ void G330Device::initProperties() {
         if(sensor.first == OB_SENSOR_COLOR) {
             auto uvcPropertyPort = std::make_shared<UvcPropertyPort>(sourcePort);
             propertyAccessor->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyPort);
-            propertyAccessor->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyPort);
+            // propertyAccessor->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyPort);  // replace by vendor property port
             propertyAccessor->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyPort);
@@ -198,6 +198,7 @@ void G330Device::initProperties() {
             auto vendorPropertyPort = std::make_shared<VendorPropertyPort>(this,sourcePort);
             propertyAccessor->registerProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", vendorPropertyPort);  // using vendor property port
             propertyAccessor->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LASER_CONTROL_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LASER_ALWAYS_ON_BOOL, "rw", "rw", vendorPropertyPort);
@@ -207,7 +208,7 @@ void G330Device::initProperties() {
             propertyAccessor->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, "", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT, "r", "r", vendorPropertyPort);
-            propertyAccessor->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "rw", "rw", vendorPropertyPort);
+            propertyAccessor->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_TIMER_RESET_DELAY_US_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, "rw", "rw", vendorPropertyPort);
@@ -234,7 +235,7 @@ void G330Device::initProperties() {
 
             propertyAccessor->registerProperty(OB_PROP_EXTERNAL_SIGNAL_RESET_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", vendorPropertyPort);
-            propertyAccessor->registerProperty(OB_PROP_GPM_BOOL, "rw", "rw", vendorPropertyPort);
+            // propertyAccessor->registerProperty(OB_PROP_GPM_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LASER_POWER_ACTUAL_LEVEL_INT, "r", "r", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_STRUCT_DEVICE_TIME, "", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_GYRO_ODR_INT, "rw", "rw", vendorPropertyPort);

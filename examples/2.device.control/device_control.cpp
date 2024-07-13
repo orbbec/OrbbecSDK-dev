@@ -49,7 +49,10 @@ int main(void) try {
         }
 
         std::cout << "Input \"?\" to get all properties." << std::endl;
-        std::vector<OBPropertyItem> propertyList;
+
+        std::vector<OBPropertyItem> propertyList = getPropertyList(device);
+        std::sort(propertyList.begin(), propertyList.end(), [](const OBPropertyItem &a, const OBPropertyItem &b) { return a.id < b.id; });
+
         bool                        isSelectProperty = true;
         while(isSelectProperty) {
             std::string choice;
@@ -99,7 +102,6 @@ int main(void) try {
                 }
             }
             else {
-                propertyList = getPropertyList(device);
                 printfPropertyList(device, propertyList);
                 std::cout << "Please select property.(Property control usage: [property number] [set/get] [property value])" << std::endl;
             }

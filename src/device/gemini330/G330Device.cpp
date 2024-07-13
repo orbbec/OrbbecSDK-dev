@@ -32,6 +32,7 @@
 #include "G330PresetManager.hpp"
 #include "G330DepthAlgModeManager.hpp"
 #include "G330SensorStreamStrategy.hpp"
+#include "G330PropertyPort.hpp"
 
 #include <algorithm>
 
@@ -164,6 +165,12 @@ void G330Device::initSensors() {
 
 void G330Device::initProperties() {
     auto propertyAccessor = std::make_shared<PropertyAccessor>(this);
+
+    auto g330PropertyPort = std::make_shared<G330PropertyPort>(this);
+    propertyAccessor->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", g330PropertyPort);
+    propertyAccessor->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", g330PropertyPort);
+    propertyAccessor->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", g330PropertyPort);
+
     for(auto &sensor: sensors_) {
         auto &sourcePort = sensor.second.backend;
         // todo: lazy create source port
@@ -188,7 +195,7 @@ void G330Device::initProperties() {
             auto uvcPropertyPort = std::make_shared<UvcPropertyPort>(sourcePort);
             propertyAccessor->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyPort);
 
-            auto vendorPropertyPort = std::make_shared<VendorPropertyPort>(sourcePort);
+            auto vendorPropertyPort = std::make_shared<VendorPropertyPort>(this,sourcePort);
             propertyAccessor->registerProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyPort);
@@ -198,7 +205,6 @@ void G330Device::initProperties() {
             propertyAccessor->registerProperty(OB_PROP_TEMPERATURE_COMPENSATION_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LDP_STATUS_BOOL, "r", "r", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, "", "rw", vendorPropertyPort);
-            propertyAccessor->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT, "r", "r", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "rw", "rw", vendorPropertyPort);
@@ -226,7 +232,6 @@ void G330Device::initProperties() {
             // todo: add these properties to the frame processor
             // propertyAccessor->registerProperty(OB_PROP_SDK_DEPTH_FRAME_UNPACK_BOOL, "rw", "rw", vendorPropertyPort);
 
-            propertyAccessor->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_EXTERNAL_SIGNAL_RESET_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_PROP_GPM_BOOL, "rw", "rw", vendorPropertyPort);
@@ -252,6 +257,8 @@ void G330Device::initProperties() {
             propertyAccessor->registerProperty(OB_RAW_DATA_DEPTH_ALG_MODE_LIST, "", "r", vendorPropertyPort);
             propertyAccessor->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyPort);
 
+            registerComponent(OB_DEV_COMPONENT_COMMAND_PORT, vendorPropertyPort);
+
             auto devMonitor = std::make_shared<DeviceMonitor>(this, sourcePort);
             registerComponent(OB_DEV_COMPONENT_DEVICE_MONITOR, devMonitor);
         }
@@ -274,9 +281,6 @@ void G330Device::initProperties() {
     propertyAccessor->aliasProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL);
     propertyAccessor->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
     propertyAccessor->aliasProperty(OB_PROP_IR_GAIN_INT, OB_PROP_DEPTH_GAIN_INT);
-
-    auto depthFrameProcessorPortWrapper = std::make_shared<DeviceComponentPropertyPortWrapper>(this, OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
-    propertyAccessor->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", depthFrameProcessorPortWrapper);
 
     registerComponent(OB_DEV_COMPONENT_PROP_ACCESSOR, propertyAccessor, true);
 }

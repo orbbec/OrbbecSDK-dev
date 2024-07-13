@@ -1,13 +1,17 @@
 #pragma once
 #include "IProperty.hpp"
 #include "ISourcePort.hpp"
+#include "IDevice.hpp"
+#include "IDeviceComponent.hpp"
 #include <mutex>
 
 namespace libobsensor {
-class VendorPropertyPort : public IPropertyExtensionPort, public IPropertyExtensionPortV1_1 {  // todo: split into two classes
+class VendorPropertyPort : public IDeviceComponent,public IPropertyExtensionPort, public IPropertyExtensionPortV1_1 {  // todo: split into two classes
 public:
-    explicit VendorPropertyPort(const std::shared_ptr<ISourcePort> &backend);
+    explicit VendorPropertyPort(IDevice *owner, const std::shared_ptr<ISourcePort> &backend);
     ~VendorPropertyPort() noexcept override = default;
+
+    IDevice * getOwner() const;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
@@ -27,6 +31,7 @@ private:
     void clearBuffers();
 
 private:
+    IDevice *owner_;
     std::shared_ptr<ISourcePort>      backend_;
     std::mutex                        mutex_;
     std::vector<uint8_t>              recvData_;

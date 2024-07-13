@@ -136,6 +136,9 @@ void FrameProcessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         setConfigValue("DisparityTransform#255", static_cast<double>(value.intValue));
     } break;
+    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT:{ 
+        setConfigValue("DisparityTransform#2", static_cast<double>(value.floatValue));
+    } break;
     }
 }
 
@@ -146,6 +149,11 @@ void FrameProcessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *valu
         getValue        = getConfigValue("DisparityTransform#255");
         value->intValue = static_cast<int32_t>(getValue);
     } break;
+    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT:{
+        getValue = getConfigValue("DisparityTransform#2");
+        value->floatValue = static_cast<float>(getValue);
+    } break;
+    
     }
 }
 
@@ -160,6 +168,14 @@ void FrameProcessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *rang
         range->min.intValue  = 0;
         range->step.intValue = 1;
     } break;
+    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT:{
+        value = getConfigValue("DisparityTransform#2");
+        range->cur.floatValue  = static_cast<float>(value);
+        range->def.floatValue  = 1.0f;
+        range->max.floatValue  = 10.0f;
+        range->min.floatValue  = 0.001f;
+        range->step.floatValue = 0.001f;
+    }break;
     }
 }
 

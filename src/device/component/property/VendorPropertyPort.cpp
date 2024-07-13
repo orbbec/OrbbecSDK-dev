@@ -4,7 +4,7 @@
 
 namespace libobsensor {
 
-VendorPropertyPort::VendorPropertyPort(const std::shared_ptr<ISourcePort> &backend) : backend_(backend), recvData_(1024), sendData_(1024) {
+VendorPropertyPort::VendorPropertyPort(IDevice *owner,const std::shared_ptr<ISourcePort> &backend) : owner_(owner),backend_(backend), recvData_(1024), sendData_(1024) {
     auto port = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
     if(!port) {
         throw invalid_value_exception("VendorPropertyPort backend must be IVendorDataPort");
@@ -245,6 +245,10 @@ const std::vector<uint8_t> &VendorPropertyPort::getStructureDataListProtoV1_1(ui
 void VendorPropertyPort::clearBuffers() {
     memset(recvData_.data(), 0, recvData_.size());
     memset(sendData_.data(), 0, sendData_.size());
+}
+
+IDevice * VendorPropertyPort::getOwner() const{
+    return owner_;
 }
 
 

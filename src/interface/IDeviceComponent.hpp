@@ -84,5 +84,6 @@ private:
 #define OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR "DeviceSyncConfigurator"
 #define OB_DEV_COMPONENT_DEVICE_MONITOR "DeviceMonitor"
 #define OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY "FrameProcessorFactory"
+#define OB_DEV_COMPONENT_COMMAND_PORT "CommandPort"
 
 }  // namespace libobsensor

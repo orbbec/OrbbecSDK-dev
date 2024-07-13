@@ -205,8 +205,8 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
         return outFrame;
     }
 
-    auto depth_seq_size = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE);
-    if(depth_seq_size != 2) {
+    auto depthSeqSize = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE);
+    if(depthSeqSize != 2) {
         return outFrame;
     }
 

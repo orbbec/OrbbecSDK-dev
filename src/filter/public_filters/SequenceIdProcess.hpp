@@ -16,13 +16,13 @@ public:
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
-    bool isSelectedId(int stream_index);
-
 protected:
     std::recursive_mutex valueUpdateMutex_;
-    uint32_t             select_sequence_id_ = 0;
 
-    std::map<std::pair<int, int>, std::shared_ptr<Frame>> last_frames_;
+    // selected id; 0 for all
+    uint32_t             selectedID_ = 0;
+
+    std::map<std::pair<int, OBFrameType>, std::shared_ptr<Frame>> recentFrames_;
 };
 
 }  // namespace libobsensor

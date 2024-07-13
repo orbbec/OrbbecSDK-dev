@@ -11,7 +11,7 @@ public:
     explicit VendorPropertyPort(IDevice *owner, const std::shared_ptr<ISourcePort> &backend);
     ~VendorPropertyPort() noexcept override = default;
 
-    IDevice * getOwner() const;
+    IDevice * getOwner() const override;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;

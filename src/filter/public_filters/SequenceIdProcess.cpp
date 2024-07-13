@@ -15,9 +15,9 @@ void SequenceIdFilter::updateConfig(std::vector<std::string> &params) {
     }
     try {
 
-        uint32_t select_sequence_id = std::stoi(params[0]);
+        int select_sequence_id = std::stoi(params[0]);
         if(select_sequence_id >= 0 && select_sequence_id <= 2) {
-            if(select_sequence_id != selectedID_) {
+            if(static_cast<uint32_t>(select_sequence_id) != selectedID_) {
                 std::lock_guard<std::recursive_mutex> lk(valueUpdateMutex_);
                 selectedID_ = select_sequence_id;
             }

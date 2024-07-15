@@ -69,23 +69,23 @@ std::string replaceFirst(const std::string &s, const std::string &src, const std
     return outStr;
 }
 
-char my_tolower(char ch) {
-    return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-}
+// char my_tolower(char ch) {
+//     return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+// }
 
 std::string toLower(const std::string &s) {
     std::string outStr = s;
-    std::transform(outStr.begin(), outStr.end(), outStr.begin(), my_tolower);
+    std::transform(outStr.begin(), outStr.end(), outStr.begin(), reinterpret_cast<char (*)(int)>(::tolower));
     return outStr;
 }
 
-char my_toupper(char ch) {
-    return static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
-}
+// char my_toupper(char ch) {
+//     return static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+// }
 
 std::string toUpper(const std::string &s) {
     std::string outStr = s;
-    std::transform(outStr.begin(), outStr.end(), outStr.begin(), my_toupper);
+    std::transform(outStr.begin(), outStr.end(), outStr.begin(), reinterpret_cast<char (*)(int)>(::toupper));
     return outStr;
 }
 

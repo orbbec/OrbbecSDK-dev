@@ -329,7 +329,7 @@ public:
     virtual ~Align() noexcept = default;
 
     OBStreamType getAlignToStreamType() {
-        return static_cast<OBStreamType>(getConfigValue("AlignType"));
+        return static_cast<OBStreamType>(static_cast<int>(getConfigValue("AlignType")));
     }
 };
 

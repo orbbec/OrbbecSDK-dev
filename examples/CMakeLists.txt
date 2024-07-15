@@ -43,3 +43,6 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/ DESTINATION examples/src PATTERN "*
 if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/publish_files/CMakeLists.txt)
     install(FILES ${CMAKE_CURRENT_LIST_DIR}/publish_files/CMakeLists.txt DESTINATION examples)
 endif()
+
+# InstallRequiredSystemLibraries
+include(InstallRequiredSystemLibraries)

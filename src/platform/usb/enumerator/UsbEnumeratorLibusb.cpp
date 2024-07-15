@@ -145,8 +145,8 @@ bool findSN2Toupper(const std::string &src, std::string &dst) {
     if(tokens[2].length() < 11) {
         return false;
     }
-    std::transform(tokens[2].begin(), tokens[2].end(), std::back_inserter(dst),
-                   [](const char &ch) { return static_cast<char>(std::toupper(static_cast<unsigned char>(ch))); });
+
+    dst = utils::string::toUpper(tokens[2]);
     return true;
 }
 

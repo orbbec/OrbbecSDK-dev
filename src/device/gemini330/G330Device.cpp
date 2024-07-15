@@ -77,7 +77,7 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
         videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
     }
     else {
-        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
+        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, globalTimestampFitter);
     }
 
     auto algParamManager = std::make_shared<G330AlgParamManager>(this);

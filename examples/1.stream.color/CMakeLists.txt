@@ -1,13 +1,11 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(ob_color)
-include_directories(${CMAKE_SOURCE_DIR}/include/libobsensor)
+
 add_executable(ob_color color.cpp)
 
 set_property(TARGET ob_color PROPERTY CXX_STANDARD 11)
-target_link_libraries(ob_color ob::openobsdk ob::examples::common ${OpenCV_LIBS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/OpenCV430/lib/Windows/include/)
+target_link_libraries(ob_color ob::openobsdk ob::examples::utils)
 set_target_properties (ob_color PROPERTIES FOLDER "examples")
 
-# ob_install_example_target(ob_color)
-# ob_install_example_current_source("/cpp/1.stream.color")
+install(TARGETS ob_color RUNTIME DESTINATION bin)

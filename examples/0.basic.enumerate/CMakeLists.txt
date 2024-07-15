@@ -4,10 +4,7 @@ project(ob_enumerate)
 add_executable(ob_enumerate enumerate.cpp)
 
 set_property(TARGET ob_enumerate PROPERTY CXX_STANDARD 11)
-target_link_libraries(ob_enumerate ob::openobsdk ob::examples::common ${OpenCV_LIBS})
-set_target_properties (ob_enumerate PROPERTIES FOLDER "examples")
+target_link_libraries(ob_enumerate ob::openobsdk ob::examples::utils)
+set_target_properties(ob_enumerate PROPERTIES FOLDER "examples")
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/3rdparty/OpenCV430/lib/Windows/include/)
-
-# ob_install_example_target(ob_enumerate)
-# ob_install_example_current_source("/cpp/0.basic.enumerate")
+install(TARGETS ob_enumerate RUNTIME DESTINATION bin)

@@ -5,10 +5,10 @@ file(GLOB subdirectories RELATIVE ${CMAKE_CURRENT_LIST_DIR} "*")
 # dependecies
 find_package(OpenCV QUIET)
 if(NOT ${OpenCV_FOUND})
-    message(WARNING "OpenCV not found, some examples will not be built")
+    message(WARNING "OpenCV not found, some examples may not be built. Please install OpenCV or set OpenCV_DIR to the directory of your OpenCV installation.")
 endif()
 
-add_subdirectory(common)
+add_subdirectory(utils)
 
 # c examples
 add_subdirectory(c_examples)
@@ -36,4 +36,10 @@ if(${OpenCV_FOUND})
     # add_subdirectory(3.advanced.coordinate_convert)
     add_subdirectory(3.advanced.hdr)
     add_subdirectory(3.advanced.multi_devices)
+endif()
+
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/ DESTINATION examples/src PATTERN "*publish_files*" EXCLUDE)
+
+if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/publish_files/CMakeLists.txt)
+    install(FILES ${CMAKE_CURRENT_LIST_DIR}/publish_files/CMakeLists.txt DESTINATION examples)
 endif()

@@ -1,6 +1,5 @@
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 #pragma once
-
 #include <libobsensor/ObSensor.hpp>
 #include <opencv2/opencv.hpp>
 #include <string>

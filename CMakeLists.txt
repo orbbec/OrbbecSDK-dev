@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.5)
 project(OpenOrbbecSDK VERSION 2.0.1 LANGUAGES CXX C)
 
@@ -17,6 +16,7 @@ include(cmake/options.cmake)
 if(OB_BUILD_USB_PORT)
     add_definitions(-DBUILD_USB_PORT)
 endif()
+
 if(OB_BUILD_NET_PORT)
     add_definitions(-DBUILD_NET_PORT)
 endif()
@@ -45,7 +45,6 @@ include(cmake/global_config.cmake)
 set(OB_PUBLIC_HEADERS_DIR ${CMAKE_CURRENT_LIST_DIR}/include/)
 set(OB_3RDPARTY_DIR ${CMAKE_CURRENT_LIST_DIR}/3rdparty)
 set(OB_PROJECT_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
-
 
 add_subdirectory(extensions)
 add_subdirectory(src)

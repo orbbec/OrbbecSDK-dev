@@ -17,4 +17,4 @@ template <typename T> std::string toString(const T a_value, const int n = 6) {
     out << std::fixed << a_value;
     return std::move(out).str();
 }
-}
+}  // namespace ob_smpl

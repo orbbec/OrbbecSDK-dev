@@ -5,9 +5,8 @@ project(ob_device_control)
 add_executable(${PROJECT_NAME} device_control.cpp)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
-target_link_libraries(${PROJECT_NAME} ob::openobsdk ob::examples::common )
+target_link_libraries(${PROJECT_NAME} ob::openobsdk ob::examples::utils )
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "examples")
 
-# ob_install_example_target(${PROJECT_NAME})
-# ob_install_example_current_source("/cpp/Sample-${PROJECT_NAME}")
+install(TARGETS ob_device_control RUNTIME DESTINATION bin)

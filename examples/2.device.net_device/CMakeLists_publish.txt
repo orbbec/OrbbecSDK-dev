@@ -1,9 +1,0 @@
-
-cmake_minimum_required(VERSION 3.5)
-project(Sample-NetDevice)
-
-add_executable(NetDevice NetDevice.cpp)
-
-set_property(TARGET NetDevice PROPERTY CXX_STANDARD 11)
-target_link_libraries(NetDevice OrbbecSDK ${OpenCV_LIBS})
-

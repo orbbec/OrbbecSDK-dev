@@ -47,7 +47,7 @@ private:
         UVC_BACKEND_TYPE_V4L2,
     } UvcBackendType;
 
-    UvcBackendType uvcBackendType_ = UVC_BACKEND_TYPE_AUTO;
+    UvcBackendType uvcBackendType_ = UVC_BACKEND_TYPE_LIBUVC;
 #endif
 
 private:

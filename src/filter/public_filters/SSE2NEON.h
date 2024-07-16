@@ -106,9 +106,6 @@
 #pragma message("Macro name collisions may happen with unsupported compilers.")
 #endif
 
-#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 10
-#warning "GCC versions earlier than 10 are not supported."
-#endif
 
 /* C language does not allow initializing a variable with a function call. */
 #ifdef __cplusplus

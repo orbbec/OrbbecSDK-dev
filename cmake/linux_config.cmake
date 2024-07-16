@@ -11,11 +11,10 @@ set(CMAKE_CXX_FLAGS
 )
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--disable-new-dtags")
 
-# string(REPLACE "-O3" "-O0" CMAKE_CXX_FLAGS_RELEASE
-# "${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+
 execute_process(
   COMMAND uname -r
   OUTPUT_VARIABLE UNAME_RESULT
@@ -25,14 +24,20 @@ string(REGEX MATCH "[0-9]+.[0-9]+" LINUX_KERNEL_VERSION ${UNAME_RESULT})
 message(STATUS "linux version ${LINUX_KERNEL_VERSION}")
 
 set(OB_CURRENT_OS "linux_x64")
-set(BUILD_LINUX_ARM OFF)
 
-if(OB_BUILD_LINUX_ARM64 AND OB_BUILD_LINUX_ARM32)
-  message(SEND_ERROR "Obsensor: can not choose two platform at the same time!!")
-endif(OB_BUILD_LINUX_ARM64 AND OB_BUILD_LINUX_ARM32)
+execute_process(COMMAND uname -m OUTPUT_VARIABLE MACHINES)
+execute_process(COMMAND getconf LONG_BIT OUTPUT_VARIABLE MACHINES_BIT)
+if ((${MACHINES} MATCHES "x86_64") AND (${MACHINES_BIT} MATCHES "64"))
+  set(OB_CURRENT_OS "linux_x64")
+elseif (${MACHINES} MATCHES "arm")
+  set(OB_BUILD_LINUX_ARM32 ON)
+elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "64"))
+  set(OB_BUILD_LINUX_ARM64 ON)
+elseif ((${MACHINES} MATCHES "aarch64") AND (${MACHINES_BIT} MATCHES "32"))
+  set(OB_BUILD_LINUX_ARM32 ON)
+endif ()
 
-execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine
-                OUTPUT_VARIABLE MACHINE)
+execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE MACHINE)
 
 if(OB_BUILD_LINUX_ARM64)
   if(${MACHINE} MATCHES "aarch64-linux-gnu")
@@ -41,17 +46,16 @@ if(OB_BUILD_LINUX_ARM64)
     set(CMAKE_C_FLAGS
         "${CMAKE_C_FLAGS}  -Wl,--allow-shlib-undefined -mstrict-align -ftree-vectorize"
     )
+
     set(CMAKE_CXX_FLAGS
         "${CMAKE_CXX_FLAGS} -Wl,--allow-shlib-undefined -mstrict-align -ftree-vectorize"
     )
+
     set(OB_CURRENT_OS "linux_arm64")
-    set(OB_BUILD_LINUX_ARM32 OFF)
-    set(OB_BUILD_LINUX_ARM64 ON)
-    set(BUILD_LINUX_ARM ON)
   else()
     message(SEND_ERROR "Obsensor: check aarch64-linux-gnu not found!!!")
   endif(${MACHINE} MATCHES "aarch64-linux-gnu")
-endif(OB_BUILD_LINUX_ARM64)
+endif()
 
 if(OB_BUILD_LINUX_ARM32)
   if(${MACHINE} MATCHES "arm-linux-gnueabihf")
@@ -64,23 +68,18 @@ if(OB_BUILD_LINUX_ARM32)
         "${CMAKE_CXX_FLAGS} -Wl,--allow-shlib-undefined -mfpu=neon -mfloat-abi=hard -ftree-vectorize -latomic"
     )
     set(OB_CURRENT_OS "linux_arm32")
-    set(OB_BUILD_LINUX_ARM32 ON)
-    set(OB_BUILD_LINUX_ARM64 OFF)
-    set(BUILD_LINUX_ARM ON)
   else()
     message(SEND_ERROR "Obsensor: check arm-linux-gnueabihf not found!!!")
   endif()
-endif(OB_BUILD_LINUX_ARM32)
-
-if(NOT BUILD_LINUX_ARM)
-  message("linux set sse3")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}   -mssse3")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -mssse3")
 endif()
 
-if(OB_BUILD_LINUX_ARM64)
+if(OB_BUILD_LINUX_ARM64 || OB_BUILD_LINUX_ARM32)
   message("linux set neon")
   add_definitions(-D__NEON__)
+else()
+  message("linux set sse3")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
 endif()
 
 add_definitions(-DOS_LINUX)
@@ -91,5 +90,4 @@ set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_SKIP_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 set(CMAKE_INSTALL_RPATH "$ORIGIN:../lib:${CMAKE_INSTALL_RPATH}")

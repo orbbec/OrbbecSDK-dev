@@ -1,2 +1,2 @@
 # unset ignore for current directory
-!./*
+!scripts/build

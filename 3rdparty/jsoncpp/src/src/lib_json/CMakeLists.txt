@@ -151,7 +151,7 @@ if(BUILD_STATIC_LIBS)
         endif()
     endif()
 
-    if (UNIX AND NOT APPLE AND NOT (BUILD_LINUX_ARM OR BUILD_LINUX_ARM32 OR BUILD_LINUX_ARM))
+    if (UNIX AND NOT APPLE AND NOT (OB_BUILD_LINUX_ARM32 OR OB_BUILD_LINUX_ARM64))
         target_compile_options(${STATIC_LIB} PUBLIC -fPIC)
     endif()
 

@@ -73,7 +73,7 @@ if(OB_BUILD_LINUX_ARM32)
   endif()
 endif()
 
-if(OB_BUILD_LINUX_ARM64 || OB_BUILD_LINUX_ARM32)
+if(OB_BUILD_LINUX_ARM64 OR OB_BUILD_LINUX_ARM32)
   message("linux set neon")
   add_definitions(-D__NEON__)
 else()

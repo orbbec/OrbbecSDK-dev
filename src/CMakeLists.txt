@@ -35,7 +35,7 @@ target_include_directories(
 
 if(UNIX)
     find_package(Threads REQUIRED)
-    target_link_libraries(openobsdk PUBLIC Threads::Threads)
+    target_link_libraries(openobsdk PRIVATE Threads::Threads)
 endif()
 
 add_library(ob::openobsdk ALIAS openobsdk)

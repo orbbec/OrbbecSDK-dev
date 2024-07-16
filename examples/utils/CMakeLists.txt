@@ -18,6 +18,9 @@ if(${OpenCV_FOUND})
     target_include_directories(ob_examples_utils PUBLIC ${OpenCV_INCLUDE_DIRS})
 endif()
 
+find_package(Threads REQUIRED)
+target_link_libraries(ob_examples_utils PUBLIC Threads::Threads)
+
 target_include_directories(ob_examples_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(ob::examples::utils ALIAS ob_examples_utils)

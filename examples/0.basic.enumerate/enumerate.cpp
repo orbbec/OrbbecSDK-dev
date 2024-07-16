@@ -112,7 +112,7 @@ int main(void) try {
         // Query the list of connected devices.
         auto deviceList = context.queryDeviceList();
         if(deviceList->getCount() < 1) {
-            std::cout << "Not found device !" << std::endl;
+            std::cout << "No device found! Please connect a supported device and retry this program." << std::endl;
             return -1;
         }
 

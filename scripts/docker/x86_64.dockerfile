@@ -7,7 +7,6 @@ ENV TERM=xterm
 ENV DEBIAN_FRONTEND=noninteractive
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=DontWarn
 
-
 # Builder dependencies installation
 RUN apt-get update -o Acquire::http::proxy=false -o Acquire::https::proxy=false \
     && apt-get install -qq -y --no-install-recommends -o Acquire::http::proxy=false -o Acquire::https::proxy=false \
@@ -29,7 +28,6 @@ RUN apt-get update -o Acquire::http::proxy=false -o Acquire::https::proxy=false 
     ca-certificates \
     zip \
     tzdata \
-    libopencv-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ADD 10_nvidia.json /etc/glvnd/egl_vendor.d/10_nvidia.json

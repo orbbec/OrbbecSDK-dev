@@ -17,3 +17,5 @@ set_target_properties(extensions PROPERTIES FOLDER "modules")
 
 install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/filters/${OB_CURRENT_OS}/" DESTINATION "bin/extensions/filters")
 install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/frameprocessor/${OB_CURRENT_OS}/" DESTINATION "bin/extensions/frameprocessor")
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/filters/${OB_CURRENT_OS}/" DESTINATION "lib/extensions/filters")
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/frameprocessor/${OB_CURRENT_OS}/" DESTINATION "lib/extensions/frameprocessor")

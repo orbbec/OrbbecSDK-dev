@@ -41,20 +41,22 @@ endif()
 add_library(ob::openobsdk ALIAS openobsdk)
 ob_source_group(ob::openobsdk)
 
-install(
-    TARGETS openobsdk
-    EXPORT openobsdkConfig
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-)
+if(OB_IS_MAIN_PROJECT)
+    install(
+        TARGETS openobsdk
+        EXPORT openobsdkConfig
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+    )
 
-install(
-    DIRECTORY ${OB_PUBLIC_HEADERS_DIR}
-    DESTINATION include
-    FILES_MATCHING
-    PATTERN "*.h"
-    PATTERN "*.hpp"
-)
+    install(
+        DIRECTORY ${OB_PUBLIC_HEADERS_DIR}
+        DESTINATION include
+        FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.hpp"
+    )
 
-install(EXPORT openobsdkConfig NAMESPACE ob:: DESTINATION lib)
+    install(EXPORT openobsdkConfig NAMESPACE ob:: DESTINATION lib)
+endif()

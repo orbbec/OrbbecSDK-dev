@@ -54,7 +54,7 @@ if(OB_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-if(OB_INSTALL_EXAMPLES_SOURCE)
+if(OB_INSTALL_EXAMPLES_SOURCE AND OB_IS_MAIN_PROJECT)
     install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/examples/ DESTINATION examples/src PATTERN "*publish_files*" EXCLUDE )
     if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/examples/publish_files)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/examples/publish_files/CMakeLists.txt DESTINATION examples)

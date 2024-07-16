@@ -35,7 +35,7 @@ $verPattern = 'project\(.*?VERSION\s+([0-9]+(?:\.[0-9]+)+)\s'
 $content = Get-Content -Path $PROJECT_ROOT\CMakeLists.txt -Raw
 $match = [regex]::Match($content, $verPattern)
 $version = $match.Groups[1].Value
-$timestamp = Get-Date -Format "yyyyMMddHHmmss"
+$timestamp = Get-Date -Format "yyyyMMddHHmm"
 $git_hash = $(git rev-parse --short HEAD)
 $package_name = "openorbbecsdk_v${version}_${timestamp}_${git_hash}_${fullPlatform}"
 

@@ -400,16 +400,13 @@ cv::Mat CVWindow::visualize(std::shared_ptr<const ob::Frame> frame) {
     else if(frame->getType() == OB_FRAME_DEPTH) {
         auto videoFrame = frame->as<const ob::VideoFrame>();
         if(videoFrame->getFormat() == OB_FORMAT_Y16 || videoFrame->getFormat() == OB_FORMAT_Z16) {
-            cv::Mat cvtMat;
             cv::Mat rawMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_16UC1, videoFrame->getData());
             // depth frame pixel value multiply scale to get distance in millimeter
             float scale = videoFrame->as<ob::DepthFrame>()->getValueScale();
 
-            // threshold to 8 meters, as is a common range for depth camera
-            cv::threshold(rawMat, cvtMat, 8000.0f / scale, 0, cv::THRESH_TRUNC);
-
-            // normalization to 0-255, 0.032f is 256/8000
-            cvtMat.convertTo(cvtMat, CV_32F, scale * 0.032f);
+            cv::Mat cvtMat;
+            // normalization to 0-255. 0.032f is 256/8000, to limit the range of depth to 8000mm
+            rawMat.convertTo(cvtMat, CV_32F, scale * 0.032f);
 
             // apply gamma correction
             cv::pow(cvtMat, 1.2f, cvtMat);

@@ -53,6 +53,13 @@ USER_ID=$(id -u)
 GROUP_ID=$(id -g)
 
 # run docker container and build openorbbecsdk
-docker run --rm -u $USER_ID:$GROUP_ID -v $PROJECT_ROOT:/workspace -w /workspace --name OpenOrbbecSDK_Build_Liunx_$ARCH -it openorbbecsdk-env.$ARCH /bin/bash -c "cd /workspace && bash ./scripts/build/build_linux.sh"
+docker run --rm -u $USER_ID:$GROUP_ID \
+    -v $PROJECT_ROOT:/workspace \
+    -w /workspace \
+    --name OpenOrbbecSDK_Build_Liunx_$ARCH \
+    -it \
+    --entrypoint /bin/bash \
+    openorbbecsdk-env.$ARCH \
+    -c "cd /workspace && bash ./scripts/build/build_linux.sh"
 
 echo "Done building openorbbecsdk for linux $ARCH via docker"

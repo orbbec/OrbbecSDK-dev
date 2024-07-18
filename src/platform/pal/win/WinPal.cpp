@@ -146,7 +146,7 @@ WinPal::~WinPal() noexcept {
     LOG_DEBUG("WinPal destroyed!");
 }
 
-std::shared_ptr<ISourcePort> WinPal::createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> WinPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
     std::shared_ptr<ISourcePort> port;
 

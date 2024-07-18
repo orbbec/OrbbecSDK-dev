@@ -263,7 +263,7 @@ bool ob_device_is_property_supported(const ob_device *device, ob_property_id pro
     }
 
     auto accessor = device->device->getPropertyAccessor();
-    return accessor->checkProperty(property_id, operationType, libobsensor::PROP_ACCESS_USER);
+    return accessor->isPropertySupported(property_id, operationType, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission)
 

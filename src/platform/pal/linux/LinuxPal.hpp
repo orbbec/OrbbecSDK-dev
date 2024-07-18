@@ -29,7 +29,7 @@ private:
 public:
     ~LinuxPal() noexcept override;
 
-    std::shared_ptr<ISourcePort> createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
+    std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
 #if defined(BUILD_USB_PORT)
 public:

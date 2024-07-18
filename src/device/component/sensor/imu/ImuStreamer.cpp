@@ -1,4 +1,4 @@
-#include "MotionStreamer.hpp"
+#include "ImuStreamer.hpp"
 #include "frame/Frame.hpp"
 #include "stream/StreamProfile.hpp"
 #include "logger/LoggerInterval.hpp"
@@ -7,8 +7,9 @@
 #include "filter/public_filters/FrameIMUCorrectProcess.hpp"
 
 namespace libobsensor {
-MotionStreamer::MotionStreamer(const std::shared_ptr<IDataStreamPort> &backend, const std::shared_ptr<IFilter> &dataPhaser)
-    : backend_(backend), dataPhaser_(dataPhaser), running_(false), frameIndex_(0) {
+ImuStreamer::ImuStreamer(IDevice *owner, const std::shared_ptr<IDataStreamPort> &backend, const std::shared_ptr<IFilter> &dataPhaser)
+    : owner_(owner), backend_(backend), dataPhaser_(dataPhaser), running_(false), frameIndex_(0) {
+
     dataPhaser_->setCallback([this](std::shared_ptr<const Frame> frame) {
         if(!frame) {
             return;
@@ -34,7 +35,7 @@ MotionStreamer::MotionStreamer(const std::shared_ptr<IDataStreamPort> &backend, 
     });
 }
 
-MotionStreamer::~MotionStreamer() noexcept {
+ImuStreamer::~ImuStreamer() noexcept {
     {
         std::lock_guard<std::mutex> lock(cbMtx_);
         callbacks_.clear();
@@ -48,7 +49,7 @@ MotionStreamer::~MotionStreamer() noexcept {
     }
 }
 
-void MotionStreamer::start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) {
+void ImuStreamer::start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) {
     {
         std::lock_guard<std::mutex> lock(cbMtx_);
         callbacks_[sp] = callback;
@@ -58,11 +59,11 @@ void MotionStreamer::start(std::shared_ptr<const StreamProfile> sp, FrameCallbac
     }
     running_ = true;
 
-    std::function<void(std::shared_ptr<Frame> frame)> streamCallback = std::bind(&MotionStreamer::praseIMUData, this, std::placeholders::_1);
+    std::function<void(std::shared_ptr<Frame> frame)> streamCallback = std::bind(&ImuStreamer::praseIMUData, this, std::placeholders::_1);
     backend_->startStream(streamCallback);
 }
 
-void MotionStreamer::stop(std::shared_ptr<const StreamProfile> sp) {
+void ImuStreamer::stop(std::shared_ptr<const StreamProfile> sp) {
     {
         std::lock_guard<std::mutex> lock(cbMtx_);
         auto                        iter = callbacks_.find(sp);
@@ -81,7 +82,7 @@ void MotionStreamer::stop(std::shared_ptr<const StreamProfile> sp) {
     running_ = false;
 }
 
-void MotionStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
+void ImuStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
     auto         data     = frame->getData();
     OBImuHeader *header   = (OBImuHeader *)data;
     auto         dataSize = frame->getDataSize();
@@ -156,7 +157,7 @@ void MotionStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
             gyroFrameData->temp = imuData->temperature;
         }
 
-        uint64_t timestamp = ((uint64_t)imuData->timestamp[0] | ((uint64_t)imuData->timestamp[1] << 32));
+        uint64_t timestamp  = ((uint64_t)imuData->timestamp[0] | ((uint64_t)imuData->timestamp[1] << 32));
         auto     frameIndex = frameIndex_++;
         if(accelFrame) {
             accelFrame->setNumber(frameIndex);
@@ -175,5 +176,9 @@ void MotionStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
         dataPhaser_->pushFrame(frameSet);
     }
 }
+
+IDevice *ImuStreamer::getOwner() const {
+    return owner_;
+};
 
 }  // namespace libobsensor

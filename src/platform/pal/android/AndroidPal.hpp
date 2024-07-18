@@ -18,7 +18,7 @@ public:
     AndroidPal();
     virtual ~AndroidPal() noexcept;
 
-    virtual std::shared_ptr<ISourcePort> createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
+    virtual std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
 #if defined(BUILD_USB_PORT)
     virtual std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;

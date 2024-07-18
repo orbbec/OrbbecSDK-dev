@@ -76,6 +76,7 @@ private:
 #define OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR "ColorFrameProcessor"
 #define OB_DEV_COMPONENT_GYRO_SENSOR "GyroSensor"
 #define OB_DEV_COMPONENT_ACCEL_SENSOR "AccelSensor"
+#define OB_DEV_COMPONENT_IMU_STREAMER "ImuStreamer"
 #define OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY "SensorStreamStrategy"
 #define OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER "GlobalTimestampFitter"
 #define OB_DEV_COMPONENT_PRESET_MANAGER "PresetManager"

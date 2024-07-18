@@ -45,11 +45,6 @@ struct LazySensor {
     OBSensorType           sensorType;
 };
 
-struct SensorEntry {
-    std::shared_ptr<ISensor>     sensor;
-    std::shared_ptr<ISourcePort> backend;
-};
-
 }  // namespace libobsensor
 
 #ifdef __cplusplus

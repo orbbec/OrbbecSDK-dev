@@ -2,12 +2,13 @@
 
 #include "IFilter.hpp"
 #include "ISourcePort.hpp"
+#include "IDeviceComponent.hpp"
 
 #include <atomic>
 #include <map>
 #include <mutex>
 
-namespace libobsensor{
+namespace libobsensor {
 
 typedef struct {
     float accelData[3];  // 三个方向加速度值(xyz)，单位：g
@@ -40,21 +41,23 @@ typedef struct {
     uint32_t timestamp[2];
 } OBImuOriginData;
 
-class MotionStreamer final {
+class ImuStreamer : public IDeviceComponent {
 public:
-    MotionStreamer(const std::shared_ptr<IDataStreamPort> &backend, const std::shared_ptr<IFilter>& dataPhaser);
-
-    ~MotionStreamer() noexcept;
+    ImuStreamer(IDevice *owner, const std::shared_ptr<IDataStreamPort> &backend, const std::shared_ptr<IFilter> &dataPhaser);
+    virtual ~ImuStreamer() noexcept;
 
     void start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback);
     void stop(std::shared_ptr<const StreamProfile> sp);
+
+    IDevice *getOwner() const override;
 
 private:
     void praseIMUData(std::shared_ptr<Frame> frame);
 
 private:
+    IDevice                         *owner_;
     std::shared_ptr<IDataStreamPort> backend_;
-    std::shared_ptr<IFilter> dataPhaser_;
+    std::shared_ptr<IFilter>         dataPhaser_;
 
     std::mutex                                                    cbMtx_;
     std::map<std::shared_ptr<const StreamProfile>, FrameCallback> callbacks_;
@@ -63,5 +66,4 @@ private:
 
     uint64_t frameIndex_;
 };
-
-}
+}  // namespace libobsensor

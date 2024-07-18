@@ -17,7 +17,7 @@ private:
 public:
     virtual ~WinPal() noexcept override;
 
-    std::shared_ptr<ISourcePort>    createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
+    std::shared_ptr<ISourcePort>   getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
     std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
     SourcePortInfoList             queryUsbSourcePort() override;
 

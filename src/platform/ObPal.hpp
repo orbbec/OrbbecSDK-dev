@@ -19,7 +19,7 @@ public:
 
     virtual ~ObPal() noexcept = default;
 
-    virtual std::shared_ptr<ISourcePort> createSourcePort(std::shared_ptr<const SourcePortInfo>) = 0;
+    virtual std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo>) = 0;
 
 #if defined(BUILD_USB_PORT)
     virtual std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const = 0;

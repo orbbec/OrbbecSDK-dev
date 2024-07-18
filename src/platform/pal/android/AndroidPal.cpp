@@ -31,7 +31,7 @@ AndroidPal::~AndroidPal() noexcept {
 #endif
 };
 
-std::shared_ptr<ISourcePort> AndroidPal::createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> AndroidPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
     std::shared_ptr<ISourcePort>  port;
 

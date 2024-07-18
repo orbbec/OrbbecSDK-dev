@@ -34,7 +34,7 @@ MacPal::MacPal() {
 
 MacPal::~MacPal() noexcept {}
 
-std::shared_ptr<ISourcePort> MacPal::createSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> MacPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
     std::shared_ptr<ISourcePort>  port;
 

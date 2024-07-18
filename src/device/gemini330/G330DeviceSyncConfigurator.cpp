@@ -93,13 +93,13 @@ void G330DeviceSyncConfigurator::setTimestampResetConfig(const OBDeviceTimestamp
 
     auto owner            = getOwner();
     auto propertyAccessor = owner->getPropertyAccessor();
-    if(propertyAccessor->checkProperty(OB_PROP_TIMER_RESET_ENABLE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_ENABLE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
         propertyAccessor->setPropertyValueT(OB_PROP_TIMER_RESET_ENABLE_BOOL, timestampResetConfig.enable);
     }
-    if(propertyAccessor->checkProperty(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
         propertyAccessor->setPropertyValueT(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, timestampResetConfig.timestamp_reset_signal_output_enable);
     }
-    if(propertyAccessor->checkProperty(OB_PROP_TIMER_RESET_DELAY_US_INT, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_DELAY_US_INT, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
         propertyAccessor->setPropertyValueT(OB_PROP_TIMER_RESET_DELAY_US_INT, timestampResetConfig.timestamp_reset_delay_us);
     }
 
@@ -115,14 +115,14 @@ OBDeviceTimestampResetConfig G330DeviceSyncConfigurator::getTimestampResetConfig
     auto owner            = getOwner();
     auto propertyAccessor = owner->getPropertyAccessor();
 
-    if(propertyAccessor->checkProperty(OB_PROP_TIMER_RESET_ENABLE_BOOL, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
+    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_ENABLE_BOOL, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
         currentTimestampResetConfig_.enable = propertyAccessor->getPropertyValueT<bool>(OB_PROP_TIMER_RESET_ENABLE_BOOL);
     }
     else {
         currentTimestampResetConfig_.enable = true;
     }
 
-    if(propertyAccessor->checkProperty(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
+    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
         currentTimestampResetConfig_.timestamp_reset_signal_output_enable =
             propertyAccessor->getPropertyValueT<bool>(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL);
     }
@@ -130,7 +130,7 @@ OBDeviceTimestampResetConfig G330DeviceSyncConfigurator::getTimestampResetConfig
         currentTimestampResetConfig_.timestamp_reset_signal_output_enable = true;
     }
 
-    if(propertyAccessor->checkProperty(OB_PROP_TIMER_RESET_DELAY_US_INT, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
+    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_DELAY_US_INT, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
         currentTimestampResetConfig_.timestamp_reset_delay_us = propertyAccessor->getPropertyValueT<int>(OB_PROP_TIMER_RESET_DELAY_US_INT);
     }
 

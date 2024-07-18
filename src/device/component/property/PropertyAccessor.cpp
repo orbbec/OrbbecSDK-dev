@@ -91,7 +91,7 @@ void PropertyAccessor::aliasProperty(uint32_t aliasId, uint32_t propertyId) {
     }
 }
 
-bool PropertyAccessor::checkProperty(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const {
+bool PropertyAccessor::isPropertySupported(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const {
     auto it = properties_.find(propertyId);
     if(it == properties_.end()) {
         return false;
@@ -120,7 +120,7 @@ bool PropertyAccessor::checkProperty(uint32_t propertyId, PropertyOperationType 
 
 void PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_WRITE, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
     }
 
@@ -142,7 +142,7 @@ void PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue val
 
 void PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -168,7 +168,7 @@ void PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *va
 
 void PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -186,7 +186,7 @@ void PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *ra
 
 void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_WRITE, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
     }
 
@@ -208,7 +208,7 @@ void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<u
 
 const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -221,7 +221,7 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t property
 
     auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
     if(extensionPort == nullptr) {
-        throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data getting");
+        throw invalid_value_exception(utils::string::to_string() << "Property " << propId << " does not support structure data getting");
     }
     const auto &data = extensionPort->getStructureData(propId);
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
@@ -232,7 +232,7 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t property
 
 void PropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -254,7 +254,7 @@ void PropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback,
 
 uint16_t PropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -276,7 +276,7 @@ uint16_t PropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyA
 
 const std::vector<uint8_t> &PropertyAccessor::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
@@ -299,7 +299,7 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureDataProtoV1_1(uint32_t
 
 void PropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_WRITE, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
     }
 
@@ -321,7 +321,7 @@ void PropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std:
 
 const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
-    if(!checkProperty(propertyId, PROP_OP_READ, accessType)) {
+    if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 

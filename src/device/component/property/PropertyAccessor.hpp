@@ -27,7 +27,7 @@ public:
     void registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr, std::shared_ptr<IPropertyPort> port) override;
     void aliasProperty(uint32_t aliasId, uint32_t propertyId) override;
 
-    bool                               checkProperty(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const override;
+    bool isPropertySupported(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const override;
     const std::vector<OBPropertyItem> &getAvailableProperties(PropertyAccessType accessType) override;
 
     void                        setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType) override;

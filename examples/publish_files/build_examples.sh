@@ -1,15 +1,33 @@
 #!/bin/bash
 
-# update apt-get
-sudo apt-get update
+echo "Checking if apt-get is workable ..."
+apt_workable=1
+#  Check if apt-get is installed
+if ! command -v apt-get &> /dev/null
+then
+    echo "apt-get could not be found."
+    apt_workable=0
+fi
 
-#install compiler and tools
-echo "Installing compiler and tools..."
-sudo apt-get install -y build-essential cmake git
+# check if apt-get is working
+if ! command -v sudo apt-get update &> /dev/null
+then
+    echo "apt-get update failed. apt-get may not be working properly."
+    apt_workable=0
+fi
 
-#install dependencies
-echo "Installing dependencies..."
-sudo apt-get install -y libopencv-dev
+if [ $apt_workable -eq 1 ]
+then
+    #install compiler and tools
+    echo "Installing compiler and tools..."
+    sudo apt-get install -y build-essential cmake git
+
+    #install dependencies
+    echo "Installing dependencies..."
+    sudo apt-get install -y libopencv-dev
+else
+    echo "Cannot install dependencies and build tools. Build examples may be failed."
+fi
 
 # restore current directory
 current_dir=$(pwd)

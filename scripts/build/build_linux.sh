@@ -32,7 +32,7 @@ make install -j8 || { echo 'Failed to build openorbbecsdk'; exit 1; }
 # Compress the installation directory
 cd $INSTALL_DIR
 cd ..
-zip -rpy ${PACKAGE_NAME}.zip $INSTALL_DIR
+zip -rpy ${PACKAGE_NAME}.zip ${PACKAGE_NAME} || { echo 'Failed to compress installation directory'; exit 1; }
 
 echo "Done building and compressing openorbbecsdk for $PLATFORM"
 echo "Done building openorbbecsdk for $PLATFORM"

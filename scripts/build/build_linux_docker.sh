@@ -24,10 +24,10 @@ fi
 
 echo "Building openorbbecsdk for linux $ARCH via docker"
 
-# detect docker image
-if [ "$(docker images -q openorbbecsdk-env.$ARCH 2>/dev/null)" == "" ]; then
-    echo "Docker image openorbbecsdk-env.$ARCH not found, building it with $PROJECT_ROOT/scripts/docker/$ARCH.dockerfile"
-    cd $PROJECT_ROOT/scripts/docker
+
+# check if cross compiling
+if [ "$ARCH" != $(uname -m) ]; then
+    echo "Cross compiling, using docker buildx to build $ARCH image"
 
     # if docker buildx is not installed, install it
     if [ "$(docker buildx ls | grep default)" == "" ]; then
@@ -40,14 +40,15 @@ if [ "$(docker images -q openorbbecsdk-env.$ARCH 2>/dev/null)" == "" ]; then
         echo "Creating docker buildx platform $platform"
         docker run --privileged --rm tonistiigi/binfmt --install all
     fi
-
-    # build docker image
-    docker buildx build --platform $platform -t openorbbecsdk-env.$ARCH -f $PROJECT_ROOT/scripts/docker/$ARCH.dockerfile . --load || {
-        echo "Failed to build docker image openorbbecsdk-env.$ARCH"
-        exit 1
-    }
-    cd $CURRNET_DIR
 fi
+
+# build docker image
+cd $PROJECT_ROOT/scripts/docker
+docker buildx build --platform $platform -t openorbbecsdk-env.$ARCH -f $PROJECT_ROOT/scripts/docker/$ARCH.dockerfile . --load || {
+    echo "Failed to build docker image openorbbecsdk-env.$ARCH"
+    exit 1
+}
+cd $CURRNET_DIR
 
 USER_ID=$(id -u)
 GROUP_ID=$(id -g)

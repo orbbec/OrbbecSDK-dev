@@ -24,6 +24,8 @@ RUN apt-get update -o Acquire::http::proxy=false -o Acquire::https::proxy=false 
     libglfw3-dev \
     libgl1-mesa-dev \
     libglu1-mesa-dev \
+    freeglut3-dev \
+    libnuma1 \
     curl \
     python3 \
     python3-dev \

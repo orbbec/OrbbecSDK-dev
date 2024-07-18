@@ -12,7 +12,6 @@ RUN apt-get update -o Acquire::http::proxy=false -o Acquire::https::proxy=false 
     && apt-get install -qq -y --no-install-recommends -o Acquire::http::proxy=false -o Acquire::https::proxy=false \
     sudo \
     build-essential \
-    cmake \
     git \
     openssl \
     libssl-dev \
@@ -29,6 +28,13 @@ RUN apt-get update -o Acquire::http::proxy=false -o Acquire::https::proxy=false 
     zip \
     tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+
+# Install CMake 3.30.0
+RUN curl -L https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.tar.gz -o cmake.tar.gz \
+    && tar -xzf cmake.tar.gz --strip-components=1 -C /usr/local \
+    && rm cmake.tar.gz
+
 
 ADD 10_nvidia.json /etc/glvnd/egl_vendor.d/10_nvidia.json
 RUN chmod 644 /etc/glvnd/egl_vendor.d/10_nvidia.json

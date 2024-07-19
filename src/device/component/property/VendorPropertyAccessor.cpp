@@ -128,6 +128,7 @@ void VendorPropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback cal
             callback(tranState, &dataChunk);
         }
     }
+
     // finish
     {
         clearBuffers();

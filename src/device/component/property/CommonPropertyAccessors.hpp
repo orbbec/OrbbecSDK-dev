@@ -7,7 +7,7 @@
 namespace libobsensor {
 class DeviceComponentPropertyAccessorWrapper : public IPropertyAccessor {
 public:
-    DeviceComponentPropertyAccessorWrapper(IDevice *device, const std::string &compName);
+    DeviceComponentPropertyAccessorWrapper(IDevice *device, DeviceComponentId compId);
     virtual ~DeviceComponentPropertyAccessorWrapper() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
@@ -16,7 +16,7 @@ public:
 
 private:
     IDevice    *device_;
-    std::string compName_;
+    DeviceComponentId compId_;
 };
 
 class FunctionPropertyAccessorWrapper : public IPropertyAccessor {

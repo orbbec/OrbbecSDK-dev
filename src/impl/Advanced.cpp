@@ -5,6 +5,7 @@
 #include "IDepthAlgModeManager.hpp"
 #include "IPresetManager.hpp"
 #include "IDevice.hpp"
+#include "IDeviceComponent.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,7 +13,7 @@ extern "C" {
 
 ob_depth_work_mode ob_device_get_current_depth_work_mode(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto               algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
+    auto               algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
     auto               checksum   = algModeMgr->getCurrentDepthAlgModeChecksum();
     ob_depth_work_mode work_mode;
     memcpy(work_mode.checksum, checksum.checksum, sizeof(checksum.checksum));
@@ -25,7 +26,7 @@ ob_status ob_device_switch_depth_work_mode(ob_device *device, const ob_depth_wor
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(work_mode);
 
-    auto algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
+    auto algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
     algModeMgr->switchDepthAlgMode(work_mode->name);
     return OB_STATUS_OK;
 }
@@ -35,7 +36,7 @@ ob_status ob_device_switch_depth_work_mode_by_name(ob_device *device, const char
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(mode_name);
 
-    auto algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
+    auto algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
     algModeMgr->switchDepthAlgMode(mode_name);
     return OB_STATUS_OK;
 }
@@ -44,7 +45,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(OB_STATUS_ERROR, device, mode_name)
 ob_depth_work_mode_list *ob_device_get_depth_work_mode_list(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
 
-    auto algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
+    auto algModeMgr    = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
     auto workModeList = algModeMgr->getDepthAlgModeList();
     auto impl          = new ob_depth_work_mode_list();
     impl->workModeList = workModeList;
@@ -77,7 +78,7 @@ HANDLE_EXCEPTIONS_NO_RETURN(work_mode_list)
 
 const char *ob_device_get_current_preset_name(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER);
     return presetMgr->getCurrentPresetName().c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)
@@ -86,7 +87,7 @@ void ob_device_load_preset(ob_device *device, const char *preset_name, ob_error 
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(preset_name);
 
-    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER);
 
     presetMgr->loadPreset(preset_name);
 }
@@ -96,7 +97,7 @@ void ob_device_load_preset_from_json_file(ob_device *device, const char *json_fi
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(json_file_path);
 
-    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER);
     presetMgr->loadPresetFromJsonFile(json_file_path);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
@@ -105,14 +106,14 @@ void ob_device_export_current_settings_as_preset_json_file(ob_device *device, co
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(json_file_path);
 
-    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER);
     presetMgr->exportSettingsAsPresetJsonFile(json_file_path);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
 
 ob_device_preset_list *ob_device_get_available_preset_list(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto presetMgr  = device->device->getComponentT<libobsensor::IPresetManager>(OB_DEV_COMPONENT_PRESET_MANAGER);
+    auto presetMgr  = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER);
     auto presetList = presetMgr->getAvailablePresetList();
 
     auto impl        = new ob_device_preset_list();

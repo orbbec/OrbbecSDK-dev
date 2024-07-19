@@ -6,8 +6,6 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/G330DeviceInfo.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330Device.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330Device.hpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330Device.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330Device.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330MetadataTypes.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330MetadataParser.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330MetadataParser.cpp
@@ -23,6 +21,6 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/G330SensorStreamStrategy.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330DeviceSyncConfigurator.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330DeviceSyncConfigurator.hpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330PropertyAccessor.hpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330PropertyAccessor.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330PropertyAccessors.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330PropertyAccessors.cpp
 )

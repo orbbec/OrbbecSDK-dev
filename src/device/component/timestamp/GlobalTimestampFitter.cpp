@@ -24,7 +24,7 @@ GlobalTimestampFitter::GlobalTimestampFitter(IDevice *owner) : DeviceComponentBa
     sampleThread_ = std::thread(&GlobalTimestampFitter::fittingLoop, this);
 
     std::unique_lock<std::mutex> lock(linearFuncParamMutex_);
-    linearFuncParamCondVar_.wait_for(lock, std::chrono::milliseconds(5000));
+    linearFuncParamCondVar_.wait_for(lock, std::chrono::milliseconds(1000));
 
     LOG_DEBUG("GlobalTimestampFitter created: maxQueueSize_={}, refreshIntervalMsec_={}", maxQueueSize_, refreshIntervalMsec_);
 }
@@ -75,8 +75,8 @@ void GlobalTimestampFitter::fittingLoop() {
         OBDeviceTime devTime;
 
         try {
-            auto owner            = getOwner();
-            auto propertyServer   = owner->getPropertyServer();
+            auto owner          = getOwner();
+            auto propertyServer = owner->getPropertyServer();
 
             auto sysTsp1Usec = utils::getNowTimesUs();
             devTime          = propertyServer->getStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME);
@@ -144,7 +144,12 @@ void GlobalTimestampFitter::fittingLoop() {
             linearFuncParamCondVar_.notify_all();
         }
 
-        sampleCondVar_.wait_for(lock, std::chrono::milliseconds(refreshIntervalMsec_));
+        auto interval = refreshIntervalMsec_;
+        if(samplingQueue_.size() >= 15) {
+            interval *= 10;
+        }
+        sampleCondVar_.wait_for(lock, std::chrono::milliseconds(interval));
+
     } while(!sampleLoopExit_ && retryCount <= MAX_RETRY_COUNT);
 
     if(retryCount > MAX_RETRY_COUNT) {

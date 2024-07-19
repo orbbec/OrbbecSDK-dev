@@ -2,23 +2,22 @@
 
 namespace libobsensor {
 
-DeviceComponentPropertyAccessorWrapper::DeviceComponentPropertyAccessorWrapper(IDevice *device, const std::string &compName)
-    : device_(device), compName_(compName) {}
+DeviceComponentPropertyAccessorWrapper::DeviceComponentPropertyAccessorWrapper(IDevice *device, DeviceComponentId compId) : device_(device), compId_(compId) {}
 
 void DeviceComponentPropertyAccessorWrapper::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
-    auto comp             = device_->getComponent(compName_);
+    auto comp             = device_->getComponent(compId_);
     auto propertyAccessor = comp.as<IPropertyAccessor>();
     propertyAccessor->setPropertyValue(propertyId, value);
 }
 
 void DeviceComponentPropertyAccessorWrapper::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
-    auto comp             = device_->getComponent(compName_);
+    auto comp             = device_->getComponent(compId_);
     auto propertyAccessor = comp.as<IPropertyAccessor>();
     propertyAccessor->getPropertyValue(propertyId, value);
 }
 
 void DeviceComponentPropertyAccessorWrapper::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
-    auto comp             = device_->getComponent(compName_);
+    auto comp             = device_->getComponent(compId_);
     auto propertyAccessor = comp.as<IPropertyAccessor>();
     propertyAccessor->getPropertyRange(propertyId, range);
 }

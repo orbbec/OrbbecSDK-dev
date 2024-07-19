@@ -32,7 +32,7 @@
 #include "G330PresetManager.hpp"
 #include "G330DepthAlgModeManager.hpp"
 #include "G330SensorStreamStrategy.hpp"
-#include "G330PropertyAccessor.hpp"
+#include "G330PropertyAccessors.hpp"
 
 #include <algorithm>
 
@@ -407,7 +407,7 @@ void G330Device::initSensorList() {
 void G330Device::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
-    auto g330PropertyAccessor = std::make_shared<G330PropertyAccessor>(this);
+    auto g330PropertyAccessor = std::make_shared<G330Disp2DepthPropertyAccessor>(this);
     propertyServer->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", g330PropertyAccessor);
     propertyServer->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", g330PropertyAccessor);
     propertyServer->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", g330PropertyAccessor);
@@ -539,7 +539,7 @@ void G330Device::initProperties() {
     propertyServer->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
     propertyServer->aliasProperty(OB_PROP_IR_GAIN_INT, OB_PROP_DEPTH_GAIN_INT);
 
-    registerComponent(OB_DEV_COMPONENT_PROP_SERVER, propertyServer, true);
+    registerComponent(OB_DEV_COMPONENT_PROPERTY_SERVER, propertyServer, true);
 }
 
 void G330Device::initFrameMetadataParserContainer() {

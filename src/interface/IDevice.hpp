@@ -33,9 +33,9 @@ public:
     virtual std::shared_ptr<const DeviceInfo> getInfo() const                                    = 0;
     virtual const std::string                &getExtensionInfo(const std::string &infoKey) const = 0;
 
-    virtual bool                                  isComponentExists(const std::string &name) const                     = 0;
-    virtual bool                                  isComponentCreated(const std::string &name) const                    = 0;  // for lazy creation
-    virtual DeviceComponentPtr<IDeviceComponent>  getComponent(const std::string &name, bool throwExIfNotFound = true) = 0;
+    virtual bool                                  isComponentExists(DeviceComponentId compId) const                     = 0;
+    virtual bool                                  isComponentCreated(DeviceComponentId compId) const                    = 0;  // for lazy creation
+    virtual DeviceComponentPtr<IDeviceComponent>  getComponent(DeviceComponentId compId, bool throwExIfNotFound = true) = 0;
     virtual DeviceComponentPtr<IPropertyServer>   getPropertyServer()                                                  = 0;
 
     virtual bool                                  isSensorExists(OBSensorType type) const                   = 0;
@@ -52,8 +52,8 @@ public:
     virtual void updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) = 0;
 
 public:
-    template <typename T> DeviceComponentPtr<T> getComponentT(const std::string &name, bool throwExIfNotFound = true) {
-        auto comp = getComponent(name, throwExIfNotFound);
+    template <typename T> DeviceComponentPtr<T> getComponentT(DeviceComponentId compId, bool throwExIfNotFound = true) {
+        auto comp = getComponent(compId, throwExIfNotFound);
         if(comp) {
             return comp.as<T>();
         }

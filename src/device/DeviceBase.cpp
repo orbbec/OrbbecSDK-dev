@@ -24,6 +24,7 @@ const std::string &DeviceBase::getExtensionInfo(const std::string &infoKey) cons
 DeviceBase::~DeviceBase() noexcept = default;
 
 void DeviceBase::deactivate() {
+    std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
     components_.clear();
     sensorPortInfos_.clear();
     isDeactivated_ = true;
@@ -47,17 +48,17 @@ DeviceComponentLock DeviceBase::tryLockResource() {
     if(isDeactivated_) {
         throw libobsensor::wrong_api_call_sequence_exception("Device is deactivated/disconnected!");
     }
-    DeviceComponentLock resLock(componentMutex_, std::defer_lock);
+    DeviceComponentLock resLock(resourceMutex_, std::defer_lock);
     if(!resLock.try_lock_for(std::chrono::milliseconds(10000))) {
         throw libobsensor::wrong_api_call_sequence_exception("Resource busy! You can try again later!");
     }
     return resLock;
 }
 
-void DeviceBase::registerComponent(const std::string &name, std::function<std::shared_ptr<IDeviceComponent>()> creator, bool lockRequired) {
-    DeviceComponentLock resLock = tryLockResource();
-    ComponentItem       item;
-    item.name         = name;
+void DeviceBase::registerComponent(DeviceComponentId compId, std::function<std::shared_ptr<IDeviceComponent>()> creator, bool lockRequired) {
+    std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
+    ComponentItem                         item;
+    item.compId       = compId;
     item.component    = nullptr;
     item.lockRequired = lockRequired;
     item.initialized  = false;
@@ -65,10 +66,10 @@ void DeviceBase::registerComponent(const std::string &name, std::function<std::s
     components_.emplace_back(item);
 }
 
-void DeviceBase::registerComponent(const std::string &name, std::shared_ptr<IDeviceComponent> component, bool lockRequired) {
-    DeviceComponentLock resLock = tryLockResource();
-    ComponentItem       item;
-    item.name         = name;
+void DeviceBase::registerComponent(DeviceComponentId compId, std::shared_ptr<IDeviceComponent> component, bool lockRequired) {
+    std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
+    ComponentItem                         item;
+    item.compId       = compId;
     item.component    = component;
     item.lockRequired = lockRequired;
     item.initialized  = true;
@@ -76,8 +77,9 @@ void DeviceBase::registerComponent(const std::string &name, std::shared_ptr<IDev
     components_.emplace_back(item);
 }
 
-bool DeviceBase::isComponentExists(const std::string &name) const {
-    auto it = std::find_if(components_.begin(), components_.end(), [name](const ComponentItem &item) { return item.name == name; });
+bool DeviceBase::isComponentExists(DeviceComponentId compId) const {
+    std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
+    auto it = std::find_if(components_.begin(), components_.end(), [compId](const ComponentItem &item) { return item.compId == compId; });
     if(it != components_.end()) {
         return true;
     }
@@ -85,8 +87,9 @@ bool DeviceBase::isComponentExists(const std::string &name) const {
     return false;
 }
 
-bool DeviceBase::isComponentCreated(const std::string &name) const {
-    auto it = std::find_if(components_.begin(), components_.end(), [name](const ComponentItem &item) { return item.name == name; });
+bool DeviceBase::isComponentCreated(DeviceComponentId compId) const {
+    std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
+    auto it = std::find_if(components_.begin(), components_.end(), [compId](const ComponentItem &item) { return item.compId == compId; });
 
     if(it != components_.end()) {
         return it->component != nullptr;
@@ -95,47 +98,56 @@ bool DeviceBase::isComponentCreated(const std::string &name) const {
     return false;
 }
 
-DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string &name, bool throwExIfNotFound) {
-    DeviceComponentLock resLock = tryLockResource();
+DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(DeviceComponentId compId, bool throwExIfNotFound) {
     if(isDeactivated_) {
         throw libobsensor::wrong_api_call_sequence_exception("Device is deactivated/disconnected!");
     }
 
-    auto it = std::find_if(components_.begin(), components_.end(), [name](const ComponentItem &item) { return item.name == name; });
+    ComponentItem item = { OB_DEV_COMPONENT_UNKNOWN };
+    {
+        std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
+        auto it = std::find_if(components_.begin(), components_.end(), [compId](const ComponentItem &item) { return item.compId == compId; });
 
-    do {
-        if(it == components_.end()) {
-            break;
-        }
+        do {
+            if(it == components_.end()) {
+                break;
+            }
 
-        if(!it->component && (it->initialized || !it->creator)) {
-            break;
-        }
-        if(!it->component) {
-            it->initialized = true;
-            BEGIN_TRY_EXECUTE({ it->component = it->creator(); })
-            CATCH_EXCEPTION_AND_EXECUTE({
-                if(throwExIfNotFound) {
-                    throw;
-                }
-                return DeviceComponentPtr<IDeviceComponent>();
-            })
-        }
+            if(!it->component && (it->initialized || !it->creator)) {
+                break;
+            }
 
-        if(!it->lockRequired) {
-            return DeviceComponentPtr<IDeviceComponent>(it->component);
+            if(!it->component) {
+                it->initialized = true;
+                BEGIN_TRY_EXECUTE({ it->component = it->creator(); })
+                CATCH_EXCEPTION_AND_EXECUTE({
+                    if(throwExIfNotFound) {
+                        throw;
+                    }
+                    return DeviceComponentPtr<IDeviceComponent>();
+                })
+            }
+            item = *it;
+
+        } while(false);
+    }
+
+    if(item.compId != OB_DEV_COMPONENT_UNKNOWN) {
+        if(item.lockRequired) {
+            DeviceComponentLock resLock = tryLockResource();
+            return DeviceComponentPtr<IDeviceComponent>(item.component, std::move(resLock));
         }
-        return DeviceComponentPtr<IDeviceComponent>(it->component, std::move(resLock));
-    } while(false);
+        return DeviceComponentPtr<IDeviceComponent>(item.component);
+    }
 
     if(throwExIfNotFound) {
-        throw invalid_value_exception(utils::string::to_string() << "Component " << name << " not found!");
+        throw invalid_value_exception(utils::string::to_string() << "Component " << compId << " not found!");
     }
     return DeviceComponentPtr<IDeviceComponent>();
 }
 
 DeviceComponentPtr<IPropertyServer> DeviceBase::getPropertyServer() {
-    return getComponentT<IPropertyServer>(OB_DEV_COMPONENT_PROP_SERVER, true);
+    return getComponentT<IPropertyServer>(OB_DEV_COMPONENT_PROPERTY_SERVER, true);
 }
 
 void DeviceBase::registerSensorPortInfo(OBSensorType type, std::shared_ptr<const SourcePortInfo> sourcePortInfo) {
@@ -158,7 +170,7 @@ bool DeviceBase::isSensorExists(OBSensorType type) const {
     return false;
 }
 
-const std::map<OBSensorType, std::string> SensorTypeToComponentNameMap = {
+const std::map<OBSensorType, DeviceComponentId> SensorTypeToComponentIdMap = {
     { OB_SENSOR_COLOR, OB_DEV_COMPONENT_COLOR_SENSOR },
     { OB_SENSOR_DEPTH, OB_DEV_COMPONENT_DEPTH_SENSOR },
     { OB_SENSOR_IR, OB_DEV_COMPONENT_IR_SENSOR },
@@ -169,13 +181,13 @@ const std::map<OBSensorType, std::string> SensorTypeToComponentNameMap = {
 };
 
 bool DeviceBase::isSensorCreated(OBSensorType type) const {
-    auto componentName = SensorTypeToComponentNameMap.at(type);
-    return isComponentCreated(componentName);
+    auto compId = SensorTypeToComponentIdMap.at(type);
+    return isComponentCreated(compId);
 }
 
 DeviceComponentPtr<ISensor> DeviceBase::getSensor(OBSensorType type) {
-    auto componentName = SensorTypeToComponentNameMap.at(type);
-    return getComponentT<ISensor>(componentName, true);
+    auto compId = SensorTypeToComponentIdMap.at(type);
+    return getComponentT<ISensor>(compId, true);
 }
 
 std::vector<OBSensorType> DeviceBase::getSensorTypeList() const {

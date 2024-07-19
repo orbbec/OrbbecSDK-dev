@@ -13,7 +13,7 @@ class Context;
 class DeviceBase : public IDevice {
 private:
     struct ComponentItem {
-        std::string                                        name;
+        DeviceComponentId                                  compId;
         std::shared_ptr<IDeviceComponent>                  component;  // If is nullptr, try to create it
         std::function<std::shared_ptr<IDeviceComponent>()> creator;    // lazy creation
         bool                                               initialized;
@@ -27,11 +27,11 @@ public:
     std::shared_ptr<const DeviceInfo> getInfo() const;
     const std::string                &getExtensionInfo(const std::string &infoKey) const;
 
-    void registerComponent(const std::string &name, std::function<std::shared_ptr<IDeviceComponent>()> creator, bool lockRequired = false);
-    void registerComponent(const std::string &name, std::shared_ptr<IDeviceComponent> component, bool lockRequired = false);
-    bool isComponentExists(const std::string &name) const override;
-    bool isComponentCreated(const std::string &name) const override;  // for lazy creation
-    DeviceComponentPtr<IDeviceComponent> getComponent(const std::string &name, bool throwExIfNotFound = true) override;
+    void registerComponent(DeviceComponentId compId, std::function<std::shared_ptr<IDeviceComponent>()> creator, bool lockRequired = false);
+    void registerComponent(DeviceComponentId compId, std::shared_ptr<IDeviceComponent> component, bool lockRequired = false);
+    bool isComponentExists(DeviceComponentId compId) const override;
+    bool isComponentCreated(DeviceComponentId compId) const override;  // for lazy creation
+    DeviceComponentPtr<IDeviceComponent> getComponent(DeviceComponentId compId, bool throwExIfNotFound = true) override;
 
     void                                         registerSensorPortInfo(OBSensorType type, std::shared_ptr<const SourcePortInfo> sourcePortInfo);
     const std::shared_ptr<const SourcePortInfo> &getSensorPortInfo(OBSensorType type) const;
@@ -62,7 +62,8 @@ protected:
 private:
     std::shared_ptr<Context> ctx_;  // handle the lifespan of the context
 
-    std::recursive_timed_mutex componentMutex_;
+    std::recursive_timed_mutex   resourceMutex_;
+    mutable std::recursive_mutex componentsMutex_;
     std::vector<ComponentItem> components_;  // using vector to control destroy order of components
 
     std::atomic<bool> isDeactivated_;

@@ -1,13 +1,14 @@
-#include "G330PropertyAccessor.hpp"
+#include "G330PropertyAccessors.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
 #include "sensor/video/DisparityBasedSensor.hpp"
 #include "IDeviceComponent.hpp"
 
 namespace libobsensor {
 
-G330PropertyAccessor::G330PropertyAccessor(IDevice *owner) : owner_(owner), hwDisparityToDepthEnabled_(true), swDisparityToDepthEnabled_(false) {}
+G330Disp2DepthPropertyAccessor::G330Disp2DepthPropertyAccessor(IDevice *owner)
+    : owner_(owner), hwDisparityToDepthEnabled_(true), swDisparityToDepthEnabled_(false) {}
 
-void G330PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void G330Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     switch(propertyId) {
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
@@ -72,7 +73,7 @@ void G330PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue
     }
 }
 
-void G330PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+void G330Disp2DepthPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     switch(propertyId) {
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
@@ -98,7 +99,7 @@ void G330PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue
     }
 }
 
-void G330PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+void G330Disp2DepthPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     switch(propertyId) {
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
@@ -123,7 +124,7 @@ void G330PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange
     }
 }
 
-void G330PropertyAccessor::markOutputDisparityFrame(bool enable) {
+void G330Disp2DepthPropertyAccessor::markOutputDisparityFrame(bool enable) {
     if(!owner_->isComponentExists(OB_DEV_COMPONENT_DEPTH_SENSOR)) {
         return;
     }

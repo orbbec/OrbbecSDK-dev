@@ -23,6 +23,6 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/G330SensorStreamStrategy.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330DeviceSyncConfigurator.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330DeviceSyncConfigurator.hpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330PropertyPort.hpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330PropertyPort.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330PropertyAccessor.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330PropertyAccessor.cpp
 )

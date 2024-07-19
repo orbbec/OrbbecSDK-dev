@@ -30,12 +30,12 @@ void DeviceBase::deactivate() {
 }
 
 void DeviceBase::reboot() {
-    auto propAccessor = getPropertyAccessor();
-    if(propAccessor->isPropertySupported(OB_PROP_DEVICE_RESET_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
-        propAccessor->setPropertyValueT(OB_PROP_DEVICE_RESET_BOOL, true);
+    auto propServer = getPropertyServer();
+    if(propServer->isPropertySupported(OB_PROP_DEVICE_RESET_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+        propServer->setPropertyValueT(OB_PROP_DEVICE_RESET_BOOL, true);
     }
-    else if(propAccessor->isPropertySupported(OB_PROP_REBOOT_DEVICE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
-        propAccessor->setPropertyValueT(OB_PROP_REBOOT_DEVICE_BOOL, true);
+    else if(propServer->isPropertySupported(OB_PROP_REBOOT_DEVICE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+        propServer->setPropertyValueT(OB_PROP_REBOOT_DEVICE_BOOL, true);
     }
     else {
         throw invalid_value_exception("Device does not support reboot!");
@@ -96,6 +96,7 @@ bool DeviceBase::isComponentCreated(const std::string &name) const {
 }
 
 DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string &name, bool throwExIfNotFound) {
+    DeviceComponentLock resLock = tryLockResource();
     if(isDeactivated_) {
         throw libobsensor::wrong_api_call_sequence_exception("Device is deactivated/disconnected!");
     }
@@ -124,7 +125,6 @@ DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string 
         if(!it->lockRequired) {
             return DeviceComponentPtr<IDeviceComponent>(it->component);
         }
-        DeviceComponentLock resLock = tryLockResource();
         return DeviceComponentPtr<IDeviceComponent>(it->component, std::move(resLock));
     } while(false);
 
@@ -134,8 +134,8 @@ DeviceComponentPtr<IDeviceComponent> DeviceBase::getComponent(const std::string 
     return DeviceComponentPtr<IDeviceComponent>();
 }
 
-DeviceComponentPtr<IPropertyAccessor> DeviceBase::getPropertyAccessor() {
-    return getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_PROP_ACCESSOR, true);
+DeviceComponentPtr<IPropertyServer> DeviceBase::getPropertyServer() {
+    return getComponentT<IPropertyServer>(OB_DEV_COMPONENT_PROP_SERVER, true);
 }
 
 void DeviceBase::registerSensorPortInfo(OBSensorType type, std::shared_ptr<const SourcePortInfo> sourcePortInfo) {

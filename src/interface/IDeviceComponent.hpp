@@ -63,7 +63,7 @@ private:
     DeviceComponentLock lock_;
 };
 
-#define OB_DEV_COMPONENT_PROP_ACCESSOR "PropertyAccessor"
+#define OB_DEV_COMPONENT_PROP_SERVER "PropertyServer"
 #define OB_DEV_COMPONENT_DEPTH_SENSOR "DepthSensor"
 #define OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR "DepthFrameProcessor"
 #define OB_DEV_COMPONENT_IR_SENSOR "InfraredSensor"
@@ -85,6 +85,6 @@ private:
 #define OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR "DeviceSyncConfigurator"
 #define OB_DEV_COMPONENT_DEVICE_MONITOR "DeviceMonitor"
 #define OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY "FrameProcessorFactory"
-#define OB_DEV_COMPONENT_COMMAND_PORT "CommandPort"
+#define OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR "MainPropertyAccessor"
 
 }  // namespace libobsensor

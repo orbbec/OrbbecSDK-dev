@@ -3,10 +3,10 @@
 #include "IDevice.hpp"
 
 namespace libobsensor {
-class G330PropertyPort : public IPropertyPort{
+class G330PropertyAccessor : public IPropertyAccessor {
 public:
-    explicit G330PropertyPort(IDevice *owner);
-    virtual ~G330PropertyPort() noexcept = default;
+    explicit G330PropertyAccessor(IDevice *owner);
+    virtual ~G330PropertyAccessor() noexcept = default;
 
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value)   override;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value)  override;

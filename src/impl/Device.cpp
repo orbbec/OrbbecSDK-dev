@@ -154,82 +154,82 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device, type)
 
 void ob_device_set_int_property(ob_device *device, ob_property_id property_id, int32_t value, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    accessor->setPropertyValueT(property_id, value, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    propServer->setPropertyValueT(property_id, value, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, value)
 
 int32_t ob_device_get_int_property(ob_device *device, ob_property_id property_id, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    return accessor->getPropertyValueT<int32_t>(property_id, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    return propServer->getPropertyValueT<int32_t>(property_id, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, device, property_id)
 
 ob_int_property_range ob_device_get_int_property_range(ob_device *device, ob_property_id property_id, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    auto range    = accessor->getPropertyRangeT<int32_t>(property_id, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    auto range    = propServer->getPropertyRangeT<int32_t>(property_id, libobsensor::PROP_ACCESS_USER);
     return { range.cur, range.max, range.min, range.step, range.def };
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_int_property_range(), device, property_id)
 
 void ob_device_set_float_property(ob_device *device, ob_property_id property_id, float value, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    accessor->setPropertyValueT(property_id, value, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    propServer->setPropertyValueT(property_id, value, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, value)
 
 float ob_device_get_float_property(ob_device *device, ob_property_id property_id, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    return accessor->getPropertyValueT<float>(property_id, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    return propServer->getPropertyValueT<float>(property_id, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0.0f, device, property_id)
 
 ob_float_property_range ob_device_get_float_property_range(ob_device *device, ob_property_id property_id, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    auto range    = accessor->getPropertyRangeT<float>(property_id, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    auto range    = propServer->getPropertyRangeT<float>(property_id, libobsensor::PROP_ACCESS_USER);
     return { range.cur, range.max, range.min, range.step, range.def };
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_float_property_range(), device, property_id)
 
 void ob_device_set_bool_property(ob_device *device, ob_property_id property_id, bool value, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    accessor->setPropertyValueT(property_id, value, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    propServer->setPropertyValueT(property_id, value, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, value)
 
 bool ob_device_get_bool_property(ob_device *device, ob_property_id property_id, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    return accessor->getPropertyValueT<bool>(property_id, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    return propServer->getPropertyValueT<bool>(property_id, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id)
 
 ob_bool_property_range ob_device_get_bool_property_range(ob_device *device, ob_property_id property_id, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    auto range    = accessor->getPropertyRangeT<bool>(property_id, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    auto range    = propServer->getPropertyRangeT<bool>(property_id, libobsensor::PROP_ACCESS_USER);
     return { range.cur, range.max, range.min, range.step, range.def };
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_bool_property_range(), device, property_id)
 
 void ob_device_set_structured_data(ob_device *device, ob_property_id property_id, const uint8_t *data, uint32_t data_size, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto                 accessor = device->device->getPropertyAccessor();
+    auto                 propServer = device->device->getPropertyServer();
     std::vector<uint8_t> dataVec(data, data + data_size);
-    accessor->setStructureData(property_id, dataVec, libobsensor::PROP_ACCESS_USER);
+    propServer->setStructureData(property_id, dataVec, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
 
 void ob_device_get_structured_data(ob_device *device, ob_property_id property_id, uint8_t *data, uint32_t *data_size, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto  accessor     = device->device->getPropertyAccessor();
-    auto &firmwareData = accessor->getStructureData(property_id, libobsensor::PROP_ACCESS_USER);
+    auto  propServer     = device->device->getPropertyServer();
+    auto &firmwareData = propServer->getStructureData(property_id, libobsensor::PROP_ACCESS_USER);
 
     memcpy(data, firmwareData.data(), firmwareData.size());
     *data_size = static_cast<uint32_t>(firmwareData.size());
@@ -238,15 +238,15 @@ HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
 
 uint32_t ob_device_get_supported_property_count(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor = device->device->getPropertyAccessor();
-    return static_cast<int>(accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER).size());
+    auto propServer = device->device->getPropertyServer();
+    return static_cast<int>(propServer->getAvailableProperties(libobsensor::PROP_ACCESS_USER).size());
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, device)
 
 ob_property_item ob_device_get_supported_property_item(const ob_device *device, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto accessor   = device->device->getPropertyAccessor();
-    auto properties = accessor->getAvailableProperties(libobsensor::PROP_ACCESS_USER);
+    auto propServer   = device->device->getPropertyServer();
+    auto properties = propServer->getAvailableProperties(libobsensor::PROP_ACCESS_USER);
     VALIDATE_UNSIGNED_INDEX(index, properties.size());
     return properties.at(index);
 }
@@ -262,8 +262,8 @@ bool ob_device_is_property_supported(const ob_device *device, ob_property_id pro
         operationType = libobsensor::PROP_OP_WRITE;
     }
 
-    auto accessor = device->device->getPropertyAccessor();
-    return accessor->isPropertySupported(property_id, operationType, libobsensor::PROP_ACCESS_USER);
+    auto propServer = device->device->getPropertyServer();
+    return propServer->isPropertySupported(property_id, operationType, libobsensor::PROP_ACCESS_USER);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission)
 

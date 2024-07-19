@@ -6,10 +6,10 @@ namespace libobsensor {
 
 G330DepthAlgModeManager::G330DepthAlgModeManager(IDevice *owner) : DeviceComponentBase(owner) {
 
-    auto propAccessor = owner->getPropertyAccessor();
+    auto propServer = owner->getPropertyServer();
 
-    depthAlgModeChecksumList_ = propAccessor->getStructureDataListProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_RAW_DATA_DEPTH_ALG_MODE_LIST);
-    currentAlgMode_           = propAccessor->getStructureDataProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE);
+    depthAlgModeChecksumList_ = propServer->getStructureDataListProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_RAW_DATA_DEPTH_ALG_MODE_LIST);
+    currentAlgMode_           = propServer->getStructureDataProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE);
 }
 
 std::vector<OBDepthAlgModeChecksum> G330DepthAlgModeManager::getDepthAlgModeList() const {
@@ -41,7 +41,7 @@ void G330DepthAlgModeManager::switchDepthAlgMode(const std::string &modeName) {
 
 void G330DepthAlgModeManager::switchDepthAlgMode(const OBDepthAlgModeChecksum &targetDepthMode) {
     auto owner        = getOwner();
-    auto propAccessor = owner->getPropertyAccessor();  // get property accessor first to lock resource to avoid start stream at the same time
+    auto propServer   = owner->getPropertyServer();  // get property server first to lock resource to avoid start stream at the same time
 
     if(owner->hasAnySensorStreamActivated()) {
         throw unsupported_operation_exception(utils::string::to_string()
@@ -53,7 +53,7 @@ void G330DepthAlgModeManager::switchDepthAlgMode(const OBDepthAlgModeChecksum &t
         return;
     }
 
-    propAccessor->setStructureDataProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, targetDepthMode);
+    propServer->setStructureDataProtoV1_1_T<OBDepthAlgModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, targetDepthMode);
     currentAlgMode_ = targetDepthMode;
     LOG_DEBUG("switchDepthWorkMode done with mode: {1}", currentAlgMode_.name, targetDepthMode.name);
 }

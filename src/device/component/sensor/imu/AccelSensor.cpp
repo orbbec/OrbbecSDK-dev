@@ -19,10 +19,10 @@ typedef struct {
 
 AccelSensor::AccelSensor(IDevice *owner, const std::shared_ptr<ISourcePort> &backend, const std::shared_ptr<ImuStreamer> &streamer)
     : SensorBase(owner, OB_SENSOR_ACCEL, backend), streamer_(streamer) {
-    auto propAccessor = owner->getPropertyAccessor();
+    auto propServer = owner->getPropertyServer();
 
-    auto accelSampleRateList     = propAccessor->getStructureDataT<AccelSampleRateList>(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST);
-    auto accelFullScaleRangeList = propAccessor->getStructureDataT<AccelFullScaleRangeList>(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST);
+    auto accelSampleRateList     = propServer->getStructureDataT<AccelSampleRateList>(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST);
+    auto accelFullScaleRangeList = propServer->getStructureDataT<AccelFullScaleRangeList>(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST);
 
     auto lazySensor = std::make_shared<LazySensor>(owner, OB_SENSOR_ACCEL);
     for(uint32_t i = 0; i < accelSampleRateList.num; i++) {
@@ -52,12 +52,12 @@ void AccelSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     updateStreamState(STREAM_STATE_STARTING);
 
     auto owner        = getOwner();
-    auto propAccessor = owner->getPropertyAccessor();
+    auto propServer   = owner->getPropertyServer();
 
     auto accelSp = sp->as<AccelStreamProfile>();
-    propAccessor->setPropertyValueT(OB_PROP_ACCEL_ODR_INT, static_cast<int>(accelSp->getSampleRate()));
-    propAccessor->setPropertyValueT(OB_PROP_ACCEL_FULL_SCALE_INT, static_cast<int>(accelSp->getFullScaleRange()));
-    propAccessor->setPropertyValueT(OB_PROP_ACCEL_SWITCH_BOOL, true);
+    propServer->setPropertyValueT(OB_PROP_ACCEL_ODR_INT, static_cast<int>(accelSp->getSampleRate()));
+    propServer->setPropertyValueT(OB_PROP_ACCEL_FULL_SCALE_INT, static_cast<int>(accelSp->getFullScaleRange()));
+    propServer->setPropertyValueT(OB_PROP_ACCEL_SWITCH_BOOL, true);
 
     streamer_->start(sp, [this](std::shared_ptr<const Frame> frame) {
         updateStreamState(STREAM_STATE_STREAMING);
@@ -70,8 +70,8 @@ void AccelSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
 void AccelSensor::stop() {
     updateStreamState(STREAM_STATE_STOPPING);
     auto owner        = getOwner();
-    auto propAccessor = owner->getPropertyAccessor();
-    propAccessor->setPropertyValueT(OB_PROP_ACCEL_SWITCH_BOOL, false);
+    auto propServer   = owner->getPropertyServer();
+    propServer->setPropertyValueT(OB_PROP_ACCEL_SWITCH_BOOL, false);
     streamer_->stop(activatedStreamProfile_);
     updateStreamState(STREAM_STATE_STOPED);
 }

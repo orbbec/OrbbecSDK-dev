@@ -1,4 +1,4 @@
-#include "UvcPropertyPort.hpp"
+#include "UvcPropertyAccessor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
 
 namespace libobsensor {
@@ -49,15 +49,14 @@ uint32_t convertToUvcCompatibleID(uint32_t propertyId) {
     }
 }
 
-UvcPropertyPort::UvcPropertyPort(const std::shared_ptr<ISourcePort> &backend)
-    : backend_(backend) {
+UvcPropertyAccessor::UvcPropertyAccessor(const std::shared_ptr<ISourcePort> &backend) : backend_(backend) {
     auto uvcPort = std::dynamic_pointer_cast<UvcDevicePort>(backend_);
     if(!uvcPort) {
-        throw invalid_value_exception("UvcPropertyPort backend must be UvcDevicePort");
+        throw invalid_value_exception("UvcPropertyAccessor backend must be UvcDevicePort");
     }
 }
 
-void UvcPropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void UvcPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     auto    uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(backend_);
     int32_t val;
 
@@ -97,7 +96,7 @@ void UvcPropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue valu
     }
 }
 
-void UvcPropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+void UvcPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     auto    uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(backend_);
     int32_t val;
 
@@ -130,7 +129,7 @@ void UvcPropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *val
     }
 }
 
-void UvcPropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+void UvcPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     auto            uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(backend_);
     int32_t         val;
     UvcControlRange rangeControl;

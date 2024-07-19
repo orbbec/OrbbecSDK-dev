@@ -4,10 +4,10 @@
 
 namespace libobsensor {
 
-class UvcPropertyPort: public IPropertyPort {
+class UvcPropertyAccessor : public IPropertyAccessor {
 public:
-    UvcPropertyPort(const std::shared_ptr<ISourcePort>& backend);
-    ~UvcPropertyPort() noexcept override = default;
+    UvcPropertyAccessor(const std::shared_ptr<ISourcePort> &backend);
+    ~UvcPropertyAccessor() noexcept override = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;

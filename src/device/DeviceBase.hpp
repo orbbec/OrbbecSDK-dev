@@ -42,7 +42,7 @@ public:
     bool                                         hasAnySensorStreamActivated() override;
     std::shared_ptr<IFilter>                     getSensorFrameFilter(const std::string &name, OBSensorType type, bool throwIfNotFound = true) override;
 
-    DeviceComponentPtr<IPropertyAccessor> getPropertyAccessor() override;
+    DeviceComponentPtr<IPropertyServer> getPropertyServer() override;
 
     void updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) override;
 

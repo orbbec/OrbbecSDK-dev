@@ -129,8 +129,8 @@ void DeviceMonitor::enableHeartbeat() {
         return;
     }
     auto owner        = getOwner();
-    auto propAccessor = owner->getPropertyAccessor();
-    propAccessor->setPropertyValueT(OB_PROP_HEARTBEAT_BOOL, true);
+    auto propServer   = owner->getPropertyServer();
+    propServer->setPropertyValueT(OB_PROP_HEARTBEAT_BOOL, true);
     heartbeatEnabled_ = true;
     heartbeatPaused_  = false;
     if(!heartbeatAndFetchStateThreadStarted_) {
@@ -145,8 +145,8 @@ void DeviceMonitor::disableHeartbeat() {
         return;
     }
     auto owner        = getOwner();
-    auto propAccessor = owner->getPropertyAccessor();
-    propAccessor->setPropertyValueT(OB_PROP_HEARTBEAT_BOOL, false);
+    auto propServer   = owner->getPropertyServer();
+    propServer->setPropertyValueT(OB_PROP_HEARTBEAT_BOOL, false);
     heartbeatEnabled_ = false;
     heartbeatPaused_  = false;
     if(heartbeatAndFetchStateThreadStarted_) {
@@ -161,8 +161,8 @@ void DeviceMonitor::pauseHeartbeat() {
         return;
     }
     auto owner        = getOwner();
-    auto propAccessor = owner->getPropertyAccessor();
-    propAccessor->setPropertyValueT(OB_PROP_HEARTBEAT_BOOL, false);
+    auto propServer   = owner->getPropertyServer();
+    propServer->setPropertyValueT(OB_PROP_HEARTBEAT_BOOL, false);
     if(heartbeatAndFetchStateThreadStarted_) {
         stop();
     }
@@ -179,8 +179,8 @@ void DeviceMonitor::resumeHeartbeat() {
     if(heartbeatEnabled_) {
         // resume heartbeat enable state if it was enabled before
         auto owner        = getOwner();
-        auto propAccessor = owner->getPropertyAccessor();
-        propAccessor->setPropertyValueT(OB_PROP_HEARTBEAT_BOOL, true);
+        auto propServer   = owner->getPropertyServer();
+        propServer->setPropertyValueT(OB_PROP_HEARTBEAT_BOOL, true);
     }
 
     if(heartbeatEnabled_ || !stateChangedCallbacks_.empty()) {

@@ -8,23 +8,24 @@
 
 namespace libobsensor {
 
-class PropertyAccessor : public IPropertyAccessor, public DeviceComponentBase {
+class PropertyServer : public IPropertyServer, public DeviceComponentBase {
 
     struct PropertyItem {
-        uint32_t                       propertyId;
-        OBPermissionType               userPermission;
-        OBPermissionType               InternalPermission;
-        std::shared_ptr<IPropertyPort> port;
+        uint32_t                           propertyId;
+        OBPermissionType                   userPermission;
+        OBPermissionType                   InternalPermission;
+        std::shared_ptr<IPropertyAccessor> accessor;
     };
 
 public:
-    PropertyAccessor(IDevice *owner);
-    ~PropertyAccessor() noexcept = default;
+    PropertyServer(IDevice *owner);
+    ~PropertyServer() noexcept = default;
 
     void registerAccessCallback(PropertyAccessCallback callback) override;
 
-    void registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyPort> port) override;
-    void registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr, std::shared_ptr<IPropertyPort> port) override;
+    void registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyAccessor> accessor) override;
+    void registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr,
+                          std::shared_ptr<IPropertyAccessor> accessor) override;
     void aliasProperty(uint32_t aliasId, uint32_t propertyId) override;
 
     bool isPropertySupported(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const override;

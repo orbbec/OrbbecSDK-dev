@@ -55,8 +55,8 @@ G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner
             }
         }
     };
-    auto propAccessor = owner->getPropertyAccessor();
-    propAccessor->registerAccessCallback(onPropertyValueUpdate);
+    auto propServer = owner->getPropertyServer();
+    propServer->registerAccessCallback(onPropertyValueUpdate);
 }
 
 void G330PresetManager::loadPreset(const std::string &presetName) {
@@ -205,9 +205,9 @@ void G330PresetManager::exportSettingsAsPresetJsonFile(const std::string &filePa
 }
 
 template <typename T> void setPropertyValue(IDevice *dev, uint32_t propertyId, T value) {
-    // get and release property accessor on this scope to avoid handle device resource lock for an extended duration
-    auto propAccessor = dev->getPropertyAccessor();
-    return propAccessor->setPropertyValueT<T>(propertyId, value);
+    // get and release property server on this scope to avoid handle device resource lock for an extended duration
+    auto propServer = dev->getPropertyServer();
+    return propServer->setPropertyValueT<T>(propertyId, value);
 }
 
 void G330PresetManager::loadCustomPreset(const std::string &presetName, const G330Preset &preset) {
@@ -243,9 +243,9 @@ void G330PresetManager::loadCustomPreset(const std::string &presetName, const G3
 }
 
 template <typename T> T getPropertyValue(IDevice *dev, uint32_t propertyId) {
-    // get and release property accessor on this scope to avoid handle device resource lock for an extended duration
-    auto propAccessor = dev->getPropertyAccessor();
-    return propAccessor->getPropertyValueT<T>(propertyId);
+    // get and release property server on this scope to avoid handle device resource lock for an extended duration
+    auto propServer = dev->getPropertyServer();
+    return propServer->getPropertyValueT<T>(propertyId);
 }
 
 void G330PresetManager::storeCurrentParamsAsCustomPreset(const std::string &presetName) {

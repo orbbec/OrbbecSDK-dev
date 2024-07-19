@@ -24,8 +24,8 @@ OBMultiDeviceSyncConfig G330DeviceSyncConfigurator::getSyncConfig() {
         return currentMultiDevSyncConfig_;
     }
     auto owner            = getOwner();
-    auto propertyAccessor = owner->getPropertyAccessor();
-    auto configInternal   = propertyAccessor->getStructureDataProtoV1_1_T<OBMultiDeviceSyncConfigInternal, 1>(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG);
+    auto propertyServer   = owner->getPropertyServer();
+    auto configInternal   = propertyServer->getStructureDataProtoV1_1_T<OBMultiDeviceSyncConfigInternal, 1>(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG);
 
     currentMultiDevSyncConfig_.syncMode = (OBMultiDeviceSyncMode)configInternal.syncMode;
     if(currentMultiDevSyncConfig_.syncMode == OB_MULTI_DEVICE_SYNC_MODE_SECONDARY) {
@@ -64,8 +64,8 @@ void G330DeviceSyncConfigurator::setSyncConfig(const OBMultiDeviceSyncConfig &de
     internalConfig.framesPerTrigger     = deviceSyncConfig.framesPerTrigger;
 
     auto owner            = getOwner();
-    auto propertyAccessor = owner->getPropertyAccessor();
-    propertyAccessor->setStructureDataProtoV1_1_T<OBMultiDeviceSyncConfigInternal, 1>(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, internalConfig);
+    auto propertyServer   = owner->getPropertyServer();
+    propertyServer->setStructureDataProtoV1_1_T<OBMultiDeviceSyncConfigInternal, 1>(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, internalConfig);
 
     currentMultiDevSyncConfig_ = deviceSyncConfig;
     isSyncConfigInit_          = true;
@@ -81,8 +81,8 @@ uint16_t G330DeviceSyncConfigurator::getSupportedSyncModeBitmap() {
 
 void G330DeviceSyncConfigurator::triggerCapture() {
     auto owner            = getOwner();
-    auto propertyAccessor = owner->getPropertyAccessor();
-    propertyAccessor->setPropertyValueT(OB_PROP_CAPTURE_IMAGE_SIGNAL_BOOL, true);
+    auto propertyServer   = owner->getPropertyServer();
+    propertyServer->setPropertyValueT(OB_PROP_CAPTURE_IMAGE_SIGNAL_BOOL, true);
 }
 
 void G330DeviceSyncConfigurator::setTimestampResetConfig(const OBDeviceTimestampResetConfig &timestampResetConfig) {
@@ -92,15 +92,15 @@ void G330DeviceSyncConfigurator::setTimestampResetConfig(const OBDeviceTimestamp
     }
 
     auto owner            = getOwner();
-    auto propertyAccessor = owner->getPropertyAccessor();
-    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_ENABLE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
-        propertyAccessor->setPropertyValueT(OB_PROP_TIMER_RESET_ENABLE_BOOL, timestampResetConfig.enable);
+    auto propertyServer   = owner->getPropertyServer();
+    if(propertyServer->isPropertySupported(OB_PROP_TIMER_RESET_ENABLE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+        propertyServer->setPropertyValueT(OB_PROP_TIMER_RESET_ENABLE_BOOL, timestampResetConfig.enable);
     }
-    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
-        propertyAccessor->setPropertyValueT(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, timestampResetConfig.timestamp_reset_signal_output_enable);
+    if(propertyServer->isPropertySupported(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+        propertyServer->setPropertyValueT(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, timestampResetConfig.timestamp_reset_signal_output_enable);
     }
-    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_DELAY_US_INT, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
-        propertyAccessor->setPropertyValueT(OB_PROP_TIMER_RESET_DELAY_US_INT, timestampResetConfig.timestamp_reset_delay_us);
+    if(propertyServer->isPropertySupported(OB_PROP_TIMER_RESET_DELAY_US_INT, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+        propertyServer->setPropertyValueT(OB_PROP_TIMER_RESET_DELAY_US_INT, timestampResetConfig.timestamp_reset_delay_us);
     }
 
     currentTimestampResetConfig_ = timestampResetConfig;
@@ -113,25 +113,25 @@ OBDeviceTimestampResetConfig G330DeviceSyncConfigurator::getTimestampResetConfig
     }
 
     auto owner            = getOwner();
-    auto propertyAccessor = owner->getPropertyAccessor();
+    auto propertyServer   = owner->getPropertyServer();
 
-    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_ENABLE_BOOL, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
-        currentTimestampResetConfig_.enable = propertyAccessor->getPropertyValueT<bool>(OB_PROP_TIMER_RESET_ENABLE_BOOL);
+    if(propertyServer->isPropertySupported(OB_PROP_TIMER_RESET_ENABLE_BOOL, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
+        currentTimestampResetConfig_.enable = propertyServer->getPropertyValueT<bool>(OB_PROP_TIMER_RESET_ENABLE_BOOL);
     }
     else {
         currentTimestampResetConfig_.enable = true;
     }
 
-    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
+    if(propertyServer->isPropertySupported(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
         currentTimestampResetConfig_.timestamp_reset_signal_output_enable =
-            propertyAccessor->getPropertyValueT<bool>(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL);
+            propertyServer->getPropertyValueT<bool>(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL);
     }
     else {
         currentTimestampResetConfig_.timestamp_reset_signal_output_enable = true;
     }
 
-    if(propertyAccessor->isPropertySupported(OB_PROP_TIMER_RESET_DELAY_US_INT, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
-        currentTimestampResetConfig_.timestamp_reset_delay_us = propertyAccessor->getPropertyValueT<int>(OB_PROP_TIMER_RESET_DELAY_US_INT);
+    if(propertyServer->isPropertySupported(OB_PROP_TIMER_RESET_DELAY_US_INT, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
+        currentTimestampResetConfig_.timestamp_reset_delay_us = propertyServer->getPropertyValueT<int>(OB_PROP_TIMER_RESET_DELAY_US_INT);
     }
 
     isTimestampResetConfigInit_ = true;
@@ -140,8 +140,8 @@ OBDeviceTimestampResetConfig G330DeviceSyncConfigurator::getTimestampResetConfig
 
 void G330DeviceSyncConfigurator::timestampReset() {
     auto owner            = getOwner();
-    auto propertyAccessor = owner->getPropertyAccessor();
-    propertyAccessor->setPropertyValueT(OB_PROP_TIMER_RESET_ENABLE_BOOL, true);
+    auto propertyServer   = owner->getPropertyServer();
+    propertyServer->setPropertyValueT(OB_PROP_TIMER_RESET_ENABLE_BOOL, true);
 }
 
 void G330DeviceSyncConfigurator::timerSyncWithHost() {
@@ -153,19 +153,19 @@ void G330DeviceSyncConfigurator::timerSyncWithHost() {
     while(repeated < MAX_REPEAT_TIME) {
         {
             auto owner            = getOwner();
-            auto propertyAccessor = owner->getPropertyAccessor();
+            auto propertyServer   = owner->getPropertyServer();
 
             auto         tsp    = utils::getNowTimesMs();
             OBDeviceTime devTsp = { tsp, 0 };
-            propertyAccessor->setStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME, devTsp);
+            propertyServer->setStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME, devTsp);
             uint64_t after = utils::getNowTimesMs();
             rtt            = after - tsp;
         }
 
         {
             auto owner            = getOwner();
-            auto propertyAccessor = owner->getPropertyAccessor();
-            auto devTsp           = propertyAccessor->getStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME);
+            auto propertyServer   = owner->getPropertyServer();
+            auto devTsp           = propertyServer->getStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME);
             auto now              = utils::getNowTimesMs();
             auto nowDev           = devTsp.time;
             auto diff             = now - nowDev - rtt / 2;

@@ -64,8 +64,8 @@ void G330AlgParamManager::fetchParams() {
 
     try {
         auto owner           = getOwner();
-        auto propAccessor    = owner->getPropertyAccessor();
-        depthCalibParamList_ = propAccessor->getStructureDataListProtoV1_1_T<OBDepthCalibrationParam, 1>(OB_RAW_DATA_DEPTH_CALIB_PARAM);
+        auto propServer      = owner->getPropertyServer();
+        depthCalibParamList_ = propServer->getStructureDataListProtoV1_1_T<OBDepthCalibrationParam, 1>(OB_RAW_DATA_DEPTH_CALIB_PARAM);
     }
     catch(const std::exception &e) {
         LOG_ERROR("Get depth calibration params failed! {}", e.what());
@@ -73,8 +73,8 @@ void G330AlgParamManager::fetchParams() {
 
     try {
         auto owner           = getOwner();
-        auto propAccessor    = owner->getPropertyAccessor();
-        auto cameraParamList = propAccessor->getStructureDataListProtoV1_1_T<OBCameraParam_Internal_V0, 0>(OB_RAW_DATA_ALIGN_CALIB_PARAM);
+        auto propServer      = owner->getPropertyServer();
+        auto cameraParamList = propServer->getStructureDataListProtoV1_1_T<OBCameraParam_Internal_V0, 0>(OB_RAW_DATA_ALIGN_CALIB_PARAM);
         for(auto &cameraParam: cameraParamList) {
             OBCameraParam param;
             param.depthIntrinsic = cameraParam.depthIntrinsic;
@@ -98,8 +98,8 @@ void G330AlgParamManager::fetchParams() {
 
     try {
         auto owner        = getOwner();
-        auto propAccessor = owner->getPropertyAccessor();
-        d2cProfileList_   = propAccessor->getStructureDataListProtoV1_1_T<OBD2CProfile, 0>(OB_RAW_DATA_D2C_ALIGN_SUPPORT_PROFILE_LIST);
+        auto propServer   = owner->getPropertyServer();
+        d2cProfileList_   = propServer->getStructureDataListProtoV1_1_T<OBD2CProfile, 0>(OB_RAW_DATA_D2C_ALIGN_SUPPORT_PROFILE_LIST);
     }
     catch(const std::exception &e) {
         LOG_ERROR("Get depth to color profile list failed! {}", e.what());
@@ -109,8 +109,8 @@ void G330AlgParamManager::fetchParams() {
     std::vector<uint8_t> data;
     BEGIN_TRY_EXECUTE({
         auto owner        = getOwner();
-        auto propAccessor = owner->getPropertyAccessor();
-        propAccessor->getRawData(
+        auto propServer   = owner->getPropertyServer();
+        propServer->getRawData(
             OB_RAW_DATA_IMU_CALIB_PARAM,
             [&](OBDataTranState state, OBDataChunk *dataChunk) {
                 if(state == DATA_TRAN_STAT_TRANSFERRING) {
@@ -416,8 +416,8 @@ void G330AlgParamManager::bindDisparityParam(std::vector<std::shared_ptr<const S
 OBDisparityParam G330AlgParamManager::getCurrentDisparityProcessParam() {
     try {
         auto owner           = getOwner();
-        auto propAccessor    = owner->getPropertyAccessor();
-        depthCalibParamList_ = propAccessor->getStructureDataListProtoV1_1_T<OBDepthCalibrationParam, 1>(OB_RAW_DATA_DEPTH_CALIB_PARAM);
+        auto propServer      = owner->getPropertyServer();
+        depthCalibParamList_ = propServer->getStructureDataListProtoV1_1_T<OBDepthCalibrationParam, 1>(OB_RAW_DATA_DEPTH_CALIB_PARAM);
     }
     catch(const std::exception &e) {
         LOG_ERROR("Get depth calibration params failed! {}", e.what());

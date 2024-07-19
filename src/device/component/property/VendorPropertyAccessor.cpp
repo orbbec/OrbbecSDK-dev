@@ -1,17 +1,18 @@
-#include "VendorPropertyPort.hpp"
+#include "VendorPropertyAccessor.hpp"
 #include "exception/ObException.hpp"
 #include "protocol/Protocol.hpp"
 
 namespace libobsensor {
 
-VendorPropertyPort::VendorPropertyPort(IDevice *owner,const std::shared_ptr<ISourcePort> &backend) : owner_(owner),backend_(backend), recvData_(1024), sendData_(1024) {
+VendorPropertyAccessor::VendorPropertyAccessor(IDevice *owner, const std::shared_ptr<ISourcePort> &backend)
+    : owner_(owner), backend_(backend), recvData_(1024), sendData_(1024) {
     auto port = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
     if(!port) {
-        throw invalid_value_exception("VendorPropertyPort backend must be IVendorDataPort");
+        throw invalid_value_exception("VendorPropertyAccessor backend must be IVendorDataPort");
     }
 }
 
-void VendorPropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void VendorPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initSetPropertyReq(sendData_.data(), propertyId, value.intValue);
@@ -22,7 +23,7 @@ void VendorPropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue v
     protocol::checkStatus(res);
 }
 
-void VendorPropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+void VendorPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initGetPropertyReq(sendData_.data(), propertyId);
@@ -37,7 +38,7 @@ void VendorPropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *
     value->intValue = resp->data.cur;
 }
 
-void VendorPropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+void VendorPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initGetPropertyReq(sendData_.data(), propertyId);
@@ -55,7 +56,7 @@ void VendorPropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *
     range->def.intValue  = resp->data.def;
 }
 
-void VendorPropertyPort::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
+void VendorPropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initSetStructureDataReq(sendData_.data(), propertyId, data.data(), static_cast<uint16_t>(data.size()));
@@ -66,7 +67,7 @@ void VendorPropertyPort::setStructureData(uint32_t propertyId, const std::vector
     protocol::checkStatus(res);
 }
 
-const std::vector<uint8_t> &VendorPropertyPort::getStructureData(uint32_t propertyId) {
+const std::vector<uint8_t> &VendorPropertyAccessor::getStructureData(uint32_t propertyId) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initGetStructureDataReq(sendData_.data(), propertyId);
@@ -89,7 +90,7 @@ const std::vector<uint8_t> &VendorPropertyPort::getStructureData(uint32_t proper
     return outputData_;
 }
 
-void VendorPropertyPort::getRawData(uint32_t propertyId, GetDataCallback callback) {
+void VendorPropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback) {
     constexpr uint32_t          transPacketSize = 3 * DATA_PAGE_SIZE;
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
@@ -143,7 +144,7 @@ void VendorPropertyPort::getRawData(uint32_t propertyId, GetDataCallback callbac
     callback(DATA_TRAN_STAT_DONE, &dataChunk);
 }
 
-uint16_t VendorPropertyPort::getCmdVersionProtoV1_1(uint32_t propertyId) {
+uint16_t VendorPropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto     req          = protocol::initGetCmdVersionReq(sendData_.data(), propertyId);
@@ -156,7 +157,7 @@ uint16_t VendorPropertyPort::getCmdVersionProtoV1_1(uint32_t propertyId) {
     return *(uint16_t *)(resp->data);
 }
 
-const std::vector<uint8_t> &VendorPropertyPort::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
+const std::vector<uint8_t> &VendorPropertyAccessor::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
 
@@ -186,7 +187,7 @@ const std::vector<uint8_t> &VendorPropertyPort::getStructureDataProtoV1_1(uint32
     return outputData_;
 }
 
-void VendorPropertyPort::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion) {
+void VendorPropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto     req          = protocol::initSetStructureDataReqV1_1(sendData_.data(), propertyId, cmdVersion, data.data(), static_cast<uint16_t>(data.size()));
@@ -196,7 +197,7 @@ void VendorPropertyPort::setStructureDataProtoV1_1(uint32_t propertyId, const st
     protocol::checkStatus(res);
 }
 
-const std::vector<uint8_t> &VendorPropertyPort::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
+const std::vector<uint8_t> &VendorPropertyAccessor::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
     constexpr uint32_t transPacketSize = 3 * DATA_PAGE_SIZE;
 
     std::lock_guard<std::mutex> lock(mutex_);
@@ -242,14 +243,13 @@ const std::vector<uint8_t> &VendorPropertyPort::getStructureDataListProtoV1_1(ui
     return outputData_;
 }
 
-void VendorPropertyPort::clearBuffers() {
+void VendorPropertyAccessor::clearBuffers() {
     memset(recvData_.data(), 0, recvData_.size());
     memset(sendData_.data(), 0, sendData_.size());
 }
 
-IDevice * VendorPropertyPort::getOwner() const{
+IDevice *VendorPropertyAccessor::getOwner() const {
     return owner_;
 }
-
 
 }  // namespace libobsensor

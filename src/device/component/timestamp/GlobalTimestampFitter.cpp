@@ -76,10 +76,10 @@ void GlobalTimestampFitter::fittingLoop() {
 
         try {
             auto owner            = getOwner();
-            auto propertyAccessor = owner->getPropertyAccessor();
+            auto propertyServer   = owner->getPropertyServer();
 
             auto sysTsp1Usec = utils::getNowTimesUs();
-            devTime          = propertyAccessor->getStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME);
+            devTime          = propertyServer->getStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME);
             auto sysTsp2Usec = utils::getNowTimesUs();
             sysTspUsec       = (sysTsp2Usec + sysTsp1Usec) / 2;
             devTime.rtt      = sysTsp2Usec - sysTsp1Usec;

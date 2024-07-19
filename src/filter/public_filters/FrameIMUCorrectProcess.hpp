@@ -6,7 +6,7 @@
 
 namespace libobsensor {
 
-class IMUCorrecter : public FilterBase, public IPropertyPort {
+class IMUCorrecter : public FilterBase, public IPropertyAccessor {
 public:
     static OBIMUCalibrateParams parserIMUCalibrationParamsRaw(uint8_t *filedata, uint32_t size);
     static float                calculateAccelGravity(int16_t accelValue, uint8_t accelFSR);

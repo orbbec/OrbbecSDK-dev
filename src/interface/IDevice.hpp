@@ -36,7 +36,7 @@ public:
     virtual bool                                  isComponentExists(const std::string &name) const                     = 0;
     virtual bool                                  isComponentCreated(const std::string &name) const                    = 0;  // for lazy creation
     virtual DeviceComponentPtr<IDeviceComponent>  getComponent(const std::string &name, bool throwExIfNotFound = true) = 0;
-    virtual DeviceComponentPtr<IPropertyAccessor> getPropertyAccessor()                                                = 0;
+    virtual DeviceComponentPtr<IPropertyServer>   getPropertyServer()                                                  = 0;
 
     virtual bool                                  isSensorExists(OBSensorType type) const                   = 0;
     virtual bool                                  isSensorCreated(OBSensorType type) const                  = 0;  // for lazy creation

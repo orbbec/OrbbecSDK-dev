@@ -5,10 +5,10 @@
 
 #include <mutex>
 namespace libobsensor {
-class DeviceComponentPropertyPortWrapper : public IPropertyPort {
+class DeviceComponentPropertyAccessorWrapper : public IPropertyAccessor {
 public:
-    DeviceComponentPropertyPortWrapper(IDevice *device, const std::string &compName);
-    virtual ~DeviceComponentPropertyPortWrapper() noexcept = default;
+    DeviceComponentPropertyAccessorWrapper(IDevice *device, const std::string &compName);
+    virtual ~DeviceComponentPropertyAccessorWrapper() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
@@ -19,12 +19,12 @@ private:
     std::string compName_;
 };
 
-class FunctionPropertyPortWrapper : public IPropertyPort {
+class FunctionPropertyAccessorWrapper : public IPropertyAccessor {
 public:
-    FunctionPropertyPortWrapper(std::function<OBPropertyValue(uint32_t)> getter, std::function<void(uint32_t, OBPropertyValue)> setter,
-                                std::function<OBPropertyRange(uint32_t)> rangeGetter);
+    FunctionPropertyAccessorWrapper(std::function<OBPropertyValue(uint32_t)> getter, std::function<void(uint32_t, OBPropertyValue)> setter,
+                                    std::function<OBPropertyRange(uint32_t)> rangeGetter);
 
-    virtual ~FunctionPropertyPortWrapper() noexcept = default;
+    virtual ~FunctionPropertyAccessorWrapper() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
@@ -36,37 +36,39 @@ private:
     std::function<OBPropertyRange(uint32_t)>       rangeGetter_;
 };
 
-class LazyPropertyPortWrapper : public virtual IPropertyPort {
+class LazyPropertyAccessorWrapper : public virtual IPropertyAccessor {
 public:
-    LazyPropertyPortWrapper(std::function<std::shared_ptr<IPropertyPort>()> portCreator);
+    LazyPropertyAccessorWrapper(std::function<std::shared_ptr<IPropertyAccessor>()> accessorCreator);
 
-    virtual ~LazyPropertyPortWrapper() noexcept = default;
+    virtual ~LazyPropertyAccessorWrapper() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
     void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
 
 protected:
-    std::function<std::shared_ptr<IPropertyPort>()> portCreator_;
-    std::shared_ptr<IPropertyPort>                  port_;
-    std::mutex                                      mutex_;
+    std::function<std::shared_ptr<IPropertyAccessor>()> accessorCreator_;
+    std::shared_ptr<IPropertyAccessor>                  accessor_;
+    std::mutex                                          mutex_;
 };
 
-class LazyPropertyExtensionPortWrapper : public LazyPropertyPortWrapper, public virtual IPropertyExtensionPort, public virtual IPropertyExtensionPortV1_1 {
+class LazyPropertyExtensionAccessorWrapper : public LazyPropertyAccessorWrapper,
+                                             public virtual IPropertyExtensionAccessor,
+                                             public virtual IPropertyExtensionAccessorV1_1 {
 public:
-    LazyPropertyExtensionPortWrapper(std::function<std::shared_ptr<IPropertyExtensionPort>()> portCreator);
-    virtual ~LazyPropertyExtensionPortWrapper() noexcept = default;
+    LazyPropertyExtensionAccessorWrapper(std::function<std::shared_ptr<IPropertyExtensionAccessor>()> accessorCreator);
+    virtual ~LazyPropertyExtensionAccessorWrapper() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override {
-        LazyPropertyPortWrapper::setPropertyValue(propertyId, value);
+        LazyPropertyAccessorWrapper::setPropertyValue(propertyId, value);
     }
 
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override {
-        LazyPropertyPortWrapper::getPropertyValue(propertyId, value);
+        LazyPropertyAccessorWrapper::getPropertyValue(propertyId, value);
     }
 
     void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override {
-        LazyPropertyPortWrapper::getPropertyRange(propertyId, range);
+        LazyPropertyAccessorWrapper::getPropertyRange(propertyId, range);
     }
 
     void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) override;

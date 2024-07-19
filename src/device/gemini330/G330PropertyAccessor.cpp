@@ -1,13 +1,13 @@
-#include "G330PropertyPort.hpp"
+#include "G330PropertyAccessor.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
 #include "sensor/video/DisparityBasedSensor.hpp"
 #include "IDeviceComponent.hpp"
 
 namespace libobsensor {
 
-G330PropertyPort::G330PropertyPort(IDevice *owner) : owner_(owner), hwDisparityToDepthEnabled_(true), swDisparityToDepthEnabled_(false) {}
+G330PropertyAccessor::G330PropertyAccessor(IDevice *owner) : owner_(owner), hwDisparityToDepthEnabled_(true), swDisparityToDepthEnabled_(false) {}
 
-void G330PropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void G330PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     switch(propertyId) {
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
@@ -16,7 +16,7 @@ void G330PropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue val
         // close hw disparity if sw disparity is on
         // if(value.intValue == 1) {
         //     OBPropertyValue hwDisparityValue;
-        //     auto            commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
+        //     auto            commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         //     commandPort->getPropertyValue(OB_PROP_DISPARITY_TO_DEPTH_BOOL, &hwDisparityValue);
         //     if(hwDisparityValue.intValue == 1) {
         //         hwDisparityValue.intValue = 0;
@@ -29,7 +29,7 @@ void G330PropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue val
         markOutputDisparityFrame(!hwDisparityToDepthEnabled_);
     } break;
     case OB_PROP_DISPARITY_TO_DEPTH_BOOL: {
-        auto commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
+        auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         commandPort->setPropertyValue(propertyId, value);
         hwDisparityToDepthEnabled_ = static_cast<bool>(value.intValue);
 
@@ -52,7 +52,7 @@ void G330PropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue val
             processor->setPropertyValue(propertyId, value);
         }
         else {
-            auto commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
+            auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
             commandPort->setPropertyValue(propertyId, value);
         }
 
@@ -66,13 +66,13 @@ void G330PropertyPort::setPropertyValue(uint32_t propertyId, OBPropertyValue val
     } break;
 
     default: {
-        auto commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
+        auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         commandPort->setPropertyValue(propertyId, value);
     } break;
     }
 }
 
-void G330PropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+void G330PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     switch(propertyId) {
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
@@ -87,18 +87,18 @@ void G330PropertyPort::getPropertyValue(uint32_t propertyId, OBPropertyValue *va
             processor->getPropertyValue(propertyId, value);
         }
         else {
-            auto commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
+            auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
             commandPort->getPropertyValue(propertyId, value);
         }
     } break;
     default: {
-        auto commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
+        auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         commandPort->getPropertyValue(propertyId, value);
     } break;
     }
 }
 
-void G330PropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+void G330PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     switch(propertyId) {
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
@@ -112,18 +112,18 @@ void G330PropertyPort::getPropertyRange(uint32_t propertyId, OBPropertyRange *ra
             processor->getPropertyRange(propertyId, range);
         }
         else {
-            auto commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
+            auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
             commandPort->getPropertyRange(propertyId, range);
         }
     } break;
     default: {
-        auto commandPort = owner_->getComponentT<IPropertyPort>(OB_DEV_COMPONENT_COMMAND_PORT);
+        auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         commandPort->getPropertyRange(propertyId, range);
     } break;
     }
 }
 
-void G330PropertyPort::markOutputDisparityFrame(bool enable) {
+void G330PropertyAccessor::markOutputDisparityFrame(bool enable) {
     if(!owner_->isComponentExists(OB_DEV_COMPONENT_DEPTH_SENSOR)) {
         return;
     }

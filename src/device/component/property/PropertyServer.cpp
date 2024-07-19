@@ -1,4 +1,4 @@
-#include "PropertyAccessor.hpp"
+#include "PropertyServer.hpp"
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
@@ -6,20 +6,20 @@
 
 namespace libobsensor {
 
-PropertyAccessor::PropertyAccessor(IDevice *owner) : DeviceComponentBase(owner) {}
+PropertyServer::PropertyServer(IDevice *owner) : DeviceComponentBase(owner) {}
 
-void PropertyAccessor::registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyPort> port) {
-    properties_[propertyId] = { propertyId, userPerms, intPerms, port };
+void PropertyServer::registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyAccessor> accessor) {
+    properties_[propertyId] = { propertyId, userPerms, intPerms, accessor };
 
     appendToPropertyMap(propertyId, userPerms, intPerms);
 }
 
-void PropertyAccessor::registerAccessCallback(PropertyAccessCallback callback) {
+void PropertyServer::registerAccessCallback(PropertyAccessCallback callback) {
     accessCallbacks_.push_back(callback);
 }
 
-void PropertyAccessor::registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr,
-                                        std::shared_ptr<IPropertyPort> port) {
+void PropertyServer::registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr,
+                                      std::shared_ptr<IPropertyAccessor> accessor) {
     auto strToPermission = [](const std::string &str) {
         if(str == "r") {
             return OB_PERMISSION_READ;
@@ -36,7 +36,7 @@ void PropertyAccessor::registerProperty(uint32_t propertyId, const std::string &
     };
     auto userPerms = strToPermission(userPermsStr);
     auto intPerms  = strToPermission(intPermsStr);
-    registerProperty(propertyId, userPerms, intPerms, port);
+    registerProperty(propertyId, userPerms, intPerms, accessor);
 }
 
 void addProperty(std::vector<OBPropertyItem> &vec, int propertyId, const char *propName, OBPropertyType propType, OBPermissionType perms) {
@@ -48,7 +48,7 @@ void addProperty(std::vector<OBPropertyItem> &vec, int propertyId, const char *p
     vec.push_back(propertyItem);
 }
 
-void PropertyAccessor::appendToPropertyMap(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms) {
+void PropertyServer::appendToPropertyMap(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms) {
     for(auto &item: OBPropertyBaseInfoMap) {
         auto infoIter = OBPropertyBaseInfoMap.find(item.first);
         if(infoIter == OBPropertyBaseInfoMap.end()) {
@@ -69,7 +69,7 @@ void PropertyAccessor::appendToPropertyMap(uint32_t propertyId, OBPermissionType
     }
 }
 
-void PropertyAccessor::aliasProperty(uint32_t aliasId, uint32_t propertyId) {
+void PropertyServer::aliasProperty(uint32_t aliasId, uint32_t propertyId) {
     auto it = properties_.find(propertyId);
     if(it == properties_.end()) {
         throw invalid_value_exception("Property not found for aliasing");
@@ -91,7 +91,7 @@ void PropertyAccessor::aliasProperty(uint32_t aliasId, uint32_t propertyId) {
     }
 }
 
-bool PropertyAccessor::isPropertySupported(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const {
+bool PropertyServer::isPropertySupported(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const {
     auto it = properties_.find(propertyId);
     if(it == properties_.end()) {
         return false;
@@ -118,20 +118,20 @@ bool PropertyAccessor::isPropertySupported(uint32_t propertyId, PropertyOperatio
     return false;
 }
 
-void PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType) {
+void PropertyServer::setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    port->setPropertyValue(propId, value);
+    accessor->setPropertyValue(propId, value);
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(), [&](PropertyAccessCallback callback) {
         auto data = reinterpret_cast<uint8_t *>(&value);
         callback(propertyId, data, sizeof(OBPropertyValue), PROP_OP_WRITE);
@@ -140,20 +140,20 @@ void PropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue val
     LOG_DEBUG("Property {} set to {}|{}", propId, value.intValue, value.floatValue);
 }
 
-void PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) {
+void PropertyServer::getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    port->getPropertyValue(propId, value);
+    accessor->getPropertyValue(propId, value);
     std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(), [&](PropertyAccessCallback callback) {
         auto data = reinterpret_cast<uint8_t *>(value);
         callback(propertyId, data, sizeof(OBPropertyValue), PROP_OP_READ);
@@ -161,42 +161,42 @@ void PropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *va
     LOG_DEBUG("Property {} get as {}|{}", propId, value->intValue, value->floatValue);
 }
 
-// std::vector<OBPropertyItem> PropertyAccessor::getProperties(PropertyAccessType accessType) const{
+// std::vector<OBPropertyItem> PropertyServer::getProperties(PropertyAccessType accessType) const{
 //     std::unique_lock<std::mutex> lock(mutex_);
 //     return properties_;
 // }
 
-void PropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType) {
+void PropertyServer::getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    port->getPropertyRange(propId, range);
+    accessor->getPropertyRange(propId, range);
     LOG_DEBUG("Property {} range as {}-{} step {} def {}|{}-{} step {} def {}", propId, range->min.intValue, range->max.intValue, range->step.intValue,
               range->def.intValue, range->min.floatValue, range->max.floatValue, range->step.floatValue, range->def.floatValue);
 }
 
-void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) {
+void PropertyServer::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessor>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data setting");
     }
@@ -206,20 +206,20 @@ void PropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<u
     LOG_DEBUG("Property {} set structure data successfully", propId);
 }
 
-const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t propertyId, PropertyAccessType accessType) {
+const std::vector<uint8_t> &PropertyServer::getStructureData(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessor>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property " << propId << " does not support structure data getting");
     }
@@ -230,19 +230,19 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureData(uint32_t property
     return data;
 }
 
-void PropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType) {
+void PropertyServer::getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPort>(port);
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessor>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support raw data getting");
     }
@@ -252,19 +252,19 @@ void PropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback callback,
     LOG_DEBUG("Property {} get raw data successfully", propId);
 }
 
-uint16_t PropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAccessType accessType) {
+uint16_t PropertyServer::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support cmd version getting");
     }
@@ -274,19 +274,19 @@ uint16_t PropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyA
     return ver;
 }
 
-const std::vector<uint8_t> &PropertyAccessor::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
+const std::vector<uint8_t> &PropertyServer::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data getting over proto v1.1");
     }
@@ -297,19 +297,19 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureDataProtoV1_1(uint32_t
     return data;
 }
 
-void PropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion, PropertyAccessType accessType) {
+void PropertyServer::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_WRITE, accessType)) {
         throw invalid_value_exception("Property not writable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data setting over proto v1.1");
     }
@@ -319,19 +319,19 @@ void PropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std:
     LOG_DEBUG("Property {} set structure data successfully over proto v1.1", propId);
 }
 
-const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
+const std::vector<uint8_t> &PropertyServer::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
         throw invalid_value_exception("Property not readable");
     }
 
-    auto  it     = properties_.find(propertyId);
-    auto &port   = it->second.port;
-    auto &propId = it->second.propertyId;
+    auto  it       = properties_.find(propertyId);
+    auto &accessor = it->second.accessor;
+    auto &propId   = it->second.propertyId;
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionPortV1_1>(port);
+    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data list getting over proto v1.1");
     }
@@ -342,7 +342,7 @@ const std::vector<uint8_t> &PropertyAccessor::getStructureDataListProtoV1_1(uint
     return data;
 }
 
-const std::vector<OBPropertyItem> &PropertyAccessor::getAvailableProperties(PropertyAccessType accessType) {
+const std::vector<OBPropertyItem> &PropertyServer::getAvailableProperties(PropertyAccessType accessType) {
     if(accessType == PROP_ACCESS_USER) {
         return userPropertiesVec_;
     }

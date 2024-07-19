@@ -18,14 +18,20 @@ struct SourceFrameQueue {
     uint32_t                                 halfTspGap;
 };
 
+enum FrameSyncMode {
+    FrameSyncModeDisable,
+    FrameSyncModeSyncAccordingFrameTimestamp,
+    FrameSyncModeSyncAccordingSystemTimestamp,
+};
 class FrameAggregator {
+public:
 public:
     FrameAggregator();
     ~FrameAggregator() noexcept;
 
     void updateConfig(std::shared_ptr<const Config> config, const bool matchingRateFirst);
     void pushFrame(std::shared_ptr<const Frame> frame);
-    void enableFrameSync(bool enable);
+    void enableFrameSync(FrameSyncMode mode);
     void setCallback(FrameCallback callback);
 
     void clearFrameQueue(OBFrameType frameType);
@@ -37,7 +43,7 @@ private:
     void tryAggregator();
 
 private:
-    bool                                    frameSync_;
+    FrameSyncMode                           frameSyncMode_;
     std::map<OBFrameType, SourceFrameQueue> srcFrameQueueMap_;
     std::recursive_mutex                    srcFrameQueueMutex_;
     FrameCallback                           FrameSetCallbackFunc_;

@@ -27,7 +27,6 @@ private:
     std::shared_ptr<IFrameMetadataParserContainer> colorMdParserContainer_;
     std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
-    // std::shared_ptr<IFrameTimestampCalculator>     imuFrameTimestampCalculator_;
 };
 
 }  // namespace libobsensor

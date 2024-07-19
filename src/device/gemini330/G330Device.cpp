@@ -1,19 +1,20 @@
 #include "G330Device.hpp"
-#include "ObPal.hpp"
-#include "InternalTypes.hpp"
-#include "DevicePids.hpp"
-#include "utils/Utils.hpp"
 
+#include "DevicePids.hpp"
+#include "InternalTypes.hpp"
+
+#include "ObPal.hpp"
+#include "utils/Utils.hpp"
 #include "environment/EnvConfig.hpp"
+#include "usb/uvc/UvcDevicePort.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "sensor/video/VideoSensor.hpp"
 #include "sensor/video/DisparityBasedSensor.hpp"
 #include "sensor/imu/ImuStreamer.hpp"
 #include "sensor/imu/AccelSensor.hpp"
 #include "sensor/imu/GyroSensor.hpp"
-#include "usb/uvc/UvcDevicePort.hpp"
-#include "filter/FilterFactory.hpp"
 
+#include "filter/FilterFactory.hpp"
 #include "filter/public_filters/FormatConverterProcess.hpp"
 #include "filter/public_filters/FrameIMUCorrectProcess.hpp"
 
@@ -24,6 +25,7 @@
 #include "component/property/PropertyServer.hpp"
 #include "component/property/CommonPropertyAccessors.hpp"
 #include "component/monitor/DeviceMonitor.hpp"
+
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
 #include "G330TimestampCalculator.hpp"

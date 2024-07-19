@@ -7,7 +7,9 @@
 
 namespace libobsensor {
 
-DeviceBase::DeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info), ctx_(Context::getInstance()), isDeactivated_(false) {}
+DeviceBase::DeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info), ctx_(Context::getInstance()), isDeactivated_(false) {
+    extensionInfo_["AllSensorsUsingSameClock"] = "true";
+}
 
 std::shared_ptr<const DeviceInfo> DeviceBase::getInfo() const {
     return deviceInfo_;

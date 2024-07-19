@@ -386,16 +386,17 @@ StreamProfileList Pipeline::getD2CDepthProfileList(std::shared_ptr<const StreamP
 }
 
 void Pipeline::enableFrameSync() {
-    auto devicePid = device_->getInfo()->pid_;
-    if(std::find(gFrameSyncAbleDevPids.begin(), gFrameSyncAbleDevPids.end(), devicePid) == gFrameSyncAbleDevPids.end()) {
-        throw libobsensor::unsupported_operation_exception("Current device does not support frame sync!");
-        return;
+    if(device_->getExtensionInfo("AllSensorsUsingSameClock") == "true") {
+        frameAggregator_->enableFrameSync(FrameSyncModeSyncAccordingFrameTimestamp);
     }
-    frameAggregator_->enableFrameSync(true);
+    else {
+        LOG_WARN("Frame sync is not supported for sensors with different clocks! Use system timestamp instead, the accuracy may be lower!");
+        frameAggregator_->enableFrameSync(FrameSyncModeSyncAccordingSystemTimestamp);
+    }
 }
 
 void Pipeline::disableFrameSync() {
-    frameAggregator_->enableFrameSync(false);
+    frameAggregator_->enableFrameSync(FrameSyncModeDisable);
 }
 
 std::shared_ptr<const VideoStreamProfile> Pipeline::getCurrentVideoStreamProfile(OBStreamType type) {

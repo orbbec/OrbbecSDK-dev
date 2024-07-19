@@ -18,8 +18,15 @@ const std::map<OBStreamType, OBFrameType> STREAM_FRAME_TYPE_MAP = {
     { OB_STREAM_GYRO, OB_FRAME_GYRO },       { OB_STREAM_RAW_PHASE, OB_FRAME_RAW_PHASE }
 };
 
+uint64_t getFrameTimestampMsec(const std::shared_ptr<const Frame> &frame, FrameSyncMode syncMode) {
+    if(syncMode == FrameSyncModeSyncAccordingSystemTimestamp) {
+        return frame->getSystemTimeStampUsec() / 1000;
+    }
+    return frame->getTimeStampUsec() / 1000;
+}
+
 FrameAggregator::FrameAggregator()
-    : frameSync_(false),
+    : frameSyncMode_(FrameSyncModeDisable),
       miniTimeStamp_(0),
       frameAggregateOutputMode_(OB_FRAME_AGGREGATE_OUTPUT_ANY_SITUATION),
       frameCnt_(0),
@@ -68,16 +75,18 @@ void FrameAggregator::pushFrame(std::shared_ptr<const Frame> frame) {
     for(auto &item: srcFrameQueueMap_) {
         if(item.first == frameType) {
             item.second.queue.push(frame);
-            uint32_t maxQueueSize_ = frameSync_ ? item.second.maxSyncQueueSize_ : MAX_NORMAL_MODE_QUEUE_SIZE;
+            uint32_t maxQueueSize_ = frameSyncMode_ == FrameSyncModeDisable ? MAX_NORMAL_MODE_QUEUE_SIZE : item.second.maxSyncQueueSize_;
             // auto size = item.second.queue.size();
             // LOG_INFO("Type: {}, queueSize: {}", frame->getType(), size);
             if(item.second.queue.size() >= maxQueueSize_) {
                 withOverflowQueue_          = true;
                 withOverflowQueueFrameType_ = frameType;
             }
-            if(srcFrameQueueMap_.size() > 1 && frameSync_ && (srcFrameQueueMap_.size() == 2 || !matchingRateFirst_)
-               && (miniTimeStamp_ == 0 || frame->getTimeStampUsec() / 1000 < miniTimeStamp_)) {
-                miniTimeStamp_          = frame->getTimeStampUsec() / 1000;
+
+            auto timestamp = getFrameTimestampMsec(frame, frameSyncMode_);
+            if(srcFrameQueueMap_.size() > 1 && frameSyncMode_ && (srcFrameQueueMap_.size() == 2 || !matchingRateFirst_)
+               && (miniTimeStamp_ == 0 || timestamp < miniTimeStamp_)) {
+                miniTimeStamp_          = timestamp;
                 miniTimeStampFrameType_ = frameType;
             }
         }
@@ -88,7 +97,7 @@ void FrameAggregator::pushFrame(std::shared_ptr<const Frame> frame) {
     tryAggregator();
 }
 
-void sortFrameMap(std::map<OBFrameType, SourceFrameQueue> &frameMap, std::vector<FrameQueuePair> &frameVec) {
+void sortFrameMap(std::map<OBFrameType, SourceFrameQueue> &frameMap, std::vector<FrameQueuePair> &frameVec, FrameSyncMode frameSyncMode) {
     // srcFrameQueueMap_排序，队头时间戳小的队列的pair放前面
     auto iter = frameMap.begin();
     while(iter != frameMap.end()) {
@@ -97,8 +106,10 @@ void sortFrameMap(std::map<OBFrameType, SourceFrameQueue> &frameMap, std::vector
         }
         iter++;
     }
-    std::sort(frameVec.begin(), frameVec.end(), [](const FrameQueuePair &x, const FrameQueuePair &y) {
-        return x->second.queue.front()->getTimeStampUsec() < y->second.queue.front()->getTimeStampUsec();
+    std::sort(frameVec.begin(), frameVec.end(), [frameSyncMode](const FrameQueuePair &x, const FrameQueuePair &y) {
+        auto xTsp = getFrameTimestampMsec(x->second.queue.front(), frameSyncMode);
+        auto yTsp = getFrameTimestampMsec(y->second.queue.front(), frameSyncMode);
+        return xTsp < yTsp;
     });
 }
 
@@ -112,21 +123,23 @@ void FrameAggregator::tryAggregator() {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));  // 等100ms后再次尝试是否能申请成功
             continue;
         }
-        if(srcFrameQueueMap_.size() > 1 && frameSync_) {
+        if(srcFrameQueueMap_.size() > 1 && frameSyncMode_) {
             if(matchingRateFirst_ && srcFrameQueueMap_.size() != 2) {  // 匹配率优先
                 std::vector<FrameQueuePair> frameVector;
-                sortFrameMap(srcFrameQueueMap_, frameVector);  // srcFrameQueueMap_排序
+                sortFrameMap(srcFrameQueueMap_, frameVector, frameSyncMode_);  // srcFrameQueueMap_排序
                 auto refIter       = frameVector.begin();
-                auto refTsp        = (*refIter)->second.queue.front()->getTimeStampUsec() / 1000;
+                auto refTsp        = getFrameTimestampMsec((*refIter)->second.queue.front(), frameSyncMode_);
                 auto refHalfTspGap = (*refIter)->second.halfTspGap;
                 for(auto &item: frameVector) {
                     auto    &tarFrame      = item->second.queue.front();
                     auto     tarHalfTspGap = item->second.halfTspGap;
                     uint32_t tspHalfGap    = tarHalfTspGap < refHalfTspGap ? tarHalfTspGap : refHalfTspGap;
-                    if(tarFrame->getTimeStampUsec() / 1000 - refTsp > tspHalfGap) {
+
+                    auto tarTsp = getFrameTimestampMsec(tarFrame, frameSyncMode_);
+                    if(tarTsp - refTsp > tspHalfGap) {
                         break;
                     }
-                    refTsp        = tarFrame->getTimeStampUsec() / 1000;  // 出队后，将本次参考时间戳保存下来，作为下一次循环的参考
+                    refTsp        = tarTsp;  // 出队后，将本次参考时间戳保存下来，作为下一次循环的参考
                     refHalfTspGap = tarHalfTspGap;
                     frameSet->pushFrame(std::move(tarFrame));
                     frameCnt_++;
@@ -147,14 +160,15 @@ void FrameAggregator::tryAggregator() {
                 OBFrameType newMiniTimeStampFrameType_ = miniTimeStampFrameType_;
                 // 同步匹配
                 auto refIter       = srcFrameQueueMap_.find(miniTimeStampFrameType_);
-                auto refTsp        = refIter->second.queue.front()->getTimeStampUsec() / 1000;
+                auto refTsp        = getFrameTimestampMsec(refIter->second.queue.front(), frameSyncMode_);
                 auto refHalfTspGap = refIter->second.halfTspGap;
                 for(auto &item: srcFrameQueueMap_) {
                     if(!item.second.queue.empty()) {
                         auto    &tarFrame      = item.second.queue.front();
                         auto     tarHalfTspGap = item.second.halfTspGap;
                         uint32_t tspHalfGap    = tarHalfTspGap < refHalfTspGap ? tarHalfTspGap : refHalfTspGap;
-                        if(tarFrame->getTimeStampUsec() / 1000 - refTsp <= tspHalfGap) {
+                        auto     tarTsp        = getFrameTimestampMsec(tarFrame, frameSyncMode_);
+                        if(tarTsp - refTsp <= tspHalfGap) {
                             frameSet->pushFrame(std::move(tarFrame));
                             frameCnt_++;
                             if(item.first == OB_FRAME_COLOR) {
@@ -166,11 +180,15 @@ void FrameAggregator::tryAggregator() {
                             }
                         }
                     }
+
                     if(item.second.queue.empty()) {
                         withEmptyQueue_ = true;
+                        continue;
                     }
-                    else if(newMiniTimeStamp_ == 0 || newMiniTimeStamp_ > item.second.queue.front()->getTimeStampUsec() / 1000) {
-                        newMiniTimeStamp_          = item.second.queue.front()->getTimeStampUsec() / 1000;
+
+                    auto tsp = getFrameTimestampMsec(item.second.queue.front(), frameSyncMode_);
+                    if(newMiniTimeStamp_ == 0 || newMiniTimeStamp_ > tsp) {
+                        newMiniTimeStamp_          = tsp;
                         newMiniTimeStampFrameType_ = item.second.queue.front()->getType();
                     }
                 }
@@ -214,7 +232,7 @@ void FrameAggregator::tryAggregator() {
         // if(depthFrame && colorFrame) {
         //     msg = msg + " | depth-color diff=" + std::to_string((int64_t)depthFrame->getTimeStamp() - (int64_t)colorFrame->getTimeStamp());
         // }
-        // if(frameSync_){
+        // if(frameSyncMode_){
         //     LOG_WARN(msg;
         // }
         outputFrameset(frameSet);
@@ -235,10 +253,10 @@ void FrameAggregator::outputFrameset(std::shared_ptr<const FrameSet> frameSet) {
     }
 }
 
-void FrameAggregator::enableFrameSync(bool enable) {
-    if(frameSync_ != enable) {
+void FrameAggregator::enableFrameSync(FrameSyncMode mode) {
+    if(frameSyncMode_ != mode) {
         std::unique_lock<std::recursive_mutex> lk(srcFrameQueueMutex_);
-        frameSync_ = enable;
+        frameSyncMode_ = mode;
         clearAllFrameQueue();
     }
 }

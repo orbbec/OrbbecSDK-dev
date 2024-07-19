@@ -64,7 +64,7 @@ private:
 
     std::recursive_timed_mutex   resourceMutex_;
     mutable std::recursive_mutex componentsMutex_;
-    std::vector<ComponentItem> components_;  // using vector to control destroy order of components
+    std::vector<ComponentItem>   components_;  // using vector to control destroy order of components
 
     std::atomic<bool> isDeactivated_;
 

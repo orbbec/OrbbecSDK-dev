@@ -14,8 +14,18 @@ void PropertyServer::registerProperty(uint32_t propertyId, OBPermissionType user
     appendToPropertyMap(propertyId, userPerms, intPerms);
 }
 
-void PropertyServer::registerAccessCallback(PropertyAccessCallback callback) {
-    accessCallbacks_.push_back(callback);
+void PropertyServer::registerAccessCallback(uint32_t propertyId, PropertyAccessCallback callback) {
+    auto it = properties_.find(propertyId);
+    if(it == properties_.end()) {
+        throw invalid_value_exception("Property not found to register callback, propertyId: " + std::to_string(propertyId));
+    }
+    it->second.accessCallbacks.push_back(callback);
+}
+
+void PropertyServer::registerAccessCallback(std::vector<uint32_t> propertyIds, PropertyAccessCallback callback) {
+    for(auto propertyId: propertyIds) {
+        registerAccessCallback(propertyId, callback);
+    }
 }
 
 void PropertyServer::registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr,
@@ -74,12 +84,15 @@ void PropertyServer::aliasProperty(uint32_t aliasId, uint32_t propertyId) {
     if(it == properties_.end()) {
         throw invalid_value_exception("Property not found for aliasing");
     }
-    properties_[aliasId] = it->second;
 
-    auto infoIter = OBPropertyBaseInfoMap.find(propertyId);
+    auto propertyItem = it->second;
+    propertyItem.accessCallbacks.clear();
+    properties_[aliasId] = propertyItem;
+
+    auto infoIter = OBPropertyBaseInfoMap.find(aliasId);
     if(infoIter == OBPropertyBaseInfoMap.end()) {
         std::string msg = ", id=";
-        msg += std::to_string(propertyId);
+        msg += std::to_string(aliasId);
         throw not_implemented_exception(msg);
     }
 
@@ -132,10 +145,11 @@ void PropertyServer::setPropertyValue(uint32_t propertyId, OBPropertyValue value
     }
 
     accessor->setPropertyValue(propId, value);
-    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(), [&](PropertyAccessCallback callback) {
+
+    for(auto &callback: it->second.accessCallbacks) {
         auto data = reinterpret_cast<uint8_t *>(&value);
         callback(propertyId, data, sizeof(OBPropertyValue), PROP_OP_WRITE);
-    });
+    }
 
     LOG_DEBUG("Property {} set to {}|{}", propId, value.intValue, value.floatValue);
 }
@@ -154,10 +168,12 @@ void PropertyServer::getPropertyValue(uint32_t propertyId, OBPropertyValue *valu
     }
 
     accessor->getPropertyValue(propId, value);
-    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(), [&](PropertyAccessCallback callback) {
+
+    for(auto &callback: it->second.accessCallbacks) {
         auto data = reinterpret_cast<uint8_t *>(value);
         callback(propertyId, data, sizeof(OBPropertyValue), PROP_OP_READ);
-    });
+    }
+
     LOG_DEBUG("Property {} get as {}|{}", propId, value->intValue, value->floatValue);
 }
 
@@ -201,8 +217,10 @@ void PropertyServer::setStructureData(uint32_t propertyId, const std::vector<uin
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data setting");
     }
     extensionPort->setStructureData(propId, data);
-    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
-                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_WRITE); });
+
+    for(auto &callback: it->second.accessCallbacks) {
+        callback(propertyId, data.data(), data.size(), PROP_OP_WRITE);
+    }
     LOG_DEBUG("Property {} set structure data successfully", propId);
 }
 
@@ -224,8 +242,9 @@ const std::vector<uint8_t> &PropertyServer::getStructureData(uint32_t propertyId
         throw invalid_value_exception(utils::string::to_string() << "Property " << propId << " does not support structure data getting");
     }
     const auto &data = extensionPort->getStructureData(propId);
-    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
-                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_READ); });
+    for(auto &callback: it->second.accessCallbacks) {
+        callback(propertyId, data.data(), data.size(), PROP_OP_READ);
+    }
     LOG_DEBUG("Property {} get structure data successfully, size {}", propId, data.size());
     return data;
 }
@@ -248,7 +267,9 @@ void PropertyServer::getRawData(uint32_t propertyId, GetDataCallback callback, P
     }
 
     extensionPort->getRawData(propId, callback);  // todo: add async support
-    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(), [&](PropertyAccessCallback callback) { callback(propertyId, nullptr, 0, PROP_OP_READ); });
+    for(auto &accessCallback: it->second.accessCallbacks) {
+        accessCallback(propertyId, nullptr, 0, PROP_OP_READ);
+    }
     LOG_DEBUG("Property {} get raw data successfully", propId);
 }
 
@@ -291,8 +312,9 @@ const std::vector<uint8_t> &PropertyServer::getStructureDataProtoV1_1(uint32_t p
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data getting over proto v1.1");
     }
     const auto &data = extensionPort->getStructureDataProtoV1_1(propId, cmdVersion);
-    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
-                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_READ); });
+    for(auto callback: it->second.accessCallbacks) {
+        callback(propertyId, data.data(), data.size(), PROP_OP_READ);
+    }
     LOG_DEBUG("Property {} get structure data successfully over proto v1.1, size {}", propId, data.size());
     return data;
 }
@@ -314,8 +336,9 @@ void PropertyServer::setStructureDataProtoV1_1(uint32_t propertyId, const std::v
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data setting over proto v1.1");
     }
     extensionPort->setStructureDataProtoV1_1(propId, data, cmdVersion);
-    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
-                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_WRITE); });
+    for(auto callback: it->second.accessCallbacks) {
+        callback(propertyId, data.data(), data.size(), PROP_OP_WRITE);
+    }
     LOG_DEBUG("Property {} set structure data successfully over proto v1.1", propId);
 }
 
@@ -336,8 +359,9 @@ const std::vector<uint8_t> &PropertyServer::getStructureDataListProtoV1_1(uint32
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data list getting over proto v1.1");
     }
     const auto &data = extensionPort->getStructureDataListProtoV1_1(propId, cmdVersion);
-    std::for_each(accessCallbacks_.begin(), accessCallbacks_.end(),
-                  [&](PropertyAccessCallback callback) { callback(propertyId, data.data(), data.size(), PROP_OP_READ); });
+    for(auto callback: it->second.accessCallbacks) {
+        callback(propertyId, data.data(), data.size(), PROP_OP_READ);
+    }
     LOG_DEBUG("Property {} get structure data list successfully over proto v1.1, size {}", propId, data.size());
     return data;
 }
@@ -353,4 +377,5 @@ const std::vector<OBPropertyItem> &PropertyServer::getAvailableProperties(Proper
     static const std::vector<OBPropertyItem> emptyVec;
     return emptyVec;
 }
+
 }  // namespace libobsensor

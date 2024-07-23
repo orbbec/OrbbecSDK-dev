@@ -23,40 +23,38 @@ G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner
         depthAlgModeManager->switchDepthAlgMode(currentPreset_.c_str());
     }
 
-    auto onPropertyValueUpdate = [&](uint32_t propertyId, const uint8_t *data, size_t size, PropertyOperationType operationType) {
-        utils::unusedVar(data);
-        utils::unusedVar(size);
-
-        if(operationType == PROP_OP_WRITE) {
-            switch(propertyId) {
-            case OB_PROP_LASER_CONTROL_INT:
-            case OB_PROP_LASER_POWER_LEVEL_CONTROL_INT:
-            case OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL:
-            case OB_PROP_IR_EXPOSURE_INT:
-            case OB_PROP_IR_GAIN_INT:
-            case OB_PROP_IR_BRIGHTNESS_INT:
-            case OB_PROP_COLOR_AUTO_EXPOSURE_BOOL:
-            case OB_PROP_COLOR_EXPOSURE_INT:
-            case OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL:
-            case OB_PROP_COLOR_WHITE_BALANCE_INT:
-            case OB_PROP_COLOR_GAIN_INT:
-            case OB_PROP_COLOR_CONTRAST_INT:
-            case OB_PROP_COLOR_SATURATION_INT:
-            case OB_PROP_COLOR_SHARPNESS_INT:
-            case OB_PROP_COLOR_BRIGHTNESS_INT:
-            case OB_PROP_COLOR_HUE_INT:
-            case OB_PROP_COLOR_GAMMA_INT:
-            case OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT:
-            case OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT:
-                currentPreset_ = "Custom";
-                break;
-            default:
-                break;
-            }
-        }
-    };
     auto propServer = owner->getPropertyServer();
-    propServer->registerAccessCallback(onPropertyValueUpdate);
+
+    propServer->registerAccessCallback(
+        {
+            OB_PROP_LASER_CONTROL_INT,
+            OB_PROP_LASER_POWER_LEVEL_CONTROL_INT,
+            OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL,
+            OB_PROP_IR_AUTO_EXPOSURE_BOOL,
+            OB_PROP_DEPTH_EXPOSURE_INT,
+            OB_PROP_IR_EXPOSURE_INT,
+            OB_PROP_DEPTH_GAIN_INT,
+            OB_PROP_IR_GAIN_INT,
+            OB_PROP_IR_BRIGHTNESS_INT,
+            OB_PROP_COLOR_AUTO_EXPOSURE_BOOL,
+            OB_PROP_COLOR_EXPOSURE_INT,
+            OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL,
+            OB_PROP_COLOR_WHITE_BALANCE_INT,
+            OB_PROP_COLOR_GAIN_INT,
+            OB_PROP_COLOR_CONTRAST_INT,
+            OB_PROP_COLOR_SATURATION_INT,
+            OB_PROP_COLOR_SHARPNESS_INT,
+            OB_PROP_COLOR_BRIGHTNESS_INT,
+            OB_PROP_COLOR_HUE_INT,
+            OB_PROP_COLOR_GAMMA_INT,
+            OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT,
+            OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT,
+        },
+        [&](uint32_t, const uint8_t *, size_t, PropertyOperationType operationType) {
+            if(operationType == PROP_OP_WRITE) {
+                currentPreset_ = "Custom";
+            }
+        });
 }
 
 void G330PresetManager::loadPreset(const std::string &presetName) {

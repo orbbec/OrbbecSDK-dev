@@ -73,7 +73,8 @@ class IPropertyServer {
 public:
     virtual ~IPropertyServer() noexcept = default;
 
-    virtual void registerAccessCallback(PropertyAccessCallback callback) = 0;
+    virtual void registerAccessCallback(uint32_t propertyId, PropertyAccessCallback callback)               = 0;
+    virtual void registerAccessCallback(std::vector<uint32_t> propertyIds, PropertyAccessCallback callback) = 0;
 
     virtual void registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyAccessor> accessor) = 0;
     virtual void registerProperty(uint32_t propertyId, const std::string &userPerms, const std::string &intPerms,

@@ -11,17 +11,19 @@ namespace libobsensor {
 class PropertyServer : public IPropertyServer, public DeviceComponentBase {
 
     struct PropertyItem {
-        uint32_t                           propertyId;
-        OBPermissionType                   userPermission;
-        OBPermissionType                   InternalPermission;
-        std::shared_ptr<IPropertyAccessor> accessor;
+        uint32_t                            propertyId;
+        OBPermissionType                    userPermission;
+        OBPermissionType                    InternalPermission;
+        std::shared_ptr<IPropertyAccessor>  accessor;
+        std::vector<PropertyAccessCallback> accessCallbacks;
     };
 
 public:
     PropertyServer(IDevice *owner);
     ~PropertyServer() noexcept = default;
 
-    void registerAccessCallback(PropertyAccessCallback callback) override;
+    virtual void registerAccessCallback(uint32_t propertyId, PropertyAccessCallback callback) override;
+    virtual void registerAccessCallback(std::vector<uint32_t> propertyIds, PropertyAccessCallback callback) override;
 
     void registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyAccessor> accessor) override;
     void registerProperty(uint32_t propertyId, const std::string &userPermsStr, const std::string &intPermsStr,
@@ -50,7 +52,6 @@ private:
     std::map<uint32_t, PropertyItem>    properties_;
     std::vector<OBPropertyItem>         userPropertiesVec_;
     std::vector<OBPropertyItem>         innerPropertiesVec_;
-    std::vector<PropertyAccessCallback> accessCallbacks_;
 };
 
 }  // namespace libobsensor

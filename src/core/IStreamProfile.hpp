@@ -3,14 +3,19 @@
 #include <memory>
 #include <vector>
 
-namespace libobsensor
-{
+namespace libobsensor {
 class StreamProfile;
 
 typedef std::vector<std::shared_ptr<const StreamProfile>> StreamProfileList;
 
-} // namespace libobsensor
+class IStreamProfileFilter {
+public:
+    virtual ~IStreamProfileFilter() = default;
 
+    virtual StreamProfileList filter(const StreamProfileList &profiles) const = 0;
+};
+
+}  // namespace libobsensor
 
 #ifdef __cplusplus
 extern "C" {

@@ -21,34 +21,37 @@ int main(void) try {
         // For dual infrared device, enable the left and right infrared streams.
         // For single infrared device, enable the infrared stream.
         OBSensorType sensorType = sensorList->getSensorType(index);
-        if(sensorType == OB_SENSOR_IR || sensorType == OB_SENSOR_IR_LEFT || sensorType == OB_SENSOR_IR_RIGHT || sensorType == OB_SENSOR_COLOR
-           || sensorType == OB_SENSOR_DEPTH) {
-            // Enable the stream with specified requirements.
-            config->enableVideoStream(ob::TypeHelper::convertSensorTypeToStreamType(sensorType));
+
+        // exclude non-video sensor type
+        if(!ob::TypeHelper::isVideoSensorType(sensorType)) {
+            continue;
         }
+
+        // Enable the stream for the sensor type.
+        config->enableStream(sensorType);
     }
 
-    std::mutex                    frameMutex;
-    std::shared_ptr<ob::FrameSet> renderframeSet = nullptr;
+    std::mutex                    framesetMutex;
+    std::shared_ptr<ob::FrameSet> frameset = nullptr;
 
     // Start the pipeline with callback.
-    pipe.start(config, [&](std::shared_ptr<ob::FrameSet> frameSet) {
-        std::lock_guard<std::mutex> lock(frameMutex);
-        renderframeSet = frameSet;
+    pipe.start(config, [&](std::shared_ptr<ob::FrameSet> output) {
+        std::lock_guard<std::mutex> lock(framesetMutex);
+        frameset = output;
     });
 
     // Create a window for rendering, and set the size of the window.
     ob_smpl::CVWindow win("Callback", 1280, 720, ob_smpl::ARRANGE_GRID);
 
     while(win.run()) {
-        std::lock_guard<std::mutex> lock(frameMutex);
+        std::lock_guard<std::mutex> lock(framesetMutex);
 
-        if(renderframeSet == nullptr) {
+        if(frameset == nullptr) {
             continue;
         }
 
         // Rendering display
-        win.pushFramesToView(renderframeSet);
+        win.pushFramesToView(frameset);
     }
 
     // Stop the Pipeline, no frame data will be generated

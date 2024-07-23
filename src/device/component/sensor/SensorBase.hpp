@@ -29,6 +29,8 @@ public:
     void          unregisterStreamStateChangedCallback(uint32_t token) override;
 
     StreamProfileList                    getStreamProfileList() const override;
+    void                                 setStreamProfileFilter(std::shared_ptr<IStreamProfileFilter> filter);
+    void                                 updateStreamProfileList(const StreamProfileList &profileList) override;
     void                                 updateDefaultStreamProfile(const std::shared_ptr<const StreamProfile> &profile) override;
     std::shared_ptr<const StreamProfile> getActivatedStreamProfile() const override;
 
@@ -51,6 +53,7 @@ protected:
     std::shared_ptr<ISourcePort> backend_;
 
     StreamProfileList streamProfileList_;
+    std::shared_ptr<IStreamProfileFilter> streamProfileFilter_;
 
     std::shared_ptr<const StreamProfile> activatedStreamProfile_;
     FrameCallback                        frameCallback_;

@@ -1,10 +1,10 @@
 #pragma once
 #include "ISensorStreamStrategy.hpp"
 #include "G330DepthAlgModeManager.hpp"
-#include "core/stream/StreamProfile.hpp"
+#include "stream/StreamProfile.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
-#include "component/DeviceComponentBase.hpp"
+#include "DeviceComponentBase.hpp"
 #include <map>
 
 namespace libobsensor {

@@ -2,47 +2,45 @@
 
 namespace libobsensor {
 
-DeviceComponentPropertyAccessorWrapper::DeviceComponentPropertyAccessorWrapper(IDevice *device, DeviceComponentId compId) : device_(device), compId_(compId) {}
+DeviceComponentPropertyAccessor::DeviceComponentPropertyAccessor(IDevice *device, DeviceComponentId compId) : device_(device), compId_(compId) {}
 
-void DeviceComponentPropertyAccessorWrapper::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void DeviceComponentPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     auto comp             = device_->getComponent(compId_);
     auto propertyAccessor = comp.as<IPropertyAccessor>();
     propertyAccessor->setPropertyValue(propertyId, value);
 }
 
-void DeviceComponentPropertyAccessorWrapper::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+void DeviceComponentPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     auto comp             = device_->getComponent(compId_);
     auto propertyAccessor = comp.as<IPropertyAccessor>();
     propertyAccessor->getPropertyValue(propertyId, value);
 }
 
-void DeviceComponentPropertyAccessorWrapper::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+void DeviceComponentPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     auto comp             = device_->getComponent(compId_);
     auto propertyAccessor = comp.as<IPropertyAccessor>();
     propertyAccessor->getPropertyRange(propertyId, range);
 }
 
-FunctionPropertyAccessorWrapper::FunctionPropertyAccessorWrapper(std::function<OBPropertyValue(uint32_t)>       getter,
-                                                                 std::function<void(uint32_t, OBPropertyValue)> setter,
-                                                                 std::function<OBPropertyRange(uint32_t)>       rangeGetter)
+FunctionPropertyAccessor::FunctionPropertyAccessor(std::function<OBPropertyValue(uint32_t)> getter, std::function<void(uint32_t, OBPropertyValue)> setter,
+                                                   std::function<OBPropertyRange(uint32_t)> rangeGetter)
     : getter_(getter), setter_(setter), rangeGetter_(rangeGetter) {}
 
-void FunctionPropertyAccessorWrapper::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void FunctionPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     setter_(propertyId, value);
 }
 
-void FunctionPropertyAccessorWrapper::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+void FunctionPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     *value = getter_(propertyId);
 }
 
-void FunctionPropertyAccessorWrapper::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+void FunctionPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     *range = rangeGetter_(propertyId);
 }
 
-LazyPropertyAccessorWrapper::LazyPropertyAccessorWrapper(std::function<std::shared_ptr<IPropertyAccessor>()> accessorCreator)
-    : accessorCreator_(accessorCreator) {}
+LazyPropertyAccessor::LazyPropertyAccessor(std::function<std::shared_ptr<IPropertyAccessor>()> accessorCreator) : accessorCreator_(accessorCreator) {}
 
-void LazyPropertyAccessorWrapper::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void LazyPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -50,7 +48,7 @@ void LazyPropertyAccessorWrapper::setPropertyValue(uint32_t propertyId, OBProper
     accessor_->setPropertyValue(propertyId, value);
 }
 
-void LazyPropertyAccessorWrapper::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+void LazyPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -58,7 +56,7 @@ void LazyPropertyAccessorWrapper::getPropertyValue(uint32_t propertyId, OBProper
     accessor_->getPropertyValue(propertyId, value);
 }
 
-void LazyPropertyAccessorWrapper::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+void LazyPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -66,10 +64,10 @@ void LazyPropertyAccessorWrapper::getPropertyRange(uint32_t propertyId, OBProper
     accessor_->getPropertyRange(propertyId, range);
 }
 
-LazyPropertyExtensionAccessorWrapper::LazyPropertyExtensionAccessorWrapper(std::function<std::shared_ptr<IPropertyExtensionAccessor>()> accessorCreator)
-    : LazyPropertyAccessorWrapper(accessorCreator) {}
+LazyPropertyExtensionAccessor::LazyPropertyExtensionAccessor(std::function<std::shared_ptr<IPropertyExtensionAccessor>()> accessorCreator)
+    : LazyPropertyAccessor(accessorCreator) {}
 
-void LazyPropertyExtensionAccessorWrapper::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
+void LazyPropertyExtensionAccessor::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -78,7 +76,7 @@ void LazyPropertyExtensionAccessorWrapper::setStructureData(uint32_t propertyId,
     extensionAccessor->setStructureData(propertyId, data);
 }
 
-const std::vector<uint8_t> &LazyPropertyExtensionAccessorWrapper::getStructureData(uint32_t propertyId) {
+const std::vector<uint8_t> &LazyPropertyExtensionAccessor::getStructureData(uint32_t propertyId) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -87,7 +85,7 @@ const std::vector<uint8_t> &LazyPropertyExtensionAccessorWrapper::getStructureDa
     return extensionAccessor->getStructureData(propertyId);
 }
 
-void LazyPropertyExtensionAccessorWrapper::getRawData(uint32_t propertyId, GetDataCallback callback) {
+void LazyPropertyExtensionAccessor::getRawData(uint32_t propertyId, GetDataCallback callback) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -96,7 +94,7 @@ void LazyPropertyExtensionAccessorWrapper::getRawData(uint32_t propertyId, GetDa
     extensionAccessor->getRawData(propertyId, callback);
 }
 
-uint16_t LazyPropertyExtensionAccessorWrapper::getCmdVersionProtoV1_1(uint32_t propertyId) {
+uint16_t LazyPropertyExtensionAccessor::getCmdVersionProtoV1_1(uint32_t propertyId) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -105,7 +103,7 @@ uint16_t LazyPropertyExtensionAccessorWrapper::getCmdVersionProtoV1_1(uint32_t p
     return extensionAccessor->getCmdVersionProtoV1_1(propertyId);
 }
 
-const std::vector<uint8_t> &LazyPropertyExtensionAccessorWrapper::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
+const std::vector<uint8_t> &LazyPropertyExtensionAccessor::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -114,7 +112,7 @@ const std::vector<uint8_t> &LazyPropertyExtensionAccessorWrapper::getStructureDa
     return extensionAccessor->getStructureDataProtoV1_1(propertyId, cmdVersion);
 }
 
-void LazyPropertyExtensionAccessorWrapper::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion) {
+void LazyPropertyExtensionAccessor::setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();
@@ -123,7 +121,7 @@ void LazyPropertyExtensionAccessorWrapper::setStructureDataProtoV1_1(uint32_t pr
     extensionAccessor->setStructureDataProtoV1_1(propertyId, data, cmdVersion);
 }
 
-const std::vector<uint8_t> &LazyPropertyExtensionAccessorWrapper::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
+const std::vector<uint8_t> &LazyPropertyExtensionAccessor::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) {
     std::lock_guard<std::mutex> lock(mutex_);
     if(!accessor_) {
         accessor_ = accessorCreator_();

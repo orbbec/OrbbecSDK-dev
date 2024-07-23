@@ -5,7 +5,7 @@
 #include "property/InternalProperty.hpp"
 #include "DevicePids.hpp"
 #include "exception/ObException.hpp"
-#include "filter/public_filters/FrameIMUCorrectProcess.hpp"
+#include "publicfilters/IMUCorrector.hpp"
 
 #include <vector>
 #include <sstream>
@@ -124,7 +124,7 @@ void G330AlgParamManager::fetchParams() {
         data.clear();
     })
     if(!data.empty()) {
-        imuCalibParam_ = IMUCorrecter::parserIMUCalibrationParamsRaw(data.data(), static_cast<uint32_t>(data.size()));
+        imuCalibParam_ = IMUCorrector::parserIMUCalibrationParamsRaw(data.data(), static_cast<uint32_t>(data.size()));
         LOG_DEBUG("Get imu calibration params success!");
     }
 }
@@ -186,9 +186,9 @@ void G330AlgParamManager::fixD2CParmaList() {
 
     auto owner      = getOwner();
     auto deviceInfo = owner->getInfo();
-    auto iter       = std::find(gG330LPids.begin(), gG330LPids.end(), deviceInfo->pid_);
+    auto iter       = std::find(G330LDevPids.begin(), G330LDevPids.end(), deviceInfo->pid_);
 
-    if(iter != gG330LPids.end()) {
+    if(iter != G330LDevPids.end()) {
         appendColorResolutions.push_back({ 480, 270 });
     }
 

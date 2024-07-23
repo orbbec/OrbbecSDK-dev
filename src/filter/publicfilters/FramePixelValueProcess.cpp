@@ -94,7 +94,7 @@ std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame
     }
 
     std::lock_guard<std::mutex> scaleLock(mtx_);
-    auto depthFrame = frame->as<DepthFrame>();
+    auto                        depthFrame = frame->as<DepthFrame>();
     auto                        outFrame   = FrameFactory::createFrameFromOtherFrame(frame);
     switch(frame->getFormat()) {
     case OB_FORMAT_Y16:
@@ -121,7 +121,7 @@ void PixelValueCutOff::updateConfig(std::vector<std::string> &params) {
     }
     try {
         std::lock_guard<std::mutex> cutOffLock(mtx_);
-        int min = std::stoi(params[0]);
+        int                         min = std::stoi(params[0]);
         if(min >= 0 && min <= 16000) {
             min_ = min;
         }
@@ -149,9 +149,9 @@ std::shared_ptr<Frame> PixelValueCutOff::processFunc(std::shared_ptr<const Frame
     }
 
     std::lock_guard<std::mutex> cutOffLock(mtx_);
-    auto  videoFrame = frame->as<VideoFrame>();
+    auto                        videoFrame = frame->as<VideoFrame>();
     auto                        outFrame   = FrameFactory::createFrameFromOtherFrame(frame);
-    float scale      = 1.0f;
+    float                       scale      = 1.0f;
     if(frame->is<DepthFrame>()) {
         scale = frame->as<DepthFrame>()->getValueScale();
     }
@@ -203,7 +203,7 @@ std::shared_ptr<Frame> PixelValueOffset::processFunc(std::shared_ptr<const Frame
     }
 
     std::lock_guard<std::mutex> offsetLock(mtx_);
-    auto videoFrame = frame->as<VideoFrame>();
+    auto                        videoFrame = frame->as<VideoFrame>();
     auto                        outFrame   = FrameFactory::createFrameFromOtherFrame(frame);
     if(offset_ != 0) {
         switch(frame->getFormat()) {

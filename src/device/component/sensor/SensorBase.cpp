@@ -60,7 +60,19 @@ void SensorBase::unregisterStreamStateChangedCallback(uint32_t token) {
 }
 
 StreamProfileList SensorBase::getStreamProfileList() const {
-    return streamProfileList_;
+    auto spList = streamProfileList_;
+    if(streamProfileFilter_) {
+        spList = streamProfileFilter_->filter(spList);
+    }
+    return spList;
+}
+
+void SensorBase::setStreamProfileFilter(std::shared_ptr<IStreamProfileFilter> filter) {
+    streamProfileFilter_ = filter;
+}
+
+void SensorBase::updateStreamProfileList(const StreamProfileList &profileList) {
+    streamProfileList_ = profileList;
 }
 
 void SensorBase::updateDefaultStreamProfile(const std::shared_ptr<const StreamProfile> &profile) {

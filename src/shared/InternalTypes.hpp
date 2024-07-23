@@ -121,7 +121,7 @@ typedef struct {
 
 // Single IMU parameters
 typedef struct {
-    char                    name[12];                   ///< IMU name
+    char                    name[12];                   /// ＜ imu name
     uint16_t                version;                    ///< IMU calibration library version number
     uint16_t                imuModel;                   ///< IMU model
     double                  body_to_gyroscope[9];       ///< Rotation from body coordinate system to gyroscope coordinate system
@@ -138,5 +138,17 @@ typedef struct {
     uint8_t           validNum;            ///< Number of valid IMUs
     OBSingleIMUParams singleIMUParams[3];  ///< Array of single IMU parameter models
 } OBIMUCalibrateParams;
+
+/**
+ *@brief List of resolutions supported by the device in the current camera depth mode
+ *
+ */
+typedef struct {
+    OBSensorType sensorType;  ///< sensor type
+    OBFormat     format;      ///< Image format
+    uint32_t     width;       ///< image width
+    uint32_t     height;      ///< Image height
+    uint32_t     maxFps;      ///< Maximum supported frame rate
+} OBEffectiveStreamProfile, ob_effective_stream_profile;
 
 #pragma pack(pop)

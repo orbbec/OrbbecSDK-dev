@@ -160,7 +160,7 @@ std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::shared_ptr<ObPal
 
     auto rstDeviceInfo = associatedSourcePortCompletion(obPal, deviceInfo);
 
-    if(isMatchDeviceByPid(rstDeviceInfo->pid_, gFemtoMegaPids)) {
+    if(isMatchDeviceByPid(rstDeviceInfo->pid_, FemtoMegaDevPids)) {
         device = std::make_shared<FemtoMegaNetDevice>(obPal, rstDeviceInfo);
         LOG_DEBUG("Create Net Device success! address={0}, port={1}, pid=0x{2:4x}", address, port, rstDeviceInfo->pid_);
     }

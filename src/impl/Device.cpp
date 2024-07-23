@@ -6,7 +6,6 @@
 #include "IDeviceEnumerator.hpp"
 #include "IProperty.hpp"
 #include "IDevice.hpp"
-#include "IProperty.hpp"
 #include "IDeviceMonitor.hpp"
 
 #ifdef __cplusplus

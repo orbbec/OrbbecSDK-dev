@@ -155,7 +155,7 @@ std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config
             throw std::runtime_error("No sensor matched!");
         }
         auto sensorSpList = sensor->getStreamProfileList();
-        if(sensorType == OBSensorType::OB_SENSOR_ACCEL) {
+        if(sensorType == OB_SENSOR_ACCEL) {
             auto profile            = sp->as<AccelStreamProfile>();
             auto matchedProfileList = matchAccelStreamProfile(sensorSpList, profile->getFullScaleRange(), profile->getSampleRate());
             if(matchedProfileList.empty()) {
@@ -163,7 +163,7 @@ std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config
             }
             config->enableStream(matchedProfileList.front());
         }
-        else if(sensorType == OBSensorType::OB_SENSOR_GYRO) {
+        else if(sensorType == OB_SENSOR_GYRO) {
             auto profile            = sp->as<GyroStreamProfile>();
             auto matchedProfileList = matchGyroStreamProfile(sensorSpList, profile->getFullScaleRange(), profile->getSampleRate());
             if(matchedProfileList.empty()) {

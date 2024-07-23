@@ -1,14 +1,16 @@
 #pragma once
 
-#include "IDevice.hpp"
 #include "IProperty.hpp"
+#include "IDevice.hpp"
 
 #include <mutex>
+#include <functional>
+
 namespace libobsensor {
-class DeviceComponentPropertyAccessorWrapper : public IPropertyAccessor {
+class DeviceComponentPropertyAccessor : public IPropertyAccessor {
 public:
-    DeviceComponentPropertyAccessorWrapper(IDevice *device, DeviceComponentId compId);
-    virtual ~DeviceComponentPropertyAccessorWrapper() noexcept = default;
+    DeviceComponentPropertyAccessor(IDevice *device, DeviceComponentId compId);
+    virtual ~DeviceComponentPropertyAccessor() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
@@ -19,12 +21,12 @@ private:
     DeviceComponentId compId_;
 };
 
-class FunctionPropertyAccessorWrapper : public IPropertyAccessor {
+class FunctionPropertyAccessor : public IPropertyAccessor {
 public:
-    FunctionPropertyAccessorWrapper(std::function<OBPropertyValue(uint32_t)> getter, std::function<void(uint32_t, OBPropertyValue)> setter,
-                                    std::function<OBPropertyRange(uint32_t)> rangeGetter);
+    FunctionPropertyAccessor(std::function<OBPropertyValue(uint32_t)> getter, std::function<void(uint32_t, OBPropertyValue)> setter,
+                             std::function<OBPropertyRange(uint32_t)> rangeGetter);
 
-    virtual ~FunctionPropertyAccessorWrapper() noexcept = default;
+    virtual ~FunctionPropertyAccessor() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
@@ -36,11 +38,11 @@ private:
     std::function<OBPropertyRange(uint32_t)>       rangeGetter_;
 };
 
-class LazyPropertyAccessorWrapper : public virtual IPropertyAccessor {
+class LazyPropertyAccessor : public virtual IPropertyAccessor {
 public:
-    LazyPropertyAccessorWrapper(std::function<std::shared_ptr<IPropertyAccessor>()> accessorCreator);
+    LazyPropertyAccessor(std::function<std::shared_ptr<IPropertyAccessor>()> accessorCreator);
 
-    virtual ~LazyPropertyAccessorWrapper() noexcept = default;
+    virtual ~LazyPropertyAccessor() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
@@ -52,23 +54,21 @@ protected:
     std::mutex                                          mutex_;
 };
 
-class LazyPropertyExtensionAccessorWrapper : public LazyPropertyAccessorWrapper,
-                                             public virtual IPropertyExtensionAccessor,
-                                             public virtual IPropertyExtensionAccessorV1_1 {
+class LazyPropertyExtensionAccessor : public LazyPropertyAccessor, public virtual IPropertyExtensionAccessor, public virtual IPropertyExtensionAccessorV1_1 {
 public:
-    LazyPropertyExtensionAccessorWrapper(std::function<std::shared_ptr<IPropertyExtensionAccessor>()> accessorCreator);
-    virtual ~LazyPropertyExtensionAccessorWrapper() noexcept = default;
+    LazyPropertyExtensionAccessor(std::function<std::shared_ptr<IPropertyExtensionAccessor>()> accessorCreator);
+    virtual ~LazyPropertyExtensionAccessor() noexcept = default;
 
     void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override {
-        LazyPropertyAccessorWrapper::setPropertyValue(propertyId, value);
+        LazyPropertyAccessor::setPropertyValue(propertyId, value);
     }
 
     void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override {
-        LazyPropertyAccessorWrapper::getPropertyValue(propertyId, value);
+        LazyPropertyAccessor::getPropertyValue(propertyId, value);
     }
 
     void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override {
-        LazyPropertyAccessorWrapper::getPropertyRange(propertyId, range);
+        LazyPropertyAccessor::getPropertyRange(propertyId, range);
     }
 
     void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) override;

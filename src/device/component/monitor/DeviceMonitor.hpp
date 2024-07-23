@@ -1,6 +1,6 @@
 #include "IDeviceMonitor.hpp"
 #include "ISourcePort.hpp"
-#include "component/DeviceComponentBase.hpp"
+#include "DeviceComponentBase.hpp"
 
 #include <map>
 

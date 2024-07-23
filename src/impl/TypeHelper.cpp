@@ -15,6 +15,10 @@ const char* ob_frame_type_to_string(OBFrameType type){
     return libobsensor::utils::obFrameToStr(type).c_str();
 }
 
+const char *ob_format_to_string(OBFormat format) {
+    return libobsensor::utils::obFormatToStr(format).c_str();
+}
+
 const char* ob_stream_type_to_string(OBStreamType type){
     return libobsensor::utils::obStreamToStr(type).c_str();
 }
@@ -22,7 +26,6 @@ const char* ob_stream_type_to_string(OBStreamType type){
 const char* ob_sensor_type_to_string(OBSensorType type){
     return libobsensor::utils::obSensorToStr(type).c_str();
 }
-
 
 const char* ob_imu_rate_type_to_string(OBIMUSampleRate type){
     return libobsensor::utils::obImuRateToStr(type).c_str();

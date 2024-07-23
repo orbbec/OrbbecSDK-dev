@@ -3,18 +3,6 @@
 
 #include <libobsensor/ObSensor.h>
 
-const char *sensor_types[] = { "OB_SENSOR_UNKNOWN", "OB_SENSOR_IR",      "OB_SENSOR_COLOR",    "OB_SENSOR_DEPTH",     "OB_SENSOR_ACCEL",
-                               "OB_SENSOR_GYRO",    "OB_SENSOR_IR_LEFT", "OB_SENSOR_IR_RIGHT", "OB_SENSOR_RAW_PHASE", "OB_SENSOR_TYPE_COUNT" };
-
-const char *stream_types[] = { "YUYV", "YUY2",       "UYVY", "NV12", "NV21",  "MJPG", "H264",  "H265",      "Y16",  "Y8",     "Y10",    "Y11",
-                               "Y12",  "GRAY",       "HEVC", "I420", "ACCEL", "GYRO", "POINT", "RGB_POINT", "RLE",  "RGB",    "BGR",    "Y14",
-                               "BGRA", "COMPRESSED", "RVL",  "Z16",  "YV12",  "BA81", "RGBA",  "BYR2",      "RW16", "DISP16", "UNKNOWN" };
-
-const char *rate_types[] = {
-    "UNKNOWN", "1_5625_HZ", "3_125_HZ", "6_25_HZ", "12_5_HZ", "25_HZ", "50_HZ",  "100_HZ",
-    "200_HZ",  "500_HZ",    "1_KHZ",    "2_KHZ",   "4_KHZ",   "8_KHZ", "16_KHZ", "32_KHZ",
-};
-
 // helper function to check for errors and exit if there is one
 void check_ob_error(ob_error **err) {
     if(*err) {
@@ -73,8 +61,13 @@ void enumerate_stream_info(ob_sensor *sensor) {
         // Print video stream profile information.
         if(sensor_type == OB_SENSOR_IR || sensor_type == OB_SENSOR_COLOR || sensor_type == OB_SENSOR_DEPTH || sensor_type == OB_SENSOR_IR_LEFT
            || sensor_type == OB_SENSOR_IR_RIGHT) {
+            ob_stream_type stream_type = ob_stream_profile_get_type(stream_profile, &error);
+            check_ob_error(&error);
+            const char *stream_type_str = ob_stream_type_to_string(stream_type);
+
             ob_format stream_format = ob_stream_profile_get_format(stream_profile, &error);
             check_ob_error(&error);
+            const char *stream_format_str = ob_format_to_string(stream_format);
 
             uint32_t stream_width = ob_video_stream_profile_get_width(stream_profile, &error);
             check_ob_error(&error);
@@ -85,27 +78,28 @@ void enumerate_stream_info(ob_sensor *sensor) {
             uint32_t stream_fps = ob_video_stream_profile_get_fps(stream_profile, &error);
             check_ob_error(&error);
 
-            printf("  %d - type: %4s, width: %4d, height: %4d, fps: %4d\n", index, stream_types[stream_format], stream_width, stream_height, stream_fps);
+            printf("  %d - type: %4s, format: %4s, width: %4d, height: %4d, fps: %4d\n", index, stream_type_str, stream_format_str, stream_width, stream_height,
+                   stream_fps);
         }
         else if(sensor_type == OB_SENSOR_ACCEL) {
             // Print acc stream profile information.
-            ob_format stream_format = ob_stream_profile_get_format(stream_profile, &error);
-            check_ob_error(&error);
+            // ob_format stream_format = ob_stream_profile_get_format(stream_profile, &error);
+            // check_ob_error(&error);
 
-            ob_accel_sample_rate acc_fps = ob_accel_stream_profile_get_sample_rate(stream_profile, &error);
-            check_ob_error(&error);
+            // ob_accel_sample_rate acc_fps = ob_accel_stream_profile_get_sample_rate(stream_profile, &error);
+            // check_ob_error(&error);
 
-            printf("  %d - type: %s, fps: %s\n", index, stream_types[stream_format], rate_types[acc_fps]);
+            // printf("  %d - type: %s, fps: %s\n", index, stream_types[stream_format], rate_types[acc_fps]);
         }
         else if(sensor_type == OB_SENSOR_GYRO) {
             // Print gyro stream profile information.
-            ob_format stream_format = ob_stream_profile_get_format(stream_profile, &error);
-            check_ob_error(&error);
+            // ob_format stream_format = ob_stream_profile_get_format(stream_profile, &error);
+            // check_ob_error(&error);
 
-            ob_gyro_sample_rate gyro_fps = ob_gyro_stream_profile_get_sample_rate(stream_profile, &error);
-            check_ob_error(&error);
+            // ob_gyro_sample_rate gyro_fps = ob_gyro_stream_profile_get_sample_rate(stream_profile, &error);
+            // check_ob_error(&error);
 
-            printf("  %d - type: %s, fps: %s\n", index, stream_types[stream_format], rate_types[gyro_fps]);
+            // printf("  %d - type: %s, fps: %s\n", index, stream_types[stream_format], rate_types[gyro_fps]);
         }
 
         // destroy stream profile
@@ -138,11 +132,12 @@ void enumerate_sensor_info(ob_device *device) {
         check_ob_error(&error);
 
         // Get sensor type.
-        ob_sensor_type sensor_name = ob_sensor_get_type(sensor, &error);
+        ob_sensor_type sensor_type = ob_sensor_get_type(sensor, &error);
         check_ob_error(&error);
+        const char *sensor_name = ob_sensor_type_to_string(sensor_type);
 
         // Print sensor information.
-        printf("  %d - sensor name: %s\n", index, sensor_types[sensor_name]);
+        printf("  %d - sensor name: %s\n", index, sensor_name);
 
         // destroy sensor
         ob_delete_sensor(sensor, &error);

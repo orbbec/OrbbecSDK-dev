@@ -10,7 +10,7 @@
 #include "frame/FrameMemoryPool.hpp"
 #include "stream/StreamIntrinsicsManager.hpp"
 #include "stream/StreamExtrinsicsManager.hpp"
-#include "filter/FilterFactory.hpp"
+#include "FilterFactory.hpp"
 
 namespace libobsensor {
 class Context {

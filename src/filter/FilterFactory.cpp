@@ -1,6 +1,6 @@
 #include "FilterFactory.hpp"
-#include "public_filters/publicFilterLoader.hpp"
-#include "private_filters/PrivFilterLoader.hpp"
+#include "publicfilters/publicFilterLoader.hpp"
+#include "privatefilters/PrivFilterLoader.hpp"
 #include "utils/PublicTypeHelper.hpp"
 #include "exception/ObException.hpp"
 

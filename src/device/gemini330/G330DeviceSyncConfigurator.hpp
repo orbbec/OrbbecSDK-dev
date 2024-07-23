@@ -1,7 +1,7 @@
 #pragma once
 #include "IDevice.hpp"
 #include "IDeviceSyncConfigurator.hpp"
-#include "component/DeviceComponentBase.hpp"
+#include "DeviceComponentBase.hpp"
 
 #include <vector>
 #include <memory>

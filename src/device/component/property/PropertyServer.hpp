@@ -4,7 +4,7 @@
 #include "InternalProperty.hpp"
 #include "libobsensor/h/Property.h"
 #include "PropertyHelper.hpp"
-#include "component/DeviceComponentBase.hpp"
+#include "DeviceComponentBase.hpp"
 
 namespace libobsensor {
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "IFilter.hpp"
 #include "logger/Logger.hpp"
-#include "private_filters/PrivFilterLoader.hpp"
+#include "privatefilters/PrivFilterLoader.hpp"
 #include <memory>
 #include <mutex>
 

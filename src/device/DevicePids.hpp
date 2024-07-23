@@ -2,18 +2,18 @@
 #include <vector>
 
 namespace libobsensor {
-const std::vector<uint16_t> gBootPids = {
+const std::vector<uint16_t> BootPids = {
     0x0501,  // bootloader
     0x0300,  // openni bootloader
     0x0301,  // openni bootloader
     0x0400,  // openni Mx400/Mx600 bootloader
 };
 
-const std::vector<uint16_t> gAstra2DevPids = {
+const std::vector<uint16_t> Astra2DevPids = {
     0x0660,  // astra2
 };
 
-const std::vector<uint16_t> gG330Pids = {
+const std::vector<uint16_t> G330DevPids = {
     0x06d0,  // Gemini 2R
     0x06d1,  // Gemini 2RL
     0x0800,  // Gemini 335 / 335e
@@ -32,7 +32,7 @@ const std::vector<uint16_t> gG330Pids = {
     0x0810,  // Gemini 336Le
 };
 
-const std::vector<uint16_t> gG330LPids = {
+const std::vector<uint16_t> G330LDevPids = {
     0x06d1,  // Gemini 2RL
     0x0804,  // Gemini 335L
     0x0805,  // Gemini 330L
@@ -46,25 +46,18 @@ const std::vector<uint16_t> gG330LPids = {
     0x0810,  // Gemini 336Le
 };
 
-const std::vector<uint16_t> gMX6600DevPids = {
-    0x0660,  // astra2
-};
-
-const std::vector<uint16_t> gGemini2Pids = {
+const std::vector<uint16_t> Gemini2DevPids = {
     0x0670,  // Gemini2
     0x0673,  // Gemini2L
     0x0671,  // Gemini2XL
-    0x0674,  // Gemini2i
-    0x0701,  // Dabai DCL
-    0x0675,  // Gemini2VL
 };
 
-const std::vector<uint16_t> gFemtoMegaPids = {
+const std::vector<uint16_t> FemtoMegaDevPids = {
     0x0669,  // Femto Mega
     0x06c0,  // Femto Mega i
 };
 
-const std::vector<uint16_t> gFemtoBoltPids = {
+const std::vector<uint16_t> FemtoBoltDevPids = {
     0x066B,  // Femto Bolt
 };
 }  // namespace libobsensor

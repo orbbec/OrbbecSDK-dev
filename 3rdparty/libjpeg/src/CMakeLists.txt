@@ -633,7 +633,6 @@ if(ENABLE_STATIC)
     # ${SIMD_OBJS}
     ${SIMD_SOURCES_ALL}
   )
-  message("SIMD_SOURCES ALL====>" ${SIMD_SOURCES_ALL})
 
   if(NOT MSVC)
     set_target_properties(jpeg_static PROPERTIES OUTPUT_NAME jpeg)

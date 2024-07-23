@@ -10,7 +10,7 @@ file(GLOB_RECURSE HEADERS_FILES "*.hpp" EXCLUDE unittest)
 target_sources(core PRIVATE ${SOURCE_FILES} ${HEADERS_FILES})
 
 target_link_libraries(core PUBLIC ob::shared)
-target_include_directories(core PUBLIC  ${OB_PUBLIC_HEADERS_DIR} ${OB_INTERFACE_DIR} ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(core PUBLIC  ${OB_PUBLIC_HEADERS_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
 add_library(ob::core ALIAS core)
 ob_source_group(ob::core)

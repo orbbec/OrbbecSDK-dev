@@ -56,7 +56,7 @@ bool CVWindow::run() {
         cv::imshow(name_, renderMat_);
     }
 
-    int key = cv::waitKey(1);
+    int key = cv::waitKey(20);
     if(key != -1) {
         std::unique_lock<std::mutex> lk(keyMtx_);
         key_ = key;
@@ -214,7 +214,7 @@ void CVWindow::processFrames() {
     while(!closed_) {
         {
             std::unique_lock<std::mutex> lk(srcFrameGroupsMtx_);
-            srcFrameGroupsCv_.wait(lk, [this] { return !srcFrameGroups_.empty() || closed_; });
+            srcFrameGroupsCv_.wait(lk);
             if(closed_) {
                 break;
             }

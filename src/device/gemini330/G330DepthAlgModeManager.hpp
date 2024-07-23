@@ -2,7 +2,7 @@
 #include "IDevice.hpp"
 #include "InternalTypes.hpp"
 #include "IDepthAlgModeManager.hpp"
-#include "component/DeviceComponentBase.hpp"
+#include "DeviceComponentBase.hpp"
 
 namespace libobsensor {
 

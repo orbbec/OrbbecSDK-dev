@@ -24,7 +24,7 @@
 
 namespace libobsensor {
 
-const std::vector<uint16_t> gFemtoMegaPids = {
+const std::vector<uint16_t> FemtoMegaDevPids = {
     0x0669,  // Femto Mega
     0x06c0,  // Femto Mega i
 };
@@ -171,7 +171,7 @@ std::shared_ptr<ISourcePort> LinuxPal::getSourcePort(std::shared_ptr<const Sourc
     case SOURCE_PORT_USB_UVC: {
         auto usbPortInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo);
         auto backend     = uvcBackendType_;
-        if(isMatchDeviceByPid(usbPortInfo->pid, gFemtoMegaPids)) {  // if the device is femto mega, force to use v4l2
+        if(isMatchDeviceByPid(usbPortInfo->pid, FemtoMegaDevPids)) {  // if the device is femto mega, force to use v4l2
             backend = UVC_BACKEND_TYPE_V4L2;
         }
         if(backend == UVC_BACKEND_TYPE_AUTO) {

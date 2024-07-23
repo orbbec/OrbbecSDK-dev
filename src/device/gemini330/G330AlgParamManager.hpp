@@ -4,7 +4,7 @@
 #include "IProperty.hpp"
 #include "InternalTypes.hpp"
 #include "libobsensor/h/ObTypes.h"
-#include "component/DeviceComponentBase.hpp"
+#include "DeviceComponentBase.hpp"
 
 #include <vector>
 #include <memory>

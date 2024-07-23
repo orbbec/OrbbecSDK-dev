@@ -1,6 +1,6 @@
 #include "FrameProcessor.hpp"
-#include "core/frame/FrameFactory.hpp"
-#include "shared/utils/Utils.hpp"
+#include "frame/FrameFactory.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBase(owner) {
@@ -136,7 +136,7 @@ void FrameProcessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         setConfigValue("DisparityTransform#255", static_cast<double>(value.intValue));
     } break;
-    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT:{ 
+    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT: {
         setConfigValue("DisparityTransform#2", static_cast<double>(value.floatValue));
     } break;
     }
@@ -153,7 +153,6 @@ void FrameProcessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *valu
         getValue = getConfigValue("DisparityTransform#2");
         value->floatValue = static_cast<float>(getValue);
     } break;
-    
     }
 }
 

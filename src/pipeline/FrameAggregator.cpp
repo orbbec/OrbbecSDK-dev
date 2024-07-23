@@ -1,8 +1,9 @@
 // #pragma once
 #include "FrameAggregator.hpp"
-#include "core/frame/FrameFactory.hpp"
+#include "frame/FrameFactory.hpp"
 #include "logger/Logger.hpp"
 #include "utils/PublicTypeHelper.hpp"
+
 #include <thread>
 
 namespace libobsensor {

@@ -78,6 +78,13 @@ OB_EXPORT const char* ob_meta_data_type_to_string(OBFrameMetadataType type);
  */
 OB_EXPORT OBStreamType ob_sensor_type_to_stream_type(OBSensorType type);
 
+/**
+ * @brief Convert OBFormat to " char* " type and then return.
+ *
+ * @param format The OBFormat to convert.
+ * @return The string.
+ */
+OB_EXPORT const char *ob_format_to_string(OBFormat format);
 #ifdef __cplusplus
 }
 #endif

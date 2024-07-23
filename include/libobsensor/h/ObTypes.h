@@ -1676,6 +1676,26 @@ typedef void(ob_frame_destroy_callback)(uint8_t *buffer, void *user_data);
 typedef void(ob_log_callback)(ob_log_severity severity, const char *message, void *user_data);
 
 /**
+ * @brief Check if the sensor_type is a video sensor
+ *
+ * @param sensor_type Sensor type to check
+ * @return True if sensor_type is a video sensor, false otherwise
+ */
+#define ob_is_video_sensor_type(sensor_type)                                                                                             \
+    (sensor_type == OB_SENSOR_COLOR || sensor_type == OB_SENSOR_DEPTH || sensor_type == OB_SENSOR_IR || sensor_type == OB_SENSOR_IR_LEFT \
+     || sensor_type == OB_SENSOR_IR_RIGHT)
+
+/**
+ * @brief check if the stream_type is a video stream
+ *
+ * @param stream_type Stream type to check
+ * @return True if stream_type is a video stream, false otherwise
+ */
+#define ob_is_video_stream_type(stream_type)                                                                                             \
+    (stream_type == OB_STREAM_COLOR || stream_type == OB_STREAM_DEPTH || stream_type == OB_STREAM_IR || stream_type == OB_STREAM_IR_LEFT \
+     || stream_type == OB_STREAM_IR_RIGHT || stream_type == OB_STREAM_VIDEO)
+
+/**
  * @brief Check if sensor_type is an IR sensor
  *
  * @param sensor_type Sensor type to check

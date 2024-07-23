@@ -5,7 +5,7 @@
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
 #include "frame/Frame.hpp"
-#include "filter/public_filters/FormatConverterProcess.hpp"
+#include "publicfilters/FormatConverterProcess.hpp"
 #include "ISensorStreamStrategy.hpp"
 #include "IDevice.hpp"
 
@@ -26,6 +26,7 @@ VideoSensor::VideoSensor(IDevice *owner, OBSensorType sensorType, const std::sha
         sp->bindOwner(lazySelf);
         sp->setType(streamType);
         backendStreamProfileList_.push_back(sp);
+        LOG_DEBUG("Backend stream profile {}", backendSp);
     }
 
     std::sort(backendStreamProfileList_.begin(), backendStreamProfileList_.end(),

@@ -2,7 +2,7 @@
 #include "IDevice.hpp"
 #include "IPresetManager.hpp"
 #include "InternalTypes.hpp"
-#include "component/DeviceComponentBase.hpp"
+#include "DeviceComponentBase.hpp"
 
 #include <map>
 #include <string>

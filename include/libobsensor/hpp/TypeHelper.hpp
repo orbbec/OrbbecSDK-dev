@@ -99,5 +99,41 @@ public:
     static OBStreamType convertSensorTypeToStreamType(OBSensorType type) {
         return ob_sensor_type_to_stream_type(type);
     }
+
+    /**
+     * @brief Check if the given sensor type is a video sensor.
+     * @brief Video sensors are sensors that produce video frames.
+     * @brief The following sensor types are considered video sensors:
+     *      OB_SENSOR_COLOR,
+     *      OB_SENSOR_DEPTH,
+     *      OB_SENSOR_IR,
+     *      OB_SENSOR_IR_LEFT,
+     *      OB_SENSOR_IR_RIGHT,
+     *
+     * @param type
+     * @return true
+     * @return false
+     */
+    static bool isVideoSensorType(OBSensorType type) {
+        return ob_is_video_sensor_type(type);
+    }
+
+    /**
+     * @brief Check if the given stream type is a video stream.
+     * @brief Video streams are streams that contain video frames.
+     * @brief The following stream types are considered video streams:
+     *      OB_STREAM_VIDEO,
+     *      OB_STREAM_DEPTH,
+     *      OB_STREAM_COLOR,
+     *      OB_STREAM_IR，
+     *      OB_STREAM_IR_LEFT,
+     *      OB_STREAM_IR_RIGHT,
+     *
+     * @param type The stream type to check.
+     * @return true if the given stream type is a video stream, false otherwise.
+     */
+    static bool isVideoStreamType(OBStreamType type) {
+        return ob_is_video_stream_type(type);
+    }
 };
 }  // namespace ob

@@ -8,7 +8,6 @@ target_link_libraries(${OB_TARGET_PAL} PUBLIC ob::shared ob::core)
 target_include_directories(${OB_TARGET_PAL} PUBLIC
     ${OB_PUBLIC_HEADERS_DIR}
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/../
 )
 
 add_library(ob::platform ALIAS ${OB_TARGET_PAL})

@@ -1,17 +1,16 @@
 cmake_minimum_required(VERSION 3.5)
 
-# add the filter library with version number
+# add the filter library with the version as the project
 add_library(filter STATIC)
 set_target_properties(filter PROPERTIES VERSION ${PROJECT_VERSION})
 
-# add the filter library sources
+# add the source files
 file(GLOB_RECURSE SOURCE_FILES "*.cpp" EXCLUDE unittest)
 file(GLOB_RECURSE HEADERS_FILES "*.hpp" EXCLUDE unittest)
 target_sources(filter PRIVATE ${SOURCE_FILES} ${HEADERS_FILES})
 
+# depedecencies
 target_link_libraries(filter PUBLIC ob::shared ob::core )
-message("OB_PUBLIC_HEADERS_DIR:${OB_PUBLIC_HEADERS_DIR}")
-message("CMAKE_CURRENT_LIST_DIR:${CMAKE_CURRENT_LIST_DIR}")
 target_include_directories(filter PUBLIC ${OB_PUBLIC_HEADERS_DIR} ${CMAKE_CURRENT_LIST_DIR})
 
 add_subdirectory(${OB_3RDPARTY_DIR}/dylib dylib)
@@ -29,5 +28,5 @@ ob_source_group(ob::filter)
 set_target_properties(filter PROPERTIES FOLDER "modules")
 
 if(OB_INSTALL_FILTER_DEV_HEADERS)
-    install(FILES ${CMAKE_CURRENT_LIST_DIR}/private_filters/PrivFilterTypes.h DESTINATION include/libobsensor/h/)
+    install(FILES ${CMAKE_CURRENT_LIST_DIR}/privatefilters/PrivFilterTypes.h DESTINATION include/libobsensor/h/)
 endif()

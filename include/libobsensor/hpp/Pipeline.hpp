@@ -5,14 +5,16 @@
  */
 #pragma once
 
-#include "Types.hpp"
+#include "Frame.hpp"
 #include "Device.hpp"
 #include "StreamProfile.hpp"
-#include "Frame.hpp"
-#include <functional>
-#include <memory>
-#include "libobsensor/h/Pipeline.h"
 
+#include "libobsensor/h/Pipeline.h"
+#include "libobsensor/hpp/Types.hpp"
+#include "libobsensor/hpp/TypeHelper.hpp"
+
+#include <memory>
+#include <functional>
 namespace ob {
 
 /**
@@ -50,7 +52,7 @@ public:
     }
 
     /**
-     * @brief enable a stream with a specific type
+     * @brief enable a stream with a specific stream type
      *
      * @param streamType The stream type to be enabled
      */
@@ -58,6 +60,17 @@ public:
         ob_error *error = nullptr;
         ob_config_enable_stream(impl_, streamType, &error);
         Error::handle(&error);
+    }
+
+    /**
+     * @brief Enable a stream with a specific sensor type
+     * @brief Will convert sensor type to stream type automatically.
+     *
+     * @param sensorType The sensor type to be enabled
+     */
+    void enableStream(OBSensorType sensorType) const {
+        auto streamType = ob::TypeHelper::convertSensorTypeToStreamType(sensorType);
+        enableStream(streamType);
     }
 
     /**
@@ -85,11 +98,27 @@ public:
      * @param fps The video stream frame rate (default is OB_FPS_ANY, which selects the default frame rate).
      * @param format The video stream format (default is OB_FORMAT_ANY, which selects the default format).
      */
-    void enableVideoStream(OBStreamType stream_type, uint32_t width = OB_WIDTH_ANY, uint32_t height = OB_HEIGHT_ANY, uint32_t fps = OB_FPS_ANY,
+    void enableVideoStream(OBStreamType streamType, uint32_t width = OB_WIDTH_ANY, uint32_t height = OB_HEIGHT_ANY, uint32_t fps = OB_FPS_ANY,
                            OBFormat format = OB_FORMAT_ANY) const {
         ob_error *error = nullptr;
-        ob_config_enable_video_stream(impl_, stream_type, width, height, fps, format, &error);
+        ob_config_enable_video_stream(impl_, streamType, width, height, fps, format, &error);
         Error::handle(&error);
+    }
+
+    /**
+     * @brief Enable a video stream to be used in the pipeline.
+     * @brief Will convert sensor type to stream type automatically.
+     *
+     * @param sensorType The sensor type to be enabled.
+     * @param width The video stream width (default is OB_WIDTH_ANY, which selects the default resolution).
+     * @param height The video stream height (default is OB_HEIGHT_ANY, which selects the default resolution).
+     * @param fps The video stream frame rate (default is OB_FPS_ANY, which selects the default frame rate).
+     * @param format The video stream format (default is OB_FORMAT_ANY, which selects the default format).
+     */
+    void enableVideoStream(OBSensorType sensorType, uint32_t width = OB_WIDTH_ANY, uint32_t height = OB_HEIGHT_ANY, uint32_t fps = OB_FPS_ANY,
+                           OBFormat format = OB_FORMAT_ANY) const {
+        auto streamType = ob::TypeHelper::convertSensorTypeToStreamType(sensorType);
+        enableVideoStream(streamType, width, height, fps, format);
     }
 
     /**
@@ -102,8 +131,8 @@ public:
      * @param fullScaleRange The full-scale range of the accelerometer (default is OB_ACCEL_FULL_SCALE_RANGE_ANY, which selects the default range).
      * @param sampleRate The sample rate of the accelerometer (default is OB_ACCEL_SAMPLE_RATE_ANY, which selects the default rate).
      */
-    void enableAccelStream(ob_accel_full_scale_range fullScaleRange = OB_ACCEL_FULL_SCALE_RANGE_ANY,
-                           ob_accel_sample_rate      sampleRate     = OB_ACCEL_SAMPLE_RATE_ANY) const {
+    void enableAccelStream(OBAccelFullScaleRange fullScaleRange = OB_ACCEL_FULL_SCALE_RANGE_ANY,
+                           OBAccelSampleRate     sampleRate     = OB_ACCEL_SAMPLE_RATE_ANY) const {
         ob_error *error = nullptr;
         ob_config_enable_accel_stream(impl_, fullScaleRange, sampleRate, &error);
         Error::handle(&error);
@@ -119,8 +148,7 @@ public:
      * @param fullScaleRange The full-scale range of the gyroscope (default is OB_GYRO_FULL_SCALE_RANGE_ANY, which selects the default range).
      * @param sampleRate The sample rate of the gyroscope (default is OB_GYRO_SAMPLE_RATE_ANY, which selects the default rate).
      */
-    void enableGyroStream(ob_gyro_full_scale_range fullScaleRange = OB_GYRO_FULL_SCALE_RANGE_ANY,
-                          ob_gyro_sample_rate      sampleRate     = OB_GYRO_SAMPLE_RATE_ANY) const {
+    void enableGyroStream(OBGyroFullScaleRange fullScaleRange = OB_GYRO_FULL_SCALE_RANGE_ANY, OBGyroSampleRate sampleRate = OB_GYRO_SAMPLE_RATE_ANY) const {
         ob_error *error = nullptr;
         ob_config_enable_gyro_stream(impl_, fullScaleRange, sampleRate, &error);
         Error::handle(&error);
@@ -135,6 +163,17 @@ public:
         ob_error *error = nullptr;
         ob_config_disable_stream(impl_, streamType, &error);
         Error::handle(&error);
+    }
+
+    /**
+     * @brief Disable a sensor stream to be used in the pipeline.
+     * @brief Will convert sensor type to stream type automatically.
+     *
+     * @param sensorType
+     */
+    void disableStream(OBSensorType sensorType) const {
+        auto streamType = ob::TypeHelper::convertSensorTypeToStreamType(sensorType);
+        disableStream(streamType);
     }
 
     /**
@@ -260,7 +299,7 @@ public:
     void start(std::shared_ptr<Config> config, FrameSetCallback callback) {
         callback_       = callback;
         ob_error *error = nullptr;
-        ob_pipeline_start_with_callback(impl_, config ? config->getImpl():nullptr, &Pipeline::frameSetCallback, this, &error);
+        ob_pipeline_start_with_callback(impl_, config ? config->getImpl() : nullptr, &Pipeline::frameSetCallback, this, &error);
         Error::handle(&error);
     }
 

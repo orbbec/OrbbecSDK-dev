@@ -22,9 +22,7 @@ include(GenerateExportHeader)
 generate_export_header(openobsdk BASE_NAME OB EXPORT_FILE_NAME ${OB_PUBLIC_HEADERS_DIR}/libobsensor/h/Export.h)
 
 file(GLOB_RECURSE SOURCE_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.cpp ${CMAKE_CURRENT_LIST_DIR}/context/*.cpp)
-file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp
-     ${CMAKE_CURRENT_LIST_DIR}/../include/libobsensor/hpp/*.hpp
-)
+file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/impl/*.hpp ${CMAKE_CURRENT_LIST_DIR}/context/*.hpp)
 
 target_sources(openobsdk PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(openobsdk PRIVATE ob::shared ob::core ob::filter ob::platform ob::device ob::pipeline)

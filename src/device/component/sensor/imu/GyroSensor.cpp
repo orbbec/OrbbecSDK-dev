@@ -37,6 +37,7 @@ GyroSensor::GyroSensor(IDevice *owner, const std::shared_ptr<ISourcePort> &backe
             streamProfileList_.emplace_back(profile);
         }
     }
+    LOG_DEBUG("GyroSensor is created!");
 }
 
 GyroSensor::~GyroSensor() noexcept {

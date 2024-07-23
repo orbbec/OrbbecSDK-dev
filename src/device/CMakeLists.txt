@@ -9,7 +9,7 @@ file(GLOB HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/*.hpp)
 target_sources(${OB_TARGET_DEVICE} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 target_link_libraries(${OB_TARGET_DEVICE} PUBLIC ob::shared ob::core ob::platform ob::filter)
-target_include_directories(${OB_TARGET_DEVICE} PUBLIC ${OB_PUBLIC_HEADERS_DIR}  ${OB_INTERFACE_DIR} ${CMAKE_CURRENT_LIST_DIR} )
+target_include_directories(${OB_TARGET_DEVICE} PUBLIC ${OB_PUBLIC_HEADERS_DIR} ${CMAKE_CURRENT_LIST_DIR} )
 
 # common:
 add_subdirectory(context)
@@ -19,6 +19,7 @@ add_subdirectory(component)
 
 # devices support:
 add_subdirectory(gemini330) # Gemini 330 series
+add_subdirectory(gemini2) # Gemini 2 series
 
 #dependecies:
 add_subdirectory(${OB_3RDPARTY_DIR}/jsoncpp jsoncpp)

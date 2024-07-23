@@ -1,6 +1,6 @@
 #pragma once
 #include "IDevice.hpp"
-#include "component/DeviceComponentBase.hpp"
+#include "DeviceComponentBase.hpp"
 
 #include <thread>
 #include <queue>

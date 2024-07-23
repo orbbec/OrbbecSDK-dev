@@ -1,6 +1,5 @@
 #pragma once
 #include "IStreamProfile.hpp"
-#include "ISensor.hpp"
 #include "libobsensor/h/ObTypes.h"
 #include "exception/ObException.hpp"
 #include <memory>
@@ -11,6 +10,7 @@ namespace libobsensor {
 class Logger;
 class StreamIntrinsicsManager;
 class StreamExtrinsicsManager;
+struct LazySensor;
 
 class StreamProfileBackendLifeSpan {
 public:

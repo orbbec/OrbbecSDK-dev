@@ -2,7 +2,7 @@
 // #include "core/frame/process/FrameProcessingBlock.hpp"
 #include "libobsensor/h/ObTypes.h"
 #include "frame/Frame.hpp"
-#include "pipeline/Config.hpp"
+#include "Config.hpp"
 
 #include <map>
 #include <queue>

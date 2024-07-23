@@ -22,13 +22,14 @@ int main(void) try {
     for(uint32_t i = 0; i < sensorList->getCount(); i++) {
         // Get sensor type.
         auto sensorType = sensorList->getSensorType(i);
+
+        // exclude gyro and accel sensors.
         if(sensorType == OB_SENSOR_GYRO || sensorType == OB_SENSOR_ACCEL) {
             continue;
         }
-        // Get frame type based on sensor type.
-        auto streamType = ob::TypeHelper::convertSensorTypeToStreamType(sensorType);
+
         // enable the stream.
-        config->enableVideoStream(streamType);
+        config->enableStream(sensorType);
     }
 
     // Start the pipeline with config

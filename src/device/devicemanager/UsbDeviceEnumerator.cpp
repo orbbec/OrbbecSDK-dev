@@ -2,6 +2,7 @@
 #include "utils/Utils.hpp"
 
 #include "gemini330/G330DeviceInfo.hpp"
+#include "gemini2/G2DeviceInfo.hpp"
 
 namespace libobsensor {
 UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(ObPal::getInstance()) {
@@ -151,6 +152,10 @@ DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoL
     DeviceEnumInfoList deviceInfoList;
     auto               g330Devs = G330DeviceInfo::createDeviceInfos(portInfoList);
     std::copy(g330Devs.begin(), g330Devs.end(), std::back_inserter(deviceInfoList));
+
+    auto g2Devs = G2DeviceInfo::createDeviceInfos(portInfoList);
+    std::copy(g2Devs.begin(), g2Devs.end(), std::back_inserter(deviceInfoList));
+
     return deviceInfoList;
 }
 

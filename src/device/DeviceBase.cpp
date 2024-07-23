@@ -3,7 +3,7 @@
 #include "context/Context.hpp"
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
-#include "component/property/InternalProperty.hpp"
+#include "property/InternalProperty.hpp"
 
 namespace libobsensor {
 
@@ -188,6 +188,10 @@ bool DeviceBase::isSensorCreated(OBSensorType type) const {
 }
 
 DeviceComponentPtr<ISensor> DeviceBase::getSensor(OBSensorType type) {
+    if(type == OB_SENSOR_IR && !isSensorExists(OB_SENSOR_IR) && isSensorExists(OB_SENSOR_IR_LEFT)) {
+        type = OB_SENSOR_IR_LEFT;
+        LOG_WARN("For stereo camera, dose not support IR sensor, use IR left instead here.");
+    }
     auto compId = SensorTypeToComponentIdMap.at(type);
     return getComponentT<ISensor>(compId, true);
 }

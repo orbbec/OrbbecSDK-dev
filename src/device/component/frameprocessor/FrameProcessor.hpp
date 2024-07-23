@@ -1,6 +1,6 @@
 #pragma once
 #include "IDevice.hpp"
-#include "filter/FilterBase.hpp"
+#include "FilterBase.hpp"
 #include "PrivFrameProcessorTypes.h"
 #include "DeviceComponentBase.hpp"
 #include <dylib.hpp>

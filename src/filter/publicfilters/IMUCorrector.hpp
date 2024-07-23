@@ -1,30 +1,30 @@
 #pragma once
 #include "FilterBase.hpp"
 #include "libobsensor/h/ObTypes.h"
-#include "IProperty.hpp"
+// #include "IProperty.hpp"
 #include "InternalTypes.hpp"
 
 namespace libobsensor {
 
-class IMUCorrecter : public FilterBase, public IPropertyAccessor {
+class IMUCorrector : public FilterBase {
 public:
-    static OBIMUCalibrateParams parserIMUCalibrationParamsRaw(uint8_t *filedata, uint32_t size);
+    static OBIMUCalibrateParams parserIMUCalibrationParamsRaw(uint8_t *data, uint32_t size);
     static float                calculateAccelGravity(int16_t accelValue, uint8_t accelFSR);
     static float                calculateGyroDPS(int16_t gyroValue, uint8_t gyroFSR);
-    static float calculateRegisterTemperature(int16_t tempValue);
+    static float                calculateRegisterTemperature(int16_t tempValue);
 
 public:
-    IMUCorrecter(const std::string &name);
+    IMUCorrector(const std::string &name);
 
-    virtual ~IMUCorrecter() = default;
+    virtual ~IMUCorrector() = default;
 
     // Config
     void               updateConfig(std::vector<std::string> &params) override;
     const std::string &getConfigSchema() const override;
 
-    void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
-    void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
-    void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
+    // void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
+    // void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
+    // void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
 
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;

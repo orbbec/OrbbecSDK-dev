@@ -37,6 +37,7 @@ AccelSensor::AccelSensor(IDevice *owner, const std::shared_ptr<ISourcePort> &bac
             streamProfileList_.emplace_back(profile);
         }
     }
+    LOG_DEBUG("AccelSensor is created!");
 }
 
 AccelSensor::~AccelSensor() noexcept {

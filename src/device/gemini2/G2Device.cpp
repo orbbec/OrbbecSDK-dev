@@ -322,13 +322,13 @@ void G2Device::initSensorList() {
             // the gyro and accel are both on the same port and share the same filter
             auto pal                = ObPal::getInstance();
             auto port               = pal->getSourcePort(imuPortInfo);
-            auto imuCorrecterFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
-            if(!imuCorrecterFilter) {
+            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
+            if(!imuCorrectorFilter) {
                 throw not_implemented_exception("Cannot find IMU correcter filter!");
             }
-            imuCorrecterFilter->enable(false);
+            imuCorrectorFilter->enable(false);
             auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
-            auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrecterFilter);
+            auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrectorFilter);
             return imuStreamer;
         });
 
@@ -482,16 +482,16 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_RAW_DATA_EFFECTIVE_VIDEO_STREAM_PROFILE_LIST, "", "r", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
-            auto imuCorrecterFilter = getSensorFrameFilter("IMUCorrector", sensor);
-            if(imuCorrecterFilter) {
-                auto filterStateProperty = std::make_shared<FilterStatePropertyAccessor>(imuCorrecterFilter);
+            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);
+            if(imuCorrectorFilter) {
+                auto filterStateProperty = std::make_shared<FilterStatePropertyAccessor>(imuCorrectorFilter);
                 propertyServer->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", filterStateProperty);
             }
         }
         else if(sensor == OB_SENSOR_GYRO) {
-            auto imuCorrecterFilter = getSensorFrameFilter("IMUCorrector", sensor);
-            if(imuCorrecterFilter) {
-                auto filterStateProperty = std::make_shared<FilterStatePropertyAccessor>(imuCorrecterFilter);
+            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);
+            if(imuCorrectorFilter) {
+                auto filterStateProperty = std::make_shared<FilterStatePropertyAccessor>(imuCorrectorFilter);
                 propertyServer->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", filterStateProperty);
             }
         }

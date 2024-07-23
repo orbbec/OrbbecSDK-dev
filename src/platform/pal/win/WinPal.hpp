@@ -21,6 +21,7 @@ public:
     std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
     SourcePortInfoList             queryUsbSourcePort() override;
 
+
 private:
     std::shared_ptr<IUsbEnumerator> usbEnumerator_;
 

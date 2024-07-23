@@ -1,6 +1,6 @@
 #include "FemtoBoltDeviceInfo.hpp"
 #include "FemtoBoltDevice.hpp"
-#include "utils/UsbGroup.hpp"
+#include "usb/UsbGroup.hpp"
 #include "DevicePids.hpp"
 
 
@@ -26,8 +26,8 @@ std::shared_ptr<IDevice> FemtoBoltDeviceInfo::createDevice() const {
 
 std::vector<std::shared_ptr<IDeviceEnumInfo>> FemtoBoltDeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
     std::vector<std::shared_ptr<IDeviceEnumInfo>> femtoBoltDeviceInfos;
-    auto                                          remainder = utils::FilterUSBPortInfoByPid(infoList, FemtoBoltDevPids);
-    auto                                          groups    = utils::GroupUSBSourcePortInfo(remainder, utils::GroupUSBSourcePortByUrl);
+    auto                                          remainder = FilterUSBPortInfoByPid(infoList, FemtoBoltDevPids);
+    auto                                          groups    = GroupUSBSourcePortInfo(remainder, GroupUSBSourcePortByUrl);
     auto                                          iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 2) {

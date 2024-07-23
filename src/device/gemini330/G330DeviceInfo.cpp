@@ -1,6 +1,6 @@
 #include "G330DeviceInfo.hpp"
 #include "G330Device.hpp"
-#include "utils/UsbGroup.hpp"
+#include "usb/UsbGroup.hpp"
 #include "DevicePids.hpp"
 
 #include <map>
@@ -43,8 +43,8 @@ std::shared_ptr<IDevice> G330DeviceInfo::createDevice() const{
 
 std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
     std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfos;
-    auto                                          remainder = utils::FilterUSBPortInfoByPid(infoList, G330DevPids);
-    auto groups    = utils::GroupUSBSourcePortInfo(remainder, utils::GroupUSBSourcePortByUrl);
+    auto                                          remainder = FilterUSBPortInfoByPid(infoList, G330DevPids);
+    auto                                          groups    = GroupUSBSourcePortInfo(remainder, GroupUSBSourcePortByUrl);
     auto iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 3) {

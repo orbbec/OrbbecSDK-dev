@@ -1,6 +1,6 @@
 #include "G2DeviceInfo.hpp"
 #include "G2Device.hpp"
-#include "utils/UsbGroup.hpp"
+#include "usb/UsbGroup.hpp"
 #include "DevicePids.hpp"
 
 #include <map>
@@ -37,8 +37,8 @@ std::shared_ptr<IDevice> G2DeviceInfo::createDevice() const {
 
 std::vector<std::shared_ptr<IDeviceEnumInfo>> G2DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
     std::vector<std::shared_ptr<IDeviceEnumInfo>> G2DeviceInfos;
-    auto                                          remainder = utils::FilterUSBPortInfoByPid(infoList, Gemini2DevPids);
-    auto                                          groups    = utils::GroupUSBSourcePortInfo(remainder, utils::GroupUSBSourcePortByUrl);
+    auto                                          remainder = FilterUSBPortInfoByPid(infoList, Gemini2DevPids);
+    auto                                          groups    = GroupUSBSourcePortInfo(remainder, GroupUSBSourcePortByUrl);
     auto                                          iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 4) {

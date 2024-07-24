@@ -408,11 +408,11 @@ cv::Mat CVWindow::visualize(std::shared_ptr<const ob::Frame> frame) {
             // normalization to 0-255. 0.032f is 256/8000, to limit the range of depth to 8000mm
             rawMat.convertTo(cvtMat, CV_32F, scale * 0.032f);
 
-            // apply gamma correction
-            cv::pow(cvtMat, 1.2f, cvtMat);
+            // apply gamma correction to enhance the contrast for near objects
+            cv::pow(cvtMat, 0.6f, cvtMat);
 
             //  convert to 8-bit
-            cvtMat.convertTo(cvtMat, CV_8UC1, 1);
+            cvtMat.convertTo(cvtMat, CV_8UC1, 10);  // multiplier 10 is to normalize to 0-255 (nearly) after applying gamma correction
 
             // apply colormap
             cv::applyColorMap(cvtMat, rstMat, cv::COLORMAP_JET);

@@ -24,6 +24,10 @@ public:
     DeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info);
     virtual ~DeviceBase() noexcept;
 
+    void reset() override;
+    void reboot() override;
+    void deactivate() override;
+
     std::shared_ptr<const DeviceInfo> getInfo() const;
     const std::string                &getExtensionInfo(const std::string &infoKey) const;
 
@@ -45,9 +49,6 @@ public:
     DeviceComponentPtr<IPropertyServer> getPropertyServer() override;
 
     void updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) override;
-
-    void reboot() override;
-    void deactivate() override;
 
 protected:
     // implement on subclass, and must be called to initialize the device info on construction

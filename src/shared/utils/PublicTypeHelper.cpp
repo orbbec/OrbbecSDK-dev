@@ -319,40 +319,38 @@ const std::map<OBFormat, std::string> Format_Str_Map = {
     { OB_FORMAT_UNKNOWN, "UNKNOWN" },
 };
 
-std::map<OBFrameMetadataType, std::string> Metadata_Str_Map = {
-    {OB_FRAME_METADATA_TYPE_TIMESTAMP, "Timestamp"},
-    {OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, "Sensor Timestamp"},
-    {OB_FRAME_METADATA_TYPE_FRAME_NUMBER, "Frame Number"},
-    {OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE, "Auto Exposure"},
-    {OB_FRAME_METADATA_TYPE_EXPOSURE, "Exposure"},
-    {OB_FRAME_METADATA_TYPE_GAIN, "Gain"},
-    {OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE, "Auto White Balance"},
-    {OB_FRAME_METADATA_TYPE_WHITE_BALANCE, "White Balance"},
-    {OB_FRAME_METADATA_TYPE_BRIGHTNESS, "Brightness"},
-    {OB_FRAME_METADATA_TYPE_CONTRAST, "Contrast"},
-    {OB_FRAME_METADATA_TYPE_SATURATION, "Saturation"},
-    {OB_FRAME_METADATA_TYPE_SHARPNESS, "Sharpness"},
-    {OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION, "Backlight Compensation"},
-    {OB_FRAME_METADATA_TYPE_HUE, "Hue"},
-    {OB_FRAME_METADATA_TYPE_GAMMA, "Gamma"},
-    {OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY, "Power Line Frequency"},
-    {OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION, "Low Light Compensation"},
-    {OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE, "Manual White Balance"},
-    {OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, "Actual Frame Rate"},
-    {OB_FRAME_METADATA_TYPE_FRAME_RATE, "Frame Rate"},
-    {OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, "AE ROI Left"},
-    {OB_FRAME_METADATA_TYPE_AE_ROI_TOP, "AE ROI Top"},
-    {OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, "AE ROI Right"},
-    {OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, "AE ROI Bottom"},
-    {OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY, "Exposure Priority"},
-    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME, "HDR Sequence Name"},
-    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE, "HDR Sequence Size"},
-    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX, "HDR Sequence Index"},
-    {OB_FRAME_METADATA_TYPE_LASER_POWER, "Laser Power"},
-    {OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL, "Laser Power Level"},
-    {OB_FRAME_METADATA_TYPE_LASER_STATUS, "Laser Status"},
-    {OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA, "GPIO Input Data"}
-};
+std::map<OBFrameMetadataType, std::string> Metadata_Str_Map = { { OB_FRAME_METADATA_TYPE_TIMESTAMP, "Timestamp" },
+                                                                { OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, "Sensor Timestamp" },
+                                                                { OB_FRAME_METADATA_TYPE_FRAME_NUMBER, "Frame Number" },
+                                                                { OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE, "Auto Exposure" },
+                                                                { OB_FRAME_METADATA_TYPE_EXPOSURE, "Exposure" },
+                                                                { OB_FRAME_METADATA_TYPE_GAIN, "Gain" },
+                                                                { OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE, "Auto White Balance" },
+                                                                { OB_FRAME_METADATA_TYPE_WHITE_BALANCE, "White Balance" },
+                                                                { OB_FRAME_METADATA_TYPE_BRIGHTNESS, "Brightness" },
+                                                                { OB_FRAME_METADATA_TYPE_CONTRAST, "Contrast" },
+                                                                { OB_FRAME_METADATA_TYPE_SATURATION, "Saturation" },
+                                                                { OB_FRAME_METADATA_TYPE_SHARPNESS, "Sharpness" },
+                                                                { OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION, "Backlight Compensation" },
+                                                                { OB_FRAME_METADATA_TYPE_HUE, "Hue" },
+                                                                { OB_FRAME_METADATA_TYPE_GAMMA, "Gamma" },
+                                                                { OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY, "Power Line Frequency" },
+                                                                { OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION, "Low Light Compensation" },
+                                                                { OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE, "Manual White Balance" },
+                                                                { OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, "Actual Frame Rate" },
+                                                                { OB_FRAME_METADATA_TYPE_FRAME_RATE, "Frame Rate" },
+                                                                { OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, "AE ROI Left" },
+                                                                { OB_FRAME_METADATA_TYPE_AE_ROI_TOP, "AE ROI Top" },
+                                                                { OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, "AE ROI Right" },
+                                                                { OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, "AE ROI Bottom" },
+                                                                { OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY, "Exposure Priority" },
+                                                                { OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME, "HDR Sequence Name" },
+                                                                { OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE, "HDR Sequence Size" },
+                                                                { OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX, "HDR Sequence Index" },
+                                                                { OB_FRAME_METADATA_TYPE_LASER_POWER, "Laser Power" },
+                                                                { OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL, "Laser Power Level" },
+                                                                { OB_FRAME_METADATA_TYPE_LASER_STATUS, "Laser Status" },
+                                                                { OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA, "GPIO Input Data" } };
 
 // type to string
 const std::string &obFormatToStr(OBFormat type) {
@@ -483,6 +481,56 @@ OBAccelFullScaleRange strToAccelFullScaleRange(const std::string str) {
     throw invalid_value_exception("Unregistered accel full scale range type");
 }
 
+float depthPrecisionLevelToUnit(OBDepthPrecisionLevel precision) {
+    switch(precision) {
+    case OB_PRECISION_1MM:
+        return 1.0f;
+    case OB_PRECISION_0MM8:
+        return 0.8f;
+    case OB_PRECISION_0MM4:
+        return 0.4f;
+    case OB_PRECISION_0MM1:
+        return 0.1f;
+    case OB_PRECISION_0MM2:
+        return 0.2f;
+    case OB_PRECISION_0MM5:
+        return 0.5f;
+    case OB_PRECISION_0MM05:
+        return 0.05f;
+    default:
+        break;
+    }
+    throw invalid_value_exception("Unregistered depth precision level");
+}
+
+bool areAlmostEqual(float a, float b, float epsilon = 1e-5f) {
+    return std::abs(a - b) < epsilon;
+}
+OBDepthPrecisionLevel depthUnitToPrecisionLevel(float unit) {
+    if(areAlmostEqual(1.0f, unit)) {
+        return OB_PRECISION_1MM;
+    }
+    else if(areAlmostEqual(0.8f, unit)) {
+        return OB_PRECISION_0MM8;
+    }
+    else if(areAlmostEqual(0.4f, unit)) {
+        return OB_PRECISION_0MM4;
+    }
+    else if(areAlmostEqual(0.1f, unit)) {
+        return OB_PRECISION_0MM1;
+    }
+    else if(areAlmostEqual(0.2f, unit)) {
+        return OB_PRECISION_0MM2;
+    }
+    else if(areAlmostEqual(0.5f, unit)) {
+        return OB_PRECISION_0MM5;
+    }
+    else if(areAlmostEqual(0.05f, unit)) {
+        return OB_PRECISION_0MM05;
+    }
+    throw invalid_value_exception("Unsupported unit to depth precision level");
+}
+
 }  // namespace utils
 }  // namespace libobsensor
 
@@ -535,8 +583,7 @@ std::ostream &operator<<(std::ostream &os, const OBCameraParam &params) {
        << ",p1:" << params.rgbDistortion.p1 << ",p2:" << params.rgbDistortion.p2 << "}\n"
        << "transform: rot:[" << params.transform.rot[0] << "," << params.transform.rot[1] << "," << params.transform.rot[2] << "," << params.transform.rot[3]
        << "," << params.transform.rot[4] << "," << params.transform.rot[5] << "," << params.transform.rot[6] << "," << params.transform.rot[7] << ","
-       << params.transform.rot[8] <<  "],trans:" << params.transform.trans[0] << "," << params.transform.trans[1] << ","
-       << params.transform.trans[2] << "}\n"
+       << params.transform.rot[8] << "],trans:" << params.transform.trans[0] << "," << params.transform.trans[1] << "," << params.transform.trans[2] << "}\n"
        << "isMirror:" << params.isMirrored << "\n"
        << "}";
     return os;

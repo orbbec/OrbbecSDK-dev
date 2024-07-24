@@ -16,12 +16,13 @@ public:
     std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) override;
 
 private:
-    void fetchDeviceInfo() override;
-
+    void init() override;
     void initSensorList();
     void initProperties();
     void initFrameMetadataParserContainer();
     void initSensorStreamProfile(std::shared_ptr<ISensor> sensor);
+
+    void fetchDeviceInfo() override;
 
 private:
     std::shared_ptr<IFrameMetadataParserContainer> colorMdParserContainer_;

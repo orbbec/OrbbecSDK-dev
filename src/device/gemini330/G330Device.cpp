@@ -44,6 +44,12 @@ constexpr uint8_t INTERFACE_COLOR = 4;
 constexpr uint8_t INTERFACE_DEPTH = 0;
 
 G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
+    init();
+}
+
+G330Device::~G330Device() noexcept {}
+
+void G330Device::init() {
     initSensorList();
     initProperties();
     initFrameMetadataParserContainer();
@@ -81,8 +87,6 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : Dev
     auto deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 }
-
-G330Device::~G330Device() noexcept {}
 
 void G330Device::fetchDeviceInfo() {
     auto propServer                   = getPropertyServer();
@@ -409,10 +413,10 @@ void G330Device::initSensorList() {
 void G330Device::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
-    auto g330PropertyAccessor = std::make_shared<G330Disp2DepthPropertyAccessor>(this);
-    propertyServer->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", g330PropertyAccessor);
-    propertyServer->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", g330PropertyAccessor);
-    propertyServer->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", g330PropertyAccessor);
+    auto d2dPropertyAccessor = std::make_shared<G330Disp2DepthPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", d2dPropertyAccessor);      // hw
+    propertyServer->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", d2dPropertyAccessor);  // sw
+    propertyServer->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", d2dPropertyAccessor);
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
@@ -420,9 +424,9 @@ void G330Device::initProperties() {
         auto &sourcePortInfo = getSensorPortInfo(sensor);
         if(sensor == OB_SENSOR_COLOR) {
             auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
-                auto pal             = ObPal::getInstance();
-                auto port            = pal->getSourcePort(sourcePortInfo);
-                auto accessor        = std::make_shared<UvcPropertyAccessor>(port);
+                auto pal      = ObPal::getInstance();
+                auto port     = pal->getSourcePort(sourcePortInfo);
+                auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
 
@@ -443,9 +447,9 @@ void G330Device::initProperties() {
         }
         else if(sensor == OB_SENSOR_DEPTH) {
             auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
-                auto pal             = ObPal::getInstance();
-                auto port            = pal->getSourcePort(sourcePortInfo);
-                auto accessor        = std::make_shared<UvcPropertyAccessor>(port);
+                auto pal      = ObPal::getInstance();
+                auto port     = pal->getSourcePort(sourcePortInfo);
+                auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
             propertyServer->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyAccessor);

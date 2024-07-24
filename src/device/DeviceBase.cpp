@@ -46,6 +46,12 @@ void DeviceBase::reboot() {
     deactivate();
 }
 
+void DeviceBase::reset() {
+    deactivate();
+    isDeactivated_ = false;
+    init();
+}
+
 DeviceComponentLock DeviceBase::tryLockResource() {
     if(isDeactivated_) {
         throw libobsensor::wrong_api_call_sequence_exception("Device is deactivated/disconnected!");

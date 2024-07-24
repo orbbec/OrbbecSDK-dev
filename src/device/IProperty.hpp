@@ -102,8 +102,8 @@ public:
 
 public:  // template functions to simplify the usage of IPropertyServer
     template <typename T>
-    typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, void>::type
-    setPropertyValueT(uint32_t propertyId, const T &value, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+    typename std::enable_if<!std::is_same<T, float>::value, void>::type setPropertyValueT(uint32_t propertyId, const T &value,
+                                                                                          PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
         OBPropertyValue obValue;
         obValue.intValue = static_cast<int32_t>(value);
         setPropertyValue(propertyId, obValue, accessType);
@@ -118,8 +118,8 @@ public:  // template functions to simplify the usage of IPropertyServer
     }
 
     template <typename T>
-    typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, T>::type
-    getPropertyValueT(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+    typename std::enable_if<!std::is_same<T, float>::value, T>::type getPropertyValueT(uint32_t           propertyId,
+                                                                                       PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
         OBPropertyValue obValue;
         getPropertyValue(propertyId, &obValue, accessType);
         return static_cast<T>(obValue.intValue);
@@ -134,8 +134,8 @@ public:  // template functions to simplify the usage of IPropertyServer
     }
 
     template <typename T>
-    typename std::enable_if<std::is_integral<T>::value || std::is_same<T, bool>::value, OBPropertyRangeT<T>>::type
-    getPropertyRangeT(uint32_t propertyId, PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
+    typename std::enable_if<!std::is_same<T, float>::value, OBPropertyRangeT<T>>::type getPropertyRangeT(uint32_t           propertyId,
+                                                                                                         PropertyAccessType accessType = PROP_ACCESS_INTERNAL) {
         OBPropertyRangeT<T> rangeT;
         OBPropertyRange     range;
         getPropertyRange(propertyId, (OBPropertyRange *)&range, accessType);

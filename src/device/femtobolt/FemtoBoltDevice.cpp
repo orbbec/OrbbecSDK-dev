@@ -29,6 +29,12 @@
 
 namespace libobsensor {
 FemtoBoltDevice::FemtoBoltDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
+    init();
+}
+
+FemtoBoltDevice::~FemtoBoltDevice() noexcept {}
+
+void FemtoBoltDevice::init() {
     initSensorList();
     initProperties();
 
@@ -42,8 +48,6 @@ FemtoBoltDevice::FemtoBoltDevice(const std::shared_ptr<const IDeviceEnumInfo> &i
     auto                                            deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 }
-
-FemtoBoltDevice::~FemtoBoltDevice() noexcept {}
 
 void FemtoBoltDevice::fetchDeviceInfo() {
     auto propServer = getPropertyServer();

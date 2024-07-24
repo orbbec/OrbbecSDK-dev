@@ -40,6 +40,9 @@ OBIMUSampleRate       strToObImuRate(const std::string str);
 OBGyroFullScaleRange  strToGyroFullScaleRange(const std::string str);
 OBAccelFullScaleRange strToAccelFullScaleRange(const std::string str);
 
+float                 depthPrecisionLevelToUnit(OBDepthPrecisionLevel precision);
+OBDepthPrecisionLevel depthUnitToPrecisionLevel(float unit);
+
 }  // namespace utils
 }  // namespace libobsensor
 

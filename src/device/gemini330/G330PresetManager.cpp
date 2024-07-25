@@ -3,24 +3,24 @@
 #include "InternalTypes.hpp"
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
-#include "G330DepthAlgModeManager.hpp"
+#include "G330DepthWorkModeManager.hpp"
 
 #include <json/json.h>
 
 namespace libobsensor {
 
 G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner) {
-    auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-    auto depthAlgModeList    = depthAlgModeManager->getDepthAlgModeList();
+    auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+    auto depthWorkModeList    = depthWorkModeManager->getDepthWorkModeList();
 
     availablePresets_.emplace_back("Custom");
-    for(auto &mode: depthAlgModeList) {
+    for(auto &mode: depthWorkModeList) {
         availablePresets_.emplace_back(mode.name);
     }
 
     if(availablePresets_.size() > 1) {
         currentPreset_ = availablePresets_[1];
-        depthAlgModeManager->switchDepthAlgMode(currentPreset_.c_str());
+        depthWorkModeManager->switchDepthWorkMode(currentPreset_.c_str());
     }
 
     auto propServer = owner->getPropertyServer();
@@ -74,9 +74,9 @@ void G330PresetManager::loadPreset(const std::string &presetName) {
     }
     else {
         auto owner               = getOwner();
-        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
+        auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
 
-        depthAlgModeManager->switchDepthAlgMode(presetName.c_str());
+        depthWorkModeManager->switchDepthWorkMode(presetName.c_str());
         currentPreset_ = presetName;
     }
 }
@@ -115,7 +115,7 @@ void G330PresetManager::loadPresetFromJsonFile(const std::string &filePath) {
 
 void G330PresetManager::loadPresetFromJsonValue(const std::string &presetName, const Json::Value &root) {
     G330Preset preset;
-    preset.depthAlgMode               = root["depth_alg_mode"].asString();
+    preset.depthWorkMode              = root["depth_alg_mode"].asString();
     preset.laserState                 = root["laser_state"].asInt();
     preset.laserPowerLevel            = root["laser_power_level"].asInt();
     preset.depthAutoExposure          = root["depth_auto_exposure"].asBool();
@@ -153,7 +153,7 @@ Json::Value G330PresetManager::exportSettingsAsPresetJsonValue(const std::string
     auto &preset = iter->second;
 
     Json::Value root;
-    root["depth_alg_mode"]               = preset.depthAlgMode;
+    root["depth_alg_mode"]               = preset.depthWorkMode;
     root["laser_state"]                  = preset.laserState;
     root["laser_power_level"]            = preset.laserPowerLevel;
     root["depth_auto_exposure"]          = preset.depthAutoExposure;
@@ -213,8 +213,8 @@ void G330PresetManager::loadCustomPreset(const std::string &presetName, const G3
     auto owner = getOwner();
 
     {
-        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-        depthAlgModeManager->switchDepthAlgMode(preset.depthAlgMode.c_str());
+        auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+        depthWorkModeManager->switchDepthWorkMode(preset.depthWorkMode.c_str());
     }
 
     setPropertyValue(owner, OB_PROP_LASER_CONTROL_INT, preset.laserState);
@@ -271,8 +271,8 @@ void G330PresetManager::storeCurrentParamsAsCustomPreset(const std::string &pres
     preset.colorPowerLineFrequency    = getPropertyValue<int>(owner, OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT);
 
     {
-        auto depthAlgModeManager = owner->getComponentT<G330DepthAlgModeManager>(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-        preset.depthAlgMode      = depthAlgModeManager->getCurrentDepthAlgModeChecksum().name;
+        auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+        preset.depthWorkMode      = depthWorkModeManager->getCurrentDepthWorkModeChecksum().name;
     }
 
     if(customPresets_.find(presetName) == customPresets_.end()) {

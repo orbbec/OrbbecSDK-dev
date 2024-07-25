@@ -5,12 +5,11 @@
 namespace libobsensor {
 std::string mapFormatToString(OBFormat format) {
     static std::map<OBFormat, std::string> formatToStringMap = {
-        { OB_FORMAT_YUYV, "yuyv" },     { OB_FORMAT_YUY2, "yuyv" }, { OB_FORMAT_UYVY, "uyvy" }, { OB_FORMAT_NV12, "nv12" }, { OB_FORMAT_NV21, "nv21" },
-        { OB_FORMAT_MJPG, "mjpg" },     { OB_FORMAT_H264, "h264" }, { OB_FORMAT_H265, "h265" }, { OB_FORMAT_Y16, "y16" },   { OB_FORMAT_Y8, "y8" },
-        { OB_FORMAT_Y10, "y10" },       { OB_FORMAT_Y11, "y11" },   { OB_FORMAT_Y12, "y12" },   { OB_FORMAT_GRAY, "y8" },   { OB_FORMAT_HEVC, "h265" },
-        { OB_FORMAT_I420, "i420" },     { OB_FORMAT_RLE, "rle" },   { OB_FORMAT_RGB, "rgb" },   { OB_FORMAT_BGR, "bgr" },   { OB_FORMAT_Y14, "y14" },
-        { OB_FORMAT_BGRA, "bgra" },     { OB_FORMAT_RGBA, "rgba" }, { OB_FORMAT_RVL, "rvl" },   { OB_FORMAT_BYR2, "byr2" }, { OB_FORMAT_RW16, "rw16" },
-        { OB_FORMAT_DISP16, "disp16" },
+        { OB_FORMAT_YUYV, "yuyv" }, { OB_FORMAT_YUY2, "yuyv" }, { OB_FORMAT_UYVY, "uyvy" }, { OB_FORMAT_NV12, "nv12" }, { OB_FORMAT_NV21, "nv21" },
+        { OB_FORMAT_MJPG, "mjpg" }, { OB_FORMAT_H264, "h264" }, { OB_FORMAT_H265, "h265" }, { OB_FORMAT_Y16, "y16" },   { OB_FORMAT_Y8, "y8" },
+        { OB_FORMAT_Y10, "y10" },   { OB_FORMAT_Y11, "y11" },   { OB_FORMAT_Y12, "y12" },   { OB_FORMAT_GRAY, "y8" },   { OB_FORMAT_HEVC, "h265" },
+        { OB_FORMAT_I420, "i420" }, { OB_FORMAT_RLE, "rle" },   { OB_FORMAT_RGB, "rgb" },   { OB_FORMAT_BGR, "bgr" },   { OB_FORMAT_Y14, "y14" },
+        { OB_FORMAT_BGRA, "bgra" }, { OB_FORMAT_RGBA, "rgba" }, { OB_FORMAT_RVL, "rvl" },   { OB_FORMAT_BYR2, "byr2" }, { OB_FORMAT_RW16, "rw16" },
     };
     return formatToStringMap[format];
 }

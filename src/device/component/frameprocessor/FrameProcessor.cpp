@@ -140,7 +140,7 @@ void FrameProcessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value
         auto level     = static_cast<OBDepthPrecisionLevel>(value.intValue);
         auto depthUnit = utils::depthPrecisionLevelToUnit(level);
         setConfigValue("DisparityTransform#2", static_cast<double>(depthUnit));
-    }
+    } break;
     case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT: {
         setConfigValue("DisparityTransform#2", static_cast<double>(value.floatValue));
     } break;
@@ -159,7 +159,7 @@ void FrameProcessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *valu
         auto getValue       = getConfigValue("DisparityTransform#2");
         auto precisionLevel = utils::depthUnitToPrecisionLevel(static_cast<float>(getValue));
         value->intValue     = static_cast<int32_t>(precisionLevel);
-    }
+    } break;
     case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT: {
         auto getValue     = getConfigValue("DisparityTransform#2");
         value->floatValue = static_cast<float>(getValue);

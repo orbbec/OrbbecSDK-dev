@@ -169,6 +169,18 @@ typedef enum {
     ob_frame_type;
 
 /**
+ * @brief Enumeration value describing the pixel type of frame (usually used for depth frame)
+ *
+ */
+typedef enum {
+    OB_PIXEL_UNKNOWN   = -1,  // Unknown pixel type, or undefined pixel type for current frame
+    OB_PIXEL_DEPTH     = 0,   // Depth pixel type, the value of the pixel is the distance from the camera to the object
+    OB_PIXEL_DISPARITY = 2,   // Disparity for structured light camera
+    OB_PIXEL_RAW_PHASE = 3,   // Raw phase for tof camera
+} OBPixelType,
+    ob_pixel_type;
+
+/**
  * @brief Enumeration value describing the pixel format
  */
 typedef enum {
@@ -206,7 +218,6 @@ typedef enum {
     OB_FORMAT_RGBA       = 31, /**< RGBA format */
     OB_FORMAT_BYR2       = 32, /**< byr2 format */
     OB_FORMAT_RW16       = 33, /**< RAW16 format */
-    OB_FORMAT_DISP16     = 34, /**< Y16 format for disparity map*/
 } OBFormat,
     ob_format;
 

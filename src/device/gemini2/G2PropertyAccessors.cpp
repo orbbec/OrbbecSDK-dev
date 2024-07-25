@@ -30,8 +30,8 @@ void G2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPrope
         markOutputDisparityFrame(!hwDisparityToDepthEnabled_);
     } break;
     case OB_PROP_DISPARITY_TO_DEPTH_BOOL: {
-        auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
-        commandPort->setPropertyValue(propertyId, value);
+        auto propertyAccessor = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+        propertyAccessor->setPropertyValue(propertyId, value);
         hwDisparityToDepthEnabled_ = static_cast<bool>(value.intValue);
 
         // // update sw disparity status
@@ -58,10 +58,9 @@ void G2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPrope
         }
 
         // update depth unit
-        auto sensor          = owner_->getComponentT<ISensor>(OB_DEV_COMPONENT_DEPTH_SENSOR).get();
-        auto disparitySensor = std::dynamic_pointer_cast<DisparityBasedSensor>(sensor);
-        if(disparitySensor) {
-            disparitySensor->setDepthUnit(value.floatValue);
+        auto sensor = owner_->getComponentT<DisparityBasedSensor>(OB_DEV_COMPONENT_DEPTH_SENSOR, false);
+        if(sensor) {
+            sensor->setDepthUnit(value.floatValue);
         }
 
     } break;
@@ -125,14 +124,9 @@ void G2Disp2DepthPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPrope
 }
 
 void G2Disp2DepthPropertyAccessor::markOutputDisparityFrame(bool enable) {
-    if(!owner_->isComponentExists(OB_DEV_COMPONENT_DEPTH_SENSOR)) {
-        return;
-    }
-
-    auto sensor          = owner_->getComponentT<ISensor>(OB_DEV_COMPONENT_DEPTH_SENSOR).get();
-    auto disparitySensor = std::dynamic_pointer_cast<DisparityBasedSensor>(sensor);
-    if(disparitySensor) {
-        disparitySensor->markOutputDisparityFrame(enable);
+    auto sensor = owner_->getComponentT<DisparityBasedSensor>(OB_DEV_COMPONENT_DEPTH_SENSOR, false);
+    if(sensor) {
+        sensor->markOutputDisparityFrame(enable);
     }
 }
 

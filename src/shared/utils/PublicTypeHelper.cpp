@@ -38,7 +38,6 @@ float getBytesPerPixel(OBFormat format) {
     case OB_FORMAT_UYVY:
     case OB_FORMAT_BYR2:
     case OB_FORMAT_RW16:
-    case OB_FORMAT_DISP16:
         bytesPerPixel = 2.f;
         break;
     case OB_FORMAT_RGB:
@@ -64,7 +63,24 @@ float getBytesPerPixel(OBFormat format) {
 }
 
 uint32_t calcDefaultStrideBytes(OBFormat format, uint32_t width) {
-    float    bytesPerPixel = getBytesPerPixel(format);
+    float bytesPerPixel = 1;
+
+    switch(format) {
+    case OB_FORMAT_MJPG:
+    case OB_FORMAT_H264:
+    case OB_FORMAT_H265:
+    case OB_FORMAT_HEVC:
+        bytesPerPixel = 1;
+        break;
+    case OB_FORMAT_RLE:
+    case OB_FORMAT_RVL:
+        bytesPerPixel = 2;
+        break;
+    default:  // assume planar format
+        bytesPerPixel = getBytesPerPixel(format);
+        break;
+    }
+
     uint32_t stride        = (uint32_t)(width * bytesPerPixel + 0.5);
     return stride;
 }
@@ -299,24 +315,23 @@ const std::map<OBAccelFullScaleRange, std::string> AccelFullScaleRange_Str_Map =
 };
 
 const std::map<OBFormat, std::string> Format_Str_Map = {
-    { OB_FORMAT_YUYV, "YUYV" },       { OB_FORMAT_YUY2, "YUY2" },
-    { OB_FORMAT_UYVY, "UYVY" },       { OB_FORMAT_NV12, "NV12" },
-    { OB_FORMAT_NV21, "NV21" },       { OB_FORMAT_MJPG, "MJPG" },
-    { OB_FORMAT_H264, "H264" },       { OB_FORMAT_H265, "H265" },
-    { OB_FORMAT_Y16, "Y16" },         { OB_FORMAT_Y8, "Y8" },
-    { OB_FORMAT_Y10, "Y10" },         { OB_FORMAT_Y11, "Y11" },
-    { OB_FORMAT_Y12, "Y12" },         { OB_FORMAT_GRAY, "GRAY" },
-    { OB_FORMAT_HEVC, "HEVC" },       { OB_FORMAT_I420, "I420" },
-    { OB_FORMAT_ACCEL, "ACCEL" },     { OB_FORMAT_GYRO, "GYRO" },
-    { OB_FORMAT_POINT, "POINT" },     { OB_FORMAT_RGB_POINT, "RGB_POINT" },
-    { OB_FORMAT_RLE, "RLE" },         { OB_FORMAT_RGB, "RGB" },
-    { OB_FORMAT_BGR, "BGR" },         { OB_FORMAT_Y14, "Y14" },
-    { OB_FORMAT_BGRA, "BGRA" },       { OB_FORMAT_COMPRESSED, "COMPRESSED" },
-    { OB_FORMAT_RVL, "RVL" },         { OB_FORMAT_Z16, "Z16" },
-    { OB_FORMAT_YV12, "YV12" },       { OB_FORMAT_BA81, "BA81" },
-    { OB_FORMAT_RGBA, "RGBA" },       { OB_FORMAT_BYR2, "BYR2" },
-    { OB_FORMAT_RW16, "RW16" },       { OB_FORMAT_DISP16, "DISP16" },
-    { OB_FORMAT_UNKNOWN, "UNKNOWN" },
+    { OB_FORMAT_YUYV, "YUYV" },   { OB_FORMAT_YUY2, "YUY2" },
+    { OB_FORMAT_UYVY, "UYVY" },   { OB_FORMAT_NV12, "NV12" },
+    { OB_FORMAT_NV21, "NV21" },   { OB_FORMAT_MJPG, "MJPG" },
+    { OB_FORMAT_H264, "H264" },   { OB_FORMAT_H265, "H265" },
+    { OB_FORMAT_Y16, "Y16" },     { OB_FORMAT_Y8, "Y8" },
+    { OB_FORMAT_Y10, "Y10" },     { OB_FORMAT_Y11, "Y11" },
+    { OB_FORMAT_Y12, "Y12" },     { OB_FORMAT_GRAY, "GRAY" },
+    { OB_FORMAT_HEVC, "HEVC" },   { OB_FORMAT_I420, "I420" },
+    { OB_FORMAT_ACCEL, "ACCEL" }, { OB_FORMAT_GYRO, "GYRO" },
+    { OB_FORMAT_POINT, "POINT" }, { OB_FORMAT_RGB_POINT, "RGB_POINT" },
+    { OB_FORMAT_RLE, "RLE" },     { OB_FORMAT_RGB, "RGB" },
+    { OB_FORMAT_BGR, "BGR" },     { OB_FORMAT_Y14, "Y14" },
+    { OB_FORMAT_BGRA, "BGRA" },   { OB_FORMAT_COMPRESSED, "COMPRESSED" },
+    { OB_FORMAT_RVL, "RVL" },     { OB_FORMAT_Z16, "Z16" },
+    { OB_FORMAT_YV12, "YV12" },   { OB_FORMAT_BA81, "BA81" },
+    { OB_FORMAT_RGBA, "RGBA" },   { OB_FORMAT_BYR2, "BYR2" },
+    { OB_FORMAT_RW16, "RW16" },   { OB_FORMAT_UNKNOWN, "UNKNOWN" },
 };
 
 std::map<OBFrameMetadataType, std::string> Metadata_Str_Map = { { OB_FRAME_METADATA_TYPE_TIMESTAMP, "Timestamp" },

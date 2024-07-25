@@ -380,6 +380,22 @@ public:
     }
 
     /**
+     * @brief Get the Pixel Type object
+     * @brief Usually used to determine the pixel type of depth frame (depth, disparity, raw phase, etc.)
+     *
+     * @attention Always return OB_PIXEL_UNKNOWN for non-depth frame currently
+     *
+     * @return OBPixelType
+     */
+    OBPixelType getPixelType() const {
+        ob_error *error     = nullptr;
+        auto      pixelType = ob_video_frame_get_pixel_type(impl_, &error);
+        Error::handle(&error);
+
+        return pixelType;
+    }
+
+    /**
      * @brief Get the effective number of pixels in the frame.
      * @attention Only valid for Y8/Y10/Y11/Y12/Y14/Y16 format.
      *
@@ -617,7 +633,7 @@ public:
      * @param frameType The type of sensor
      * @return std::shared_ptr<Frame> The corresponding type of frame
      */
-    std::shared_ptr< Frame> getFrame(OBFrameType frameType) const {
+    std::shared_ptr<Frame> getFrame(OBFrameType frameType) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame(impl_, frameType, &error);
         if(!frame) {
@@ -633,7 +649,7 @@ public:
      * @param index The index of the frame
      * @return std::shared_ptr<Frame> The frame at the specified index
      */
-    std::shared_ptr< Frame> getFrameByIndex(uint32_t index) const {
+    std::shared_ptr<Frame> getFrameByIndex(uint32_t index) const {
         ob_error *error = nullptr;
         auto      frame = ob_frameset_get_frame_by_index(impl_, index, &error);
         if(!frame) {

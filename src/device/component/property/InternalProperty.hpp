@@ -4,8 +4,9 @@
 namespace libobsensor {
 
 typedef enum {
-    OB_PROP_DEVICE_RESET_BOOL  = 29, /**< Reset/reboot the device*/
-    OB_PROP_REBOOT_DEVICE_BOOL = 57, /**< Reboot the device*/
+    OB_PROP_DEVICE_RESET_BOOL               = 29,  /**< Reset/reboot the device*/
+    OB_PROP_REBOOT_DEVICE_BOOL              = 57,  /**< Reboot the device*/
+    OB_PROP_DEPTH_MIRROR_MODULE_STATUS_BOOL = 108, /**< Depth mirror module status*/
 
     OB_PROP_GYRO_SWITCH_BOOL     = 2019, /**< Gyroscope switch*/
     OB_PROP_ACCEL_SWITCH_BOOL    = 2020, /**< Accelerometer switch*/

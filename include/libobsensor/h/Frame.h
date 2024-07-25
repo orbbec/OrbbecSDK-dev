@@ -392,6 +392,27 @@ OB_EXPORT uint32_t ob_video_frame_get_width(const ob_frame *frame, ob_error **er
 OB_EXPORT uint32_t ob_video_frame_get_height(const ob_frame *frame, ob_error **error);
 
 /**
+ * @brief Get video frame pixel format
+ * @brief Usually used to determine the pixel type of depth frame (depth, disparity, raw phase, etc.)
+ *
+ * @attention Always return OB_PIXEL_UNKNOWN for non-depth frame currently if user has not set the pixel type by @ref ob_video_frame_set_pixel_type()
+ *
+ * @param frame Frame object
+ * @param error Pointer to an error object that will be set if an error occurs.
+ * @return ob_pixel_type return the pixel format of the frame.
+ */
+OB_EXPORT ob_pixel_type ob_video_frame_get_pixel_type(const ob_frame *frame, ob_error **error);
+
+/**
+ * @brief Set video frame pixel format
+ *
+ * @param frame Frame object
+ * @param pixel_type the pixel format of the frame
+ * @param error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_video_frame_set_pixel_type(ob_frame *frame, ob_pixel_type pixel_type, ob_error **error);
+
+/**
  * @brief Get the effective number of pixels (such as Y16 format frame, but only the lower 10 bits are effective bits, and the upper 6 bits are filled with 0)
  * @attention Only valid for Y8/Y10/Y11/Y12/Y14/Y16 format
  *

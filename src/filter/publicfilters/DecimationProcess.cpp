@@ -248,7 +248,7 @@ std::shared_ptr<Frame> DecimationFilter::processFunc(std::shared_ptr<const Frame
     newOutFrame->copyInfoFromOther(frame);
     auto srcVideosFrame = frame->as<VideoFrame>();
     auto newVideoFrame  = newOutFrame->as<VideoFrame>();
-    if(frame->getType() == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16 || frameFormat == OB_FORMAT_DISP16)) {
+    if(frame->getType() == OB_FRAME_DEPTH && (frameFormat == OB_FORMAT_Y16 || frameFormat == OB_FORMAT_Z16)) {
         decimateDepth((uint16_t *)frame->getData(), (uint16_t *)newVideoFrame->getData(), srcVideosFrame->getWidth(), patch_size_);
     }
     else {

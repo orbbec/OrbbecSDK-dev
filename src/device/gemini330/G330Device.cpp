@@ -32,7 +32,7 @@
 #include "G330DeviceSyncConfigurator.hpp"
 #include "G330AlgParamManager.hpp"
 #include "G330PresetManager.hpp"
-#include "G330DepthAlgModeManager.hpp"
+#include "G330DepthWorkModeManager.hpp"
 #include "G330SensorStreamStrategy.hpp"
 #include "G330PropertyAccessors.hpp"
 
@@ -71,8 +71,8 @@ void G330Device::init() {
     auto algParamManager = std::make_shared<G330AlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
-    auto depthAlgModeManager = std::make_shared<G330DepthAlgModeManager>(this);
-    registerComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER, depthAlgModeManager);
+    auto depthWorkModeManager = std::make_shared<G330DepthWorkModeManager>(this);
+    registerComponent(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER, depthWorkModeManager);
 
     auto presetManager = std::make_shared<G330PresetManager>(this);
     registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);

@@ -37,10 +37,8 @@ void DisparityBasedSensor::setDepthUnit(float unit){
 
 void DisparityBasedSensor::outputFrame(std::shared_ptr<Frame> frame) {
     if(outputDisparityFrame_) {
-        auto sp    = frame->getStreamProfile();
-        auto newSp = sp->clone();
-        newSp->setFormat(OB_FORMAT_DISP16);
-        frame->setStreamProfile(newSp);
+        auto vsp = frame->as<VideoFrame>();
+        vsp->setPixelType(OB_PIXEL_DISPARITY);
     }
 
     auto depthFrame = frame->as<DepthFrame>();

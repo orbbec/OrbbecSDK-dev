@@ -22,10 +22,6 @@ public:
     void               updateConfig(std::vector<std::string> &params) override;
     const std::string &getConfigSchema() const override;
 
-    // void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
-    // void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
-    // void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
-
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 

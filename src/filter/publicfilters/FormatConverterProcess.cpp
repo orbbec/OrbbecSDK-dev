@@ -57,6 +57,24 @@ void FormatConverter::setConversion(OBFormat srcFormat, OBFormat dstFormat) {
             break;
         }
     }
+    else if(srcFormat == OB_FORMAT_MJPEG) {
+        switch(dstFormat) {
+        case OB_FORMAT_RGB:
+            convertType_ = FORMAT_MJPG_TO_RGB;
+            break;
+        // case OB_FORMAT_RGBA:
+        //     convertType_ = FORMAT_MJPG_TO_RGBA;
+        //     break;
+        case OB_FORMAT_BGR:
+            convertType_ = FORMAT_MJPG_TO_BGR;
+            break;
+        case OB_FORMAT_BGRA:
+            convertType_ = FORMAT_MJPG_TO_BGRA;
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame> frame) {
@@ -98,7 +116,7 @@ std::shared_ptr<Frame> FormatConverter::processFunc(std::shared_ptr<const Frame>
     auto videoStreamProfile = frame->getStreamProfile();
     if(!currentStreamProfile_ || currentStreamProfile_.get() != videoStreamProfile.get()) {
         currentStreamProfile_ = videoStreamProfile;
-        tarStreamProfile_ = videoStreamProfile->clone();
+        tarStreamProfile_     = videoStreamProfile->clone();
     }
 
     tarFrame->copyInfoFromOther(frame);

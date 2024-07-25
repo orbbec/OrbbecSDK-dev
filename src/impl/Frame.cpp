@@ -339,6 +339,18 @@ ob_device *ob_frame_get_device(const ob_frame *frame, ob_error **error) BEGIN_AP
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, frame)
 
+ob_pixel_type ob_video_frame_get_pixel_type(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    return frame->frame->as<libobsensor::VideoFrame>()->getPixelType();
+}
+HANDLE_EXCEPTIONS_AND_RETURN(OB_PIXEL_UNKNOWN, frame)
+
+void ob_video_frame_set_pixel_type(ob_frame *frame, ob_pixel_type pixel_type, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(frame);
+    frame->frame->as<libobsensor::VideoFrame>()->setPixelType(pixel_type);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(frame)
+
 uint8_t ob_video_frame_get_pixel_available_bit_size(const ob_frame *frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame);
     return frame->frame->as<libobsensor::VideoFrame>()->getPixelAvailableBitSize();

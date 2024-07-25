@@ -42,9 +42,6 @@ public:
     void pushFramesToView(std::vector<std::shared_ptr<const ob::Frame>> frames, int groupId = 0);
     void pushFramesToView(std::shared_ptr<const ob::Frame> currentFrame, int groupId = 0);
 
-    // wait for the key to be pressed
-    int waitKey(uint32_t timeoutMsec = 1);
-
     // set show frame info
     void setShowInfo(bool show);
 
@@ -53,6 +50,9 @@ public:
 
     // set the window size
     void resize(int width, int height);
+
+    // set the key pressed callback
+    void setKeyPressedCallback(std::function<void(int)> callback);
 
     // set the key prompt
     void setKeyPrompt(const std::string &prompt);
@@ -84,10 +84,6 @@ private:
     bool        showInfo_;
     float       alpha_;
 
-    int                     key_;
-    std::mutex              keyMtx_;
-    std::condition_variable keyCv_;
-
     std::thread                                                  processThread_;
     std::map<int, std::vector<std::shared_ptr<const ob::Frame>>> srcFrameGroups_;
     std::mutex                                                   srcFrameGroupsMtx_;
@@ -104,6 +100,8 @@ private:
 
     std::string log_;
     uint64      logCreatedTime_;
+
+    std::function<void(int)> keyPressedCallback_;
 };
 
 }  // namespace ob_smpl

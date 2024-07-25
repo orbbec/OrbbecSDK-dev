@@ -11,17 +11,9 @@
 
 namespace ob_smpl {
 
-const std::string defaultKeyMapPrompt = "'Esc': Exit Window, '?': Show Key Map, '1~5': Switch Arrange Mode, '+'/'-': Adjust Alpha";
+const std::string defaultKeyMapPrompt = "'Esc': Exit Window, '?': Show Key Map";
 CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeMode arrangeMode)
-    : name_(std::move(name)),
-      arrangeMode_(arrangeMode),
-      width_(width),
-      height_(height),
-      closed_(false),
-      showInfo_(true),
-      alpha_(0.6f),
-      key_(-1),
-      showPrompt_(false) {
+    : name_(std::move(name)), arrangeMode_(arrangeMode), width_(width), height_(height), closed_(false), showInfo_(true), alpha_(0.6f), showPrompt_(false) {
 
 #if defined(TO_DISABLE_OPENCV_LOG)
     cv::utils::logging::setLogLevel(cv::utils::logging::LogLevel::LOG_LEVEL_SILENT);
@@ -42,9 +34,13 @@ CVWindow::CVWindow(std::string name, uint32_t width, uint32_t height, ArrangeMod
     winCreatedTime_ = getNowTimesMs();
 }
 
-CVWindow::~CVWindow() noexcept{
+CVWindow::~CVWindow() noexcept {
     close();
     cv::destroyWindow(name_);
+}
+
+void CVWindow::setKeyPressedCallback(std::function<void(int)> callback) {
+    keyPressedCallback_ = callback;
 }
 
 // if window is closed
@@ -56,12 +52,8 @@ bool CVWindow::run() {
         cv::imshow(name_, renderMat_);
     }
 
-    int key = cv::waitKey(20);
+    int key = cv::waitKey(1);
     if(key != -1) {
-        std::unique_lock<std::mutex> lk(keyMtx_);
-        key_ = key;
-        keyCv_.notify_all();
-
         if(key == ESC_KEY) {
             closed_ = true;
             srcFrameGroupsCv_.notify_all();
@@ -102,6 +94,9 @@ bool CVWindow::run() {
                 alpha_ = 0;
             }
             addLog("Adjust alpha to " + ob_smpl::toString(alpha_, 1) + " (Only valid in OVERLAY arrange mode)");
+        }
+        if(keyPressedCallback_) {
+            keyPressedCallback_(key);
         }
     }
     return !closed_;
@@ -181,15 +176,6 @@ void CVWindow::pushFramesToView(std::vector<std::shared_ptr<const ob::Frame>> fr
 
 void CVWindow::pushFramesToView(std::shared_ptr<const ob::Frame> currentFrame, int groupId) {
     pushFramesToView(std::vector<std::shared_ptr<const ob::Frame>>{ currentFrame }, groupId);
-}
-
-// wait for the key to be pressed
-int CVWindow::waitKey(uint32_t timeoutMsec) {
-    std::unique_lock<std::mutex> lk(keyMtx_);
-    keyCv_.wait_for(lk, std::chrono::milliseconds(timeoutMsec), [&] { return key_ != -1; });
-    int key = key_;
-    key_    = -1;
-    return key;
 }
 
 // set show frame info

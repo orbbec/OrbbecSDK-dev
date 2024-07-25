@@ -16,7 +16,6 @@ const int IR_OVER_SATURATED_VALUE_Y8  = 0xfa;  // 250 (255 - IR_UNDER_SATURATED_
 const int IR_UNDER_SATURATED_VALUE_Y16 = 0x14;   // 20 (4 * IR_UNDER_SATURATED_VALUE_Y8)
 const int IR_OVER_SATURATED_VALUE_Y16  = 0x3eb;  // 1003 (1023 - IR_UNDER_SATURATED_VALUE_Y16)
 
-
 template <typename T> bool isInfraredValid(T ir_value, OBFormat ir_format) {
     bool result = false;
     if(ir_format == OB_FORMAT_Y8)
@@ -29,8 +28,8 @@ template <typename T> bool isInfraredValid(T ir_value, OBFormat ir_format) {
 }
 
 template <typename T>
-void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, uint16_t *d1, const std::shared_ptr<const Frame> first_ir, const std::shared_ptr<const Frame> second_ir,
-                        int width_height_prod) {
+void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, uint16_t *d1, const std::shared_ptr<const Frame> first_ir,
+                        const std::shared_ptr<const Frame> second_ir, int width_height_prod) {
     auto i0 = (T *)first_ir->getData();
     auto i1 = (T *)second_ir->getData();
 
@@ -131,7 +130,7 @@ bool checkFramesMergeAbility(std::shared_ptr<const Frame> first_f, std::shared_p
     std::shared_ptr<const DepthFrame> first_depth  = nullptr;
     std::shared_ptr<const DepthFrame> second_depth = nullptr;
 
-    std::shared_ptr<const IRFrame> first_ir     = nullptr;
+    std::shared_ptr<const IRFrame> first_ir  = nullptr;
     std::shared_ptr<const IRFrame> second_ir = nullptr;
 
     if(first_f->is<FrameSet>()) {
@@ -169,8 +168,6 @@ bool checkFramesMergeAbility(std::shared_ptr<const Frame> first_f, std::shared_p
     return true;
 }
 
-
-
 HdrMerge::HdrMerge(const std::string &name) : FilterBase(name) {}
 HdrMerge::~HdrMerge() noexcept {}
 
@@ -192,7 +189,6 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
 
     // 1.get depth frame,check the depth frame exists
     std::shared_ptr<const DepthFrame> depthFrame = nullptr;
-    std::shared_ptr<Frame>            outFrame   = FrameFactory::createFrameFromOtherFrame(frame);
     if(frame->is<FrameSet>()) {
         depthFrame = frame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
     }
@@ -202,17 +198,19 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
 
     if(!depthFrame) {
         LOG_WARN_INTVL("No depth frame found, hdrMerge unsupported to process this frame");
+        std::shared_ptr<Frame> outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
         return outFrame;
     }
 
     auto depthSeqSize = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE);
     if(depthSeqSize != 2) {
+        LOG_WARN_INTVL("HdrMerge unsupported to process this frame with sequence size: {}", depthSeqSize);
+        std::shared_ptr<Frame> outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
         return outFrame;
     }
 
     // 2.add the frame to vector of frames
     auto depth_seq_id = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-
     // condition added to ensure that frames are saved in the right order
     // to prevent for example the saving of frame with sequence id 1 before
     // saving frame of sequence id 0
@@ -220,11 +218,11 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
     // with frame n as basis
     int64_t frameSize = static_cast<int64_t>(frames_.size());
     if(frameSize == depth_seq_id) {
-        frames_[depth_seq_id] = outFrame;
+        frames_[depth_seq_id] = depthFrame;
     }
 
     // discard merged frame if not relevant
-    discardDepthMergedFrameIfNeeded(outFrame);
+    discardDepthMergedFrameIfNeeded(depthFrame);
 
     // 3. check if size of this vector is at least 2 (if not - return latest merge frame)
     if(frames_.size() >= 2) {
@@ -246,7 +244,8 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
 
     // 7. return the merge frame
     if(depth_merged_frame_) {
-        if(outFrame->is<FrameSet>()) {
+        if(frame->is<FrameSet>()) {
+            auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
             auto frameSet = outFrame->as<FrameSet>();
             frameSet->pushFrame(std::move(depth_merged_frame_));
             return outFrame;
@@ -256,10 +255,11 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
         }
     }
 
+    std::shared_ptr<Frame> outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
     return outFrame;
 }
 
-void HdrMerge::discardDepthMergedFrameIfNeeded(std::shared_ptr<Frame> frame) {
+void HdrMerge::discardDepthMergedFrameIfNeeded(std::shared_ptr<const Frame> frame) {
     if(depth_merged_frame_) {
         // criteria for discarding saved merged_depth_frame:
         // 1 - frame counter for merged depth is greater than the input frame

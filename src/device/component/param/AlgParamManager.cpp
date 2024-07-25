@@ -3,7 +3,6 @@
 #include "stream/StreamExtrinsicsManager.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "property/InternalProperty.hpp"
-#include "DevicePids.hpp"
 #include "exception/ObException.hpp"
 #include "publicfilters/IMUCorrector.hpp"
 

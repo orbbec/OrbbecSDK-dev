@@ -313,9 +313,9 @@
         <FemtoBolt>
             <Depth>
                 <!--The width of the default resolution, int type-->
-                <Width>640</Width>
+                <Width>1024</Width>
                 <!--The height of the default resolution, int type-->
-                <Height>576</Height>
+                <Height>1024</Height>
                 <!--Default frame rate, int type-->
                 <FPS>15</FPS>
                 <!--Default frame format-->
@@ -351,9 +351,9 @@
 
             <IR>
                 <!--The width of the default resolution, int type-->
-                <Width>640</Width>
+                <Width>1024</Width>
                 <!--The height of the default resolution, int type-->
-                <Height>576</Height>
+                <Height>1024</Height>
                 <!--Default frame rate, int type-->
                 <FPS>15</FPS>
                 <!--Default frame format-->

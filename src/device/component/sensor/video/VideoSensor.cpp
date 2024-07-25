@@ -182,7 +182,7 @@ void VideoSensor::stop() {
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
     vsPort->stopStream(currentBackendStreamProfile_);
 
-    updateStreamState(STREAM_STATE_STOPED);
+    updateStreamState(STREAM_STATE_STOPPED);
     activatedStreamProfile_.reset();
     frameCallback_ = nullptr;
 }

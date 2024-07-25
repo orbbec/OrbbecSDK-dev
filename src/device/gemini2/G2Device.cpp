@@ -139,7 +139,7 @@ void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     //     if(state == STREAM_STATE_STARTING) {
     //         streamStrategy->markStreamStarted(sp);
     //     }
-    //     else if(state == STREAM_STATE_STOPED) {
+    //     else if(state == STREAM_STATE_STOPPED) {
     //         streamStrategy->markStreamStopped(sp);
     //     }
     // });

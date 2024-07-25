@@ -1,12 +1,13 @@
 #include <libobsensor/ObSensor.hpp>
 
 #include "utils_opencv.hpp"
+#include <thread>
 
 int main(void) try {
 
     // Create a pipeline with default device.
     ob::Pipeline pipe;
-
+    
     // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled.
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 

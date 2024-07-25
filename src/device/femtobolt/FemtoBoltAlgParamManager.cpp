@@ -13,7 +13,7 @@
 
 namespace libobsensor {
 FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : DeviceComponentBase(owner) {
-    fetchParams();
+  //  fetchParams();
    // registerBasicExtrinsics();
 }
 

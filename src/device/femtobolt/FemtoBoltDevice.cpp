@@ -8,6 +8,8 @@
 #include "sensor/imu/ImuStreamer.hpp"
 #include "sensor/imu/AccelSensor.hpp"
 #include "sensor/imu/GyroSensor.hpp"
+#include "sensor/rawphase/RawPhaseStreamer.hpp"
+#include "sensor/rawphase/RawPhaseConvertSensor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
 #include "FilterFactory.hpp"
 
@@ -25,6 +27,7 @@
 
 #include "FemtoBoltAlgParamManager.hpp"
 #include "gemini330/G330DeviceSyncConfigurator.hpp"
+#include "sensor/rawphase/depthengine/DepthEngineLoader.hpp"
 //  #include "G330SensorStreamStrategy.hpp"
 
 namespace libobsensor {
@@ -80,8 +83,8 @@ void FemtoBoltDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<FemtoBoltAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
-        algParamManager->bindStreamProfileParams(profiles);
+        // auto algParamManager = getComponentT<FemtoBoltAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        // algParamManager->bindStreamProfileParams(profiles);
     }
 
     auto sensorType = sensor->getSensorType();
@@ -95,7 +98,7 @@ void FemtoBoltDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     //     if(state == STREAM_STATE_STARTING) {
     //         streamStrategy->markStreamStarted(sp);
     //     }
-    //     else if(state == STREAM_STATE_STOPED) {
+    //     else if(state == STREAM_STATE_STOPPED) {
     //         streamStrategy->markStreamStopped(sp);
     //     }
     // });
@@ -115,20 +118,42 @@ void FemtoBoltDevice::initSensorList() {
 
     if(depthPortInfoIter != sourcePortInfoList.end()) {
         auto depthPortInfo = *depthPortInfoIter;
+        registerComponent(OB_DEV_COMPONENT_DEPTH_ENGINE_LOADER_FACTORY, [this]() {
+            std::shared_ptr<DepthEngineLoadFactory> factory;
+            TRY_EXECUTE({ factory = std::make_shared<DepthEngineLoadFactory>(this); })
+            return factory;
+        });
+        registerComponent(OB_DEV_COMPONENT_RAWPHASE_STREAMER, [this, depthPortInfo]() {
+            auto pal  = ObPal::getInstance();
+            auto port = pal->getSourcePort(depthPortInfo);
+
+            auto depthEngineLoader    = getComponentT<DepthEngineLoadFactory>(OB_DEV_COMPONENT_DEPTH_ENGINE_LOADER_FACTORY);
+            auto depthEngineLoaderPtr = depthEngineLoader.get();
+
+            auto dataStreamPort   = std::dynamic_pointer_cast<IVideoStreamPort>(port);
+            auto rawPhaseStreamer = std::make_shared<RawPhaseStreamer>(this, dataStreamPort, depthEngineLoaderPtr);
+            if(rawPhaseStreamer) {
+                do {
+                    utils::sleepMs(1000);
+                } while(rawPhaseStreamer->isInitialized());
+            }
+            return rawPhaseStreamer;
+        });
         registerComponent(
             OB_DEV_COMPONENT_DEPTH_SENSOR,
             [this, depthPortInfo]() {
-                auto pal    = ObPal::getInstance();
-                auto port   = pal->getSourcePort(depthPortInfo);
-                auto sensor = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
+                auto pal                       = ObPal::getInstance();
+                auto port                      = pal->getSourcePort(depthPortInfo);
+                auto rawphaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAWPHASE_STREAMER);
+                auto rawphaseStreamerSharedPtr = rawphaseStreamer.get();
+                auto sensor                    = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_DEPTH, rawphaseStreamerSharedPtr);
+                //  sensor->setFrameMetadataParserContainer(depthMdParserContainer_);
+                //  sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
 
-                sensor->setFrameMetadataParserContainer(depthMdParserContainer_);
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
-
-                auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
-                if(frameProcessor) {
-                    sensor->setFrameProcessor(frameProcessor.get());
-                }
+                // auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+                // if(frameProcessor) {
+                //     sensor->setFrameProcessor(frameProcessor.get());
+                // }
 
                 initSensorStreamProfile(sensor);
                 return sensor;
@@ -141,6 +166,36 @@ void FemtoBoltDevice::initSensorList() {
             auto factory = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
 
             auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_DEPTH);
+            return frameProcessor;
+        });
+
+        registerComponent(
+            OB_DEV_COMPONENT_IR_SENSOR,
+            [this, depthPortInfo]() {
+                auto pal                       = ObPal::getInstance();
+                auto port                      = pal->getSourcePort(depthPortInfo);
+                auto rawphaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAWPHASE_STREAMER);
+                auto rawphaseStreamerSharedPtr = rawphaseStreamer.get();
+                rawphaseStreamer->setIsPassiveIR(true);
+                auto sensor = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_IR, rawphaseStreamerSharedPtr);
+                //  sensor->setFrameMetadataParserContainer(depthMdParserContainer_);
+                //  sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+                // auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+                // if(frameProcessor) {
+                //     sensor->setFrameProcessor(frameProcessor.get());
+                // }
+
+                initSensorStreamProfile(sensor);
+                return sensor;
+            },
+            true);
+        registerSensorPortInfo(OB_SENSOR_IR, depthPortInfo);
+
+        registerComponent(OB_DEV_COMPONENT_IR_FRAME_PROCESSOR, [this]() {
+            auto factory = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
+
+            auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR);
             return frameProcessor;
         });
     }
@@ -159,19 +214,19 @@ void FemtoBoltDevice::initSensorList() {
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
-                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
-                    { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr },
+                    // { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
+                    //  { FormatFilterPolicy::REPLACE, OB_FORMAT_BYR2, OB_FORMAT_RW16, nullptr },
                 };
 
-                auto formatConverter = getSensorFrameFilter("FormatConverter", OB_SENSOR_COLOR, false);
-                if(formatConverter) {
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGB, formatConverter });
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGBA, formatConverter });
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGR, formatConverter });
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGRA, formatConverter });
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y16, formatConverter });
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y8, formatConverter });
-                }
+                // auto formatConverter = getSensorFrameFilter("FormatConverter", OB_SENSOR_COLOR, false);
+                // if(formatConverter) {
+                //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGB, formatConverter });
+                //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGBA, formatConverter });
+                //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGR, formatConverter });
+                //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGRA, formatConverter });
+                //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y16, formatConverter });
+                //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y8, formatConverter });
+                // }
 
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
                 sensor->setFrameMetadataParserContainer(colorMdParserContainer_);

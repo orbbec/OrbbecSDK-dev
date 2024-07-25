@@ -20,9 +20,6 @@ enum SourcePortType {
     SOURCE_PORT_UNKNOWN = 0xff,
 };
 
-enum RawPhaseConverterPortType {
-    RAW_PHASE_CONVERTER_MSDE = 0,
-};
 
 struct SourcePortInfo {
     virtual ~SourcePortInfo() noexcept = default;

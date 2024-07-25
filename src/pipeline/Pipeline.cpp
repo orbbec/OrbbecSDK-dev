@@ -13,7 +13,7 @@
 #include <algorithm>
 
 namespace libobsensor {
-Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), config_(nullptr), streamState_(STREAM_STATE_STOPED), pipelineCallback_(nullptr) {
+Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), config_(nullptr), streamState_(STREAM_STATE_STOPPED), pipelineCallback_(nullptr) {
     LOG_DEBUG("Pipeline init ...");
     auto sensorTypeList = device_->getSensorTypeList();
     if(sensorTypeList.empty()) {
@@ -248,7 +248,7 @@ void Pipeline::startStream() {
 
 void Pipeline::onFrameCallback(std::shared_ptr<const Frame> frame) {
     std::unique_lock<std::mutex> lk(streamMutex_);
-    if(streamState_ != STREAM_STATE_STOPED && streamState_ != STREAM_STATE_STOPPING) {
+    if(streamState_ != STREAM_STATE_STOPPED && streamState_ != STREAM_STATE_STOPPING) {
         if(streamState_ == STREAM_STATE_STARTING) {
             streamState_ = STREAM_STATE_STREAMING;
         }
@@ -309,7 +309,7 @@ void Pipeline::stopStream() {
 
 void Pipeline::stop() {
     LOG_INFO("Try to stop pipeline!");
-    if(streamState_ != STREAM_STATE_STOPED) {
+    if(streamState_ != STREAM_STATE_STOPPED) {
         stopStream();
     }
 
@@ -326,7 +326,7 @@ void Pipeline::stop() {
     // clear callback
     pipelineCallback_ = nullptr;
 
-    streamState_ = STREAM_STATE_STOPED;
+    streamState_ = STREAM_STATE_STOPPED;
     LOG_INFO("Stop pipeline done!");
 }
 

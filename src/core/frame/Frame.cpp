@@ -248,6 +248,9 @@ OBPixelType VideoFrame::getPixelType() const {
     return pixelType_;
 }
 
+VideoFrame::VideoFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : Frame(data, dataBufSize, OB_FRAME_VIDEO, bufferReclaimFunc), availablePixelBitSize_(0), pixelType_(OB_PIXEL_UNKNOWN) {}
+
 uint8_t VideoFrame::getPixelAvailableBitSize() const {
     if(availablePixelBitSize_ == 0) {
         auto format = getFormat();

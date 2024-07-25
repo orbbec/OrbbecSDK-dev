@@ -129,6 +129,7 @@ private:
 class VideoFrame : public Frame {
 public:
     VideoFrame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
+    VideoFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 
     uint32_t getWidth() const;
     uint32_t getHeight() const;

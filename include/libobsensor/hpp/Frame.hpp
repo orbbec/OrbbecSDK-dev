@@ -330,9 +330,48 @@ public:
         return std::make_shared<const T>(impl_);
     }
 
-    /**[Deprecated] */
-    OBFrameType type() const {
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED OBFrameType type() const {
         return getType();
+    }
+
+    OB_DEPRECATED virtual OBFormat format() const {
+        return getFormat();
+    }
+
+    OB_DEPRECATED virtual uint64_t index() const {
+        return getIndex();
+    }
+
+    OB_DEPRECATED virtual uint8_t *data() const {
+        return getData();
+    }
+
+    OB_DEPRECATED virtual uint32_t dataSize() const {
+        return getDataSize();
+    }
+
+    OB_DEPRECATED uint64_t timeStampUs() const {
+        return getTimeStampUs();
+    }
+
+    OB_DEPRECATED uint64_t systemTimeStampUs() const {
+        return getSystemTimeStampUs();
+    }
+
+    OB_DEPRECATED uint64_t globalTimeStampUs() const {
+        return getGlobalTimeStampUs();
+    }
+
+    OB_DEPRECATED uint8_t *metadata() const {
+        return getMetadata();
+    }
+
+    OB_DEPRECATED uint32_t metadataSize() const {
+        return getMetadataSize();
     }
 };
 
@@ -408,6 +447,22 @@ public:
         Error::handle(&error);
 
         return bitSize;
+    }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED uint32_t width() const {
+        return getWidth();
+    }
+
+    OB_DEPRECATED uint32_t height() const {
+        return getHeight();
+    }
+
+    OB_DEPRECATED uint8_t pixelAvailableBitSize() const {
+        return getPixelAvailableBitSize();
     }
 };
 
@@ -677,6 +732,38 @@ public:
         ob_frameset_push_frame(unConstImpl, otherImpl, &error);
 
         Error::handle(&error);
+    }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED uint32_t count() const {
+        return getCount();
+    }
+
+    OB_DEPRECATED std::shared_ptr<DepthFrame> depthFrame() {
+        auto frame = getFrame(OB_FRAME_DEPTH);
+        auto depthFrame = frame->as<ob::DepthFrame>();
+        return depthFrame;
+    }
+
+    OB_DEPRECATED std::shared_ptr<ColorFrame> colorFrame() {
+        auto frame = getFrame(OB_FRAME_COLOR);
+        auto colorFrame = frame->as<ob::ColorFrame>();
+        return colorFrame;
+    }
+
+    OB_DEPRECATED std::shared_ptr<IRFrame> irFrame() {
+        auto frame = getFrame(OB_FRAME_IR);
+        auto irFrame = frame->as<ob::IRFrame>();
+        return irFrame;
+    }
+
+    OB_DEPRECATED std::shared_ptr<PointsFrame> pointsFrame() {
+        auto frame = getFrame(OB_FRAME_POINTS);
+        auto pointsFrame = frame->as<ob::PointsFrame>();
+        return pointsFrame;
     }
 };
 

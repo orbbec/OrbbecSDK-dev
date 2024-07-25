@@ -28,7 +28,7 @@ public:
     typedef std::function<void(std::shared_ptr<Frame> frame)> FrameCallback;
 
 protected:
-    ob_sensor_t  *impl_;
+    ob_sensor_t * impl_;
     FrameCallback callback_;
 
 public:
@@ -49,7 +49,7 @@ public:
         return *this;
     }
 
-    Sensor(const Sensor &sensor)            = delete;
+    Sensor(const Sensor &sensor) = delete;
     Sensor &operator=(const Sensor &sensor) = delete;
 
     virtual ~Sensor() noexcept {
@@ -128,6 +128,14 @@ private:
         auto sensor = static_cast<Sensor *>(userData);
         sensor->callback_(std::make_shared<Frame>(frame));
     }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED OBSensorType type() const {
+        return getType();
+    }
 };
 
 class SensorList {
@@ -192,6 +200,18 @@ public:
         auto      sensor = ob_sensor_list_get_sensor_by_type(impl_, sensorType, &error);
         Error::handle(&error);
         return std::make_shared<Sensor>(sensor);
+    }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED uint32_t count() const {
+        return getCount();
+    }
+
+    OB_DEPRECATED OBSensorType type(uint32_t index) const {
+        return getSensorType(index);
     }
 };
 

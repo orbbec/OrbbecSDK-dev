@@ -598,6 +598,34 @@ OB_EXPORT ob_frame *ob_frameset_get_frame_by_index(const ob_frame *frameset, uin
  */
 OB_EXPORT void ob_frameset_push_frame(ob_frame *frameset, const ob_frame *frame, ob_error **error);
 
+/**
+ * In order to be compatible with the closed source version of orbbecsdk's interface.
+ * We recommend using the latest interface names for a better experience.
+*/
+#define ob_frame_index ob_frame_get_index
+#define ob_frame_format ob_frame_get_format
+#define ob_frame_time_stamp_us ob_frame_get_timestamp_us
+#define ob_frame_set_device_time_stamp_us ob_frame_set_timestamp_us
+#define ob_frame_system_time_stamp_us ob_frame_get_system_timestamp_us
+#define ob_frame_global_time_stamp_us ob_frame_get_global_timestamp_us
+#define ob_frame_data ob_frame_get_data
+#define ob_frame_data_size ob_frame_get_data_size
+#define ob_frame_metadata ob_frame_get_metadata
+#define ob_frame_metadata_size ob_frame_get_metadata_size
+#define ob_video_frame_width ob_video_frame_get_width
+#define ob_video_frame_height ob_video_frame_get_height
+#define ob_video_frame_pixel_available_bit_size ob_video_frame_get_pixel_available_bit_size
+#define ob_points_frame_get_position_value_scale ob_points_frame_get_coordinate_value_scale
+#define ob_frameset_frame_count ob_frameset_get_frame_count
+#define ob_frameset_depth_frame ob_frameset_get_depth_frame
+#define ob_frameset_color_frame ob_frameset_get_color_frame
+#define ob_frameset_ir_frame ob_frameset_get_ir_frame
+#define ob_frameset_points_frame ob_frameset_get_points_frame
+#define ob_accel_frame_value ob_accel_frame_get_value
+#define ob_accel_frame_temperature ob_accel_frame_get_temperature
+#define ob_gyro_frame_value ob_gyro_frame_get_value
+#define ob_gyro_frame_temperature ob_gyro_frame_get_temperature
+
 #ifdef __cplusplus
 }
 #endif

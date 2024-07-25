@@ -45,7 +45,7 @@ public:
     typedef std::function<void(OBDeviceState state, const char *message)> DeviceStateChangedCallback;
 
 protected:
-    ob_device                 *impl_ = nullptr;
+    ob_device *                impl_ = nullptr;
     DeviceStateChangedCallback deviceStateChangeCallback_;
     DeviceFwUpdateCallback     fwUpdateCallback_;
 
@@ -70,7 +70,7 @@ public:
         return *this;
     }
 
-    Device(const Device &)            = delete;
+    Device(const Device &) = delete;
     Device &operator=(const Device &) = delete;
 
     virtual ~Device() noexcept {
@@ -558,7 +558,7 @@ public:
      * @return const char* return the current preset name, it should be one of the preset names returned by @ref getAvailablePresetList.
      */
     const char *getCurrentPresetName() const {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *name  = ob_device_get_current_preset_name(impl_, &error);
         Error::handle(&error);
         return name;
@@ -626,6 +626,18 @@ private:
             device->fwUpdateCallback_(state, message, percent);
         }
     }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+public:
+    void deviceUpgrade(const char *filePath, DeviceFwUpdateCallback callback, bool async = true) {
+        updateFirmware(filePath, callback, async);
+    }
+    void deviceUpgradeFromData(const uint8_t *firmwareData, uint32_t firmwareDataSize, DeviceFwUpdateCallback callback, bool async = true) {
+        updateFirmwareFromData(firmwareData, firmwareDataSize, callback, async);
+    }
 };
 
 /**
@@ -649,7 +661,7 @@ public:
      * @return const char * return the device name
      */
     const char *getName() const {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *name  = ob_device_info_get_name(impl_, &error);
         Error::handle(&error);
         return name;
@@ -685,7 +697,7 @@ public:
      * @return const char * return the uid of the device
      */
     const char *getUid() const {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *uid   = ob_device_info_get_uid(impl_, &error);
         Error::handle(&error);
         return uid;
@@ -697,7 +709,7 @@ public:
      * @return const char * return the serial number of the device
      */
     const char *getSerialNumber() const {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *sn    = ob_device_info_get_serial_number(impl_, &error);
         Error::handle(&error);
         return sn;
@@ -709,7 +721,7 @@ public:
      * @return const char* return the version number of the firmware
      */
     const char *getFirmwareVersion() const {
-        ob_error   *error   = nullptr;
+        ob_error *  error   = nullptr;
         const char *version = ob_device_info_get_firmware_version(impl_, &error);
         Error::handle(&error);
         return version;
@@ -722,7 +734,7 @@ public:
      * "Ethernet"
      */
     const char *getConnectionType() const {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *type  = ob_device_info_get_connection_type(impl_, &error);
         Error::handle(&error);
         return type;
@@ -736,7 +748,7 @@ public:
      * @return const char* the IP address of the device, such as "192.168.1.10"
      */
     const char *getIpAddress() const {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *ip    = ob_device_info_get_ip_address(impl_, &error);
         Error::handle(&error);
         return ip;
@@ -748,7 +760,7 @@ public:
      * @return const char* the version number of the hardware
      */
     const char *getHardwareVersion() const {
-        ob_error   *error   = nullptr;
+        ob_error *  error   = nullptr;
         const char *version = ob_device_info_get_hardware_version(impl_, &error);
         Error::handle(&error);
         return version;
@@ -760,7 +772,7 @@ public:
      * @return const char* the minimum SDK version number supported by the device
      */
     const char *getSupportedMinSdkVersion() const {
-        ob_error   *error   = nullptr;
+        ob_error *  error   = nullptr;
         const char *version = ob_device_info_get_supported_min_sdk_version(impl_, &error);
         Error::handle(&error);
         return version;
@@ -772,7 +784,7 @@ public:
      * @return const char* Returns extended information about the device
      */
     const char *getExtensionInfo(const char *info_key) const {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *info  = ob_device_info_get_extension_info(impl_, info_key, &error);
         Error::handle(&error);
         return info;
@@ -784,7 +796,7 @@ public:
      * @return const char* the chip type name
      */
     const char *getAsicName() const {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *name  = ob_device_info_get_asicName(impl_, &error);
         Error::handle(&error);
         return name;
@@ -796,10 +808,66 @@ public:
      * @return OBDeviceType the device type
      */
     OBDeviceType getDeviceType() const {
-        ob_error    *error = nullptr;
+        ob_error *   error = nullptr;
         OBDeviceType type  = ob_device_info_get_device_type(impl_, &error);
         Error::handle(&error);
         return type;
+    }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED const char *name() const {
+        return getName();
+    }
+
+    OB_DEPRECATED int pid() const {
+        return getPid();
+    }
+
+    OB_DEPRECATED int vid() const {
+        return getVid();
+    }
+
+    OB_DEPRECATED const char *uid() const {
+        return getUid();
+    }
+
+    OB_DEPRECATED const char *serialNumber() const {
+        return getSerialNumber();
+    }
+
+    OB_DEPRECATED const char *firmwareVersion() const {
+        return getFirmwareVersion();
+    }
+
+    OB_DEPRECATED const char *connectionType() const {
+        return getConnectionType();
+    }
+
+    OB_DEPRECATED const char *ipAddress() const {
+        return getIpAddress();
+    }
+
+    OB_DEPRECATED const char *hardwareVersion() const {
+        return getHardwareVersion();
+    }
+
+    OB_DEPRECATED const char *supportedMinSdkVersion() const {
+        return getSupportedMinSdkVersion();
+    }
+
+    OB_DEPRECATED const char *extensionInfo(const char *info_key) const {
+        return getExtensionInfo(info_key);
+    }
+
+    OB_DEPRECATED const char *asicName() const {
+        return getAsicName();
+    }
+
+    OB_DEPRECATED OBDeviceType deviceType() const {
+        return getDeviceType();
     }
 };
 
@@ -973,6 +1041,38 @@ public:
         Error::handle(&error);
         return std::make_shared<Device>(device);
     }
+
+    OB_DEPRECATED uint32_t deviceCount() const {
+        return getCount();
+    }
+
+    OB_DEPRECATED int pid(uint32_t index) const {
+        return getPid(index);
+    }
+
+    OB_DEPRECATED int vid(uint32_t index) const {
+        return getVid(index);
+    }
+
+    OB_DEPRECATED const char *uid(uint32_t index) const {
+        return getUid(index);
+    }
+
+    OB_DEPRECATED const char *serialNumber(uint32_t index) const {
+        return getSerialNumber(index);
+    }
+
+    OB_DEPRECATED const char *name(uint32_t index) const {
+        return getName(index);
+    }
+
+    OB_DEPRECATED const char *connectionType(uint32_t index) const {
+        return getConnectionType(index);
+    }
+
+    OB_DEPRECATED const char *ipAddress(uint32_t index) const {
+        return getIpAddress(index);
+    }
 };
 
 class OBDepthWorkModeList {
@@ -992,7 +1092,7 @@ public:
      *
      * @return uint32_t the number of OBDepthWorkMode objects in the list
      */
-    uint32_t count() {
+    uint32_t getCount() {
         ob_error *error = nullptr;
         auto      count = ob_depth_work_mode_list_count(impl_, &error);
         Error::handle(&error);
@@ -1021,6 +1121,14 @@ public:
     OBDepthWorkMode operator[](uint32_t index) {
         return getOBDepthWorkMode(index);
     }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED uint32_t count() {
+        return getCount();
+    }
 };
 
 /**
@@ -1044,7 +1152,7 @@ public:
      *
      * @return uint32_t the number of device presets in the list
      */
-    uint32_t count() {
+    uint32_t getCount() {
         ob_error *error = nullptr;
         auto      count = ob_device_preset_list_count(impl_, &error);
         Error::handle(&error);
@@ -1058,7 +1166,7 @@ public:
      * @return const char* the name of the device preset
      */
     const char *getName(uint32_t index) {
-        ob_error   *error = nullptr;
+        ob_error *  error = nullptr;
         const char *name  = ob_device_preset_list_get_name(impl_, index, &error);
         Error::handle(&error);
         return name;
@@ -1074,6 +1182,9 @@ public:
         auto      result = ob_device_preset_list_has_preset(impl_, name, &error);
         Error::handle(&error);
         return result;
+    }
+    OB_DEPRECATED uint32_t count() {
+        return getCount();
     }
 };
 

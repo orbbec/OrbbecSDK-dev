@@ -18,7 +18,7 @@ protected:
 public:
     explicit StreamProfile(const ob_stream_profile_t *impl) : impl_(impl) {}
 
-    StreamProfile(StreamProfile &streamProfile)            = delete;
+    StreamProfile(StreamProfile &streamProfile) = delete;
     StreamProfile &operator=(StreamProfile &streamProfile) = delete;
 
     StreamProfile(StreamProfile &&streamProfile) noexcept : impl_(streamProfile.impl_) {
@@ -119,6 +119,18 @@ public:
 
         return std::static_pointer_cast<const T>(shared_from_this());
     }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED OBFormat format() const {
+        return getFormat();
+    }
+
+    OB_DEPRECATED OBStreamType type() const {
+        return getType();
+    }
 };
 
 /**
@@ -189,6 +201,22 @@ public:
         auto      distortion = ob_video_stream_get_distortion(impl_, &error);
         Error::handle(&error);
         return distortion;
+    }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED uint32_t fps() const {
+        getFps();
+    }
+
+    OB_DEPRECATED uint32_t width() const {
+        getWidth();
+    }
+
+    OB_DEPRECATED uint32_t height() const {
+        getHeight();
     }
 };
 
@@ -385,6 +413,14 @@ public:
         auto      profile = ob_stream_profile_list_get_gyro_stream_profile(impl_, fullScaleRange, sampleRate, &error);
         Error::handle(&error);
         return std::make_shared<GyroStreamProfile>(profile);
+    }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED uint32_t count() const {
+        getCount();
     }
 };
 

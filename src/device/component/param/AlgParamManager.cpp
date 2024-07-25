@@ -1,4 +1,4 @@
-#include "G2AlgParamManager.hpp"
+#include "AlgParamManager.hpp"
 #include "stream/StreamIntrinsicsManager.hpp"
 #include "stream/StreamExtrinsicsManager.hpp"
 #include "stream/StreamProfileFactory.hpp"
@@ -65,12 +65,12 @@ bool findBestMatchedD2CProfile(const std::vector<OBD2CProfile> &d2cProfileList, 
     return found;
 }
 
-G2AlgParamManager::G2AlgParamManager(IDevice *owner) : DeviceComponentBase(owner) {
+AlgParamManager::AlgParamManager(IDevice *owner) : DeviceComponentBase(owner) {
     fetchParams();
     registerBasicExtrinsics();
 }
 
-void G2AlgParamManager::fetchParams() {
+void AlgParamManager::fetchParams() {
 
     try {
         auto owner           = getOwner();
@@ -139,7 +139,7 @@ void G2AlgParamManager::fetchParams() {
     }
 }
 
-void G2AlgParamManager::registerBasicExtrinsics() {
+void AlgParamManager::registerBasicExtrinsics() {
     auto extrinsicMgr          = StreamExtrinsicsManager::getInstance();
     depthEmptyStreamProfile_   = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_DEPTH, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
     colorEmptyStreamProfile_   = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_COLOR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
@@ -202,13 +202,13 @@ typedef struct {
     uint32_t height;
 } Resolution;
 
-void G2AlgParamManager::bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
+void AlgParamManager::bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
     bindExtrinsic(streamProfileList);
     bindIntrinsic(streamProfileList);
     bindDisparityParam(streamProfileList);
 }
 
-void G2AlgParamManager::bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
+void AlgParamManager::bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
     auto extrinsicMgr            = StreamExtrinsicsManager::getInstance();
     auto matchEmptyStreamProfile = [&](std::shared_ptr<const StreamProfile> profile) {
         auto spType = profile->getType();
@@ -236,7 +236,7 @@ void G2AlgParamManager::bindExtrinsic(std::vector<std::shared_ptr<const StreamPr
     }
 }
 
-void G2AlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
+void AlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
     auto intrinsicMgr = StreamIntrinsicsManager::getInstance();
     bool mirrored     = false;
 
@@ -313,7 +313,7 @@ void G2AlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const StreamPr
     }
 }
 
-void G2AlgParamManager::bindDisparityParam(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
+void AlgParamManager::bindDisparityParam(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
     auto dispParam    = getCurrentDisparityProcessParam();
     auto intrinsicMgr = StreamIntrinsicsManager::getInstance();
     for(const auto &sp: streamProfileList) {
@@ -324,7 +324,7 @@ void G2AlgParamManager::bindDisparityParam(std::vector<std::shared_ptr<const Str
     }
 }
 
-OBDisparityParam G2AlgParamManager::getCurrentDisparityProcessParam() {
+OBDisparityParam AlgParamManager::getCurrentDisparityProcessParam() {
     try {
         auto owner           = getOwner();
         auto propServer      = owner->getPropertyServer();
@@ -350,7 +350,7 @@ OBDisparityParam G2AlgParamManager::getCurrentDisparityProcessParam() {
     return param;
 }
 
-// bool G2AlgParamManager::isBinocularCamera() const {
+// bool AlgParamManager::isBinocularCamera() const {
 //     // const auto &depthCalib = depthCalibParamList_.front();
 //     // return depthCalib.depthMode == (uint32_t)DEPTH_MODE_STEREO;
 //     return true;

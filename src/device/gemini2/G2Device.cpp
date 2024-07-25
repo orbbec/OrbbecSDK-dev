@@ -25,11 +25,11 @@
 #include "property/CommonPropertyAccessors.hpp"
 #include "property/FilterPropertyAccessors.hpp"
 #include "monitor/DeviceMonitor.hpp"
+#include "param/AlgParamManager.hpp"
 
 #include "G2StreamProfileFilter.hpp"
 #include "G2PropertyAccessors.hpp"
 #include "G2DepthWorkModeManager.hpp"
-#include "G2AlgParamManager.hpp"
 
 #include <algorithm>
 
@@ -63,7 +63,7 @@ void G2Device::init() {
     //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, globalTimestampFitter);
     // }
 
-    auto algParamManager = std::make_shared<G2AlgParamManager>(this);
+    auto algParamManager = std::make_shared<AlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
     auto depthWorkModeManager = std::make_shared<G2DepthWorkModeManager>(this);
@@ -124,7 +124,7 @@ void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<G2AlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<AlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 

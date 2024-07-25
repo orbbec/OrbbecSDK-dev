@@ -11,10 +11,10 @@
 
 namespace libobsensor {
 
-class G2AlgParamManager : public DeviceComponentBase {
+class AlgParamManager : public DeviceComponentBase {
 public:
-    G2AlgParamManager(IDevice *owner);
-    virtual ~G2AlgParamManager() = default;
+    AlgParamManager(IDevice *owner);
+    virtual ~AlgParamManager() = default;
 
     void bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);
     void bindDisparityParam(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);

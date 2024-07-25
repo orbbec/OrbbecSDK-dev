@@ -355,7 +355,7 @@ void DecimationFilter::updateOutputProfile(const std::shared_ptr<const Frame> fr
 
 void DecimationFilter::decimateDepth(uint16_t *frame_data_in, uint16_t *frame_data_out, size_t width_in, size_t scale) {
 
-    // 创建寄存器内部buf
+    // construct internal register buf
     register uint16_t working_kernel[9];
     uint16_t *        pixel_raws[10];  // max scale set 10
     uint16_t *        block_start = const_cast<uint16_t *>(frame_data_in);
@@ -365,19 +365,18 @@ void DecimationFilter::decimateDepth(uint16_t *frame_data_in, uint16_t *frame_da
     MDFUNC            f;
 
     if(scale == 2 || scale == 3) {
-        // 外层循环遍历每一行
+        // loop through rows
         for(int j = 0; j < real_height_; j++) {
 
-            // 获取指针并预取数据
             for(size_t i = 0; i < scale; i++) {
                 pixel_raws[i] = block_start + (width_in * i);
                 //__builtin_prefetch(pixel_raws[i] + (width_in * scale), 0, 3);
             }
 
-            // 按行方向处理
+            // processing row-wisely
             for(size_t i = 0, chunk_offset = 0; i < real_width_; i++, chunk_offset += scale) {
                 wk_count = 0;
-                // kernel处理
+                // processing kernel
                 for(size_t n = 0; n < scale; ++n) {
                     p = pixel_raws[n] + chunk_offset;
                     for(size_t m = 0; m < scale; ++m) {
@@ -396,25 +395,22 @@ void DecimationFilter::decimateDepth(uint16_t *frame_data_in, uint16_t *frame_da
                 }
             }
 
-            // 填充处理块右侧的空白列
+            // filling right side blanks
             for(int k = real_width_; k < padded_width_; k++)
                 *frame_data_out++ = 0;
 
-            // 移动到下一个处理块的起始位置
+            // move to the start position of next processing block
             block_start += width_in * scale;
         }
     }
     else {
 
-        // 外层循环遍历每一行
         for(int j = 0; j < real_height_; j++) {
 
-            // 获取指针
             for(size_t i = 0; i < scale; i++) {
                 pixel_raws[i] = block_start + (width_in * i);
             }
 
-            // 按行方向处理
             for(size_t i = 0, chunk_offset = 0; i < real_width_; i++, chunk_offset += scale) {
                 wk_sum   = 0;
                 wk_count = 0;
@@ -431,15 +427,12 @@ void DecimationFilter::decimateDepth(uint16_t *frame_data_in, uint16_t *frame_da
                 *frame_data_out++ = (uint16_t)(wk_count == 0 ? 0 : wk_sum / wk_count);
             }
 
-            // 填充处理块右侧的空白列
             for(int k = real_width_; k < padded_width_; k++)
                 *frame_data_out++ = 0;
 
-            // 移动到下一个处理块的起始位置
             block_start += width_in * scale;
         }
     }
-    // 使用memset效率会更高
     memset(frame_data_out, 0, (padded_height_ - real_height_) * padded_width_ * sizeof(uint16_t));
 }
 
@@ -525,7 +518,6 @@ void DecimationFilter::decimateOthers(OBFormat format, void *frame_data_in, void
             }
         }
 
-        // 使用memset效率会更高
         memset(q, 0, (padded_height_ - real_height_) * padded_width_ * sizeof(uint8_t) * 2);
     } break;
 
@@ -596,7 +588,6 @@ void DecimationFilter::decimateOthers(OBFormat format, void *frame_data_in, void
             }
         }
 
-        // 使用memset效率会更高
         memset(q, 0, (padded_height_ - real_height_) * padded_width_ * sizeof(uint8_t) * 2);
     } break;
 
@@ -630,7 +621,6 @@ void DecimationFilter::decimateOthers(OBFormat format, void *frame_data_in, void
             }
         }
 
-        // 使用memset效率会更高
         memset(q, 0, (padded_height_ - real_height_) * padded_width_ * sizeof(uint8_t) * 3);
     } break;
 
@@ -695,7 +685,6 @@ void DecimationFilter::decimateOthers(OBFormat format, void *frame_data_in, void
                 *q++ = 0;
         }
 
-        // 使用memset效率会更高
         memset(q, 0, (padded_height_ - real_height_) * padded_width_ * sizeof(uint8_t));
 
     } break;

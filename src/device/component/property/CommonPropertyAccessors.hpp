@@ -17,7 +17,7 @@ public:
     void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
 
 private:
-    IDevice    *device_;
+    IDevice          *device_;
     DeviceComponentId compId_;
 };
 
@@ -79,6 +79,20 @@ public:
     const std::vector<uint8_t> &getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) override;
     void                        setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion) override;
     const std::vector<uint8_t> &getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) override;
+};
+
+class HeartbeatPropertyAccessor : public IPropertyAccessor {
+public:
+    HeartbeatPropertyAccessor(IDevice *owner);
+
+    virtual ~HeartbeatPropertyAccessor() noexcept = default;
+
+    void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
+    void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
+    void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
+
+private:
+    IDevice *owner_;
 };
 
 }  // namespace libobsensor

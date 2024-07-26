@@ -1,5 +1,7 @@
 #include "CommonPropertyAccessors.hpp"
+#include "IDeviceMonitor.hpp"
 
+#include "utils/Utils.hpp"
 namespace libobsensor {
 
 DeviceComponentPropertyAccessor::DeviceComponentPropertyAccessor(IDevice *device, DeviceComponentId compId) : device_(device), compId_(compId) {}
@@ -128,6 +130,35 @@ const std::vector<uint8_t> &LazyPropertyExtensionAccessor::getStructureDataListP
     }
     auto extensionAccessor = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor_);
     return extensionAccessor->getStructureDataListProtoV1_1(propertyId, cmdVersion);
+}
+
+HeartbeatPropertyAccessor::HeartbeatPropertyAccessor(IDevice *owner) : owner_(owner) {}
+
+void HeartbeatPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+    utils::unusedVar(propertyId);
+    auto deviceMonitor = owner_->getComponentT<IDeviceMonitor>(OB_DEV_COMPONENT_DEVICE_MONITOR);
+    if(value.intValue == 1) {
+        deviceMonitor->enableHeartbeat();
+    }
+    else {
+        deviceMonitor->disableHeartbeat();
+    }
+}
+
+void HeartbeatPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
+    utils::unusedVar(propertyId);
+    auto deviceMonitor = owner_->getComponentT<IDeviceMonitor>(OB_DEV_COMPONENT_DEVICE_MONITOR);
+    value->intValue    = deviceMonitor->isHeartbeatEnabled() ? 1 : 0;
+}
+
+void HeartbeatPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
+    OBPropertyValue cur;
+    getPropertyValue(propertyId, &cur);
+    range->cur           = cur;
+    range->min.intValue  = 0;
+    range->max.intValue  = 1;
+    range->step.intValue = 1;
+    range->def.intValue  = 0;
 }
 
 }  // namespace libobsensor

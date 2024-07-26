@@ -10,22 +10,21 @@ public:
     DeviceMonitor(IDevice *owner, std::shared_ptr<ISourcePort> sourcePort);
     virtual ~DeviceMonitor() noexcept;
 
-    void start() override;
-    void stop() override;
-
     OBDeviceState getCurrentDeviceState()  const override;
     int           registerStateChangedCallback(DeviceStateChangedCallback callback) override;
     void          unregisterStateChangedCallback(int callbackId) override;
     void          enableHeartbeat() override;
     void          disableHeartbeat() override;
+    bool          isHeartbeatEnabled() const override;
     void          pauseHeartbeat() override;
     void          resumeHeartbeat() override;
 
     const std::vector<uint8_t> &sendAndReceiveData(const std::vector<uint8_t> &data, uint32_t exceptedRecvLen) override;
 
 private:
+    void start();
+    void stop();
     void heartbeatAndFetchState();
-    void poll();
 
 private:
     std::mutex                       commMutex_;

@@ -55,7 +55,7 @@ OB_EXPORT ob_depth_work_mode_list *ob_device_get_depth_work_mode_list(const ob_d
  * @return The total number contained in ob_depth_work_mode_list
  *
  */
-OB_EXPORT uint32_t ob_depth_work_mode_list_count(const ob_depth_work_mode_list *work_mode_list, ob_error **error);
+OB_EXPORT uint32_t ob_depth_work_mode_list_get_count(const ob_depth_work_mode_list *work_mode_list, ob_error **error);
 
 /**
  * @brief Get the index target of ob_depth_work_mode from work_mode_list
@@ -144,7 +144,7 @@ OB_EXPORT void ob_delete_preset_list(ob_device_preset_list *preset_list, ob_erro
  * @param error  Pointer to an error object that will be set if an error occurs.
  * @return  The number of preset in the preset list.
  */
-OB_EXPORT uint32_t ob_device_preset_list_count(const ob_device_preset_list *preset_list, ob_error **error);
+OB_EXPORT uint32_t ob_device_preset_list_get_count(const ob_device_preset_list *preset_list, ob_error **error);
 
 /**
  * @brief Get the name of the preset in the preset list.
@@ -165,6 +165,13 @@ OB_EXPORT const char *ob_device_preset_list_get_name(const ob_device_preset_list
  * @return  Whether the preset list has the preset. If true, the preset list has the preset. If false, the preset list does not have the preset.
  */
 OB_EXPORT bool ob_device_preset_list_has_preset(const ob_device_preset_list *preset_list, const char *preset_name, ob_error **error);
+
+/**
+ * In order to be compatible with the closed source version of orbbecsdk's interface.
+ * We recommend using the latest interface names for a better experience.
+*/
+#define ob_depth_work_mode_list_count ob_depth_work_mode_list_get_count
+#define ob_device_preset_list_count ob_device_preset_list_get_count
 
 #ifdef __cplusplus
 }

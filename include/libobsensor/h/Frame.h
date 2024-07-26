@@ -517,7 +517,7 @@ OB_EXPORT float ob_gyro_frame_get_temperature(const ob_frame *frame, ob_error **
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return uint32_t return the number of frames
  */
-OB_EXPORT uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error);
+OB_EXPORT uint32_t ob_frameset_get_count(const ob_frame *frameset, ob_error **error);
 
 /**
  * @brief Get the depth frame from the frameset.
@@ -601,7 +601,7 @@ OB_EXPORT void ob_frameset_push_frame(ob_frame *frameset, const ob_frame *frame,
 /**
  * In order to be compatible with the closed source version of orbbecsdk's interface.
  * We recommend using the latest interface names for a better experience.
-*/
+ */
 #define ob_frame_index ob_frame_get_index
 #define ob_frame_format ob_frame_get_format
 #define ob_frame_time_stamp_us ob_frame_get_timestamp_us
@@ -616,7 +616,7 @@ OB_EXPORT void ob_frameset_push_frame(ob_frame *frameset, const ob_frame *frame,
 #define ob_video_frame_height ob_video_frame_get_height
 #define ob_video_frame_pixel_available_bit_size ob_video_frame_get_pixel_available_bit_size
 #define ob_points_frame_get_position_value_scale ob_points_frame_get_coordinate_value_scale
-#define ob_frameset_frame_count ob_frameset_get_frame_count
+#define ob_frameset_frame_count ob_frameset_get_count
 #define ob_frameset_depth_frame ob_frameset_get_depth_frame
 #define ob_frameset_color_frame ob_frameset_get_color_frame
 #define ob_frameset_ir_frame ob_frameset_get_ir_frame
@@ -625,6 +625,24 @@ OB_EXPORT void ob_frameset_push_frame(ob_frame *frameset, const ob_frame *frame,
 #define ob_accel_frame_temperature ob_accel_frame_get_temperature
 #define ob_gyro_frame_value ob_gyro_frame_get_value
 #define ob_gyro_frame_temperature ob_gyro_frame_get_temperature
+#define ob_frameset_get_frame_count ob_frameset_get_count
+
+#define ob_frame_time_stamp(frame, err)                                \
+    do {                                                               \
+        uint64_t timestamp_us = ob_frame_get_timestamp_us(frame, err); \
+        return timestamp_us / 1000;                                    \
+    } while(0);
+
+#define ob_frame_system_time_stamp(frame, err)                                     \
+    do {                                                                           \
+        uint64 system_timestamp_us = ob_frame_get_system_timestamp_us(frame, err); \
+        return system_timestamp_us / 1000;                                         \
+    } while(0);
+
+#define ob_frame_set_system_time_stamp(frame, system_timestamp, err)           \
+    do {                                                                       \
+        ob_frame_set_system_timestamp_us(frame, system_timestamp * 1000, err); \
+    } while(0);
 
 #ifdef __cplusplus
 }

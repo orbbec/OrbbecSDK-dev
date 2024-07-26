@@ -121,7 +121,7 @@ void enumerate_sensor_info(ob_device *device) {
     check_ob_error(&error);
 
     // Get sensor count.
-    uint32_t sensor_count = ob_sensor_list_get_sensor_count(sensor_list, &error);
+    uint32_t sensor_count = ob_sensor_list_get_count(sensor_list, &error);
     check_ob_error(&error);
 
     // Print sensor information.
@@ -210,7 +210,7 @@ int main(void) {
     check_ob_error(&error);
 
     // Get device count from device list.
-    uint32_t dev_count = ob_device_list_get_device_count(dev_list, &error);
+    uint32_t dev_count = ob_device_list_get_count(dev_list, &error);
     check_ob_error(&error);
 
     // Check if any device is connected.

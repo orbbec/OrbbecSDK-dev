@@ -429,7 +429,7 @@ OB_EXPORT void ob_delete_device_list(ob_device_list *list, ob_error **error);
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return uint32_t return the number of devices
  */
-OB_EXPORT uint32_t ob_device_list_get_device_count(const ob_device_list *list, ob_error **error);
+OB_EXPORT uint32_t ob_device_list_get_count(const ob_device_list *list, ob_error **error);
 
 /**
  * @brief Get device name
@@ -549,6 +549,7 @@ OB_EXPORT ob_device *ob_device_list_get_device_by_uid(const ob_device_list *list
  * In order to be compatible with the closed source version of orbbecsdk's interface.
  * We recommend using the latest interface names for a better experience.
 */
+#define ob_device_list_device_count ob_device_list_get_count
 #define ob_device_list_get_extension_info ob_device_info_get_extension_info
 #define ob_device_upgrade ob_device_update_firmware
 #define ob_device_upgrade_from_data ob_device_update_firmware_from_data
@@ -566,6 +567,7 @@ OB_EXPORT ob_device *ob_device_list_get_device_by_uid(const ob_device_list *list
 #define ob_device_info_supported_min_sdk_version ob_device_info_get_supported_min_sdk_version
 #define ob_device_info_asicName ob_device_info_get_asicName
 #define ob_device_info_device_type ob_device_info_get_device_type
+#define ob_device_list_get_device_count ob_device_list_get_count
 
 #ifdef __cplusplus
 }

@@ -264,6 +264,14 @@ public:
         Error::handle(&error);
         return intrinsic;
     }
+
+    OB_DEPRECATED OBAccelFullScaleRange fullScaleRange() const{
+        return getFullScaleRange();
+    }
+
+    OB_DEPRECATED OBAccelSampleRate sampleRate() const{
+        return getSampleRate();
+    }
 };
 
 /**
@@ -309,6 +317,14 @@ public:
         auto      intrinsic = ob_gyro_stream_get_intrinsic(impl_, &error);
         Error::handle(&error);
         return intrinsic;
+    }
+
+    OB_DEPRECATED OBGyroFullScaleRange fullScaleRange() const{
+        return getFullScaleRange();
+    }
+
+    OB_DEPRECATED OBGyroSampleRate sampleRate() const{
+        return getSampleRate();
     }
 };
 

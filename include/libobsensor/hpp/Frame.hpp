@@ -354,8 +354,16 @@ public:
         return getDataSize();
     }
 
+    OB_DEPRECATED uint64_t timeStamp() const {
+        return getTimeStampUs() / 1000;
+    }
+
     OB_DEPRECATED uint64_t timeStampUs() const {
         return getTimeStampUs();
+    }
+
+    OB_DEPRECATED uint64_t systemTimeStamp() const {
+        return getSystemTimeStampUs() / 1000;
     }
 
     OB_DEPRECATED uint64_t systemTimeStampUs() const {
@@ -621,6 +629,14 @@ public:
 
         return temp;
     }
+
+    OB_DEPRECATED OBAccelValue value(){
+        return getValue();
+    }
+
+    OB_DEPRECATED float temperature(){
+        return getTemperature();
+    }
 };
 
 /**
@@ -658,6 +674,14 @@ public:
 
         return temperature;
     }
+
+    OB_DEPRECATED OBGyroValue value(){
+        return getValue();
+    }
+
+    OB_DEPRECATED float temperature(){
+        return getTemperature();
+    }
 };
 
 /**
@@ -678,7 +702,7 @@ public:
      */
     uint32_t getCount() const {
         ob_error *error = nullptr;
-        auto      count = ob_frameset_get_frame_count(impl_, &error);
+        auto      count = ob_frameset_get_count(impl_, &error);
         Error::handle(&error);
         return count;
     }
@@ -738,32 +762,36 @@ public:
      * In order to be compatible with the closed source version of orbbecsdk's interface.
      * We recommend using the latest interface names for a better experience.
      */
-    OB_DEPRECATED uint32_t count() const {
+    OB_DEPRECATED uint32_t frameCount() const {
         return getCount();
     }
 
     OB_DEPRECATED std::shared_ptr<DepthFrame> depthFrame() {
-        auto frame = getFrame(OB_FRAME_DEPTH);
+        auto frame      = getFrame(OB_FRAME_DEPTH);
         auto depthFrame = frame->as<ob::DepthFrame>();
         return depthFrame;
     }
 
     OB_DEPRECATED std::shared_ptr<ColorFrame> colorFrame() {
-        auto frame = getFrame(OB_FRAME_COLOR);
+        auto frame      = getFrame(OB_FRAME_COLOR);
         auto colorFrame = frame->as<ob::ColorFrame>();
         return colorFrame;
     }
 
     OB_DEPRECATED std::shared_ptr<IRFrame> irFrame() {
-        auto frame = getFrame(OB_FRAME_IR);
+        auto frame   = getFrame(OB_FRAME_IR);
         auto irFrame = frame->as<ob::IRFrame>();
         return irFrame;
     }
 
     OB_DEPRECATED std::shared_ptr<PointsFrame> pointsFrame() {
-        auto frame = getFrame(OB_FRAME_POINTS);
+        auto frame       = getFrame(OB_FRAME_POINTS);
         auto pointsFrame = frame->as<ob::PointsFrame>();
         return pointsFrame;
+    }
+
+    OB_DEPRECATED std::shared_ptr<Frame> getFrame(int index){
+        return getFrameByIndex(index);
     }
 };
 

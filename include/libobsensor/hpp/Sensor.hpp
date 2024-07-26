@@ -158,7 +158,7 @@ public:
      */
     uint32_t getCount() const {
         ob_error *error = nullptr;
-        auto      count = ob_sensor_list_get_sensor_count(impl_, &error);
+        auto      count = ob_sensor_list_get_count(impl_, &error);
         Error::handle(&error);
         return count;
     }

@@ -56,7 +56,7 @@ OB_EXPORT void ob_sensor_stop(ob_sensor *sensor, ob_error **error);
 OB_EXPORT void ob_delete_sensor(ob_sensor *sensor, ob_error **error);
 
 /**
- * @brief Request the list of recommended filter list
+ * @brief Request the list of recommended filter list.
  *
  * @param[in] sensor The ob_sensor object.
  * @param[out] error Pointer to an error object that will be set if an error occurs.
@@ -72,7 +72,7 @@ OB_EXPORT ob_filter_list *ob_sensor_get_recommended_filter_list(const ob_sensor 
  * @param[out] error Logs error messages.
  * @return The number of sensors in the list.
  */
-OB_EXPORT uint32_t ob_sensor_list_get_sensor_count(const ob_sensor_list *sensor_list, ob_error **error);
+OB_EXPORT uint32_t ob_sensor_list_get_count(const ob_sensor_list *sensor_list, ob_error **error);
 
 /**
  * @brief Get the sensor type.
@@ -111,6 +111,8 @@ OB_EXPORT ob_sensor *ob_sensor_list_get_sensor(const ob_sensor_list *sensor_list
  * @param[out] error Logs error messages.
  */
 OB_EXPORT void ob_delete_sensor_list(ob_sensor_list *sensor_list, ob_error **error);
+
+#define ob_sensor_list_get_sensor_count ob_sensor_list_get_count
 
 #ifdef __cplusplus
 }

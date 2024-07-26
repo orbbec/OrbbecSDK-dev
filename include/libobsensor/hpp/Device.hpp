@@ -893,7 +893,7 @@ public:
      */
     uint32_t getCount() const {
         ob_error *error = nullptr;
-        auto      count = ob_device_list_get_device_count(impl_, &error);
+        auto      count = ob_device_list_get_count(impl_, &error);
         Error::handle(&error);
         return count;
     }
@@ -1042,6 +1042,11 @@ public:
         return std::make_shared<Device>(device);
     }
 
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
     OB_DEPRECATED uint32_t deviceCount() const {
         return getCount();
     }
@@ -1094,7 +1099,7 @@ public:
      */
     uint32_t getCount() {
         ob_error *error = nullptr;
-        auto      count = ob_depth_work_mode_list_count(impl_, &error);
+        auto      count = ob_depth_work_mode_list_get_count(impl_, &error);
         Error::handle(&error);
         return count;
     }
@@ -1154,7 +1159,7 @@ public:
      */
     uint32_t getCount() {
         ob_error *error = nullptr;
-        auto      count = ob_device_preset_list_count(impl_, &error);
+        auto      count = ob_device_preset_list_get_count(impl_, &error);
         Error::handle(&error);
         return count;
     }
@@ -1183,6 +1188,11 @@ public:
         Error::handle(&error);
         return result;
     }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
     OB_DEPRECATED uint32_t count() {
         return getCount();
     }

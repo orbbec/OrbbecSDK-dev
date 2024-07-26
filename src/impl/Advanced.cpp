@@ -53,7 +53,7 @@ ob_depth_work_mode_list *ob_device_get_depth_work_mode_list(const ob_device *dev
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)
 
-uint32_t ob_depth_work_mode_list_count(const ob_depth_work_mode_list *work_mode_list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_depth_work_mode_list_get_count(const ob_depth_work_mode_list *work_mode_list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(work_mode_list);
     return static_cast<uint32_t>(work_mode_list->workModeList.size());
 }
@@ -131,7 +131,7 @@ void ob_delete_preset_list(ob_device_preset_list *preset_list, ob_error **error)
 }
 HANDLE_EXCEPTIONS_NO_RETURN(preset_list)
 
-uint32_t ob_device_preset_list_count(const ob_device_preset_list *preset_list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_device_preset_list_get_count(const ob_device_preset_list *preset_list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(preset_list);
     return static_cast<uint32_t>(preset_list->presetList.size());
 }

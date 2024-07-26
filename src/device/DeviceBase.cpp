@@ -36,6 +36,10 @@ const std::string &DeviceBase::getExtensionInfo(const std::string &infoKey) cons
 DeviceBase::~DeviceBase() noexcept = default;
 
 void DeviceBase::deactivate() {
+    if(hasAnySensorStreamActivated()) {
+        LOG_WARN("Device is deactivated or disconnected while there are still sensors streaming!");
+    }
+
     std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
     components_.clear();
     sensorPortInfos_.clear();

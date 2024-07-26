@@ -235,7 +235,7 @@ SourcePortInfoList WinPal::queryUsbSourcePortInfos() {
     const auto &usbInfoList = usbEnumerator_->queryUsbInterfaces();
     for(const auto &info: usbInfoList) {
         if(info.vid == 0x2bc5 && (info.cls == OB_USB_CLASS_HID || info.cls == OB_USB_CLASS_VENDOR_SPECIFIC)) {
-            // 1. Filter non-Obi devices 2. Filter uvc class
+            // 1. Filter non orbbec devices 2. Filter uvc class
             auto portInfo      = std::make_shared<USBSourcePortInfo>();
             portInfo->portType = info.cls == OB_USB_CLASS_HID ? SOURCE_PORT_USB_HID : SOURCE_PORT_USB_VENDOR;
             portInfo->url      = info.url;

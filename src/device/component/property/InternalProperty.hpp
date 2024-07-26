@@ -5,6 +5,8 @@ namespace libobsensor {
 
 typedef enum {
     OB_PROP_DEVICE_RESET_BOOL               = 29,  /**< Reset/reboot the device*/
+    OB_PROP_TOF_EXPOSURE_TIME_INT           = 47,  /**<TOF exposure time // only sdk-firmware internal use */
+    OB_PROP_TOF_GAIN_INT                    = 48,  /**<TOF gain value // only sdk-firmware internal use */
     OB_PROP_REBOOT_DEVICE_BOOL              = 57,  /**< Reboot the device*/
     OB_PROP_DEPTH_MIRROR_MODULE_STATUS_BOOL = 108, /**< Depth mirror module status*/
 

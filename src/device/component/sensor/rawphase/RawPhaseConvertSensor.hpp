@@ -15,7 +15,6 @@ public:
     void start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) override;
     void stop() override;
 
-   // void setIsPassiveIR(bool isPassiveIR);
 
 private:
     void updateStreamProfileList();

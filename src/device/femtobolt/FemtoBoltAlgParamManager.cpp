@@ -13,8 +13,8 @@
 
 namespace libobsensor {
 FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : DeviceComponentBase(owner) {
-  //  fetchParams();
-   // registerBasicExtrinsics();
+    fetchParams();
+    registerBasicExtrinsics();
 }
 
 std::vector<OBCameraParam> alignCalibParamParse(uint8_t *filedata, uint32_t size) {
@@ -139,6 +139,7 @@ void FemtoBoltAlgParamManager::registerBasicExtrinsics() {
     auto extrinsicMgr        = StreamExtrinsicsManager::getInstance();
     depthEmptyStreamProfile_ = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_DEPTH, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
     colorEmptyStreamProfile_ = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_COLOR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
+    irEmptyStreamProfile_    = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_IR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
     accelEmptyStreamProfile_ = StreamProfileFactory::createAccelStreamProfile(OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
     gyroEmptyStreamProfile_  = StreamProfileFactory::createGyroStreamProfile(OB_GYRO_FS_16dps, OB_SAMPLE_RATE_1_5625_HZ);
 
@@ -170,7 +171,7 @@ void FemtoBoltAlgParamManager::registerBasicExtrinsics() {
 
 void FemtoBoltAlgParamManager::bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
     bindExtrinsic(streamProfileList);
-    bindExtrinsic(streamProfileList);
+    bindIntrinsic(streamProfileList);
 }
 
 void FemtoBoltAlgParamManager::bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
@@ -183,6 +184,9 @@ void FemtoBoltAlgParamManager::bindExtrinsic(std::vector<std::shared_ptr<const S
             break;
         case OB_STREAM_COLOR:
             return colorEmptyStreamProfile_;
+            break;
+        case OB_STREAM_IR:
+            return irEmptyStreamProfile_;
             break;
         case OB_STREAM_ACCEL:
             return accelEmptyStreamProfile_;
@@ -231,8 +235,6 @@ void FemtoBoltAlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const S
                 break;
             case OB_STREAM_DEPTH:
             case OB_STREAM_IR:
-            case OB_STREAM_IR_LEFT:
-            case OB_STREAM_IR_RIGHT:
                 intrinsic  = param.depthIntrinsic;
                 distortion = param.depthDistortion;
                 break;

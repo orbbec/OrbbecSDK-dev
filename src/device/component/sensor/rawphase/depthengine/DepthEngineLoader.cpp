@@ -3,7 +3,7 @@
 namespace libobsensor {
 
 DepthEngineLoadFactory::DepthEngineLoadFactory(IDevice *owner) : DeviceComponentBase(owner) {
-    dylib_ = std::make_shared<dylib>(depthEngineLoadPath_, "depthengine_2_0");
+    dylib_ = std::make_shared<dylib>(depthEngineLoadPath_, "depthengine");
 
     context_ = std::make_shared<deloader_global_context_t>();
 

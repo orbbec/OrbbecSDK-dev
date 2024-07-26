@@ -36,6 +36,7 @@ private:
     std::vector<OBD2CProfile>            d2cProfileList_;
     std::shared_ptr<const StreamProfile> colorEmptyStreamProfile_;
     std::shared_ptr<const StreamProfile> depthEmptyStreamProfile_;
+    std::shared_ptr<const StreamProfile> irEmptyStreamProfile_;
     std::shared_ptr<const StreamProfile> accelEmptyStreamProfile_;
     std::shared_ptr<const StreamProfile> gyroEmptyStreamProfile_;
 };

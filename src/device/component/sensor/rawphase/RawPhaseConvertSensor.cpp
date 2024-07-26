@@ -15,30 +15,6 @@ RawPhaseConvertSensor::RawPhaseConvertSensor(IDevice *owner, const std::shared_p
     LOG_DEBUG("RawPhaseConvertSensor is created!");
 }
 
-// void RawPhaseConvertSensor::setIsPassiveIR(bool isPassiveIR) {
-//     isPassiveIR_ = isPassiveIR;
-
-//     for(auto it = profileVector_.begin(); it != profileVector_.end();) {
-//         if(it->first.first == 1024 && it->first.second == 1024) {
-//             it = profileVector_.erase(it);
-//         }
-//         else {
-//             ++it;
-//         }
-//     }
-
-//     if(isPassiveIR) {
-//         profileVector_.push_back({ { 1024, 1024 }, { 8192, 130 } });
-//     }
-//     else {
-//         profileVector_.push_back({ { 1024, 1024 }, { 4096, 1154 } });
-//     }
-//     streamProfileList_.clear();
-
-//     streamProfileList_ = getStreamProfileList();
-//     updateStreamProfileList();
-// }
-
 RawPhaseConvertSensor::~RawPhaseConvertSensor() noexcept {
     if(isStreamActivated()) {
         TRY_EXECUTE(stop());

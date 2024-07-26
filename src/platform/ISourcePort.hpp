@@ -20,6 +20,7 @@ enum SourcePortType {
     SOURCE_PORT_UNKNOWN = 0xff,
 };
 
+
 struct SourcePortInfo {
     virtual ~SourcePortInfo() noexcept = default;
     SourcePortType portType;
@@ -75,7 +76,7 @@ struct USBSourcePortInfo : public SourcePortInfo {
     std::string infName;       // interface name
     std::string hubId;         // hub id
 
-    bool        equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
+    bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
         if(cmpInfo->portType != portType) {
             return false;
         }
@@ -116,9 +117,9 @@ class IVideoStreamPort : virtual public ISourcePort {  // Virtual inheritance so
 public:
     ~IVideoStreamPort() noexcept override = default;
 
-    virtual StreamProfileList       getStreamProfileList()                                                                  = 0;
-    virtual void                    startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) = 0;
-    virtual void                    stopStream(std::shared_ptr<const StreamProfile> profile)                                = 0;
-    virtual void                    stopAllStream()                                                                         = 0;
+    virtual StreamProfileList getStreamProfileList()                                                                  = 0;
+    virtual void              startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) = 0;
+    virtual void              stopStream(std::shared_ptr<const StreamProfile> profile)                                = 0;
+    virtual void              stopAllStream()                                                                         = 0;
 };
 }  // namespace libobsensor

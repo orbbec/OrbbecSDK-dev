@@ -8,15 +8,14 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/G330Device.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330MetadataTypes.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330MetadataParser.hpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330MetadataParser.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330TimestampCalculator.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330TimestampCalculator.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330AlgParamManager.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330AlgParamManager.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330PresetManager.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330PresetManager.hpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330DepthAlgModeManager.cpp
-            ${CMAKE_CURRENT_LIST_DIR}/G330DepthAlgModeManager.hpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330DepthWorkModeManager.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/G330DepthWorkModeManager.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330SensorStreamStrategy.cpp
             ${CMAKE_CURRENT_LIST_DIR}/G330SensorStreamStrategy.hpp
             ${CMAKE_CURRENT_LIST_DIR}/G330DeviceSyncConfigurator.cpp

@@ -32,7 +32,7 @@
 #include "G330DeviceSyncConfigurator.hpp"
 #include "G330AlgParamManager.hpp"
 #include "G330PresetManager.hpp"
-#include "G330DepthAlgModeManager.hpp"
+#include "G330DepthWorkModeManager.hpp"
 #include "G330SensorStreamStrategy.hpp"
 #include "G330PropertyAccessors.hpp"
 
@@ -44,6 +44,12 @@ constexpr uint8_t INTERFACE_COLOR = 4;
 constexpr uint8_t INTERFACE_DEPTH = 0;
 
 G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
+    init();
+}
+
+G330Device::~G330Device() noexcept {}
+
+void G330Device::init() {
     initSensorList();
     initProperties();
     initFrameMetadataParserContainer();
@@ -65,8 +71,8 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : Dev
     auto algParamManager = std::make_shared<G330AlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
-    auto depthAlgModeManager = std::make_shared<G330DepthAlgModeManager>(this);
-    registerComponent(OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER, depthAlgModeManager);
+    auto depthWorkModeManager = std::make_shared<G330DepthWorkModeManager>(this);
+    registerComponent(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER, depthWorkModeManager);
 
     auto presetManager = std::make_shared<G330PresetManager>(this);
     registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
@@ -81,8 +87,6 @@ G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : Dev
     auto deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 }
-
-G330Device::~G330Device() noexcept {}
 
 void G330Device::fetchDeviceInfo() {
     auto propServer                   = getPropertyServer();
@@ -109,7 +113,7 @@ void G330Device::fetchDeviceInfo() {
 }
 
 void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
-    auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFormEnvConfig(deviceInfo_->name_, sensor->getSensorType());
+    auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensor->getSensorType());
     if(streamProfile) {
         sensor->updateDefaultStreamProfile(streamProfile);
     }
@@ -132,7 +136,7 @@ void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
         if(state == STREAM_STATE_STARTING) {
             streamStrategy->markStreamStarted(sp);
         }
-        else if(state == STREAM_STATE_STOPED) {
+        else if(state == STREAM_STATE_STOPPED) {
             streamStrategy->markStreamStopped(sp);
         }
     });
@@ -363,12 +367,12 @@ void G330Device::initSensorList() {
             // the gyro and accel are both on the same port and share the same filter
             auto pal                = ObPal::getInstance();
             auto port               = pal->getSourcePort(imuPortInfo);
-            auto imuCorrecterFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
-            if(!imuCorrecterFilter) {
+            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
+            if(!imuCorrectorFilter) {
                 throw not_implemented_exception("Cannot find IMU correcter filter!");
             }
             auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
-            auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrecterFilter);
+            auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrectorFilter);
             return imuStreamer;
         });
 
@@ -409,10 +413,10 @@ void G330Device::initSensorList() {
 void G330Device::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
-    auto g330PropertyAccessor = std::make_shared<G330Disp2DepthPropertyAccessor>(this);
-    propertyServer->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", g330PropertyAccessor);
-    propertyServer->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", g330PropertyAccessor);
-    propertyServer->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", g330PropertyAccessor);
+    auto d2dPropertyAccessor = std::make_shared<G330Disp2DepthPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_PROP_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", d2dPropertyAccessor);      // hw
+    propertyServer->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", d2dPropertyAccessor);  // sw
+    propertyServer->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", d2dPropertyAccessor);
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
@@ -420,9 +424,9 @@ void G330Device::initProperties() {
         auto &sourcePortInfo = getSensorPortInfo(sensor);
         if(sensor == OB_SENSOR_COLOR) {
             auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
-                auto pal             = ObPal::getInstance();
-                auto port            = pal->getSourcePort(sourcePortInfo);
-                auto accessor        = std::make_shared<UvcPropertyAccessor>(port);
+                auto pal      = ObPal::getInstance();
+                auto port     = pal->getSourcePort(sourcePortInfo);
+                auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
 
@@ -443,9 +447,9 @@ void G330Device::initProperties() {
         }
         else if(sensor == OB_SENSOR_DEPTH) {
             auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
-                auto pal             = ObPal::getInstance();
-                auto port            = pal->getSourcePort(sourcePortInfo);
-                auto accessor        = std::make_shared<UvcPropertyAccessor>(port);
+                auto pal      = ObPal::getInstance();
+                auto port     = pal->getSourcePort(sourcePortInfo);
+                auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
             propertyServer->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyAccessor);
@@ -522,16 +526,16 @@ void G330Device::initProperties() {
             propertyServer->registerProperty(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, "", "rw", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
-            auto imuCorrecterFilter = getSensorFrameFilter("IMUCorrector", sensor);
-            if(imuCorrecterFilter) {
-                auto filterStateProperty = std::make_shared<FilterStatePropertyAccessor>(imuCorrecterFilter);
+            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);
+            if(imuCorrectorFilter) {
+                auto filterStateProperty = std::make_shared<FilterStatePropertyAccessor>(imuCorrectorFilter);
                 propertyServer->registerProperty(OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL, "rw", "rw", filterStateProperty);
             }
         }
         else if(sensor == OB_SENSOR_GYRO) {
-            auto imuCorrecterFilter = getSensorFrameFilter("IMUCorrector", sensor);
-            if(imuCorrecterFilter) {
-                auto filterStateProperty = std::make_shared<FilterStatePropertyAccessor>(imuCorrecterFilter);
+            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);
+            if(imuCorrectorFilter) {
+                auto filterStateProperty = std::make_shared<FilterStatePropertyAccessor>(imuCorrectorFilter);
                 propertyServer->registerProperty(OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL, "rw", "rw", filterStateProperty);
             }
         }
@@ -688,5 +692,4 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
 
     return {};
 }
-
 }  // namespace libobsensor

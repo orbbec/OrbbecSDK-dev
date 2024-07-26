@@ -81,31 +81,6 @@ float IMUCorrector::calculateRegisterTemperature(int16_t tempValue) {
 
 IMUCorrector::IMUCorrector(const std::string &name) : FilterBase(name) {}
 
-// void IMUCorrector::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
-//     if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL) {
-//         throw invalid_value_exception("Not support this property");
-//     }
-//     FilterBase::enable(static_cast<bool>(value.intValue));
-// }
-
-// void IMUCorrector::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
-//     if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL) {
-//         throw invalid_value_exception("Not support this property");
-//     }
-//     value->intValue = static_cast<int32_t>(isEnabled());
-// }
-
-// void IMUCorrector::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
-//     if(propertyId != OB_PROP_SDK_ACCEL_FRAME_TRANSFORMED_BOOL && propertyId != OB_PROP_SDK_GYRO_FRAME_TRANSFORMED_BOOL) {
-//         throw invalid_value_exception("Not support this property");
-//     }
-//     range->cur.intValue  = static_cast<int32_t>(isEnabled());
-//     range->def.intValue  = 1;
-//     range->max.intValue  = 1;
-//     range->min.intValue  = 0;
-//     range->step.intValue = 1;
-// }
-
 void IMUCorrector::updateConfig(std::vector<std::string> &params) {
     if(params.size() != 0) {
         throw unsupported_operation_exception("IMUCorrector update config error: unsupported operation.");

@@ -238,26 +238,38 @@ size_t Frame::getDataBufSize() const {
 }
 
 VideoFrame::VideoFrame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
-    : Frame(data, dataBufSize, type, bufferReclaimFunc), availableBitSize_(0) {}
+    : Frame(data, dataBufSize, type, bufferReclaimFunc), availablePixelBitSize_(0), pixelType_(OB_PIXEL_UNKNOWN) {}
+
+void VideoFrame::setPixelType(OBPixelType pixelType) {
+    pixelType_ = pixelType;
+}
+
+OBPixelType VideoFrame::getPixelType() const {
+    return pixelType_;
+}
+
+VideoFrame::VideoFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
+    : Frame(data, dataBufSize, OB_FRAME_VIDEO, bufferReclaimFunc), availablePixelBitSize_(0), pixelType_(OB_PIXEL_UNKNOWN) {}
 
 uint8_t VideoFrame::getPixelAvailableBitSize() const {
-    if(availableBitSize_ == 0) {
+    if(availablePixelBitSize_ == 0) {
         auto format = getFormat();
         return static_cast<uint8_t>(utils::getBytesPerPixel(format) * 8);
     }
-    return availableBitSize_;
+    return availablePixelBitSize_;
 }
 
 void VideoFrame::setPixelAvailableBitSize(uint8_t bitSize) {
-    availableBitSize_ = bitSize;
+    availablePixelBitSize_ = bitSize;
 }
 
 void VideoFrame::copyInfoFromOther(std::shared_ptr<const Frame> sourceFrame) {
     Frame::copyInfoFromOther(sourceFrame);
     if(sourceFrame->is<VideoFrame>()) {
-        auto vf           = sourceFrame->as<VideoFrame>();
-        availableBitSize_ = vf->availableBitSize_;
-        stride_           = vf->stride_;
+        auto vf                = sourceFrame->as<VideoFrame>();
+        pixelType_             = vf->pixelType_;
+        availablePixelBitSize_ = vf->availablePixelBitSize_;
+        stride_                = vf->stride_;
     }
 }
 
@@ -265,7 +277,9 @@ ColorFrame::ColorFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc
     : VideoFrame(data, dataBufSize, OB_FRAME_COLOR, bufferReclaimFunc) {}
 
 DepthFrame::DepthFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
-    : VideoFrame(data, dataBufSize, OB_FRAME_DEPTH, bufferReclaimFunc), valueScale_(1.0f) {}
+    : VideoFrame(data, dataBufSize, OB_FRAME_DEPTH, bufferReclaimFunc), valueScale_(1.0f) {
+    setPixelType(OB_PIXEL_DEPTH);  // set default pixel type to OB_PIXEL_DEPTH
+}
 
 void DepthFrame::setValueScale(float valueScale) {
     valueScale_ = valueScale;

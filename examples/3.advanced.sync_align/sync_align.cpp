@@ -10,9 +10,8 @@ float   alpha      = 0.5;
 uint8_t align_mode = 0;
 
 // key press event processing
-void handleKeyPress(ob_smpl::CVWindow &win, std::shared_ptr<ob::Pipeline> pipe /*, std::shared_ptr<ob::Config> config*/) {
+void handleKeyPress(ob_smpl::CVWindow &win, std::shared_ptr<ob::Pipeline> pipe, int key) {
     ////Get the key value
-    int key = win.waitKey(1);
     if(key == 'F' || key == 'f') {
         // Press the F key to switch synchronization
         sync = !sync;
@@ -53,7 +52,10 @@ int main(void) try {
 
     // Create a window for rendering and set the resolution of the window
     ob_smpl::CVWindow win("Sync&Align", 1280, 720, ob_smpl::ARRANGE_OVERLAY);
-    win.setKeyPrompt("'T': Switch Align Mode, 'F': Toggle Synchronization");
+    // set key prompt
+    win.setKeyPrompt("'T': Switch Align Mode, 'F': Toggle Synchronization, '+/-': Adjust Transparency");
+    // set the callback function for the window to handle key press events
+    win.setKeyPressedCallback([&win, pipe](int key) { handleKeyPress(win, pipe, key); });
 
     // Create a filter to align depth frame to color frame
     auto depth2colorAlign = std::make_shared<ob::Align>(OB_STREAM_COLOR);
@@ -66,9 +68,6 @@ int main(void) try {
     color2depthAlign->setCallBack([&win](std::shared_ptr<ob::Frame> frame) { win.pushFramesToView(frame); });
 
     while(win.run()) {
-        // Handle key press event
-        handleKeyPress(win, pipe);
-
         // Wait for a frameset from the pipeline
         auto frameSet = pipe->waitForFrameset(100);
         if(frameSet == nullptr) {

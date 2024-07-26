@@ -135,7 +135,7 @@ void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
                        sensorType_);
         return;
     }
-    else if(IS_FIXED_SIZE_FORMAT(activatedStreamProfile_->getFormat()) && maxFrameDataSize != dataSize) {
+    else if(IS_FIXED_SIZE_FORMAT(format) && maxFrameDataSize != dataSize) {
         LOG_WARN_INTVL("This frame will be dropped because the data size does not match the expectation! size={}, expected={} @{}", dataSize, maxFrameDataSize,
                        sensorType_);
         return;
@@ -182,7 +182,7 @@ void VideoSensor::stop() {
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
     vsPort->stopStream(currentBackendStreamProfile_);
 
-    updateStreamState(STREAM_STATE_STOPED);
+    updateStreamState(STREAM_STATE_STOPPED);
     activatedStreamProfile_.reset();
     frameCallback_ = nullptr;
 }

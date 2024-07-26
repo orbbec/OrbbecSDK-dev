@@ -107,7 +107,14 @@ typedef struct {
     uint8_t  checksum[16];  ///< The camera depth mode corresponds to the hash binary array
     char     name[32];      ///< name
     uint32_t optionCode;    // OBDepthModeOptionCode
-} OBDepthAlgModeChecksum;
+} OBDepthAlgModeChecksum, OBDepthWorkModeChecksum;
+
+typedef enum {
+    NORMAL                             = 0,           // Normal mode, no special processing required
+    MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL = 2,           // Gemini2 calibration mode, right IR data goes through the depth channel
+    RIGHT_IR_NO_FROM_DEPTH_CHANNEL     = 4,           // Gemini2XL, right IR goes to the right IR channel
+    INVALID                            = 0xffffffff,  // Invalid value
+} OBDepthModeOptionCode;
 
 // Orbbec Magnetometer model
 typedef struct {

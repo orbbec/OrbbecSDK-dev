@@ -2,7 +2,7 @@
 
 #include "ImplTypes.hpp"
 
-#include "IDepthAlgModeManager.hpp"
+#include "IDepthWorkModeManager.hpp"
 #include "IPresetManager.hpp"
 #include "IDevice.hpp"
 #include "IDeviceComponent.hpp"
@@ -13,8 +13,8 @@ extern "C" {
 
 ob_depth_work_mode ob_device_get_current_depth_work_mode(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto               algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-    auto               checksum   = algModeMgr->getCurrentDepthAlgModeChecksum();
+    auto               workModeMgr = device->device->getComponentT<libobsensor::IDepthWorkModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+    auto               checksum    = workModeMgr->getCurrentDepthWorkModeChecksum();
     ob_depth_work_mode work_mode;
     memcpy(work_mode.checksum, checksum.checksum, sizeof(checksum.checksum));
     memcpy(work_mode.name, checksum.name, sizeof(work_mode.name));
@@ -26,8 +26,8 @@ ob_status ob_device_switch_depth_work_mode(ob_device *device, const ob_depth_wor
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(work_mode);
 
-    auto algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-    algModeMgr->switchDepthAlgMode(work_mode->name);
+    auto workModeMgr = device->device->getComponentT<libobsensor::IDepthWorkModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+    workModeMgr->switchDepthWorkMode(work_mode->name);
     return OB_STATUS_OK;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_STATUS_ERROR, device, work_mode)
@@ -36,8 +36,8 @@ ob_status ob_device_switch_depth_work_mode_by_name(ob_device *device, const char
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(mode_name);
 
-    auto algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-    algModeMgr->switchDepthAlgMode(mode_name);
+    auto workModeMgr = device->device->getComponentT<libobsensor::IDepthWorkModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+    workModeMgr->switchDepthWorkMode(mode_name);
     return OB_STATUS_OK;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_STATUS_ERROR, device, mode_name)
@@ -45,8 +45,8 @@ HANDLE_EXCEPTIONS_AND_RETURN(OB_STATUS_ERROR, device, mode_name)
 ob_depth_work_mode_list *ob_device_get_depth_work_mode_list(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
 
-    auto algModeMgr    = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-    auto workModeList = algModeMgr->getDepthAlgModeList();
+    auto workModeMgr   = device->device->getComponentT<libobsensor::IDepthWorkModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+    auto workModeList  = workModeMgr->getDepthWorkModeList();
     auto impl          = new ob_depth_work_mode_list();
     impl->workModeList = workModeList;
     return impl;

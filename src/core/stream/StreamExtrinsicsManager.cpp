@@ -179,14 +179,14 @@ OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamP
         throw invalid_value_exception(utils::string::to_string() << "Can not find path to calculate the extrinsics from" << fromId << "to" << toId);
     }
 
-    LOG_TRACE("Extrinsics path:");
-    for(auto iter = path.begin(); iter != path.end(); ++iter) {
-        auto target = iter + 1;
-        if(target == path.end()) {
-            break;
-        }
-        LOG_TRACE(" - {} -> {} ", iter->first, target->first);
-    }
+    // LOG_TRACE("Extrinsics path:");
+    // for(auto iter = path.begin(); iter != path.end(); ++iter) {
+    //     auto target = iter + 1;
+    //     if(target == path.end()) {
+    //         break;
+    //     }
+    //     LOG_TRACE(" - {} -> {} ", iter->first, target->first);
+    // }
     if(path.size() == 2) {
         return path[1].second;
     }
@@ -200,7 +200,7 @@ OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamP
 
 bool StreamExtrinsicsManager::searchPath(std::vector<std::pair<uint64_t, OBExtrinsic>> &path, uint64_t fromId, uint64_t toId) const {
 
-    LOG_TRACE("searchPath: {} -> {}", fromId, toId);
+    // LOG_TRACE("searchPath: {} -> {}", fromId, toId);
     // Check if the from node is directly connected to the to node
     auto extList = extrinsicsGraph_.at(fromId);
     for(const auto &extPair: extList) {

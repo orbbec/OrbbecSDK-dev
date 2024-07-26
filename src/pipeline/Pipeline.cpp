@@ -13,7 +13,7 @@
 #include <algorithm>
 
 namespace libobsensor {
-Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), config_(nullptr), streamState_(STREAM_STATE_STOPED), pipelineCallback_(nullptr) {
+Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), config_(nullptr), streamState_(STREAM_STATE_STOPPED), pipelineCallback_(nullptr) {
     LOG_DEBUG("Pipeline init ...");
     auto sensorTypeList = device_->getSensorTypeList();
     if(sensorTypeList.empty()) {
@@ -152,14 +152,14 @@ std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config
         auto sensorType = utils::mapStreamTypeToSensorType(streamType);
         auto sensor     = device_->getSensor(sensorType);
         if(!sensor) {
-            throw std::runtime_error("No sensor matched!");
+            throw invalid_value_exception(utils::string::to_string() << "No matched sensor found for:" << sensorType);
         }
         auto sensorSpList = sensor->getStreamProfileList();
         if(sensorType == OB_SENSOR_ACCEL) {
             auto profile            = sp->as<AccelStreamProfile>();
             auto matchedProfileList = matchAccelStreamProfile(sensorSpList, profile->getFullScaleRange(), profile->getSampleRate());
             if(matchedProfileList.empty()) {
-                throw std::runtime_error("No matched profile found!");
+                throw invalid_value_exception(utils::string::to_string() << "No matched profile found for:" << sp);
             }
             config->enableStream(matchedProfileList.front());
         }
@@ -167,7 +167,7 @@ std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config
             auto profile            = sp->as<GyroStreamProfile>();
             auto matchedProfileList = matchGyroStreamProfile(sensorSpList, profile->getFullScaleRange(), profile->getSampleRate());
             if(matchedProfileList.empty()) {
-                throw std::runtime_error("No matched profile found!");
+                throw invalid_value_exception(utils::string::to_string() << "No matched profile found for:" << sp);
             }
             config->enableStream(matchedProfileList.front());
         }
@@ -175,7 +175,7 @@ std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config
             auto profile            = sp->as<VideoStreamProfile>();
             auto matchedProfileList = matchVideoStreamProfile(sensorSpList, profile->getWidth(), profile->getHeight(), profile->getFps(), profile->getFormat());
             if(matchedProfileList.empty()) {
-                throw std::runtime_error("No matched profile found!");
+                throw invalid_value_exception(utils::string::to_string() << "No matched profile found for: " << sp);
             }
             config->enableStream(matchedProfileList.front());
         }
@@ -248,7 +248,7 @@ void Pipeline::startStream() {
 
 void Pipeline::onFrameCallback(std::shared_ptr<const Frame> frame) {
     std::unique_lock<std::mutex> lk(streamMutex_);
-    if(streamState_ != STREAM_STATE_STOPED && streamState_ != STREAM_STATE_STOPPING) {
+    if(streamState_ != STREAM_STATE_STOPPED && streamState_ != STREAM_STATE_STOPPING) {
         if(streamState_ == STREAM_STATE_STARTING) {
             streamState_ = STREAM_STATE_STREAMING;
         }
@@ -309,7 +309,7 @@ void Pipeline::stopStream() {
 
 void Pipeline::stop() {
     LOG_INFO("Try to stop pipeline!");
-    if(streamState_ != STREAM_STATE_STOPED) {
+    if(streamState_ != STREAM_STATE_STOPPED) {
         stopStream();
     }
 
@@ -326,7 +326,7 @@ void Pipeline::stop() {
     // clear callback
     pipelineCallback_ = nullptr;
 
-    streamState_ = STREAM_STATE_STOPED;
+    streamState_ = STREAM_STATE_STOPPED;
     LOG_INFO("Stop pipeline done!");
 }
 

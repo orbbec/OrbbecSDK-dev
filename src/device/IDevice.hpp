@@ -30,14 +30,22 @@ class IDevice : public std::enable_shared_from_this<IDevice> {
 public:
     virtual ~IDevice() = default;
 
+    // device life control
+    virtual void reset()      = 0;
+    virtual void reboot()     = 0;
+    virtual void deactivate() = 0;
+
+    // device info
     virtual std::shared_ptr<const DeviceInfo> getInfo() const                                    = 0;
     virtual const std::string                &getExtensionInfo(const std::string &infoKey) const = 0;
 
-    virtual bool                                  isComponentExists(DeviceComponentId compId) const                     = 0;
-    virtual bool                                  isComponentCreated(DeviceComponentId compId) const                    = 0;  // for lazy creation
-    virtual DeviceComponentPtr<IDeviceComponent>  getComponent(DeviceComponentId compId, bool throwExIfNotFound = true) = 0;
-    virtual DeviceComponentPtr<IPropertyServer>   getPropertyServer()                                                  = 0;
+    // device components management
+    virtual bool                                 isComponentExists(DeviceComponentId compId) const                     = 0;
+    virtual bool                                 isComponentCreated(DeviceComponentId compId) const                    = 0;  // for lazy creation
+    virtual DeviceComponentPtr<IDeviceComponent> getComponent(DeviceComponentId compId, bool throwExIfNotFound = true) = 0;
+    virtual DeviceComponentPtr<IPropertyServer>  getPropertyServer()                                                   = 0;
 
+    // device sensors (specify components) management
     virtual bool                                  isSensorExists(OBSensorType type) const                   = 0;
     virtual bool                                  isSensorCreated(OBSensorType type) const                  = 0;  // for lazy creation
     virtual DeviceComponentPtr<ISensor>           getSensor(OBSensorType type)                              = 0;
@@ -46,12 +54,11 @@ public:
     virtual std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) = 0;
     virtual std::shared_ptr<IFilter>              getSensorFrameFilter(const std::string &name, OBSensorType type, bool throwIfNotFound = true) = 0;
 
-    virtual void reboot()     = 0;
-    virtual void deactivate() = 0;
-
+    // device firmware update
     virtual void updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) = 0;
 
 public:
+    // templated functions
     template <typename T> DeviceComponentPtr<T> getComponentT(DeviceComponentId compId, bool throwExIfNotFound = true) {
         auto comp = getComponent(compId, throwExIfNotFound);
         if(comp) {
@@ -59,6 +66,10 @@ public:
         }
         return DeviceComponentPtr<T>(nullptr);
     }
+
+protected:
+    // device initialization, called on constructor and reset()
+    virtual void init() = 0;
 };
 
 }  // namespace libobsensor

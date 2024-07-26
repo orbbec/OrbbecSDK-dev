@@ -81,7 +81,7 @@ public:
 
     virtual void copyInfoFromOther(std::shared_ptr<const Frame> otherFrame);
 
-    template <typename T> bool               is() const{
+    template <typename T> bool is() const {
         return std::dynamic_pointer_cast<const T>(shared_from_this()) != nullptr;
     }
 
@@ -129,6 +129,7 @@ private:
 class VideoFrame : public Frame {
 public:
     VideoFrame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
+    VideoFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
 
     uint32_t getWidth() const;
     uint32_t getHeight() const;
@@ -137,14 +138,17 @@ public:
     void     setStride(uint32_t stride);
     uint32_t getStride() const;
 
-    uint8_t getPixelAvailableBitSize() const;
-    void    setPixelAvailableBitSize(uint8_t bitSize);
+    void        setPixelType(OBPixelType pixelType);
+    OBPixelType getPixelType() const;
+    uint8_t     getPixelAvailableBitSize() const;
+    void        setPixelAvailableBitSize(uint8_t bitSize);
 
     virtual void copyInfoFromOther(std::shared_ptr<const Frame> sourceFrame) override;
 
 protected:
-    uint8_t  availableBitSize_;  // available bit size of each pixel
-    uint32_t stride_ = 0;
+    OBPixelType pixelType_;              // 0: depth, 1: disparity for structure light camara， 2： raw phase for tof camara
+    uint8_t     availablePixelBitSize_;  // available bit size of each pixel
+    uint32_t    stride_ = 0;
 };
 
 class ColorFrame : public VideoFrame {

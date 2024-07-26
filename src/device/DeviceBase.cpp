@@ -7,6 +7,16 @@
 
 namespace libobsensor {
 
+const std::map<OBSensorType, DeviceComponentId> SensorTypeToComponentIdMap = {
+    { OB_SENSOR_COLOR, OB_DEV_COMPONENT_COLOR_SENSOR },
+    { OB_SENSOR_DEPTH, OB_DEV_COMPONENT_DEPTH_SENSOR },
+    { OB_SENSOR_IR, OB_DEV_COMPONENT_IR_SENSOR },
+    { OB_SENSOR_IR_LEFT, OB_DEV_COMPONENT_LEFT_IR_SENSOR },
+    { OB_SENSOR_IR_RIGHT, OB_DEV_COMPONENT_RIGHT_IR_SENSOR },
+    { OB_SENSOR_GYRO, OB_DEV_COMPONENT_GYRO_SENSOR },
+    { OB_SENSOR_ACCEL, OB_DEV_COMPONENT_ACCEL_SENSOR },
+};
+
 DeviceBase::DeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info), ctx_(Context::getInstance()), isDeactivated_(false) {
     extensionInfo_["AllSensorsUsingSameClock"] = "true";
 }
@@ -46,6 +56,12 @@ void DeviceBase::reboot() {
     deactivate();
 }
 
+void DeviceBase::reset() {
+    deactivate();
+    isDeactivated_ = false;
+    init();
+}
+
 DeviceComponentLock DeviceBase::tryLockResource() {
     if(isDeactivated_) {
         throw libobsensor::wrong_api_call_sequence_exception("Device is deactivated/disconnected!");
@@ -77,6 +93,14 @@ void DeviceBase::registerComponent(DeviceComponentId compId, std::shared_ptr<IDe
     item.initialized  = true;
     item.creator      = nullptr;
     components_.emplace_back(item);
+}
+
+void DeviceBase::deregisterComponent(DeviceComponentId compId) {
+    std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
+    auto it = std::find_if(components_.begin(), components_.end(), [compId](const ComponentItem &item) { return item.compId == compId; });
+    if(it != components_.end()) {
+        components_.erase(it);
+    }
 }
 
 bool DeviceBase::isComponentExists(DeviceComponentId compId) const {
@@ -156,6 +180,12 @@ void DeviceBase::registerSensorPortInfo(OBSensorType type, std::shared_ptr<const
     sensorPortInfos_[type] = sourcePortInfo;
 }
 
+void DeviceBase::deregisterSensor(OBSensorType type) {
+    sensorPortInfos_.erase(type);
+    auto componentId = SensorTypeToComponentIdMap.at(type);
+    deregisterComponent(componentId);
+}
+
 const std::shared_ptr<const SourcePortInfo> &DeviceBase::getSensorPortInfo(OBSensorType type) const {
     auto it = sensorPortInfos_.find(type);
     if(it != sensorPortInfos_.end()) {
@@ -171,16 +201,6 @@ bool DeviceBase::isSensorExists(OBSensorType type) const {
     }
     return false;
 }
-
-const std::map<OBSensorType, DeviceComponentId> SensorTypeToComponentIdMap = {
-    { OB_SENSOR_COLOR, OB_DEV_COMPONENT_COLOR_SENSOR },
-    { OB_SENSOR_DEPTH, OB_DEV_COMPONENT_DEPTH_SENSOR },
-    { OB_SENSOR_IR, OB_DEV_COMPONENT_IR_SENSOR },
-    { OB_SENSOR_IR_LEFT, OB_DEV_COMPONENT_LEFT_IR_SENSOR },
-    { OB_SENSOR_IR_RIGHT, OB_DEV_COMPONENT_RIGHT_IR_SENSOR },
-    { OB_SENSOR_GYRO, OB_DEV_COMPONENT_GYRO_SENSOR },
-    { OB_SENSOR_ACCEL, OB_DEV_COMPONENT_ACCEL_SENSOR },
-};
 
 bool DeviceBase::isSensorCreated(OBSensorType type) const {
     auto compId = SensorTypeToComponentIdMap.at(type);

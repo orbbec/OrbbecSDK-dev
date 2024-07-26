@@ -24,16 +24,22 @@ public:
     DeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info);
     virtual ~DeviceBase() noexcept;
 
+    void reset() override;
+    void reboot() override;
+    void deactivate() override;
+
     std::shared_ptr<const DeviceInfo> getInfo() const;
     const std::string                &getExtensionInfo(const std::string &infoKey) const;
 
     void registerComponent(DeviceComponentId compId, std::function<std::shared_ptr<IDeviceComponent>()> creator, bool lockRequired = false);
     void registerComponent(DeviceComponentId compId, std::shared_ptr<IDeviceComponent> component, bool lockRequired = false);
+    void deregisterComponent(DeviceComponentId compId);
     bool isComponentExists(DeviceComponentId compId) const override;
     bool isComponentCreated(DeviceComponentId compId) const override;  // for lazy creation
     DeviceComponentPtr<IDeviceComponent> getComponent(DeviceComponentId compId, bool throwExIfNotFound = true) override;
 
     void                                         registerSensorPortInfo(OBSensorType type, std::shared_ptr<const SourcePortInfo> sourcePortInfo);
+    void                                         deregisterSensor(OBSensorType type);
     const std::shared_ptr<const SourcePortInfo> &getSensorPortInfo(OBSensorType type) const;
     bool                                         isSensorExists(OBSensorType type) const override;
     bool                                         isSensorCreated(OBSensorType type) const override;  // for lazy creation
@@ -45,9 +51,6 @@ public:
     DeviceComponentPtr<IPropertyServer> getPropertyServer() override;
 
     void updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) override;
-
-    void reboot() override;
-    void deactivate() override;
 
 protected:
     // implement on subclass, and must be called to initialize the device info on construction

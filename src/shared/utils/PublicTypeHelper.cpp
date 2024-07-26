@@ -38,7 +38,6 @@ float getBytesPerPixel(OBFormat format) {
     case OB_FORMAT_UYVY:
     case OB_FORMAT_BYR2:
     case OB_FORMAT_RW16:
-    case OB_FORMAT_DISP16:
         bytesPerPixel = 2.f;
         break;
     case OB_FORMAT_RGB:
@@ -64,7 +63,24 @@ float getBytesPerPixel(OBFormat format) {
 }
 
 uint32_t calcDefaultStrideBytes(OBFormat format, uint32_t width) {
-    float    bytesPerPixel = getBytesPerPixel(format);
+    float bytesPerPixel = 1;
+
+    switch(format) {
+    case OB_FORMAT_MJPG:
+    case OB_FORMAT_H264:
+    case OB_FORMAT_H265:
+    case OB_FORMAT_HEVC:
+        bytesPerPixel = 1;
+        break;
+    case OB_FORMAT_RLE:
+    case OB_FORMAT_RVL:
+        bytesPerPixel = 2;
+        break;
+    default:  // assume planar format
+        bytesPerPixel = getBytesPerPixel(format);
+        break;
+    }
+
     uint32_t stride        = (uint32_t)(width * bytesPerPixel + 0.5);
     return stride;
 }
@@ -299,60 +315,57 @@ const std::map<OBAccelFullScaleRange, std::string> AccelFullScaleRange_Str_Map =
 };
 
 const std::map<OBFormat, std::string> Format_Str_Map = {
-    { OB_FORMAT_YUYV, "YUYV" },       { OB_FORMAT_YUY2, "YUY2" },
-    { OB_FORMAT_UYVY, "UYVY" },       { OB_FORMAT_NV12, "NV12" },
-    { OB_FORMAT_NV21, "NV21" },       { OB_FORMAT_MJPG, "MJPG" },
-    { OB_FORMAT_H264, "H264" },       { OB_FORMAT_H265, "H265" },
-    { OB_FORMAT_Y16, "Y16" },         { OB_FORMAT_Y8, "Y8" },
-    { OB_FORMAT_Y10, "Y10" },         { OB_FORMAT_Y11, "Y11" },
-    { OB_FORMAT_Y12, "Y12" },         { OB_FORMAT_GRAY, "GRAY" },
-    { OB_FORMAT_HEVC, "HEVC" },       { OB_FORMAT_I420, "I420" },
-    { OB_FORMAT_ACCEL, "ACCEL" },     { OB_FORMAT_GYRO, "GYRO" },
-    { OB_FORMAT_POINT, "POINT" },     { OB_FORMAT_RGB_POINT, "RGB_POINT" },
-    { OB_FORMAT_RLE, "RLE" },         { OB_FORMAT_RGB, "RGB" },
-    { OB_FORMAT_BGR, "BGR" },         { OB_FORMAT_Y14, "Y14" },
-    { OB_FORMAT_BGRA, "BGRA" },       { OB_FORMAT_COMPRESSED, "COMPRESSED" },
-    { OB_FORMAT_RVL, "RVL" },         { OB_FORMAT_Z16, "Z16" },
-    { OB_FORMAT_YV12, "YV12" },       { OB_FORMAT_BA81, "BA81" },
-    { OB_FORMAT_RGBA, "RGBA" },       { OB_FORMAT_BYR2, "BYR2" },
-    { OB_FORMAT_RW16, "RW16" },       { OB_FORMAT_DISP16, "DISP16" },
-    { OB_FORMAT_UNKNOWN, "UNKNOWN" },
+    { OB_FORMAT_YUYV, "YUYV" },   { OB_FORMAT_YUY2, "YUY2" },
+    { OB_FORMAT_UYVY, "UYVY" },   { OB_FORMAT_NV12, "NV12" },
+    { OB_FORMAT_NV21, "NV21" },   { OB_FORMAT_MJPG, "MJPG" },
+    { OB_FORMAT_H264, "H264" },   { OB_FORMAT_H265, "H265" },
+    { OB_FORMAT_Y16, "Y16" },     { OB_FORMAT_Y8, "Y8" },
+    { OB_FORMAT_Y10, "Y10" },     { OB_FORMAT_Y11, "Y11" },
+    { OB_FORMAT_Y12, "Y12" },     { OB_FORMAT_GRAY, "GRAY" },
+    { OB_FORMAT_HEVC, "HEVC" },   { OB_FORMAT_I420, "I420" },
+    { OB_FORMAT_ACCEL, "ACCEL" }, { OB_FORMAT_GYRO, "GYRO" },
+    { OB_FORMAT_POINT, "POINT" }, { OB_FORMAT_RGB_POINT, "RGB_POINT" },
+    { OB_FORMAT_RLE, "RLE" },     { OB_FORMAT_RGB, "RGB" },
+    { OB_FORMAT_BGR, "BGR" },     { OB_FORMAT_Y14, "Y14" },
+    { OB_FORMAT_BGRA, "BGRA" },   { OB_FORMAT_COMPRESSED, "COMPRESSED" },
+    { OB_FORMAT_RVL, "RVL" },     { OB_FORMAT_Z16, "Z16" },
+    { OB_FORMAT_YV12, "YV12" },   { OB_FORMAT_BA81, "BA81" },
+    { OB_FORMAT_RGBA, "RGBA" },   { OB_FORMAT_BYR2, "BYR2" },
+    { OB_FORMAT_RW16, "RW16" },   { OB_FORMAT_UNKNOWN, "UNKNOWN" },
 };
 
-std::map<OBFrameMetadataType, std::string> Metadata_Str_Map = {
-    {OB_FRAME_METADATA_TYPE_TIMESTAMP, "Timestamp"},
-    {OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, "Sensor Timestamp"},
-    {OB_FRAME_METADATA_TYPE_FRAME_NUMBER, "Frame Number"},
-    {OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE, "Auto Exposure"},
-    {OB_FRAME_METADATA_TYPE_EXPOSURE, "Exposure"},
-    {OB_FRAME_METADATA_TYPE_GAIN, "Gain"},
-    {OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE, "Auto White Balance"},
-    {OB_FRAME_METADATA_TYPE_WHITE_BALANCE, "White Balance"},
-    {OB_FRAME_METADATA_TYPE_BRIGHTNESS, "Brightness"},
-    {OB_FRAME_METADATA_TYPE_CONTRAST, "Contrast"},
-    {OB_FRAME_METADATA_TYPE_SATURATION, "Saturation"},
-    {OB_FRAME_METADATA_TYPE_SHARPNESS, "Sharpness"},
-    {OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION, "Backlight Compensation"},
-    {OB_FRAME_METADATA_TYPE_HUE, "Hue"},
-    {OB_FRAME_METADATA_TYPE_GAMMA, "Gamma"},
-    {OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY, "Power Line Frequency"},
-    {OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION, "Low Light Compensation"},
-    {OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE, "Manual White Balance"},
-    {OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, "Actual Frame Rate"},
-    {OB_FRAME_METADATA_TYPE_FRAME_RATE, "Frame Rate"},
-    {OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, "AE ROI Left"},
-    {OB_FRAME_METADATA_TYPE_AE_ROI_TOP, "AE ROI Top"},
-    {OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, "AE ROI Right"},
-    {OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, "AE ROI Bottom"},
-    {OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY, "Exposure Priority"},
-    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME, "HDR Sequence Name"},
-    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE, "HDR Sequence Size"},
-    {OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX, "HDR Sequence Index"},
-    {OB_FRAME_METADATA_TYPE_LASER_POWER, "Laser Power"},
-    {OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL, "Laser Power Level"},
-    {OB_FRAME_METADATA_TYPE_LASER_STATUS, "Laser Status"},
-    {OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA, "GPIO Input Data"}
-};
+std::map<OBFrameMetadataType, std::string> Metadata_Str_Map = { { OB_FRAME_METADATA_TYPE_TIMESTAMP, "Timestamp" },
+                                                                { OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, "Sensor Timestamp" },
+                                                                { OB_FRAME_METADATA_TYPE_FRAME_NUMBER, "Frame Number" },
+                                                                { OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE, "Auto Exposure" },
+                                                                { OB_FRAME_METADATA_TYPE_EXPOSURE, "Exposure" },
+                                                                { OB_FRAME_METADATA_TYPE_GAIN, "Gain" },
+                                                                { OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE, "Auto White Balance" },
+                                                                { OB_FRAME_METADATA_TYPE_WHITE_BALANCE, "White Balance" },
+                                                                { OB_FRAME_METADATA_TYPE_BRIGHTNESS, "Brightness" },
+                                                                { OB_FRAME_METADATA_TYPE_CONTRAST, "Contrast" },
+                                                                { OB_FRAME_METADATA_TYPE_SATURATION, "Saturation" },
+                                                                { OB_FRAME_METADATA_TYPE_SHARPNESS, "Sharpness" },
+                                                                { OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION, "Backlight Compensation" },
+                                                                { OB_FRAME_METADATA_TYPE_HUE, "Hue" },
+                                                                { OB_FRAME_METADATA_TYPE_GAMMA, "Gamma" },
+                                                                { OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY, "Power Line Frequency" },
+                                                                { OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION, "Low Light Compensation" },
+                                                                { OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE, "Manual White Balance" },
+                                                                { OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, "Actual Frame Rate" },
+                                                                { OB_FRAME_METADATA_TYPE_FRAME_RATE, "Frame Rate" },
+                                                                { OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, "AE ROI Left" },
+                                                                { OB_FRAME_METADATA_TYPE_AE_ROI_TOP, "AE ROI Top" },
+                                                                { OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, "AE ROI Right" },
+                                                                { OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, "AE ROI Bottom" },
+                                                                { OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY, "Exposure Priority" },
+                                                                { OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME, "HDR Sequence Name" },
+                                                                { OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE, "HDR Sequence Size" },
+                                                                { OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX, "HDR Sequence Index" },
+                                                                { OB_FRAME_METADATA_TYPE_LASER_POWER, "Laser Power" },
+                                                                { OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL, "Laser Power Level" },
+                                                                { OB_FRAME_METADATA_TYPE_LASER_STATUS, "Laser Status" },
+                                                                { OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA, "GPIO Input Data" } };
 
 // type to string
 const std::string &obFormatToStr(OBFormat type) {
@@ -483,6 +496,56 @@ OBAccelFullScaleRange strToAccelFullScaleRange(const std::string str) {
     throw invalid_value_exception("Unregistered accel full scale range type");
 }
 
+float depthPrecisionLevelToUnit(OBDepthPrecisionLevel precision) {
+    switch(precision) {
+    case OB_PRECISION_1MM:
+        return 1.0f;
+    case OB_PRECISION_0MM8:
+        return 0.8f;
+    case OB_PRECISION_0MM4:
+        return 0.4f;
+    case OB_PRECISION_0MM1:
+        return 0.1f;
+    case OB_PRECISION_0MM2:
+        return 0.2f;
+    case OB_PRECISION_0MM5:
+        return 0.5f;
+    case OB_PRECISION_0MM05:
+        return 0.05f;
+    default:
+        break;
+    }
+    throw invalid_value_exception("Unregistered depth precision level");
+}
+
+bool areAlmostEqual(float a, float b, float epsilon = 1e-5f) {
+    return std::abs(a - b) < epsilon;
+}
+OBDepthPrecisionLevel depthUnitToPrecisionLevel(float unit) {
+    if(areAlmostEqual(1.0f, unit)) {
+        return OB_PRECISION_1MM;
+    }
+    else if(areAlmostEqual(0.8f, unit)) {
+        return OB_PRECISION_0MM8;
+    }
+    else if(areAlmostEqual(0.4f, unit)) {
+        return OB_PRECISION_0MM4;
+    }
+    else if(areAlmostEqual(0.1f, unit)) {
+        return OB_PRECISION_0MM1;
+    }
+    else if(areAlmostEqual(0.2f, unit)) {
+        return OB_PRECISION_0MM2;
+    }
+    else if(areAlmostEqual(0.5f, unit)) {
+        return OB_PRECISION_0MM5;
+    }
+    else if(areAlmostEqual(0.05f, unit)) {
+        return OB_PRECISION_0MM05;
+    }
+    throw invalid_value_exception("Unsupported unit to depth precision level");
+}
+
 }  // namespace utils
 }  // namespace libobsensor
 
@@ -535,8 +598,7 @@ std::ostream &operator<<(std::ostream &os, const OBCameraParam &params) {
        << ",p1:" << params.rgbDistortion.p1 << ",p2:" << params.rgbDistortion.p2 << "}\n"
        << "transform: rot:[" << params.transform.rot[0] << "," << params.transform.rot[1] << "," << params.transform.rot[2] << "," << params.transform.rot[3]
        << "," << params.transform.rot[4] << "," << params.transform.rot[5] << "," << params.transform.rot[6] << "," << params.transform.rot[7] << ","
-       << params.transform.rot[8] <<  "],trans:" << params.transform.trans[0] << "," << params.transform.trans[1] << ","
-       << params.transform.trans[2] << "}\n"
+       << params.transform.rot[8] << "],trans:" << params.transform.trans[0] << "," << params.transform.trans[1] << "," << params.transform.trans[2] << "}\n"
        << "isMirror:" << params.isMirrored << "\n"
        << "}";
     return os;

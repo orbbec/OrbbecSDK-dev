@@ -92,27 +92,27 @@ FrameProcessor::~FrameProcessor() noexcept {
 }
 
 std::shared_ptr<Frame> FrameProcessor::processFunc(std::shared_ptr<const Frame> frame) {
-    if(context_->process_frame) {
-        ob_frame              *c_frame = new ob_frame();
-        ob_error              *error   = nullptr;
-        std::shared_ptr<Frame> resultFrame;
-        c_frame->frame = std::const_pointer_cast<Frame>(frame);
+    if(!context_->process_frame || !privateProcessor_) {
+        return FrameFactory::createFrameFromOtherFrame(frame, true);
+    }
+    ob_frame              *c_frame = new ob_frame();
+    ob_error              *error   = nullptr;
+    std::shared_ptr<Frame> resultFrame;
+    c_frame->frame = std::const_pointer_cast<Frame>(frame);
 
-        auto rst_frame = context_->process_frame(privateProcessor_, c_frame, &error);
-        if(rst_frame) {
-            resultFrame = rst_frame->frame;
-            delete rst_frame;
-        }
-        delete c_frame;
+    auto rst_frame = context_->process_frame(privateProcessor_, c_frame, &error);
+    if(rst_frame) {
+        resultFrame = rst_frame->frame;
+        delete rst_frame;
+    }
+    delete c_frame;
 
-        if(error) {
-            delete error;
-            return FrameFactory::createFrameFromOtherFrame(frame, true);
-        }
-        return resultFrame;
+    if(error) {
+        delete error;
+        return FrameFactory::createFrameFromOtherFrame(frame, true);
     }
 
-    return FrameFactory::createFrameFromOtherFrame(frame, true);
+    return resultFrame;
 }
 
 const std::string &FrameProcessor::getConfigSchema() const {
@@ -136,23 +136,36 @@ void FrameProcessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         setConfigValue("DisparityTransform#255", static_cast<double>(value.intValue));
     } break;
+    case OB_PROP_DEPTH_PRECISION_LEVEL_INT: {
+        auto level     = static_cast<OBDepthPrecisionLevel>(value.intValue);
+        auto depthUnit = utils::depthPrecisionLevelToUnit(level);
+        setConfigValue("DisparityTransform#2", static_cast<double>(depthUnit));
+    } break;
     case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT: {
         setConfigValue("DisparityTransform#2", static_cast<double>(value.floatValue));
     } break;
+    default:
+        throw invalid_value_exception("Invalid property id");
     }
 }
 
 void FrameProcessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
-    double getValue = 0;
     switch(propertyId) {
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
-        getValue        = getConfigValue("DisparityTransform#255");
+        auto getValue   = getConfigValue("DisparityTransform#255");
         value->intValue = static_cast<int32_t>(getValue);
     } break;
-    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT:{
-        getValue = getConfigValue("DisparityTransform#2");
+    case OB_PROP_DEPTH_PRECISION_LEVEL_INT: {
+        auto getValue       = getConfigValue("DisparityTransform#2");
+        auto precisionLevel = utils::depthUnitToPrecisionLevel(static_cast<float>(getValue));
+        value->intValue     = static_cast<int32_t>(precisionLevel);
+    } break;
+    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT: {
+        auto getValue     = getConfigValue("DisparityTransform#2");
         value->floatValue = static_cast<float>(getValue);
     } break;
+    default:
+        throw invalid_value_exception("Invalid property id");
     }
 }
 
@@ -167,15 +180,25 @@ void FrameProcessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *rang
         range->min.intValue  = 0;
         range->step.intValue = 1;
     } break;
-    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT:{
-        value = getConfigValue("DisparityTransform#2");
+    case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT: {
+        value                  = getConfigValue("DisparityTransform#2");
         range->cur.floatValue  = static_cast<float>(value);
         range->def.floatValue  = 1.0f;
         range->max.floatValue  = 10.0f;
         range->min.floatValue  = 0.001f;
         range->step.floatValue = 0.001f;
-    }break;
+    } break;
+    case OB_PROP_DEPTH_PRECISION_LEVEL_INT: {
+        OBPropertyValue cur;
+        getPropertyValue(OB_PROP_DEPTH_PRECISION_LEVEL_INT, &cur);
+        range->cur.intValue  = cur.intValue;
+        range->def.intValue  = static_cast<int32_t>(OB_PRECISION_1MM);
+        range->max.intValue  = static_cast<int32_t>(OB_PRECISION_1MM);
+        range->min.intValue  = static_cast<int32_t>(OB_PRECISION_0MM05);
+        range->step.intValue = 1;
+    } break;
+    default:
+        throw invalid_value_exception("Invalid property id");
     }
 }
-
 }  // namespace libobsensor

@@ -39,9 +39,13 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
         return iter->second;
     }
 
-
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {
+    case OB_FRAME_VIDEO:
+    
+        frameBufMgr = std::shared_ptr<FrameBufferManager<VideoFrame>>(new FrameBufferManager<VideoFrame>(frameBufferSize));
+        LOG_DEBUG("VideoFrame bufferManager created!");
+        break;
     case OB_FRAME_DEPTH:
         frameBufMgr = std::shared_ptr<FrameBufferManager<DepthFrame>>(new FrameBufferManager<DepthFrame>(frameBufferSize));
         LOG_DEBUG("DepthFrame bufferManager created!");
@@ -79,10 +83,11 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
         LOG_DEBUG("Frameset bufferManager created!");
         break;
     default:
-        if(frameBufferSize != 0){
+        if(frameBufferSize != 0) {
             frameBufMgr = std::shared_ptr<FrameBufferManager<Frame>>(new FrameBufferManager<Frame>(frameBufferSize));
             LOG_DEBUG("Frame bufferManager created!");
-        }else{
+        }
+        else {
             std::ostringstream oss_msg;
             oss_msg << "Unsupported Frame Type to create buffer manager! frameType: " << type;
             throw unsupported_operation_exception(oss_msg.str());

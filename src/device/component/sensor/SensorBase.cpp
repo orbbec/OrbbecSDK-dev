@@ -9,7 +9,7 @@ SensorBase::SensorBase(IDevice *owner, OBSensorType sensorType, const std::share
     : owner_(owner),
       sensorType_(sensorType),
       backend_(backend),
-      streamState_(STREAM_STATE_STOPED),
+      streamState_(STREAM_STATE_STOPPED),
       onRecovering_(false),
       recoveryEnabled_(false),
       maxRecoveryCount_(DefaultMaxRecoveryCount),
@@ -177,7 +177,7 @@ void SensorBase::watchStreamState() {
     recoveryCount_ = 0;
     while(recoveryEnabled_) {
         std::unique_lock<std::mutex> lock(streamStateMutex_);
-        if(streamState_ == STREAM_STATE_STOPED || streamState_ == STREAM_STATE_STOPPING || streamState_ == STREAM_STATE_ERROR) {
+        if(streamState_ == STREAM_STATE_STOPPED || streamState_ == STREAM_STATE_STOPPING || streamState_ == STREAM_STATE_ERROR) {
             streamStateCv_.wait(lock);
             recoveryCount_ = 0;
         }

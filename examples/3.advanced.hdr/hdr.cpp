@@ -34,28 +34,37 @@ int main(void) try {
     obHdrConfig.gain_1     = 24;
     obHdrConfig.exposure_2 = 100;
     obHdrConfig.gain_2     = 16;
-    device->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, reinterpret_cast<uint8_t*>(&obHdrConfig), sizeof(OBHdrConfig));
+    device->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, reinterpret_cast<uint8_t *>(&obHdrConfig), sizeof(OBHdrConfig));
 
     // Start the pipeline with config
     pipe.start(config);
 
-    // Create a window for rendering and set the resolution of the window
-    ob_smpl::CVWindow win("HDR-Merge", 1280, 720);
-    bool   mergeRequired = true;
+    bool mergeRequired       = true;
+    bool alternateShowOrigin = true;
 
-    std::cout << "Press 'M' to toggle HDR merge." << std::endl;
-    while(win.run()) {
-        auto key = win.waitKey(1);
+    // Create a window for rendering and set the resolution of the window
+    ob_smpl::CVWindow win("HDR-Merge", 1280, 720, ob_smpl::ARRANGE_GRID);
+    win.setKeyPrompt("'M': Toggle HDR merge, 'N': Toggle alternate show origin frame");
+    win.setKeyPressedCallback([&](int key) {
         if(key == 'M' || key == 'm') {
             mergeRequired = !mergeRequired;
             if(mergeRequired) {
-                std::cout << "HDR merge enabled." << std::endl;
+                win.reset();
+                win.addLog("HDR merge enabled.");
             }
             else {
-                std::cout << "HDR merge disabled." << std::endl;
+                win.reset();
+                win.addLog("HDR merge disabled.");
             }
         }
+        if(key == 'N' || key == 'n') {
+            alternateShowOrigin = !alternateShowOrigin;
+            win.reset();
+            win.addLog(std::string("Alternate show origin frame: ") + (alternateShowOrigin ? "on" : "off"));
+        }
+    });
 
+    while(win.run()) {
         auto frameSet = pipe.waitForFrameset(100);
         if(frameSet == nullptr) {
             continue;
@@ -66,19 +75,18 @@ int main(void) try {
             continue;
         }
 
+        // add original depth frame to render queue
+        int groupId = alternateShowOrigin ? 0 : static_cast<int>(depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX));
+        win.pushFramesToView(depthFrame, groupId);
+
         if(mergeRequired) {
             // Using HdrMerge post processor to merge depth frames
             auto mergedDepthFrame = hdrMerge->process(depthFrame);
             if(mergedDepthFrame == nullptr) {
                 continue;
             }
-
             // add merged depth frame to render queue
-            win.pushFramesToView(mergedDepthFrame);
-        }
-        else {
-            // add original depth frame to render queue
-            win.pushFramesToView(depthFrame);
+            win.pushFramesToView(mergedDepthFrame, 10);  // set the group id to 10 to avoid same group id with original depth frame
         }
     }
 
@@ -87,7 +95,7 @@ int main(void) try {
 
     // close hdr merge
     obHdrConfig.enable = false;
-    device->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, reinterpret_cast<uint8_t*>(&obHdrConfig) , sizeof(OBHdrConfig));
+    device->setStructuredData(OB_STRUCT_DEPTH_HDR_CONFIG, reinterpret_cast<uint8_t *>(&obHdrConfig), sizeof(OBHdrConfig));
 
     return 0;
 }

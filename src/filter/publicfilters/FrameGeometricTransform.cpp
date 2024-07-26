@@ -281,9 +281,8 @@ std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> fra
         return outFrame;
     }
 
-    if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV
-       && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA
-       && frame->getFormat() != OB_FORMAT_BGRA) {
+    if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV && frame->getFormat() != OB_FORMAT_RGB
+       && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameMirror unsupported to process this format: {}", frame->getFormat());
         return outFrame;
     }
@@ -305,7 +304,7 @@ std::shared_ptr<Frame> FrameMirror::processFunc(std::shared_ptr<const Frame> fra
             imageMirror<uint32_t>((uint32_t *)videoFrame->getData(), (uint32_t *)outFrame->getData(), videoFrame->getWidth() / 2, videoFrame->getHeight());
         }
         break;
-    case OB_FORMAT_RGB888:
+    case OB_FORMAT_RGB:
     case OB_FORMAT_BGR:
         mirrorRGBImage((uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
         break;
@@ -393,7 +392,7 @@ std::shared_ptr<Frame> FrameFlip::processFunc(std::shared_ptr<const Frame> frame
     }
 
     if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV && frame->getFormat() != OB_FORMAT_BGR
-       && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
+       && frame->getFormat() != OB_FORMAT_RGB && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameFlip unsupported to process this format:{}", frame->getFormat());
         return outFrame;
     }
@@ -409,7 +408,7 @@ std::shared_ptr<Frame> FrameFlip::processFunc(std::shared_ptr<const Frame> frame
         imageFlip<uint16_t>((uint16_t *)videoFrame->getData(), (uint16_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
         break;
     case OB_FORMAT_BGR:
-    case OB_FORMAT_RGB888:
+    case OB_FORMAT_RGB:
         flipRGBImage(3, (uint8_t *)videoFrame->getData(), (uint8_t *)outFrame->getData(), videoFrame->getWidth(), videoFrame->getHeight());
         break;
     case OB_FORMAT_RGBA:
@@ -500,9 +499,8 @@ std::shared_ptr<Frame> FrameRotate::processFunc(std::shared_ptr<const Frame> fra
         return outFrame;
     }
 
-    if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV
-       && frame->getFormat() != OB_FORMAT_RGB888 && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA
-       && frame->getFormat() != OB_FORMAT_BGRA) {
+    if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV && frame->getFormat() != OB_FORMAT_RGB
+       && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameRotate unsupported to process this format: {}", frame->getFormat());
         return outFrame;
     }

@@ -87,7 +87,7 @@ std::shared_ptr<GyroStreamProfile> createGyroStreamProfile(std::shared_ptr<LazyS
     return gsp;
 }
 
-std::shared_ptr<const StreamProfile> getDefaultStreamProfileFormEnvConfig(const std::string &deviceName, OBSensorType sensorType) {
+std::shared_ptr<const StreamProfile> getDefaultStreamProfileFromEnvConfig(const std::string &deviceName, OBSensorType sensorType) {
     auto        devName      = utils::string::remove(deviceName, " ");
     auto        envConfig    = EnvConfig::getInstance();
     std::string nodePathName = "Device." + devName + ".";

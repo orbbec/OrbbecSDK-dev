@@ -16,7 +16,7 @@ namespace libobsensor {
 
 struct G330Preset {
     // device/global
-    std::string depthAlgMode;
+    std::string depthWorkMode;
     int         laserState;
     int         laserPowerLevel;
 

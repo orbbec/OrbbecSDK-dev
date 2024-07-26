@@ -74,7 +74,7 @@ void AccelSensor::stop() {
     auto propServer   = owner->getPropertyServer();
     propServer->setPropertyValueT(OB_PROP_ACCEL_SWITCH_BOOL, false);
     streamer_->stop(activatedStreamProfile_);
-    updateStreamState(STREAM_STATE_STOPED);
+    updateStreamState(STREAM_STATE_STOPPED);
 }
 
 }  // namespace libobsensor

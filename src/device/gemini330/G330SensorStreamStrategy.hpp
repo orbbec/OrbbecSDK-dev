@@ -1,6 +1,6 @@
 #pragma once
 #include "ISensorStreamStrategy.hpp"
-#include "G330DepthAlgModeManager.hpp"
+#include "G330DepthWorkModeManager.hpp"
 #include "stream/StreamProfile.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"

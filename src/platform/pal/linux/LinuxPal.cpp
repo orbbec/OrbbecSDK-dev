@@ -170,7 +170,7 @@ std::shared_ptr<ISourcePort> LinuxPal::getSourcePort(std::shared_ptr<const Sourc
     }
     case SOURCE_PORT_USB_UVC: {
         auto usbPortInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo);
-        auto backend     = UVC_BACKEND_TYPE_V4L2;
+        auto backend     = uvcBackendType_;
         if(isMatchDeviceByPid(usbPortInfo->pid, FemtoMegaDevPids)) {  // if the device is femto mega, force to use v4l2
             backend = UVC_BACKEND_TYPE_V4L2;
         }

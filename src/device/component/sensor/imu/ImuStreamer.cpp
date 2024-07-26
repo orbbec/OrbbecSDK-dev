@@ -174,6 +174,6 @@ void ImuStreamer::outputFrame(std::shared_ptr<Frame> frame) {
 
 IDevice *ImuStreamer::getOwner() const {
     return owner_;
-};
+}
 
 }  // namespace libobsensor

@@ -1,8 +1,8 @@
 #include "G2StreamProfileFilter.hpp"
 
-#include "utils/utils.hpp"
+#include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
-#include "exception/OBException.hpp"
+#include "exception/ObException.hpp"
 #include "property/InternalProperty.hpp"
 
 namespace libobsensor {

@@ -144,7 +144,7 @@ void RawPhaseStreamer::parseRawPhaseFrame(std::shared_ptr<Frame> frame) {
         std::vector<uint8_t> headerData(sizeof(YEATS_MIPI_HDR) * 2);
         // inFile.read(reinterpret_cast<char *>(headerData.data()), sizeof(YEATS_MIPI_HDR) * 2);
         memcpy(headerData.data(), data, sizeof(YEATS_MIPI_HDR) * 2);
-        for(int i = 0; i < sizeof(YEATS_MIPI_HDR); ++i) {
+        for(size_t i = 0; i < sizeof(YEATS_MIPI_HDR); ++i) {
             uint8_t *mipiHdrArray = reinterpret_cast<uint8_t *>(&mipiHdr);
             mipiHdrArray[i]       = headerData[i * 2];
         }
@@ -272,7 +272,7 @@ void RawPhaseStreamer::parseRawPhaseFrame(std::shared_ptr<Frame> frame) {
 
         if(irStreamProfile) {
             auto irFrame = FrameFactory::createFrameFromStreamProfile(irStreamProfile);
-            irFrame->updateData((const uint8_t *)zFrame, nPixels * 2);
+            irFrame->updateData((const uint8_t *)abFrame, nPixels * 2);
             irFrame->setDataSize(nPixels * 2);
             frameSet->pushFrame(irFrame);
         }

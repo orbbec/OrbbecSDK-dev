@@ -1,5 +1,5 @@
 #include "FilterPropertyAccessors.hpp"
-#include "utils/utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 FilterStatePropertyAccessor::FilterStatePropertyAccessor(std::shared_ptr<IFilter> filter) : filter_(filter) {}

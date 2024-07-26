@@ -356,7 +356,7 @@ void DecimationFilter::updateOutputProfile(const std::shared_ptr<const Frame> fr
 void DecimationFilter::decimateDepth(uint16_t *frame_data_in, uint16_t *frame_data_out, size_t width_in, size_t scale) {
 
     // construct internal register buf
-    register uint16_t working_kernel[9];
+    uint16_t          working_kernel[9];
     uint16_t *        pixel_raws[10];  // max scale set 10
     uint16_t *        block_start = const_cast<uint16_t *>(frame_data_in);
     uint16_t *        p{};

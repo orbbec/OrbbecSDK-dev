@@ -238,7 +238,7 @@ size_t Frame::getDataBufSize() const {
 }
 
 VideoFrame::VideoFrame(uint8_t *data, size_t dataBufSize, OBFrameType type, FrameBufferReclaimFunc bufferReclaimFunc)
-    : Frame(data, dataBufSize, type, bufferReclaimFunc), availablePixelBitSize_(0), pixelType_(OB_PIXEL_UNKNOWN) {}
+    : Frame(data, dataBufSize, type, bufferReclaimFunc), pixelType_(OB_PIXEL_UNKNOWN), availablePixelBitSize_(0) {}
 
 void VideoFrame::setPixelType(OBPixelType pixelType) {
     pixelType_ = pixelType;
@@ -249,7 +249,7 @@ OBPixelType VideoFrame::getPixelType() const {
 }
 
 VideoFrame::VideoFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
-    : Frame(data, dataBufSize, OB_FRAME_VIDEO, bufferReclaimFunc), availablePixelBitSize_(0), pixelType_(OB_PIXEL_UNKNOWN) {}
+    : Frame(data, dataBufSize, OB_FRAME_VIDEO, bufferReclaimFunc), pixelType_(OB_PIXEL_UNKNOWN), availablePixelBitSize_(0) {}
 
 uint8_t VideoFrame::getPixelAvailableBitSize() const {
     if(availablePixelBitSize_ == 0) {

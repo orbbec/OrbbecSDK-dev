@@ -116,7 +116,7 @@ void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
 
     auto        depthWorkModeManager = getComponentT<IDepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
     auto        workMode             = depthWorkModeManager->getCurrentDepthWorkMode();
-    std::string workModeName         = utils::string::removeSpace(workMode.name);
+    std::string workModeName         = workMode.name;
     auto        sensorType           = sensor->getSensorType();
     auto        streamProfile        = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType, workModeName);
     if(!streamProfile) {
@@ -555,6 +555,7 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_ODR_LIST, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DEVICE_USB2_REPEAT_IDENTIFY_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);

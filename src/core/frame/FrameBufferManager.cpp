@@ -1,6 +1,7 @@
 #include "FrameBufferManager.hpp"
 #include "FrameMemoryPool.hpp"
 
+#include "environment/EnvConfig.hpp"
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
 
@@ -8,20 +9,34 @@ namespace libobsensor {
 
 #define DEFAULT_MAX_FRAME_MEMORY_SIZE ((uint64_t)2 * 1024 * 1024 * 1024)  // 2GB
 
-FrameMemoryAllocator::FrameMemoryAllocator() : maxSize_(DEFAULT_MAX_FRAME_MEMORY_SIZE), usedSize_(0), logger_(Logger::getInstance()) {}
+FrameMemoryAllocator::FrameMemoryAllocator() : maxSize_(DEFAULT_MAX_FRAME_MEMORY_SIZE), usedSize_(0), logger_(Logger::getInstance()) {
+    auto envConfig = EnvConfig::getInstance();
+
+    if(envConfig->isNodeContained("Memory.MaxFrameBufferSize")) {
+        int frameBufferSize;
+        envConfig->getIntValue("Memory.MaxFrameBufferSize", frameBufferSize);
+        if(frameBufferSize < 100) {
+            LOG_WARN("The frame buffer size you set is too small, will set to 100MB instead");
+            frameBufferSize = 100;
+        }
+        maxSize_ = frameBufferSize * 1024 * 1024;
+    }
+    LOG_DEBUG("FrameMemoryAllocator created! The max frame memory size has been set to {:.3f}MB", byteToMB(maxSize_));
+}
+
 FrameMemoryAllocator::~FrameMemoryAllocator() noexcept {
     if(usedSize_ > 0) {
         LOG_WARN("FrameMemoryAllocator destroyed while still has memory used! usedSize={0:.3f}MB", byteToMB(usedSize_));
     }
 }
 
-std::mutex FrameMemoryAllocator::instanceMutex_;
-std::weak_ptr<FrameMemoryAllocator> FrameMemoryAllocator::instanceWeakPtr_;
+std::mutex                            FrameMemoryAllocator::instanceMutex_;
+std::weak_ptr<FrameMemoryAllocator>   FrameMemoryAllocator::instanceWeakPtr_;
 std::shared_ptr<FrameMemoryAllocator> FrameMemoryAllocator::getInstance() {
     std::lock_guard<std::mutex> lock(instanceMutex_);
     auto                        instance = instanceWeakPtr_.lock();
     if(!instance) {
-        instance                      = std::shared_ptr<FrameMemoryAllocator>(new FrameMemoryAllocator());
+        instance         = std::shared_ptr<FrameMemoryAllocator>(new FrameMemoryAllocator());
         instanceWeakPtr_ = instance;
     }
     return instance;
@@ -38,6 +53,7 @@ void FrameMemoryAllocator::setMaxFrameMemorySize(uint64_t sizeInMb) {
         LOG_WARN("The size you is less than 100MB, size={:.3f}MB, will set to 100MB instead", (double)sizeInMb);
         maxSize_ = 100 * 1024 * 1024;
     }
+    LOG_DEBUG("FrameMemoryAllocator max frame memory size has been set to {:.3f}MB", byteToMB(maxSize_));
 }
 
 uint8_t *FrameMemoryAllocator::allocate(size_t size) {

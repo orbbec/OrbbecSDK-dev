@@ -23,7 +23,7 @@ public:
 
 #if defined(BUILD_USB_PORT)
     virtual std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const = 0;
-    virtual SourcePortInfoList             queryUsbSourcePort()           = 0;
+    virtual SourcePortInfoList             queryUsbSourcePortInfos()      = 0;
 #endif
 
 #if defined(BUILD_NET_PORT)

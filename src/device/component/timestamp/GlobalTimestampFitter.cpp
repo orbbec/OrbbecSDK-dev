@@ -4,22 +4,19 @@
 #include "logger/LoggerInterval.hpp"
 #include "InternalTypes.hpp"
 #include "property/InternalProperty.hpp"
+#include "environment/EnvConfig.hpp"
 
 namespace libobsensor {
 GlobalTimestampFitter::GlobalTimestampFitter(IDevice *owner) : DeviceComponentBase(owner), sampleLoopExit_(false), linearFuncParam_({ 0, 0, 0, 0 }) {
-
-    // todo: read config from xml
-
-    // auto config = Context::getInstance()->getXmlConfig();
-
-    // int value = 0;
-    // if(config->getIntValue("Misc.GlobalTimestampFitterQueueSize", value) && value >= 4) {
-    //     maxQueueSize_ = value;
-    // }
-    // value = 0;
-    // if(config->getIntValue("Misc.GlobalTimestampFitterInterval", value) && value >= 100) {
-    //     refreshIntervalMsec_ = value;
-    // }
+    auto envConfig = EnvConfig::getInstance();
+    int  value     = 0;
+    if(envConfig->getIntValue("Misc.GlobalTimestampFitterQueueSize", value) && value >= 4) {
+        maxQueueSize_ = value;
+    }
+    value = 0;
+    if(envConfig->getIntValue("Misc.GlobalTimestampFitterInterval", value) && value >= 100) {
+        refreshIntervalMsec_ = value;
+    }
 
     sampleThread_ = std::thread(&GlobalTimestampFitter::fittingLoop, this);
 
@@ -83,7 +80,7 @@ void GlobalTimestampFitter::fittingLoop() {
             auto sysTsp2Usec = utils::getNowTimesUs();
             sysTspUsec       = (sysTsp2Usec + sysTsp1Usec) / 2;
             devTime.rtt      = sysTsp2Usec - sysTsp1Usec;
-            if(devTime.rtt > 10000) {
+            if(devTime.rtt > 2000) {
                 LOG_DEBUG("Get device time rtt is too large! rtt={}", devTime.rtt);
                 throw std::runtime_error("RTT too large");
             }
@@ -105,7 +102,7 @@ void GlobalTimestampFitter::fittingLoop() {
 
         samplingQueue_.push_back({ sysTspUsec, devTime.time });
 
-        if(samplingQueue_.size() < 10) {
+        if(samplingQueue_.size() < 4) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             continue;
         }

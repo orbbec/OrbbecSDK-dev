@@ -206,7 +206,7 @@ std::shared_ptr<DeviceWatcher> WinPal::createUsbDeviceWatcher() const {
     return std::make_shared<WinUsbDeviceWatcher>(this);
 }
 
-SourcePortInfoList WinPal::queryUsbSourcePort() {
+SourcePortInfoList WinPal::queryUsbSourcePortInfos() {
     SourcePortInfoList portInfoList;
 
     auto action = [&](const UsbInterfaceInfo &info, IMFActivate *) {
@@ -220,7 +220,7 @@ SourcePortInfoList WinPal::queryUsbSourcePort() {
             portInfo->vid      = info.vid;
             portInfo->pid      = info.pid;
             portInfo->serial   = serial;
-            portInfo->connSpec = usbSpecToString(static_cast<UsbSpec>(info.conn_spec));
+            portInfo->connSpec = usbSpecToString(static_cast<UsbSpec>(usbSpec));
             portInfo->infUrl   = info.infUrl;
             portInfo->infIndex = info.infIndex;
             portInfo->infName  = info.infName;

@@ -110,7 +110,7 @@ std::shared_ptr<DeviceWatcher> AndroidPal::createUsbDeviceWatcher() const {
     return androidUsbManager_;
 }
 
-SourcePortInfoList AndroidPal::queryUsbSourcePort() {
+SourcePortInfoList AndroidPal::queryUsbSourcePortInfos() {
     SourcePortInfoList portInfoList;
 
     const auto &usbInfoList = androidUsbManager_->getDeviceInfoList();

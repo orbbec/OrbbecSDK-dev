@@ -238,7 +238,7 @@ std::shared_ptr<DeviceWatcher> LinuxPal::createUsbDeviceWatcher() const {
     return nullptr;
 }
 
-SourcePortInfoList LinuxPal::queryUsbSourcePort() {
+SourcePortInfoList LinuxPal::queryUsbSourcePortInfos() {
     SourcePortInfoList portInfoList;
 
     const auto &interfaceInfoList = usbEnumerator_->queryUsbInterfaces();

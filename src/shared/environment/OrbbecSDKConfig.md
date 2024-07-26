@@ -69,21 +69,21 @@ Based on the device's timestamp and considering data transmission delays, the ti
 ```cpp
     <Misc>
         <GlobalTimestampFitterEnable>true</GlobalTimestampFitterEnable>
-        <!--Global timestamp fitter refresh interval, unit: milliseconds, default value: 8000, minimum value: 100, it is recommended not to be greater than 10000 -->
-        <GlobalTimestampFitterInterval>8000</GlobalTimestampFitterInterval>
-        <!--Global timestamp fitter queue size, default value: 10, minimum value: 4 -->
-        <GlobalTimestampFitterQueueSize>10</GlobalTimestampFitterQueueSize>
+        <!--Global timestamp fitter refresh interval, unit: milliseconds, default value: 1000, minimum value: 100, it is recommended not to be greater than 1000 -->
+        <GlobalTimestampFitterInterval>1000</GlobalTimestampFitterInterval>
+        <!--Global timestamp fitter queue size, default value: 100, minimum value: 20 -->
+        <GlobalTimestampFitterQueueSize>100</GlobalTimestampFitterQueueSize>
     </Misc>
 ```
 
 1. By default, the device time is obtained every eight seconds to update the global timestamp fitter.
 ```cpp
-        <GlobalTimestampFitterInterval>8000</GlobalTimestampFitterInterval>
+        <GlobalTimestampFitterInterval>1000</GlobalTimestampFitterInterval>
 ```
 
 2. The default queue size of the global timestamp fitter is 10.
 ```cpp
-        <GlobalTimestampFitterQueueSize>10</GlobalTimestampFitterQueueSize>
+        <GlobalTimestampFitterQueueSize>100</GlobalTimestampFitterQueueSize>
 ```
 
 **Notes**

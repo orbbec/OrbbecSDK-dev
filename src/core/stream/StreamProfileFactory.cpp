@@ -87,34 +87,40 @@ std::shared_ptr<GyroStreamProfile> createGyroStreamProfile(std::shared_ptr<LazyS
     return gsp;
 }
 
-std::shared_ptr<const StreamProfile> getDefaultStreamProfileFromEnvConfig(const std::string &deviceName, OBSensorType sensorType, const std::string &tag) {
-    auto        devName      = utils::string::remove(deviceName, " ");
-    auto        envConfig    = EnvConfig::getInstance();
-    std::string nodePathName = "Device." + devName + ".";
-    if(!tag.empty()) {
-        nodePathName += tag;
-        nodePathName += ".";
-    }
-    nodePathName += utils::obSensorToStr(sensorType);
+std::shared_ptr<const StreamProfile> getStreamProfileFromEnvConfig(const std::string &nodePathName, OBSensorType sensorType) {
+    auto envConfig = EnvConfig::getInstance();
+
+    auto nodePath = nodePathName + utils::obSensorToStr(sensorType);
+    nodePath      = utils::string::removeSpace(nodePath);
 
     if(sensorType == OB_SENSOR_ACCEL || sensorType == OB_SENSOR_GYRO) {
         return nullptr;  // todo: implement it
     }
-    else {
-        // video stream profile
-        int         w = 0, h = 0, fps = 0;
-        std::string fmt;
-        if(envConfig->getIntValue(nodePathName + ".Width", w) && envConfig->getIntValue(nodePathName + ".Height", h)
-           && envConfig->getIntValue(nodePathName + ".FPS", fps) && envConfig->getStringValue(nodePathName + ".Format", fmt)) {
-            auto width      = static_cast<uint32_t>(w);
-            auto height     = static_cast<uint32_t>(h);
-            auto frameRate  = static_cast<uint32_t>(fps);
-            auto format     = utils::strToOBFormat(fmt);
-            auto streamType = utils::mapSensorTypeToStreamType(sensorType);
-            return StreamProfileFactory::createVideoStreamProfile(streamType, format, width, height, frameRate);
-        }
+
+    // video stream profile
+    int         w = 0, h = 0, fps = 0;
+    std::string fmt;
+    if(envConfig->getIntValue(nodePath + ".Width", w) && envConfig->getIntValue(nodePath + ".Height", h) && envConfig->getIntValue(nodePath + ".FPS", fps)
+       && envConfig->getStringValue(nodePath + ".Format", fmt)) {
+        auto width      = static_cast<uint32_t>(w);
+        auto height     = static_cast<uint32_t>(h);
+        auto frameRate  = static_cast<uint32_t>(fps);
+        auto format     = utils::strToOBFormat(fmt);
+        auto streamType = utils::mapSensorTypeToStreamType(sensorType);
+        return StreamProfileFactory::createVideoStreamProfile(streamType, format, width, height, frameRate);
     }
+
     return nullptr;
+}
+
+std::shared_ptr<const StreamProfile> getDefaultStreamProfileFromEnvConfig(const std::string &deviceName, OBSensorType sensorType, const std::string &tag) {
+    auto        envConfig    = EnvConfig::getInstance();
+    std::string nodePathName = "Device." + deviceName + ".";
+    if(!tag.empty()) {
+        nodePathName += tag;
+        nodePathName += ".";
+    }
+    return getStreamProfileFromEnvConfig(nodePathName, sensorType);
 }
 
 }  // namespace StreamProfileFactory

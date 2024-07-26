@@ -135,7 +135,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid)
 
 DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    auto                                   portInfoList = obPal_->queryUsbSourcePort();
+    auto                                   portInfoList = obPal_->queryUsbSourcePortInfos();
     if(portInfoList != currentUsbPortInfoList_) {
         currentUsbPortInfoList_ = portInfoList;
         LOG_DEBUG("Current usb device port list:");

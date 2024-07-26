@@ -119,7 +119,7 @@ std::shared_ptr<DeviceWatcher> MacPal::createUsbDeviceWatcher() const {
     }
 }
 
-SourcePortInfoList MacPal::queryUsbSourcePort() {
+SourcePortInfoList MacPal::queryUsbSourcePortInfos() {
     SourcePortInfoList portInfoList;
 
     const auto &usbInfoList = usbEnumerator_->queryUsbInterfaces();

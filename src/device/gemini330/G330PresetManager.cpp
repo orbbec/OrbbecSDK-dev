@@ -272,7 +272,7 @@ void G330PresetManager::storeCurrentParamsAsCustomPreset(const std::string &pres
 
     {
         auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
-        preset.depthWorkMode      = depthWorkModeManager->getCurrentDepthWorkModeChecksum().name;
+        preset.depthWorkMode      = depthWorkModeManager->getCurrentDepthWorkMode().name;
     }
 
     if(customPresets_.find(presetName) == customPresets_.end()) {

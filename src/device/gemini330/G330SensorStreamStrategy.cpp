@@ -82,12 +82,12 @@ void G330SensorStreamStrategy::validateDepthAndIrStream(const std::vector<std::s
 }
 
 void G330SensorStreamStrategy::validatePreset(const std::vector<std::shared_ptr<const StreamProfile>> &profiles) {
-    OBDepthWorkModeChecksum currentDepthMode;
+    OBDepthWorkMode_Internal currentDepthMode;
 
     {
         auto owner               = getOwner();
         auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
-        currentDepthMode          = depthWorkModeManager->getCurrentDepthWorkModeChecksum();
+        currentDepthMode          = depthWorkModeManager->getCurrentDepthWorkMode();
     }
 
     for(auto profile: profiles) {

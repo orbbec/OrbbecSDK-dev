@@ -11,16 +11,16 @@ public:
     G2DepthWorkModeManager(IDevice *owner);
     virtual ~G2DepthWorkModeManager() = default;
 
-    std::vector<OBDepthWorkModeChecksum> getDepthWorkModeList() const override;
-    const OBDepthWorkModeChecksum       &getCurrentDepthWorkModeChecksum() const override;
+    std::vector<OBDepthWorkMode_Internal> getDepthWorkModeList() const override;
+    const OBDepthWorkMode_Internal       &getCurrentDepthWorkMode() const override;
     void                                 switchDepthWorkMode(const std::string &modeName) override;
 
 private:
-    void switchDepthWorkMode(const OBDepthWorkModeChecksum &targetDepthMode);
+    void switchDepthWorkMode(const OBDepthWorkMode_Internal &targetDepthMode);
 
 private:
-    std::vector<OBDepthWorkModeChecksum> depthWorkModeChecksumList_;
-    OBDepthWorkModeChecksum              currentWorkMode_;
+    std::vector<OBDepthWorkMode_Internal> depthWorkModeList_;
+    OBDepthWorkMode_Internal              currentWorkMode_;
 };
 
 }  // namespace libobsensor

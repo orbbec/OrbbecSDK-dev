@@ -111,12 +111,18 @@ void G2Device::fetchDeviceInfo() {
 
 void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
 
-    {
-        auto streamProfileFilter = getComponentT<IStreamProfileFilter>(OB_DEV_COMPONENT_STREAM_PROFILE_FILTER);
-        sensor->setStreamProfileFilter(streamProfileFilter.get());
-    }
+    auto streamProfileFilter = getComponentT<IStreamProfileFilter>(OB_DEV_COMPONENT_STREAM_PROFILE_FILTER);
+    sensor->setStreamProfileFilter(streamProfileFilter.get());
 
-    auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensor->getSensorType());
+    auto        depthWorkModeManager = getComponentT<IDepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+    auto        workMode             = depthWorkModeManager->getCurrentDepthWorkMode();
+    std::string workModeName         = utils::string::removeSpace(workMode.name);
+    auto        sensorType           = sensor->getSensorType();
+    auto        streamProfile        = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType, workModeName);
+    if(!streamProfile) {
+        // if not found, try to get default stream profile without work mode
+        streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType);
+    }
     if(streamProfile) {
         sensor->updateDefaultStreamProfile(streamProfile);
     }
@@ -128,7 +134,6 @@ void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
         algParamManager->bindStreamProfileParams(profiles);
     }
 
-    auto sensorType = sensor->getSensorType();
     LOG_INFO("Sensor {} created! Found {} stream profiles.", sensorType, profiles.size());
     for(auto &profile: profiles) {
         LOG_INFO(" - {}", profile);
@@ -207,6 +212,7 @@ void G2Device::initSensorList() {
             return frameProcessor;
         });
 
+        // right ir stream is using depth stream port when depth work mode optionCode is MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL
         registerComponent(
             OB_DEV_COMPONENT_RIGHT_IR_SENSOR,
             [this, depthPortInfo]() {
@@ -294,6 +300,7 @@ void G2Device::initSensorList() {
             return frameProcessor;
         });
 
+        // left ir stream is using the same port as the ir stream when depth work mode optionCode is MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL
         registerComponent(
             OB_DEV_COMPONENT_LEFT_IR_SENSOR,
             [this, irPortInfo]() {
@@ -426,8 +433,9 @@ void G2Device::initSensorList() {
 
 void G2Device::fixSensorList() {
     auto depthWorkModeManager = getComponentT<G2DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
-    auto currentMode          = depthWorkModeManager->getCurrentDepthWorkModeChecksum();
+    auto currentMode          = depthWorkModeManager->getCurrentDepthWorkMode();
 
+    // deregister unsupported sensors according to depth work mode option code
     if(currentMode.optionCode == OBDepthModeOptionCode::MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL) {
         deregisterSensor(OB_SENSOR_IR);
         deregisterSensor(OB_SENSOR_DEPTH);
@@ -536,10 +544,16 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", vendorPropertyAccessor);  // todo: map to device monitor
             propertyServer->registerProperty(OB_PROP_LASER_POWER_ACTUAL_LEVEL_INT, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_STRUCT_DEVICE_TIME, "rw", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_GYRO_ODR_INT, "", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_ACCEL_ODR_INT, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_GYRO_ODR_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_ACCEL_ODR_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_ACCEL_SWITCH_BOOL, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_GYRO_SWITCH_BOOL, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_GYRO_FULL_SCALE_INT, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_ACCEL_FULL_SCALE_INT, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_ODR_LIST, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DEVICE_USB2_REPEAT_IDENTIFY_BOOL, "rw", "rw", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {

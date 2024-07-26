@@ -157,7 +157,7 @@ void PropertyServer::setPropertyValue(uint32_t propertyId, OBPropertyValue value
 void PropertyServer::getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
-        throw invalid_value_exception("Property not readable");
+        throw invalid_value_exception(utils::string::to_string() << "Property not readable: " << propertyId);
     }
 
     auto  it       = properties_.find(propertyId);
@@ -185,7 +185,7 @@ void PropertyServer::getPropertyValue(uint32_t propertyId, OBPropertyValue *valu
 void PropertyServer::getPropertyRange(uint32_t propertyId, OBPropertyRange *range, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
-        throw invalid_value_exception("Property not readable");
+        throw invalid_value_exception(utils::string::to_string() << "Property not readable: " << propertyId);
     }
 
     auto  it       = properties_.find(propertyId);
@@ -227,7 +227,7 @@ void PropertyServer::setStructureData(uint32_t propertyId, const std::vector<uin
 const std::vector<uint8_t> &PropertyServer::getStructureData(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
-        throw invalid_value_exception("Property not readable");
+        throw invalid_value_exception(utils::string::to_string() << "Property not readable: " << propertyId);
     }
 
     auto  it       = properties_.find(propertyId);
@@ -252,7 +252,7 @@ const std::vector<uint8_t> &PropertyServer::getStructureData(uint32_t propertyId
 void PropertyServer::getRawData(uint32_t propertyId, GetDataCallback callback, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
-        throw invalid_value_exception("Property not readable");
+        throw invalid_value_exception(utils::string::to_string() << "Property not readable: " << propertyId);
     }
 
     auto  it       = properties_.find(propertyId);
@@ -276,7 +276,7 @@ void PropertyServer::getRawData(uint32_t propertyId, GetDataCallback callback, P
 uint16_t PropertyServer::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
-        throw invalid_value_exception("Property not readable");
+        throw invalid_value_exception(utils::string::to_string() << "Property not readable: " << propertyId);
     }
 
     auto  it       = properties_.find(propertyId);
@@ -298,7 +298,7 @@ uint16_t PropertyServer::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAcc
 const std::vector<uint8_t> &PropertyServer::getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
-        throw invalid_value_exception("Property not readable");
+        throw invalid_value_exception(utils::string::to_string() << "Property not readable: " << propertyId);
     }
 
     auto  it       = properties_.find(propertyId);
@@ -345,7 +345,7 @@ void PropertyServer::setStructureDataProtoV1_1(uint32_t propertyId, const std::v
 const std::vector<uint8_t> &PropertyServer::getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion, PropertyAccessType accessType) {
     std::unique_lock<std::mutex> lock(mutex_);
     if(!isPropertySupported(propertyId, PROP_OP_READ, accessType)) {
-        throw invalid_value_exception("Property not readable");
+        throw invalid_value_exception(utils::string::to_string() << "Property not readable: " << propertyId);
     }
 
     auto  it       = properties_.find(propertyId);

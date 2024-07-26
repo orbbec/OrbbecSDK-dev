@@ -113,7 +113,8 @@ void G330Device::fetchDeviceInfo() {
 }
 
 void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
-    auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensor->getSensorType());
+    auto sensorType    = sensor->getSensorType();
+    auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType);
     if(streamProfile) {
         sensor->updateDefaultStreamProfile(streamProfile);
     }
@@ -125,7 +126,6 @@ void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
         algParamManager->bindStreamProfileParams(profiles);
     }
 
-    auto sensorType = sensor->getSensorType();
     LOG_INFO("Sensor {} created! Found {} stream profiles.", sensorType, profiles.size());
     for(auto &profile: profiles) {
         LOG_INFO(" - {}", profile);

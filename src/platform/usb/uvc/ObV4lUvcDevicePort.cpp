@@ -235,26 +235,26 @@ void foreachProfile(std::vector<std::shared_ptr<V4lDeviceHandle>>               
                 frame_interval.height           = frame_size.discrete.height;
                 while(!quit && xioctl(devHandle->fd, VIDIOC_ENUM_FRAMEINTERVALS, &frame_interval) == 0) {
                     if(frame_interval.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
-                        if(frame_interval.discrete.numerator == 0 || utils::uvcFourccToOBFormat(fourcc) == OB_FORMAT_UNKNOWN) {
-                            continue;
-                        }
-
-                        auto width  = frame_size.discrete.width;
-                        auto height = frame_size.discrete.height;
-                        auto fps    = static_cast<float>(frame_interval.discrete.denominator) / static_cast<float>(frame_interval.discrete.numerator);
-                        auto format = utils::uvcFourccToOBFormat(fourcc);
-                        // FIXME:
-                        auto profile = std::make_shared<VideoStreamProfile>(std::shared_ptr<LazySensor>(), OB_STREAM_VIDEO, format, width, height, fps);
-                        if(fourcc != 0) {
-                            quit = func(devHandle, profile);
+                        if(frame_interval.discrete.numerator != 0) {
+                            auto obformat = utils::uvcFourccToOBFormat(fourcc);
+                            if(obformat != OB_FORMAT_UNKNOWN) {
+                                auto width   = frame_size.discrete.width;
+                                auto height  = frame_size.discrete.height;
+                                auto fps     = static_cast<float>(frame_interval.discrete.denominator) / static_cast<float>(frame_interval.discrete.numerator);
+                                auto format  = obformat;
+                                auto profile = std::make_shared<VideoStreamProfile>(std::shared_ptr<LazySensor>(), OB_STREAM_VIDEO, format, width, height, fps);
+                                if(fourcc != 0) {
+                                    quit = func(devHandle, profile);
+                                }
+                            }
                         }
                     }
+                    ++frame_interval.index;
                 }
-                ++frame_interval.index;
+                ++frame_size.index;
             }
-            ++frame_size.index;
+            ++pixel_format.index;
         }
-        ++pixel_format.index;
     }
 }
 

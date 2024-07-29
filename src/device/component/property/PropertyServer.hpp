@@ -48,7 +48,7 @@ private:
     void appendToPropertyMap(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms);
 
 private:
-    std::mutex                          mutex_;
+    std::recursive_mutex                mutex_;
     std::map<uint32_t, PropertyItem>    properties_;
     std::vector<OBPropertyItem>         userPropertiesVec_;
     std::vector<OBPropertyItem>         innerPropertiesVec_;

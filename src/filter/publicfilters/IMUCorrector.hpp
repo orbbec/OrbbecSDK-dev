@@ -8,7 +8,7 @@ namespace libobsensor {
 
 class IMUCorrector : public FilterBase {
 public:
-    static OBIMUCalibrateParams parserIMUCalibrationParamsRaw(uint8_t *data, uint32_t size);
+    static OBIMUCalibrateParams parserIMUCalibParamRaw(uint8_t *data, uint32_t size);
     static OBIMUCalibrateParams getDefaultImuCalibParam();
     static float                calculateAccelGravity(int16_t accelValue, uint8_t accelFSR);
     static float                calculateGyroDPS(int16_t gyroValue, uint8_t gyroFSR);

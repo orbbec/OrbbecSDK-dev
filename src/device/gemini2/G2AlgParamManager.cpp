@@ -93,7 +93,7 @@ void G2AlgParamManager::fetchParams() {
         imuCalibParam_ = IMUCorrector::getDefaultImuCalibParam();
     }
     else {
-        imuCalibParam_ = IMUCorrector::parserIMUCalibrationParamsRaw(data.data(), static_cast<uint32_t>(data.size()));
+        imuCalibParam_ = IMUCorrector::parserIMUCalibParamRaw(data.data(), static_cast<uint32_t>(data.size()));
         LOG_DEBUG("Get imu calibration params success!");
     }
 }

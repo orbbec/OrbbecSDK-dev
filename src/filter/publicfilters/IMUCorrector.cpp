@@ -6,7 +6,7 @@
 
 namespace libobsensor {
 
-OBIMUCalibrateParams IMUCorrector::parserIMUCalibrationParamsRaw(uint8_t *data, uint32_t size) {
+OBIMUCalibrateParams IMUCorrector::parserIMUCalibParamRaw(uint8_t *data, uint32_t size) {
     auto                 singleIMUParamSize = sizeof(OBSingleIMUParams);
     uint8_t              paramCount         = static_cast<uint8_t>(size / singleIMUParamSize);
     OBIMUCalibrateParams params{};

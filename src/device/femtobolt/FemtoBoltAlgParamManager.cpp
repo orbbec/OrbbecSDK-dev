@@ -12,33 +12,29 @@
 #define D2C_PARAMS_ITEM_SIZE 0xB0
 
 namespace libobsensor {
-FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : DeviceComponentBase(owner) {
+FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : AlgParamManagerBase(owner) {
     fetchParams();
     registerBasicExtrinsics();
 }
 
-std::vector<OBCameraParam> alignCalibParamParse(uint8_t *filedata, uint32_t size) {
+std::vector<OBCameraParam> alignCalibParamParse(uint8_t *data, uint32_t size) {
     std::vector<OBCameraParam> output;
     for(int i = 0; i < static_cast<int>(size / D2C_PARAMS_ITEM_SIZE); i++) {
-        output.push_back(*(OBCameraParam *)(filedata + i * D2C_PARAMS_ITEM_SIZE));
+        output.push_back(*(OBCameraParam *)(data + i * D2C_PARAMS_ITEM_SIZE));
     }
     return output;
 }
 
-std::vector<OBD2CProfile> d2cProfileInfoParse(uint8_t *filedata, uint32_t size) {
+std::vector<OBD2CProfile> d2cProfileInfoParse(uint8_t *data, uint32_t size) {
     std::vector<OBD2CProfile> output;
-    // int                       strustSize = sizeof(OBD2CProfile);
     for(int i = 0; i < static_cast<int>(size / sizeof(OBD2CProfile)); i++) {
-        output.push_back(*(OBD2CProfile *)(filedata + i * sizeof(OBD2CProfile)));
+        output.push_back(*(OBD2CProfile *)(data + i * sizeof(OBD2CProfile)));
     }
     return output;
 }
 
 void FemtoBoltAlgParamManager::fetchParams() {
-
     std::vector<uint8_t> data;
-    // uint32_t             size = 0;
-    // align param
     data.clear();
     BEGIN_TRY_EXECUTE({
         auto owner      = getOwner();
@@ -124,28 +120,26 @@ void FemtoBoltAlgParamManager::fetchParams() {
     })
 
     if(!data.empty()) {
-        imuCalibParam_ = IMUCorrector::parserIMUCalibrationParamsRaw(data.data(), static_cast<uint32_t>(data.size()));
+        imuCalibParam_ = IMUCorrector::parserIMUCalibParamRaw(data.data(), static_cast<uint32_t>(data.size()));
         LOG_DEBUG("Get imu calibration params success!");
     }
     else {
         LOG_WARN("Get imu calibration param failed!load default param.");
-        // auto fs        = cmrc::ob::get_filesystem();
-        // auto defConfig = fs.open("config/imu_calib_dft_0.2.yaml");
-        // imuCalibParam_ = parserIMUCalibrationParams(defConfig.begin());
+        imuCalibParam_ = IMUCorrector::getDefaultImuCalibParam();
     }
 }
 
 void FemtoBoltAlgParamManager::registerBasicExtrinsics() {
     auto extrinsicMgr        = StreamExtrinsicsManager::getInstance();
-    depthBasicStreamProfile_ = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_DEPTH, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
-    colorBasicStreamProfile_ = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_COLOR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
-    irBasicStreamProfile_    = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_IR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
-    accelBasicStreamProfile_ = StreamProfileFactory::createAccelStreamProfile(OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
-    gyroBasicStreamProfile_  = StreamProfileFactory::createGyroStreamProfile(OB_GYRO_FS_16dps, OB_SAMPLE_RATE_1_5625_HZ);
+    auto depthBasicStreamProfile = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_DEPTH, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
+    auto colorBasicStreamProfile = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_COLOR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
+    auto irBasicStreamProfile    = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_IR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
+    auto accelBasicStreamProfile = StreamProfileFactory::createAccelStreamProfile(OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
+    auto gyroBasicStreamProfile  = StreamProfileFactory::createGyroStreamProfile(OB_GYRO_FS_16dps, OB_SAMPLE_RATE_1_5625_HZ);
 
     if(!calibrationCameraParamList_.empty()) {
         auto d2cExtrinsic = calibrationCameraParamList_.front().transform;
-        extrinsicMgr->registerExtrinsics(depthBasicStreamProfile_, colorBasicStreamProfile_, d2cExtrinsic);
+        extrinsicMgr->registerExtrinsics(depthBasicStreamProfile, colorBasicStreamProfile, d2cExtrinsic);
     }
 
     double imuExtr[16] = { 0 };
@@ -165,93 +159,13 @@ void FemtoBoltAlgParamManager::registerBasicExtrinsics() {
     imu_to_depth.trans[0] = (float)imuExtr[3];
     imu_to_depth.trans[1] = (float)imuExtr[7];
     imu_to_depth.trans[2] = (float)imuExtr[11];
-    extrinsicMgr->registerExtrinsics(accelBasicStreamProfile_, depthBasicStreamProfile_, imu_to_depth);
-    extrinsicMgr->registerSameExtrinsics(gyroBasicStreamProfile_, accelBasicStreamProfile_);
-}
+    extrinsicMgr->registerExtrinsics(accelBasicStreamProfile, depthBasicStreamProfile, imu_to_depth);
+    extrinsicMgr->registerSameExtrinsics(gyroBasicStreamProfile, accelBasicStreamProfile);
 
-void FemtoBoltAlgParamManager::bindStreamProfileParams(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
-    bindExtrinsic(streamProfileList);
-    bindIntrinsic(streamProfileList);
-}
-
-void FemtoBoltAlgParamManager::bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
-    auto extrinsicMgr            = StreamExtrinsicsManager::getInstance();
-    auto matchBasicStreamProfile = [&](std::shared_ptr<const StreamProfile> profile) {
-        auto spType = profile->getType();
-        switch(spType) {
-        case OB_STREAM_DEPTH:
-            return depthBasicStreamProfile_;
-            break;
-        case OB_STREAM_COLOR:
-            return colorBasicStreamProfile_;
-            break;
-        case OB_STREAM_IR:
-            return irBasicStreamProfile_;
-            break;
-        case OB_STREAM_ACCEL:
-            return accelBasicStreamProfile_;
-            break;
-        case OB_STREAM_GYRO:
-            return gyroBasicStreamProfile_;
-            break;
-        default:
-            return std::shared_ptr<const StreamProfile>(nullptr);
-            break;
-        }
-    };
-
-    for(auto &sp: streamProfileList) {
-        auto src = matchBasicStreamProfile(sp);
-        extrinsicMgr->registerSameExtrinsics(sp, src);
-    }
-}
-
-void FemtoBoltAlgParamManager::bindIntrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
-    auto intrinsicMgr = StreamIntrinsicsManager::getInstance();
-    for(const auto &sp: streamProfileList) {
-        if(sp->is<AccelStreamProfile>()) {
-            OBAccelIntrinsic accIntrinsic;
-            memcpy(&accIntrinsic, &imuCalibParam_.singleIMUParams[0].acc, sizeof(OBAccelIntrinsic));
-            intrinsicMgr->registerAccelStreamIntrinsics(sp, accIntrinsic);
-        }
-        else if(sp->is<GyroStreamProfile>()) {
-            OBGyroIntrinsic gyroIntrinsic;
-            memcpy(&gyroIntrinsic, &imuCalibParam_.singleIMUParams[0].gyro, sizeof(OBGyroIntrinsic));
-            intrinsicMgr->registerGyroStreamIntrinsics(sp, gyroIntrinsic);
-        }
-        else {
-            OBCameraIntrinsic  intrinsic  = { 0 };
-            OBCameraDistortion distortion = { 0 };
-            OBCameraParam      param{};
-            auto               vsp = sp->as<VideoStreamProfile>();
-            // if(!findBestMatchedCameraParam(calibrationCameraParamList_, vsp, param)) {
-            //     // throw libobsensor::unsupported_operation_exception("Can not find matched camera param!");
-            //     continue;
-            // }
-            switch(sp->getType()) {
-            case OB_STREAM_COLOR:
-                intrinsic  = param.rgbIntrinsic;
-                distortion = param.rgbDistortion;
-                break;
-            case OB_STREAM_DEPTH:
-            case OB_STREAM_IR:
-                intrinsic  = param.depthIntrinsic;
-                distortion = param.depthDistortion;
-                break;
-            default:
-                break;
-            }
-            auto ratio = (float)vsp->getWidth() / (float)intrinsic.width;
-            intrinsic.fx *= ratio;
-            intrinsic.fy *= ratio;
-            intrinsic.cx *= ratio;
-            intrinsic.cy *= ratio;
-            intrinsic.width  = static_cast<int16_t>(vsp->getWidth());
-            intrinsic.height = static_cast<int16_t>((float)intrinsic.height * ratio);
-
-            intrinsicMgr->registerVideoStreamIntrinsics(sp, intrinsic);
-            intrinsicMgr->registerVideoStreamDistortion(sp, distortion);
-        }
-    }
+    basicStreamProfileList_.emplace_back(depthBasicStreamProfile);
+    basicStreamProfileList_.emplace_back(colorBasicStreamProfile);
+    basicStreamProfileList_.emplace_back(irBasicStreamProfile);
+    basicStreamProfileList_.emplace_back(accelBasicStreamProfile);
+    basicStreamProfileList_.emplace_back(gyroBasicStreamProfile);
 }
 }  // namespace libobsensor

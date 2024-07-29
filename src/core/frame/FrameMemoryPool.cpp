@@ -42,7 +42,7 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
     std::shared_ptr<IFrameBufferManager> frameBufMgr;
     switch(type) {
     case OB_FRAME_VIDEO:
-    
+
         frameBufMgr = std::shared_ptr<FrameBufferManager<VideoFrame>>(new FrameBufferManager<VideoFrame>(frameBufferSize));
         LOG_DEBUG("VideoFrame bufferManager created!");
         break;
@@ -106,10 +106,10 @@ std::shared_ptr<IFrameBufferManager> FrameMemoryPool::createFrameBufferManager(O
         return createFrameBufferManager(type, sp->getFormat(), sp->getWidth(), sp->getHeight());
     }
     else if(streamProfile->is<AccelStreamProfile>()) {
-        return createFrameBufferManager(type, sizeof(AccelFrame::OBAccelFrameData));
+        return createFrameBufferManager(type, sizeof(AccelFrame::Data));
     }
     else if(streamProfile->is<GyroStreamProfile>()) {
-        return createFrameBufferManager(type, sizeof(GyroFrame::OBGyroFrameData));
+        return createFrameBufferManager(type, sizeof(GyroFrame::Data));
     }
     LOG_WARN("unsupported streamProfile type");
     return nullptr;

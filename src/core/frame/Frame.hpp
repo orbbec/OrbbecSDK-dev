@@ -197,10 +197,12 @@ private:
 
 class AccelFrame : public Frame {
 public:
+#pragma pack(push, 1)
     typedef struct {
-        float accelData[3];  // Acceleration values in three directions (xyz), unit: g (9.80665 m/s^2)
+        OBAccelValue value;         // Acceleration values in three directions (xyz), unit: g (9.80665 m/s^2)
         float temp;          // Temperature in Celsius
-    } OBAccelFrameData;
+    } Data;
+#pragma pack(pop)
 
 public:
     AccelFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);
@@ -211,10 +213,12 @@ public:
 
 class GyroFrame : public Frame {
 public:
+#pragma pack(push, 1)
     typedef struct {
-        float gyroData[3];  // Acceleration values ​​in three directions (xyz), unit: dps (degrees per second)
+        OBGyroValue value;        // Acceleration values ​​in three directions (xyz), unit: dps (degrees per second)
         float temp;         // Temperature in Celsius
-    } OBGyroFrameData;
+    } Data;
+#pragma pack(pop)
 
 public:
     GyroFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc = nullptr);

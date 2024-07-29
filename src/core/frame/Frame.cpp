@@ -325,7 +325,7 @@ OBAccelValue AccelFrame::value() {
 }
 
 float AccelFrame::temperature() {
-    return ((OBAccelFrameData *)getData())->temp;
+    return ((AccelFrame::Data *)getData())->temp;
 }
 
 GyroFrame::GyroFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
@@ -336,7 +336,7 @@ OBGyroValue GyroFrame ::value() {
 }
 
 float GyroFrame ::temperature() {
-    return ((OBGyroFrameData *)getData())->temp;
+    return ((GyroFrame::Data *)getData())->temp;
 }
 
 FrameSet::FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc) : Frame(data, dataBufSize, OB_FRAME_SET, bufferReclaimFunc) {}

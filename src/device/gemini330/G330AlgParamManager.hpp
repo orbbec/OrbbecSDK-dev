@@ -43,12 +43,12 @@ private:
 
 private:
     // using empty stream profile to initialize and register extrinsic to GlobalStreamExtrinsicsManager
-    std::shared_ptr<const StreamProfile> colorEmptyStreamProfile_;
-    std::shared_ptr<const StreamProfile> depthEmptyStreamProfile_;
-    std::shared_ptr<const StreamProfile> leftIrEmptyStreamProfile_;
-    std::shared_ptr<const StreamProfile> rightIrEmptyStreamProfile_;
-    std::shared_ptr<const StreamProfile> accelEmptyStreamProfile_;
-    std::shared_ptr<const StreamProfile> gyroEmptyStreamProfile_;
+    std::shared_ptr<const StreamProfile> colorBasicStreamProfile_;
+    std::shared_ptr<const StreamProfile> depthBasicStreamProfile_;
+    std::shared_ptr<const StreamProfile> leftIrBasicStreamProfile_;
+    std::shared_ptr<const StreamProfile> rightIrBasicStreamProfile_;
+    std::shared_ptr<const StreamProfile> accelBasicStreamProfile_;
+    std::shared_ptr<const StreamProfile> gyroBasicStreamProfile_;
 
     std::vector<OBDepthCalibrationParam> depthCalibParamList_;
     OBIMUCalibrateParams                 imuCalibParam_;

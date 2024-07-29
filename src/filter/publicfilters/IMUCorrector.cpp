@@ -20,6 +20,24 @@ OBIMUCalibrateParams IMUCorrector::parserIMUCalibrationParamsRaw(uint8_t *data, 
     return params;
 }
 
+OBIMUCalibrateParams IMUCorrector::getDefaultImuCalibParam() {
+    auto generateDefaultParams = []() {
+        OBIMUCalibrateParams params;
+        const double         IdentityMatrix3x3[9]  = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+        const double         IdentityMatrix4x4[16] = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+        memset(&params, 0, sizeof(OBIMUCalibrateParams));
+        memcpy(params.singleIMUParams[0].imu_to_cam_extrinsics, IdentityMatrix4x4, sizeof(IdentityMatrix4x4));
+        memcpy(params.singleIMUParams[0].body_to_gyroscope, IdentityMatrix3x3, sizeof(IdentityMatrix3x3));
+        memcpy(params.singleIMUParams[0].acc_to_gyro_factor, IdentityMatrix3x3, sizeof(IdentityMatrix3x3));
+        memcpy(params.singleIMUParams[0].acc.scaleMisalignment, IdentityMatrix3x3, sizeof(IdentityMatrix3x3));
+        memcpy(params.singleIMUParams[0].gyro.scaleMisalignment, IdentityMatrix3x3, sizeof(IdentityMatrix3x3));
+
+        return params;
+    };
+    static OBIMUCalibrateParams params = generateDefaultParams();
+    return params;
+}
+
 float IMUCorrector::calculateAccelGravity(int16_t accelValue, uint8_t accelFSR) {
     float sensitivity = 0.f;
 
@@ -105,37 +123,28 @@ std::shared_ptr<Frame> IMUCorrector::processFunc(std::shared_ptr<const Frame> fr
     auto frameSet   = newFrame->as<FrameSet>();
     auto accelFrame = frameSet->getFrame(OB_FRAME_ACCEL);
     if(accelFrame) {
-        auto sp       = accelFrame->getStreamProfile();
-        auto accelSp  = sp->as<AccelStreamProfile>();
-        auto intrisic = accelSp->getIntrinsic();
+        auto sp        = accelFrame->getStreamProfile();
+        auto accelSp   = sp->as<AccelStreamProfile>();
+        auto intrinsic = accelSp->getIntrinsic();
 
-        auto      frameData     = (AccelFrame::OBAccelFrameData *)accelFrame->getData();
-        OBPoint3f accelValue    = { frameData->accelData[0], frameData->accelData[1], frameData->accelData[2] };
-        accelValue              = correctAccel(accelValue, &intrisic);
-        frameData->accelData[0] = accelValue.x;
-        frameData->accelData[1] = accelValue.y;
-        frameData->accelData[2] = accelValue.z;
-        frameData->temp         = calculateRegisterTemperature(static_cast<int16_t>(frameData->temp));
+        auto frameData   = (AccelFrame::Data *)accelFrame->getData();
+        frameData->value = correctAccel(frameData->value, &intrinsic);
     }
 
     auto gyroFrame = frameSet->getFrame(OB_FRAME_GYRO);
     if(gyroFrame) {
-        auto sp       = gyroFrame->getStreamProfile();
-        auto gyroSp   = sp->as<GyroStreamProfile>();
-        auto intrisic = gyroSp->getIntrinsic();
+        auto sp        = gyroFrame->getStreamProfile();
+        auto gyroSp    = sp->as<GyroStreamProfile>();
+        auto intrinsic = gyroSp->getIntrinsic();
 
-        auto      frameData    = (GyroFrame::OBGyroFrameData *)gyroFrame->getData();
-        OBPoint3f gyroValue    = { frameData->gyroData[0], frameData->gyroData[1], frameData->gyroData[2] };
-        gyroValue              = correctGyro(gyroValue, &intrisic);
-        frameData->gyroData[0] = gyroValue.x;
-        frameData->gyroData[1] = gyroValue.y;
-        frameData->gyroData[2] = gyroValue.z;
+        auto frameData   = (GyroFrame::Data *)gyroFrame->getData();
+        frameData->value = correctGyro(frameData->value, &intrinsic);
     }
 
     return newFrame;
 }
 
-OBPoint3f IMUCorrector::correctAccel(const OBPoint3f &accelVec, OBAccelIntrinsic *intrinsic) {
+OBAccelValue IMUCorrector::correctAccel(const OBAccelValue &accelValue, OBAccelIntrinsic *intrinsic) {
     double M_acc[3][3];
     double bias_acc[3];
 
@@ -151,13 +160,14 @@ OBPoint3f IMUCorrector::correctAccel(const OBPoint3f &accelVec, OBAccelIntrinsic
 
     double correctedAccel[3];
     for(int i = 0; i < 3; i++) {
-        correctedAccel[i] = M_acc[i][0] * (accelVec.x - bias_acc[0]) + M_acc[i][1] * (accelVec.y - bias_acc[1]) + M_acc[i][2] * (accelVec.z - bias_acc[2]);
+        correctedAccel[i] =
+            M_acc[i][0] * (accelValue.x - bias_acc[0]) + M_acc[i][1] * (accelValue.y - bias_acc[1]) + M_acc[i][2] * (accelValue.z - bias_acc[2]);
     }
 
     return { static_cast<float>(correctedAccel[0]), static_cast<float>(correctedAccel[1]), static_cast<float>(correctedAccel[2]) };
 }
 
-OBPoint3f IMUCorrector::correctGyro(const OBPoint3f &gyroVec, OBGyroIntrinsic *intrinsic) {
+OBGyroValue IMUCorrector::correctGyro(const OBGyroValue &gyroValue, OBGyroIntrinsic *intrinsic) {
     double M_gyro[3][3];
     double bias_gyro[3];
 
@@ -173,7 +183,8 @@ OBPoint3f IMUCorrector::correctGyro(const OBPoint3f &gyroVec, OBGyroIntrinsic *i
 
     double correctedGyro[3];
     for(int i = 0; i < 3; i++) {
-        correctedGyro[i] = M_gyro[i][0] * (gyroVec.x - bias_gyro[0]) + M_gyro[i][1] * (gyroVec.y - bias_gyro[1]) + M_gyro[i][2] * (gyroVec.z - bias_gyro[2]);
+        correctedGyro[i] =
+            M_gyro[i][0] * (gyroValue.x - bias_gyro[0]) + M_gyro[i][1] * (gyroValue.y - bias_gyro[1]) + M_gyro[i][2] * (gyroValue.z - bias_gyro[2]);
     }
 
     return { static_cast<float>(correctedGyro[0]), static_cast<float>(correctedGyro[1]), static_cast<float>(correctedGyro[2]) };

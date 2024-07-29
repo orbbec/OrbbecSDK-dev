@@ -131,23 +131,23 @@ void G330AlgParamManager::fetchParams() {
 
 void G330AlgParamManager::registerBasicExtrinsics() {
     auto extrinsicMgr          = StreamExtrinsicsManager::getInstance();
-    depthEmptyStreamProfile_   = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_DEPTH, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
-    colorEmptyStreamProfile_   = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_COLOR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
-    leftIrEmptyStreamProfile_  = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_IR_LEFT, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
-    rightIrEmptyStreamProfile_ = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_IR_RIGHT, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
-    accelEmptyStreamProfile_   = StreamProfileFactory::createAccelStreamProfile(OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
-    gyroEmptyStreamProfile_    = StreamProfileFactory::createGyroStreamProfile(OB_GYRO_FS_16dps, OB_SAMPLE_RATE_1_5625_HZ);
+    depthBasicStreamProfile_   = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_DEPTH, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
+    colorBasicStreamProfile_   = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_COLOR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
+    leftIrBasicStreamProfile_  = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_IR_LEFT, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
+    rightIrBasicStreamProfile_ = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_IR_RIGHT, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
+    accelBasicStreamProfile_   = StreamProfileFactory::createAccelStreamProfile(OB_ACCEL_FS_2g, OB_SAMPLE_RATE_1_5625_HZ);
+    gyroBasicStreamProfile_    = StreamProfileFactory::createGyroStreamProfile(OB_GYRO_FS_16dps, OB_SAMPLE_RATE_1_5625_HZ);
 
     if(!calibrationCameraParamList_.empty()) {
         auto d2cExtrinsic = calibrationCameraParamList_.front().transform;
-        extrinsicMgr->registerExtrinsics(depthEmptyStreamProfile_, colorEmptyStreamProfile_, d2cExtrinsic);
+        extrinsicMgr->registerExtrinsics(depthBasicStreamProfile_, colorBasicStreamProfile_, d2cExtrinsic);
     }
-    extrinsicMgr->registerSameExtrinsics(leftIrEmptyStreamProfile_, depthEmptyStreamProfile_);
+    extrinsicMgr->registerSameExtrinsics(leftIrBasicStreamProfile_, depthBasicStreamProfile_);
 
     if(!depthCalibParamList_.empty()) {
         auto left_to_right     = IdentityExtrinsic;
         left_to_right.trans[0] = depthCalibParamList_.front().baseline * depthCalibParamList_.front().unit;
-        extrinsicMgr->registerExtrinsics(leftIrEmptyStreamProfile_, rightIrEmptyStreamProfile_, left_to_right);
+        extrinsicMgr->registerExtrinsics(leftIrBasicStreamProfile_, rightIrBasicStreamProfile_, left_to_right);
     }
 
     // todo: use shared_ptr to manage imuCalibParam_
@@ -168,8 +168,8 @@ void G330AlgParamManager::registerBasicExtrinsics() {
     imu_to_depth.trans[0] = (float)imuExtr[3];
     imu_to_depth.trans[1] = (float)imuExtr[7];
     imu_to_depth.trans[2] = (float)imuExtr[11];
-    extrinsicMgr->registerExtrinsics(accelEmptyStreamProfile_, depthEmptyStreamProfile_, imu_to_depth);
-    extrinsicMgr->registerSameExtrinsics(gyroEmptyStreamProfile_, accelEmptyStreamProfile_);
+    extrinsicMgr->registerExtrinsics(accelBasicStreamProfile_, depthBasicStreamProfile_, imu_to_depth);
+    extrinsicMgr->registerSameExtrinsics(gyroBasicStreamProfile_, accelBasicStreamProfile_);
 }
 
 typedef struct {
@@ -326,27 +326,27 @@ void G330AlgParamManager::bindStreamProfileParams(std::vector<std::shared_ptr<co
 
 void G330AlgParamManager::bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) {
     auto extrinsicMgr            = StreamExtrinsicsManager::getInstance();
-    auto matchEmptyStreamProfile = [&](std::shared_ptr<const StreamProfile> profile) {
+    auto matchBasicStreamProfile = [&](std::shared_ptr<const StreamProfile> profile) {
         auto spType = profile->getType();
         switch(spType) {
         case OB_STREAM_DEPTH:
-            return depthEmptyStreamProfile_;
+            return depthBasicStreamProfile_;
         case OB_STREAM_COLOR:
-            return colorEmptyStreamProfile_;
+            return colorBasicStreamProfile_;
         case OB_STREAM_IR_LEFT:
-            return leftIrEmptyStreamProfile_;
+            return leftIrBasicStreamProfile_;
         case OB_STREAM_IR_RIGHT:
-            return rightIrEmptyStreamProfile_;
+            return rightIrBasicStreamProfile_;
         case OB_STREAM_ACCEL:
-            return accelEmptyStreamProfile_;
+            return accelBasicStreamProfile_;
         case OB_STREAM_GYRO:
-            return gyroEmptyStreamProfile_;
+            return gyroBasicStreamProfile_;
         default:
             return std::shared_ptr<const StreamProfile>(nullptr);
         }
     };
     for(auto &sp: streamProfileList) {
-        auto src = matchEmptyStreamProfile(sp);
+        auto src = matchBasicStreamProfile(sp);
         extrinsicMgr->registerSameExtrinsics(sp, src);
     }
 }

@@ -313,6 +313,14 @@ public:
     void setCoordinateSystem(OBCoordinateSystemType type) {
         setConfigValue("coordinateSystemType", static_cast<double>(type));
     }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+     */
+    OB_DEPRECATED void setPositionDataScaled(float scale){
+        setCoordinateDataScaled(scale);
+    }
 };
 
 class Align : public Filter {

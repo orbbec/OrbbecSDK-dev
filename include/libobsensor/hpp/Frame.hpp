@@ -630,11 +630,11 @@ public:
         return temp;
     }
 
-    OB_DEPRECATED OBAccelValue value(){
+    OB_DEPRECATED OBAccelValue value() {
         return getValue();
     }
 
-    OB_DEPRECATED float temperature(){
+    OB_DEPRECATED float temperature() {
         return getTemperature();
     }
 };
@@ -675,11 +675,11 @@ public:
         return temperature;
     }
 
-    OB_DEPRECATED OBGyroValue value(){
+    OB_DEPRECATED OBGyroValue value() {
         return getValue();
     }
 
-    OB_DEPRECATED float temperature(){
+    OB_DEPRECATED float temperature() {
         return getTemperature();
     }
 };
@@ -766,31 +766,31 @@ public:
         return getCount();
     }
 
-    OB_DEPRECATED std::shared_ptr<DepthFrame> depthFrame() {
+    OB_DEPRECATED std::shared_ptr<DepthFrame> depthFrame() const {
         auto frame      = getFrame(OB_FRAME_DEPTH);
         auto depthFrame = frame->as<ob::DepthFrame>();
         return depthFrame;
     }
 
-    OB_DEPRECATED std::shared_ptr<ColorFrame> colorFrame() {
+    OB_DEPRECATED std::shared_ptr<ColorFrame> colorFrame() const {
         auto frame      = getFrame(OB_FRAME_COLOR);
         auto colorFrame = frame->as<ob::ColorFrame>();
         return colorFrame;
     }
 
-    OB_DEPRECATED std::shared_ptr<IRFrame> irFrame() {
+    OB_DEPRECATED std::shared_ptr<IRFrame> irFrame() const {
         auto frame   = getFrame(OB_FRAME_IR);
         auto irFrame = frame->as<ob::IRFrame>();
         return irFrame;
     }
 
-    OB_DEPRECATED std::shared_ptr<PointsFrame> pointsFrame() {
+    OB_DEPRECATED std::shared_ptr<PointsFrame> pointsFrame() const {
         auto frame       = getFrame(OB_FRAME_POINTS);
         auto pointsFrame = frame->as<ob::PointsFrame>();
         return pointsFrame;
     }
 
-    OB_DEPRECATED std::shared_ptr<Frame> getFrame(int index){
+    OB_DEPRECATED std::shared_ptr<Frame> getFrame(int index) const {
         return getFrameByIndex(index);
     }
 };

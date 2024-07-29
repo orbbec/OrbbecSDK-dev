@@ -231,6 +231,12 @@ OB_EXPORT uint32_t ob_filter_config_schema_list_get_count(const ob_filter_config
  */
 OB_EXPORT ob_filter_config_schema_item ob_filter_config_schema_list_get_item(const ob_filter_config_schema_list *config_schema_list, uint32_t index,
                                                                              ob_error **error);
+/**
+ * In order to be compatible with the closed source version of orbbecsdk's interface.
+ * We recommend using the latest interface names for a better experience.
+*/
+#define ob_get_filter ob_filter_list_get_filter
+#define ob_get_filter_name ob_filter_get_name
 
 #ifdef __cplusplus
 }

@@ -22,6 +22,14 @@ ob_depth_work_mode ob_device_get_current_depth_work_mode(const ob_device *device
 }
 HANDLE_EXCEPTIONS_AND_RETURN({}, device)
 
+const char *ob_device_get_current_depth_work_mode_name(const ob_device *device, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    auto  algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
+    auto &checksum   = algModeMgr->getCurrentDepthAlgModeChecksum();
+    return checksum.name;
+}
+HANDLE_EXCEPTIONS_AND_RETURN({}, device)
+
 ob_status ob_device_switch_depth_work_mode(ob_device *device, const ob_depth_work_mode *work_mode, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(work_mode);
@@ -102,6 +110,16 @@ void ob_device_load_preset_from_json_file(ob_device *device, const char *json_fi
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
 
+void ob_device_load_preset_from_json_data(ob_device *device, const char *presetName, const uint8_t *data, uint32_t size, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    VALIDATE_NOT_NULL(data);
+
+    auto                 presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER);
+    std::vector<uint8_t> vecData(data, data + size);
+    presetMgr->loadPresetFromJsonData(presetName, vecData);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device, data)
+
 void ob_device_export_current_settings_as_preset_json_file(ob_device *device, const char *json_file_path, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(json_file_path);
@@ -110,6 +128,17 @@ void ob_device_export_current_settings_as_preset_json_file(ob_device *device, co
     presetMgr->exportSettingsAsPresetJsonFile(json_file_path);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
+
+void ob_device_export_current_settings_as_preset_json_data(ob_device *device, const char *presetName, const uint8_t **data, uint32_t *dataSize,
+                                                           ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+
+    auto        presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER);
+    const auto &jsonData  = presetMgr->exportSettingsAsPresetJsonData(presetName);
+    *data                 = (const uint8_t *)jsonData.data();
+    *dataSize             = (uint32_t)jsonData.size();
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device, presetName)
 
 ob_device_preset_list *ob_device_get_available_preset_list(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);

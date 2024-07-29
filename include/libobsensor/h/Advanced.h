@@ -15,6 +15,13 @@ extern "C" {
 OB_EXPORT ob_depth_work_mode ob_device_get_current_depth_work_mode(const ob_device *device, ob_error **error);
 
 /**
+ * @brief Get current depth mode name
+ * @brief According the current preset name to return current depth mode name
+ * @return const char* return the current depth mode name.
+ */
+OB_EXPORT const char * ob_device_get_current_depth_work_mode_name(const ob_device *device, ob_error **error);
+
+/**
  * @brief Switch the depth work mode by ob_depth_work_mode.
  *        Prefer to use ob_device_switch_depth_work_mode_by_name to switch depth mode when the complete name of the depth work mode is known.
  *
@@ -111,6 +118,19 @@ OB_EXPORT void ob_device_load_preset(ob_device *device, const char *preset_name,
 OB_EXPORT void ob_device_load_preset_from_json_file(ob_device *device, const char *json_file_path, ob_error **error);
 
 /**
+ * @brief Load custom preset from data.
+ * @brief After loading the custom preset, the settings in the custom preset will set to the device immediately.
+ * @brief After loading the custom preset, the available preset list will be appended with the custom preset and named as the @ref presetName.
+ *
+ * @attention The user should ensure that the custom preset data is adapted to the device and the settings in the data are valid.
+ * @attention It is recommended to re-read the device settings to update the user program temporarily after successfully loading the custom preset.
+ *
+ * @param data The custom preset data.
+ * @param size The size of the custom preset data.
+ */
+OB_EXPORT void ob_device_load_preset_from_json_data(ob_device *device, const char *presetName, const uint8_t *data, uint32_t size, ob_error **error);
+
+/**
  * @brief Export current settings as a preset json file.
  * @brief After exporting the custom preset, the available preset list will be appended with the custom preset and named as the file name.
  *
@@ -119,6 +139,19 @@ OB_EXPORT void ob_device_load_preset_from_json_file(ob_device *device, const cha
  * @param error   Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_device_export_current_settings_as_preset_json_file(ob_device *device, const char *json_file_path, ob_error **error);
+
+/**
+ * @brief Export current device settings as a preset json data.
+ * @brief After exporting the preset, a new preset named as the @ref presetName will be added to the available preset list.
+ *
+ * @attention The memory of the data is allocated by the SDK, and will automatically be released by the SDK.
+ * @attention The memory of the data will be reused by the SDK on the next call, so the user should copy the data to a new buffer if it needs to be
+ * preserved.
+ *
+ * @param[out] data return the preset json data.
+ * @param[out] dataSize return the size of the preset json data.
+ */
+OB_EXPORT void ob_device_export_current_settings_as_preset_json_data(ob_device *device, const char *presetName, const uint8_t **data, uint32_t *dataSize, ob_error **error);
 
 /**
  * @brief Get the available preset list.

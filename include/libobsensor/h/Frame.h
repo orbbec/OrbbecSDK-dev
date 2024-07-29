@@ -644,6 +644,11 @@ OB_EXPORT void ob_frameset_push_frame(ob_frame *frameset, const ob_frame *frame,
         ob_frame_set_system_timestamp_us(frame, system_timestamp * 1000, err); \
     } while(0);
 
+#define ob_frame_set_device_time_stamp(frame, device_timestamp, err)    \
+    do {                                                                \
+        ob_frame_set_timestamp_us(frame, device_timestamp * 1000, err); \
+    } while(0);
+
 #ifdef __cplusplus
 }
 #endif

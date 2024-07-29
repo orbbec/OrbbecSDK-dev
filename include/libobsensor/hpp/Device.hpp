@@ -371,6 +371,18 @@ public:
     }
 
     /**
+     * @brief Get current depth mode name
+     * @brief According the current preset name to return current depth mode name
+     * @return const char* return the current depth mode name.
+     */
+    const char *getCurrentDepthModeName(){
+        ob_error *error = nullptr;
+        auto      name  = ob_device_get_current_depth_work_mode_name(impl_, &error);
+        Error::handle(&error);
+        return name;
+    }
+
+    /**
      * @brief Switch depth work mode by OBDepthWorkMode. Prefer invoke switchDepthWorkMode(const char *modeName) to switch depth mode
      * when known the complete name of depth work mode.
      * @param[in] workMode Depth work mode come from ob_depth_work_mode_list which return by ob_device_get_depth_work_mode_list
@@ -604,6 +616,38 @@ public:
         ob_error *error = nullptr;
         ob_device_load_preset_from_json_file(impl_, filePath, &error);
         Error::handle(&error);
+    }
+
+    /**
+     * @brief Load custom preset from data.
+     * @brief After loading the custom preset, the settings in the custom preset will set to the device immediately.
+     * @brief After loading the custom preset, the available preset list will be appended with the custom preset and named as the @ref presetName.
+     *
+     * @attention The user should ensure that the custom preset data is adapted to the device and the settings in the data are valid.
+     * @attention It is recommended to re-read the device settings to update the user program temporarily after successfully loading the custom preset.
+     *
+     * @param data The custom preset data.
+     * @param size The size of the custom preset data.
+     */
+    void loadPresetFromJsonData(const char *presetName, const uint8_t *data, uint32_t size){
+        ob_error *error = nullptr;
+        ob_device_load_preset_from_json_data(impl_, presetName, data, size, &error);
+    }
+
+    /**
+     * @brief Export current device settings as a preset json data.
+     * @brief After exporting the preset, a new preset named as the @ref presetName will be added to the available preset list.
+     *
+     * @attention The memory of the data is allocated by the SDK, and will automatically be released by the SDK.
+     * @attention The memory of the data will be reused by the SDK on the next call, so the user should copy the data to a new buffer if it needs to be
+     * preserved.
+     *
+     * @param[out] data return the preset json data.
+     * @param[out] dataSize return the size of the preset json data.
+     */
+    void exportSettingsAsPresetJsonData(const char *presetName, const uint8_t **data, uint32_t *dataSize){
+        ob_error *error = nullptr;
+        ob_device_export_current_settings_as_preset_json_data(impl_, presetName, data, dataSize, &error);
     }
 
     /**

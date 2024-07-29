@@ -591,6 +591,12 @@ public:
 
         return scale;
     }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+    */
+    #define getPositionValueScale getCoordinateValueScale
 };
 
 /**

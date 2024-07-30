@@ -219,15 +219,15 @@ void G330PresetManager::loadCustomPreset(const std::string &presetName, const G3
 
     setPropertyValue(owner, OB_PROP_LASER_CONTROL_INT, preset.laserState);
     setPropertyValue(owner, OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, preset.laserPowerLevel);
-    setPropertyValue(owner, OB_PROP_IR_EXPOSURE_INT, preset.depthExposureTime);  // using ir exposures for depth due to access property manager directly
+    setPropertyValue(owner, OB_PROP_IR_EXPOSURE_INT, preset.depthExposureTime);
     setPropertyValue(owner, OB_PROP_IR_GAIN_INT, preset.depthGain);
     setPropertyValue(owner, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, (bool)preset.depthAutoExposure);
     setPropertyValue(owner, OB_PROP_IR_BRIGHTNESS_INT, preset.depthBrightness);
+    setPropertyValue(owner, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, (bool)preset.colorAutoExposure);
     setPropertyValue(owner, OB_PROP_COLOR_EXPOSURE_INT, preset.colorExposureTime);
     setPropertyValue(owner, OB_PROP_COLOR_GAIN_INT, preset.colorGain);
-    setPropertyValue(owner, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, (bool)preset.colorAutoExposure);
-    setPropertyValue(owner, OB_PROP_COLOR_WHITE_BALANCE_INT, preset.colorWhiteBalance);
     setPropertyValue(owner, OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, (bool)preset.colorAutoWhiteBalance);
+    setPropertyValue(owner, OB_PROP_COLOR_WHITE_BALANCE_INT, preset.colorWhiteBalance);
     setPropertyValue(owner, OB_PROP_COLOR_CONTRAST_INT, preset.colorContrast);
     setPropertyValue(owner, OB_PROP_COLOR_SATURATION_INT, preset.colorSaturation);
     setPropertyValue(owner, OB_PROP_COLOR_SHARPNESS_INT, preset.colorSharpness);

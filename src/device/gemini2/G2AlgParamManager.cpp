@@ -10,11 +10,11 @@
 
 namespace libobsensor {
 G2AlgParamManager::G2AlgParamManager(IDevice *owner) : DisparityAlgParamManagerBase(owner) {
-    fetchParams();
+    fetchParamFromDevice();
     registerBasicExtrinsics();
 }
 
-void G2AlgParamManager::fetchParams() {
+void G2AlgParamManager::fetchParamFromDevice() {
     try {
         auto owner                   = getOwner();
         auto propServer              = owner->getPropertyServer();

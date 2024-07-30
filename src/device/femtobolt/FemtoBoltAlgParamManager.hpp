@@ -11,7 +11,7 @@ public:
     virtual ~FemtoBoltAlgParamManager() noexcept = default;
 
 private:
-    void fetchParams() override;
+    void fetchParamFromDevice() override;
     void registerBasicExtrinsics() override;
 };
 }  // namespace libobsensor

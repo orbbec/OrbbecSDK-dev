@@ -14,7 +14,7 @@
 
 namespace libobsensor {
 FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : AlgParamManagerBase(owner) {
-    fetchParams();
+    fetchParamFromDevice();
     registerBasicExtrinsics();
 }
 
@@ -34,7 +34,7 @@ FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : AlgParamMan
 //     return output;
 // }
 
-void FemtoBoltAlgParamManager::fetchParams() {
+void FemtoBoltAlgParamManager::fetchParamFromDevice() {
     std::vector<uint8_t> data;
     data.clear();
     BEGIN_TRY_EXECUTE({

@@ -8,7 +8,7 @@ public:
     G2AlgParamManager(IDevice *owner);
     virtual ~G2AlgParamManager() = default;
 
-    void fetchParams() override;
+    void fetchParamFromDevice() override;
     void registerBasicExtrinsics() override;
 
 private:

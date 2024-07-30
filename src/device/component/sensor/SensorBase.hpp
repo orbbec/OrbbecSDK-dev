@@ -37,7 +37,7 @@ public:
     FrameCallback getFrameCallback() const override;
 
     // when start Stream fails or interrupts, try to recover by restarting the stream; If Timeout<0, never timeout. if Timeout=0, use default timeout.
-    void enableStreamRecovery(bool enable, uint32_t maxRecoveryCount = DefaultMaxRecoveryCount, int noStreamTimeoutMs = DefaultNoStreamTimeoutMs,
+    void enableStreamRecovery(uint32_t maxRecoveryCount = DefaultMaxRecoveryCount, int noStreamTimeoutMs = DefaultNoStreamTimeoutMs,
                               int streamInterruptTimeoutMs = DefaultStreamInterruptTimeoutMs);
     // stop trying to recover the stream
     void disableStreamRecovery();

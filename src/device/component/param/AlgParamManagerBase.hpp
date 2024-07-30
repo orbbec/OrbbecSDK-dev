@@ -23,7 +23,7 @@ public:
     const std::vector<OBCameraParam> &getCalibrationCameraParamList() const override;
     const OBIMUCalibrateParams       &getIMUCalibrationParam() const override;
 
-    virtual void fetchParams()             = 0;
+    virtual void fetchParamFromDevice()    = 0;
     virtual void registerBasicExtrinsics() = 0;
 
     virtual void bindExtrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList);

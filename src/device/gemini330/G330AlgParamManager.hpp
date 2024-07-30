@@ -13,9 +13,10 @@ public:
     virtual ~G330AlgParamManager() = default;
 
     void bindIntrinsic(std::vector<std::shared_ptr<const StreamProfile>> streamProfileList) override;
+    void reFetchDisparityParams();
 
 private:
-    void fetchParams() override;
+    void fetchParamFromDevice() override;
     void registerBasicExtrinsics() override;
     void fixD2CParmaList();
 

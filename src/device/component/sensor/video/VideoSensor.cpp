@@ -77,7 +77,8 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
         auto owner    = getOwner();
         auto strategy = owner->getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, false);
         if(strategy) {
-            strategy->validateStartStream(sp);
+            strategy->validateStream(sp);
+            strategy->markStreamActivated(sp);
         }
     }
 
@@ -176,6 +177,14 @@ void VideoSensor::outputFrame(std::shared_ptr<Frame> frame) {
 void VideoSensor::stop() {
     if(!isStreamActivated()) {
         return;
+    }
+
+    {
+        auto owner    = getOwner();
+        auto strategy = owner->getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, false);
+        if(strategy) {
+            strategy->markStreamDeactivated(activatedStreamProfile_);
+        }
     }
     updateStreamState(STREAM_STATE_STOPPING);
 

@@ -142,10 +142,10 @@ void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // sensor->registerStreamStateChangedCallback([this](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
     //     auto streamStrategy = getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
     //     if(state == STREAM_STATE_STARTING) {
-    //         streamStrategy->markStreamStarted(sp);
+    //         streamStrategy->markStreamActivated (sp);
     //     }
     //     else if(state == STREAM_STATE_STOPPED) {
-    //         streamStrategy->markStreamStopped(sp);
+    //         streamStrategy->markStreamDeactivated(sp);
     //     }
     // });
 }

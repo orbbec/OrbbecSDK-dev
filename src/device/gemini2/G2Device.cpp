@@ -494,7 +494,8 @@ void G2Device::initProperties() {
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
-            auto vendorPropertyAccessor = std::make_shared<LazyPropertyExtensionAccessor>([this, &sourcePortInfo]() {
+
+            auto vendorPropertyAccessor = std::make_shared<LazyExtensionPropertyAccessor>([this, &sourcePortInfo]() {
                 auto pal                    = ObPal::getInstance();
                 auto port                   = pal->getSourcePort(sourcePortInfo);
                 auto vendorPropertyAccessor = std::make_shared<VendorPropertyAccessor>(this, port);

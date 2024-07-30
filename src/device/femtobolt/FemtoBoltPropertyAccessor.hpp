@@ -3,7 +3,7 @@
 #include "IDevice.hpp"
 
 namespace libobsensor {
-class FemtoBoltPropertyAccessor : public IPropertyAccessor {
+class FemtoBoltPropertyAccessor : public IBasicPropertyAccessor {
 public:
     explicit FemtoBoltPropertyAccessor(IDevice *owner);
     virtual ~FemtoBoltPropertyAccessor() noexcept = default;

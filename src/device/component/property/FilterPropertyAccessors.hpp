@@ -3,7 +3,7 @@
 
 namespace libobsensor {
 
-class FilterStatePropertyAccessor : public IPropertyAccessor {
+class FilterStatePropertyAccessor : public IBasicPropertyAccessor {
 public:
     FilterStatePropertyAccessor(std::shared_ptr<IFilter> filter);
     virtual ~FilterStatePropertyAccessor() noexcept = default;

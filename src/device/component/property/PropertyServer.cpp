@@ -144,7 +144,8 @@ void PropertyServer::setPropertyValue(uint32_t propertyId, OBPropertyValue value
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    accessor->setPropertyValue(propId, value);
+    auto basicAccessor = std::dynamic_pointer_cast<IBasicPropertyAccessor>(accessor);
+    basicAccessor->setPropertyValue(propId, value);
 
     for(auto &callback: it->second.accessCallbacks) {
         auto data = reinterpret_cast<uint8_t *>(&value);
@@ -167,7 +168,8 @@ void PropertyServer::getPropertyValue(uint32_t propertyId, OBPropertyValue *valu
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    accessor->getPropertyValue(propId, value);
+    auto basicAccessor = std::dynamic_pointer_cast<IBasicPropertyAccessor>(accessor);
+    basicAccessor->getPropertyValue(propId, value);
 
     for(auto &callback: it->second.accessCallbacks) {
         auto data = reinterpret_cast<uint8_t *>(value);
@@ -195,7 +197,8 @@ void PropertyServer::getPropertyRange(uint32_t propertyId, OBPropertyRange *rang
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    accessor->getPropertyRange(propId, range);
+    auto basicAccessor = std::dynamic_pointer_cast<IBasicPropertyAccessor>(accessor);
+    basicAccessor->getPropertyRange(propId, range);
     LOG_DEBUG("Property {} range as {}-{} step {} def {}|{}-{} step {} def {}", propId, range->min.intValue, range->max.intValue, range->step.intValue,
               range->def.intValue, range->min.floatValue, range->max.floatValue, range->step.floatValue, range->def.floatValue);
 }
@@ -212,7 +215,7 @@ void PropertyServer::setStructureData(uint32_t propertyId, const std::vector<uin
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessor>(accessor);
+    auto extensionPort = std::dynamic_pointer_cast<IExtensionPropertyAccessor>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data setting");
     }
@@ -237,7 +240,7 @@ const std::vector<uint8_t> &PropertyServer::getStructureData(uint32_t propertyId
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
 
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessor>(accessor);
+    auto extensionPort = std::dynamic_pointer_cast<IExtensionPropertyAccessor>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property " << propId << " does not support structure data getting");
     }
@@ -261,7 +264,7 @@ void PropertyServer::getRawData(uint32_t propertyId, GetDataCallback callback, P
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessor>(accessor);
+    auto extensionPort = std::dynamic_pointer_cast<IExtensionPropertyAccessor>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support raw data getting");
     }
@@ -285,7 +288,7 @@ uint16_t PropertyServer::getCmdVersionProtoV1_1(uint32_t propertyId, PropertyAcc
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor);
+    auto extensionPort = std::dynamic_pointer_cast<IExtensionPropertyAccessorV1_1>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support cmd version getting");
     }
@@ -307,7 +310,7 @@ const std::vector<uint8_t> &PropertyServer::getStructureDataProtoV1_1(uint32_t p
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor);
+    auto extensionPort = std::dynamic_pointer_cast<IExtensionPropertyAccessorV1_1>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data getting over proto v1.1");
     }
@@ -331,7 +334,7 @@ void PropertyServer::setStructureDataProtoV1_1(uint32_t propertyId, const std::v
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor);
+    auto extensionPort = std::dynamic_pointer_cast<IExtensionPropertyAccessorV1_1>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data setting over proto v1.1");
     }
@@ -354,7 +357,7 @@ const std::vector<uint8_t> &PropertyServer::getStructureDataListProtoV1_1(uint32
     if(propId != propertyId) {
         LOG_DEBUG("Property {} alias to {}", propId, propertyId);
     }
-    auto extensionPort = std::dynamic_pointer_cast<IPropertyExtensionAccessorV1_1>(accessor);
+    auto extensionPort = std::dynamic_pointer_cast<IExtensionPropertyAccessorV1_1>(accessor);
     if(extensionPort == nullptr) {
         throw invalid_value_exception(utils::string::to_string() << "Property" << propId << " does not support structure data list getting over proto v1.1");
     }

@@ -28,17 +28,17 @@ void FemtoBoltPropertyAccessor::setPropertyValue(uint32_t propertyId, OBProperty
         break;
     }
 
-    auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+    auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     commandPort->setPropertyValue(propertyId, value);
 }
 
 void FemtoBoltPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
-    auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+    auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     commandPort->getPropertyValue(propertyId, value);
 }
 
 void FemtoBoltPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *range) {
-    auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+    auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     commandPort->getPropertyRange(propertyId, range);
 }
 

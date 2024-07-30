@@ -7,8 +7,9 @@
 
 namespace libobsensor {
 class VendorPropertyAccessor : public IDeviceComponent,
-                               public IPropertyExtensionAccessor,
-                               public IPropertyExtensionAccessorV1_1 {  // todo: split into two classes
+                               public IBasicPropertyAccessor,
+                               public IExtensionPropertyAccessor,
+                               public IExtensionPropertyAccessorV1_1 {  // todo: split into two classes
 public:
     explicit VendorPropertyAccessor(IDevice *owner, const std::shared_ptr<ISourcePort> &backend);
     ~VendorPropertyAccessor() noexcept override = default;

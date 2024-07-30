@@ -130,7 +130,7 @@ void DeviceMonitor::enableHeartbeat() {
     auto            owner = getOwner();
     OBPropertyValue value;
     value.intValue    = 1;
-    auto propAccessor = owner->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+    auto propAccessor = owner->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     propAccessor->setPropertyValue(OB_PROP_HEARTBEAT_BOOL, value);
 
     heartbeatEnabled_ = true;
@@ -150,7 +150,7 @@ void DeviceMonitor::disableHeartbeat() {
 
     OBPropertyValue value;
     value.intValue    = 0;
-    auto propAccessor = owner->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+    auto propAccessor = owner->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     propAccessor->setPropertyValue(OB_PROP_HEARTBEAT_BOOL, value);
 
     heartbeatEnabled_ = false;
@@ -173,7 +173,7 @@ void DeviceMonitor::pauseHeartbeat() {
     auto            owner = getOwner();
     OBPropertyValue value;
     value.intValue    = 0;
-    auto propAccessor = owner->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+    auto propAccessor = owner->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     propAccessor->setPropertyValue(OB_PROP_HEARTBEAT_BOOL, value);
     if(heartbeatAndFetchStateThreadStarted_) {
         stop();
@@ -193,7 +193,7 @@ void DeviceMonitor::resumeHeartbeat() {
         auto            owner = getOwner();
         OBPropertyValue value;
         value.intValue    = 1;
-        auto propAccessor = owner->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+        auto propAccessor = owner->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         propAccessor->setPropertyValue(OB_PROP_HEARTBEAT_BOOL, value);
     }
 

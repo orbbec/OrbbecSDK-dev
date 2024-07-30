@@ -338,7 +338,7 @@ void FemtoBoltDevice::initProperties() {
             propertyServer->registerProperty(OB_PROP_COLOR_HDR_BOOL, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_DEPTH) {
-            auto vendorPropertyAccessor = std::make_shared<LazyPropertyExtensionAccessor>([this, &sourcePortInfo]() {
+            auto vendorPropertyAccessor = std::make_shared<LazyExtensionPropertyAccessor>([this, &sourcePortInfo]() {
                 auto pal      = ObPal::getInstance();
                 auto port     = pal->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<VendorPropertyAccessor>(this, port);

@@ -255,4 +255,8 @@ void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint3
     }
 }
 
+void DepthFrameProcessor::enableHardwareD2CProcess(bool enable) {
+    setConfigValue("HardwareD2CProcessor#255", static_cast<double>(enable));
+}
+
 }  // namespace libobsensor

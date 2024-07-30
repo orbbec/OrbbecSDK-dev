@@ -12,6 +12,7 @@
 #include <memory>
 #include <iostream>
 #include <typeinfo>
+#include <functional>
 
 /**
  *  Frame classis inheritance hierarchy：
@@ -349,7 +350,7 @@ public:
      *
      * @param impl The pointer to the internal frame object.
      */
-    explicit VideoFrame(const ob_frame *impl) : Frame(impl) {};
+    explicit VideoFrame(const ob_frame *impl) : Frame(impl){};
 
     ~VideoFrame() noexcept override = default;
 
@@ -425,7 +426,7 @@ public:
      *
      * @param impl The pointer to the internal frame object.
      */
-    explicit ColorFrame(const ob_frame *impl) : VideoFrame(impl) {};
+    explicit ColorFrame(const ob_frame *impl) : VideoFrame(impl){};
 
     ~ColorFrame() noexcept override = default;
 };
@@ -446,7 +447,7 @@ public:
      *
      * @param impl The pointer to the internal frame object.
      */
-    explicit DepthFrame(const ob_frame *impl) : VideoFrame(impl) {};
+    explicit DepthFrame(const ob_frame *impl) : VideoFrame(impl){};
 
     ~DepthFrame() noexcept override = default;
 
@@ -483,7 +484,7 @@ public:
      *
      * @param impl The pointer to the internal frame object.
      */
-    explicit IRFrame(const ob_frame *impl) : VideoFrame(impl) {};
+    explicit IRFrame(const ob_frame *impl) : VideoFrame(impl){};
 
     ~IRFrame() noexcept override = default;
 };
@@ -509,7 +510,7 @@ public:
      *
      * @param impl The pointer to the internal frame object.
      */
-    explicit PointsFrame(const ob_frame *impl) : Frame(impl) {};
+    explicit PointsFrame(const ob_frame *impl) : Frame(impl){};
 
     ~PointsFrame() noexcept override = default;
 
@@ -536,7 +537,7 @@ public:
 class AccelFrame : public Frame {
 
 public:
-    explicit AccelFrame(const ob_frame *impl) : Frame(impl) {};
+    explicit AccelFrame(const ob_frame *impl) : Frame(impl){};
 
     ~AccelFrame() noexcept override = default;
 
@@ -573,7 +574,7 @@ public:
 class GyroFrame : public Frame {
 
 public:
-    explicit GyroFrame(const ob_frame *impl) : Frame(impl) {};
+    explicit GyroFrame(const ob_frame *impl) : Frame(impl){};
 
     ~GyroFrame() noexcept override = default;
 
@@ -611,7 +612,7 @@ public:
 class FrameSet : public Frame {
 
 public:
-    explicit FrameSet(const ob_frame *impl) : Frame(impl) {};
+    explicit FrameSet(const ob_frame *impl) : Frame(impl){};
 
     ~FrameSet() noexcept override = default;
 

@@ -46,7 +46,16 @@ ob_stream_profile *ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_s
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, full_scale_range, sample_rate)
 
-ob_stream_profile *ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error) BEGIN_API_CALL {
+ob_stream_profile *ob_create_stream_profile_from_other_stream_profile(const ob_stream_profile *srcProfile, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(srcProfile);
+    auto sp              = srcProfile->profile->clone();
+    auto profileImpl     = new ob_stream_profile();
+    profileImpl->profile = sp;
+    return profileImpl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, srcProfile)
+
+ob_stream_profile *ob_create_stream_profile_with_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
     auto sp              = profile->profile->clone(new_format);
     auto profileImpl     = new ob_stream_profile();
@@ -61,11 +70,25 @@ ob_format ob_stream_profile_get_format(const ob_stream_profile *profile, ob_erro
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_FORMAT_UNKNOWN, profile)
 
+void ob_stream_profile_set_format(ob_stream_profile *profile, ob_format format, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(profile);
+    auto noneConstProfile = std::const_pointer_cast<libobsensor::StreamProfile>(profile->profile);
+    noneConstProfile->setFormat(format);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(profile, format)
+
 ob_stream_type ob_stream_profile_get_type(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
     return profile->profile->getType();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(OB_STREAM_UNKNOWN, profile)
+
+void ob_stream_profile_set_type(const ob_stream_profile *profile, ob_stream_type type, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(profile);
+    auto noneConstProfile = std::const_pointer_cast<libobsensor::StreamProfile>(profile->profile);
+    noneConstProfile->setType(type);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(profile, type)
 
 ob_extrinsic ob_stream_profile_get_extrinsic_to(const ob_stream_profile *source, ob_stream_profile *target, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(source);
@@ -102,6 +125,18 @@ uint32_t ob_video_stream_profile_get_width(const ob_stream_profile *profile, ob_
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, profile)
 
+OB_EXPORT void ob_video_stream_profile_set_width(ob_stream_profile *profile, uint32_t width, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(profile);
+    VALIDATE_GE(width, 1);
+    if(!profile->profile->is<libobsensor::VideoStreamProfile>()) {
+        throw libobsensor::unsupported_operation_exception("It's not a video stream profile!");
+    }
+    auto videoProfile          = profile->profile->as<libobsensor::VideoStreamProfile>();
+    auto noneConstVideoProfile = std::const_pointer_cast<libobsensor::VideoStreamProfile>(videoProfile);
+    noneConstVideoProfile->setWidth(width);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(profile, width)
+
 uint32_t ob_video_stream_profile_get_height(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
     if(!profile->profile->is<libobsensor::VideoStreamProfile>()) {
@@ -111,6 +146,18 @@ uint32_t ob_video_stream_profile_get_height(const ob_stream_profile *profile, ob
     return videoProfile->getHeight();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0, profile)
+
+void ob_video_stream_profile_set_height(ob_stream_profile *profile, uint32_t height, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(profile);
+    VALIDATE_GE(height, 1);
+    if(!profile->profile->is<libobsensor::VideoStreamProfile>()) {
+        throw libobsensor::unsupported_operation_exception("It's not a video stream profile!");
+    }
+    auto videoProfile          = profile->profile->as<libobsensor::VideoStreamProfile>();
+    auto noneConstVideoProfile = std::const_pointer_cast<libobsensor::VideoStreamProfile>(videoProfile);
+    noneConstVideoProfile->setHeight(height);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(profile, height)
 
 ob_camera_intrinsic ob_video_stream_get_intrinsic(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);

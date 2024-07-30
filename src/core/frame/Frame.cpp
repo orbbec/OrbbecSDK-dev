@@ -208,9 +208,12 @@ bool Frame::hasMetadata(OBFrameMetadataType type) const {
 
 int64_t Frame::getMetadataValue(OBFrameMetadataType type) const {
     if(!metadataPhasers_) {
-        throw unsupported_operation_exception(utils::string::to_string() << "Unsupported metadata type: " << type);
+        throw unsupported_operation_exception(utils::string::to_string() << "Metadata phasers are not registered! Unsupported to get metadata for type: " << type);
     }
     auto parser = metadataPhasers_->get(type);
+    if(!parser->isSupported(metadata_, metadataSize_)) {
+        throw unsupported_operation_exception(utils::string::to_string() << "Current metadata does not contain metadata for type: " << type);
+    }
     return parser->getValue(metadata_, metadataSize_);
 }
 

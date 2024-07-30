@@ -4,6 +4,7 @@
 #include "gemini330/G330DeviceInfo.hpp"
 #include "gemini2/G2DeviceInfo.hpp"
 #include "femtobolt/FemtoBoltDeviceInfo.hpp"
+#include "femtomega/FemtoMegaDeviceInfo.hpp"
 
 namespace libobsensor {
 UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(ObPal::getInstance()) {
@@ -151,14 +152,18 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
 
 DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
     DeviceEnumInfoList deviceInfoList;
-    auto               g330Devs  = G330DeviceInfo::createDeviceInfos(portInfoList);
-    auto               femtoDevs = FemtoBoltDeviceInfo::createDeviceInfos(portInfoList);
+    auto               g330Devs = G330DeviceInfo::createDeviceInfos(portInfoList);
     std::copy(g330Devs.begin(), g330Devs.end(), std::back_inserter(deviceInfoList));
 
     auto g2Devs = G2DeviceInfo::createDeviceInfos(portInfoList);
     std::copy(g2Devs.begin(), g2Devs.end(), std::back_inserter(deviceInfoList));
 
-    std::copy(femtoDevs.begin(), femtoDevs.end(), std::back_inserter(deviceInfoList));
+    auto femtoBoltDevs = FemtoBoltDeviceInfo::createDeviceInfos(portInfoList);
+    std::copy(femtoBoltDevs.begin(), femtoBoltDevs.end(), std::back_inserter(deviceInfoList));
+
+    auto femtoMegaDevs = FemtoMegaDeviceInfo::createDeviceInfos(portInfoList);
+    std::copy(femtoMegaDevs.begin(), femtoMegaDevs.end(), std::back_inserter(deviceInfoList));
+
     return deviceInfoList;
 }
 

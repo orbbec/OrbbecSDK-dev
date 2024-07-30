@@ -137,7 +137,6 @@ public:
 
 private:
     virtual void parseRawPhaseFrame(std::shared_ptr<Frame> frame);
-    void         outputFrameSet(std::shared_ptr<Frame> frame);
 
     // Nvram
     void                  initNvramData();
@@ -158,14 +157,14 @@ private:
     IDevice                          *owner_;
     std::shared_ptr<IVideoStreamPort> backend_;
 
-    std::mutex                                                                           cbMtx_;
-    std::map<std::shared_ptr<const StreamProfile>, FrameCallback>                        callbacks_;
+    std::mutex                                                    cbMtx_;
+    std::map<std::shared_ptr<const StreamProfile>, FrameCallback> callbacks_;
     std::atomic_bool                                                                     running_;
     std::vector<std::pair<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>>> profileVector_;
     std::vector<std::shared_ptr<StreamProfile>>                                          streamProfileList_;
     std::shared_ptr<const StreamProfile>                                                 realSp = nullptr;
     // nvram
-    uint8_t *nvramData_ = nullptr;
+    uint8_t             *nvramData_   = nullptr;
     uint32_t             nvramSize_   = 0;
     bool                 isPassiveIR_ = false;
     std::recursive_mutex streamMutex_;

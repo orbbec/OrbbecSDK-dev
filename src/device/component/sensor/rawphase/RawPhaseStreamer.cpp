@@ -238,30 +238,23 @@ void RawPhaseStreamer::parseRawPhaseFrame(std::shared_ptr<Frame> frame) {
         std::shared_ptr<const libobsensor::VideoStreamProfile> depthStreamProfile;
         std::shared_ptr<const libobsensor::VideoStreamProfile> irStreamProfile;
         for(const auto &iter: callbacks_) {
-            if(iter.first->getType() == OB_STREAM_DEPTH) {
+            if(iter.first->getType() == OB_STREAM_DEPTH && outputType != k4a_depth_engine_output_type_t::K4A_DEPTH_ENGINE_OUTPUT_TYPE_PCM) {
                 depthStreamProfile = iter.first->as<libobsensor::VideoStreamProfile>();
+                auto depthFrame    = FrameFactory::createFrameFromStreamProfile(depthStreamProfile);
+                depthFrame->updateData((const uint8_t *)zFrame, nPixels * 2);
+                depthFrame->setDataSize(nPixels * 2);
+                depthFrame->copyInfoFromOther(frame);
+                iter.second(depthFrame);
             }
             else if(iter.first->getType() == OB_STREAM_IR) {
                 irStreamProfile = iter.first->as<libobsensor::VideoStreamProfile>();
+                auto irFrame    = FrameFactory::createFrameFromStreamProfile(irStreamProfile);
+                irFrame->updateData((const uint8_t *)abFrame, nPixels * 2);
+                irFrame->setDataSize(nPixels * 2);
+                irFrame->copyInfoFromOther(frame);
+                iter.second(irFrame);
             }
         }
-
-        auto frameSet = FrameFactory::createFrameSet();
-        if(depthStreamProfile && outputType != k4a_depth_engine_output_type_t::K4A_DEPTH_ENGINE_OUTPUT_TYPE_PCM) {
-            auto depthFrame = FrameFactory::createFrameFromStreamProfile(depthStreamProfile);
-            depthFrame->updateData((const uint8_t *)zFrame, nPixels * 2);
-            depthFrame->setDataSize(nPixels * 2);
-            frameSet->pushFrame(depthFrame);
-        }
-
-        if(irStreamProfile) {
-            auto irFrame = FrameFactory::createFrameFromStreamProfile(irStreamProfile);
-            irFrame->updateData((const uint8_t *)abFrame, nPixels * 2);
-            irFrame->setDataSize(nPixels * 2);
-            frameSet->pushFrame(irFrame);
-        }
-
-        outputFrameSet(frameSet);
     }
 
     // #endif
@@ -398,29 +391,6 @@ void RawPhaseStreamer::deinitDepthEngine() {
     global->plugin.depth_engine_destroy(&depthEngineContext_);
     depthEngineContext_ = nullptr;
     // #endif
-}
-
-void RawPhaseStreamer::outputFrameSet(std::shared_ptr<Frame> frame) {
-    if(!frame) {
-        return;
-    }
-
-    std::lock_guard<std::mutex> lock(cbMtx_);
-    for(auto &callback: callbacks_) {
-        std::shared_ptr<const Frame> callbackFrame = frame;
-        if(frame->is<FrameSet>()) {
-            auto frameSet = frame->as<FrameSet>();
-            callbackFrame = frameSet->getFrame(utils::mapStreamTypeToFrameType(callback.first->getType()));
-            if(!callbackFrame) {
-                continue;
-            }
-        }
-
-        if(callbackFrame->getFormat() != callback.first->getFormat()) {
-            continue;
-        }
-        callback.second(callbackFrame);
-    }
 }
 
 IDevice *RawPhaseStreamer::getOwner() const {

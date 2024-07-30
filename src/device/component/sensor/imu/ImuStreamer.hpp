@@ -42,7 +42,7 @@ public:
     IDevice *getOwner() const override;
 
 private:
-    virtual void praseIMUData(std::shared_ptr<Frame> frame);
+    virtual void parseIMUData(std::shared_ptr<Frame> frame);
     virtual void outputFrame(std::shared_ptr<Frame> frame);
 
 private:

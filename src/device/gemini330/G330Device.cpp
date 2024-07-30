@@ -18,7 +18,7 @@
 #include "publicfilters/FormatConverterProcess.hpp"
 
 #include "metadata/FrameMetadataParserContainer.hpp"
-#include "timestamp/GlobalTimestampFitter.hpp"
+#include "timestamp/GlobalTimestampFilter.hpp"
 #include "property/VendorPropertyAccessor.hpp"
 #include "property/UvcPropertyAccessor.hpp"
 #include "property/PropertyServer.hpp"
@@ -56,16 +56,16 @@ void G330Device::init() {
 
     fetchDeviceInfo();
 
-    auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(this);
-    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER, globalTimestampFitter);
+    auto globalTimestampFilter = std::make_shared<GlobalTimestampFilter>(this);
+    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
     // todo: make timestamp calculator as a component
     auto iter = std::find(G330LDevPids.begin(), G330LDevPids.end(), deviceInfo_->pid_);
     if(iter != G330LDevPids.end()) {
-        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
+        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFilter);
     }
     else {
-        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, globalTimestampFitter);
+        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, globalTimestampFilter);
     }
 
     auto algParamManager = std::make_shared<G330AlgParamManager>(this);
@@ -113,8 +113,7 @@ void G330Device::fetchDeviceInfo() {
 }
 
 void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
-    auto sensorType    = sensor->getSensorType();
-    auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType);
+    auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensor->getSensorType());
     if(streamProfile) {
         sensor->updateDefaultStreamProfile(streamProfile);
     }
@@ -126,6 +125,7 @@ void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
         algParamManager->bindStreamProfileParams(profiles);
     }
 
+    auto sensorType = sensor->getSensorType();
     LOG_INFO("Sensor {} created! Found {} stream profiles.", sensorType, profiles.size());
     for(auto &profile: profiles) {
         LOG_INFO(" - {}", profile);

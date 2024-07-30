@@ -10,6 +10,5 @@ target_sources(
              ${CMAKE_CURRENT_LIST_DIR}/FemtoBoltPropertyAccessor.cpp
              ${CMAKE_CURRENT_LIST_DIR}/FemtoBoltAlgParamManager.hpp
              ${CMAKE_CURRENT_LIST_DIR}/FemtoBoltAlgParamManager.cpp
-
       
         )

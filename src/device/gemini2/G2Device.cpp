@@ -18,7 +18,7 @@
 #include "sensor/imu/ImuStreamer.hpp"
 #include "sensor/imu/AccelSensor.hpp"
 #include "sensor/imu/GyroSensor.hpp"
-#include "timestamp/GlobalTimestampFitter.hpp"
+#include "timestamp/GlobalTimestampFilter.hpp"
 #include "property/VendorPropertyAccessor.hpp"
 #include "property/UvcPropertyAccessor.hpp"
 #include "property/PropertyServer.hpp"
@@ -51,16 +51,16 @@ void G2Device::init() {
 
     fetchDeviceInfo();
 
-    auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(this);
-    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER, globalTimestampFitter);
+   // auto GlobalTimestampFilter = std::make_shared<GlobalTimestampFilter>(this);
+   // registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, GlobalTimestampFilter);
 
     // // todo: make timestamp calculator as a component
     // auto iter = std::find(G2LDevPids.begin(), G2LDevPids.end(), deviceInfo_->pid_);
     // if(iter != G2LDevPids.end()) {
-    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
+    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, GlobalTimestampFilter);
     // }
     // else {
-    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, globalTimestampFitter);
+    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, GlobalTimestampFilter);
     // }
 
     auto algParamManager = std::make_shared<G2AlgParamManager>(this);

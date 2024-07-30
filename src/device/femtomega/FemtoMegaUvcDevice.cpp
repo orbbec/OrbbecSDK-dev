@@ -1,6 +1,5 @@
-#include "FemtoBoltDevice.hpp"
+#include "FemtoMegaUvcDevice.hpp"
 #include "ObPal.hpp"
-#include "FemtoBoltPropertyAccessor.hpp"
 #include "environment/EnvConfig.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "sensor/video/VideoSensor.hpp"
@@ -25,33 +24,38 @@
 #include "publicfilters/FormatConverterProcess.hpp"
 #include "publicfilters/IMUCorrector.hpp"
 
-#include "FemtoBoltAlgParamManager.hpp"
 #include "gemini330/G330DeviceSyncConfigurator.hpp"
-#include "sensor/rawphase/depthengine/DepthEngineLoader.hpp"
 #include "timestamp/GlobalTimestampFilter.hpp"
+#include "femtobolt/FemtoBoltAlgParamManager.hpp"
+//  #include "G330SensorStreamStrategy.hpp"
 
 namespace libobsensor {
-FemtoBoltDevice::FemtoBoltDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
+FemtoMegaUvcDevice::FemtoMegaUvcDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
     init();
 }
 
-FemtoBoltDevice::~FemtoBoltDevice() noexcept {}
+FemtoMegaUvcDevice::~FemtoMegaUvcDevice() noexcept {}
 
-void FemtoBoltDevice::init() {
+void FemtoMegaUvcDevice::init() {
     initSensorList();
     initProperties();
 
     fetchDeviceInfo();
+
+    // auto GlobalTimestampFilter = std::make_shared<GlobalTimestampFilter>(this);
+    // registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, GlobalTimestampFilter);
+
     auto algParamManager = std::make_shared<FemtoBoltAlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
-    static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes     = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
-                                                                               OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED };
-    auto                                            deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
-    registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
+    // static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes     = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
+    //                                                                            OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED
+    //                                                                            };
+    // auto                                            deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
+    // registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 }
 
-void FemtoBoltDevice::fetchDeviceInfo() {
+void FemtoMegaUvcDevice::fetchDeviceInfo() {
     auto propServer = getPropertyServer();
 
     auto version                      = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
@@ -73,7 +77,7 @@ void FemtoBoltDevice::fetchDeviceInfo() {
     }
 }
 
-void FemtoBoltDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
+void FemtoMegaUvcDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     auto sensorType    = sensor->getSensorType();
     auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType);
     if(streamProfile) {
@@ -103,7 +107,7 @@ void FemtoBoltDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // });
 }
 
-void FemtoBoltDevice::initSensorList() {
+void FemtoMegaUvcDevice::initSensorList() {
     registerComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY, [this]() {
         std::shared_ptr<FrameProcessorFactory> factory;
         TRY_EXECUTE({ factory = std::make_shared<FrameProcessorFactory>(this); })
@@ -117,33 +121,14 @@ void FemtoBoltDevice::initSensorList() {
 
     if(depthPortInfoIter != sourcePortInfoList.end()) {
         auto depthPortInfo = *depthPortInfoIter;
-        registerComponent(OB_DEV_COMPONENT_DEPTH_ENGINE_LOADER_FACTORY, [this]() {
-            std::shared_ptr<DepthEngineLoadFactory> factory;
-            TRY_EXECUTE({ factory = std::make_shared<DepthEngineLoadFactory>(this); })
-            return factory;
-        });
-        registerComponent(OB_DEV_COMPONENT_RAWPHASE_STREAMER, [this, depthPortInfo]() {
-            auto pal  = ObPal::getInstance();
-            auto port = pal->getSourcePort(depthPortInfo);
 
-            auto depthEngineLoader    = getComponentT<DepthEngineLoadFactory>(OB_DEV_COMPONENT_DEPTH_ENGINE_LOADER_FACTORY);
-            auto depthEngineLoaderPtr = depthEngineLoader.get();
-
-            auto dataStreamPort   = std::dynamic_pointer_cast<IVideoStreamPort>(port);
-            auto rawPhaseStreamer = std::make_shared<RawPhaseStreamer>(this, dataStreamPort, depthEngineLoaderPtr);
-            if(rawPhaseStreamer) {
-                rawPhaseStreamer->setNvramDataStreamStopFunc([&]() { LOG_INFO("setNvramDataStreamStopFunc succeed"); });
-            }
-            return rawPhaseStreamer;
-        });
         registerComponent(
             OB_DEV_COMPONENT_DEPTH_SENSOR,
             [this, depthPortInfo]() {
-                auto pal                       = ObPal::getInstance();
-                auto port                      = pal->getSourcePort(depthPortInfo);
-                auto rawphaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAWPHASE_STREAMER);
-                auto rawphaseStreamerSharedPtr = rawphaseStreamer.get();
-                auto sensor                    = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_DEPTH, rawphaseStreamerSharedPtr);
+                auto pal  = ObPal::getInstance();
+                auto port = pal->getSourcePort(depthPortInfo);
+
+                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_DEPTH, port);
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
 
                 // auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
@@ -165,41 +150,43 @@ void FemtoBoltDevice::initSensorList() {
             return frameProcessor;
         });
 
-        registerComponent(
-            OB_DEV_COMPONENT_IR_SENSOR,
-            [this, depthPortInfo]() {
-                auto pal                       = ObPal::getInstance();
-                auto port                      = pal->getSourcePort(depthPortInfo);
-                auto rawphaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAWPHASE_STREAMER);
-                auto rawphaseStreamerSharedPtr = rawphaseStreamer.get();
-                auto sensor                    = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_IR, rawphaseStreamerSharedPtr);
-
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
-
-                // auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
-                // if(frameProcessor) {
-                //     sensor->setFrameProcessor(frameProcessor.get());
-                // }
-
-                initSensorStreamProfile(sensor);
-                return sensor;
-            },
-            true);
-        registerSensorPortInfo(OB_SENSOR_IR, depthPortInfo);
-
-        registerComponent(OB_DEV_COMPONENT_IR_FRAME_PROCESSOR, [this]() {
-            auto factory = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
-
-            auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR);
-            return frameProcessor;
-        });
-
         // the main property accessor is using the depth port(uvc xu)
         registerComponent(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR, [this, depthPortInfo]() {
             auto pal      = ObPal::getInstance();
             auto port     = pal->getSourcePort(depthPortInfo);
             auto accessor = std::make_shared<VendorPropertyAccessor>(this, port);
             return accessor;
+        });
+    }
+
+    auto irPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {
+        return portInfo->portType == SOURCE_PORT_USB_UVC && std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->infIndex == 4;
+    });
+
+    if(irPortInfoIter != sourcePortInfoList.end()) {
+        auto irPortInfo = *irPortInfoIter;
+
+        registerComponent(
+            OB_DEV_COMPONENT_IR_SENSOR,
+            [this, irPortInfo]() {
+                auto pal  = ObPal::getInstance();
+                auto port = pal->getSourcePort(irPortInfo);
+
+                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR, port);
+                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+                initSensorStreamProfile(sensor);
+                return sensor;
+            },
+            true);
+
+        registerSensorPortInfo(OB_SENSOR_IR, irPortInfo);
+
+        registerComponent(OB_DEV_COMPONENT_IR_FRAME_PROCESSOR, [this]() {
+            auto factory = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
+
+            auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR);
+            return frameProcessor;
         });
     }
 
@@ -224,11 +211,11 @@ void FemtoBoltDevice::initSensorList() {
                 auto formatConverter = getSensorFrameFilter("FormatConverter", OB_SENSOR_COLOR, false);
                 if(formatConverter) {
                     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGB, formatConverter });
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGBA, formatConverter });
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGR, formatConverter });
+                    //  formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_RGBA, formatConverter });
+                    //  formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGR, formatConverter });
                     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_BGRA, formatConverter });
                     // formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y16, formatConverter });
-                    // formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y8, formatConverter });
+                    //  formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_YUYV, OB_FORMAT_Y8, formatConverter });
                 }
 
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
@@ -306,12 +293,8 @@ void FemtoBoltDevice::initSensorList() {
     }
 }
 
-void FemtoBoltDevice::initProperties() {
+void FemtoMegaUvcDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
-
-    auto femotboltPropertyAccessor = std::make_shared<FemtoBoltPropertyAccessor>(this);
-    propertyServer->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "r", "r", femotboltPropertyAccessor);
-    propertyServer->registerProperty(OB_PROP_SWITCH_IR_MODE_INT, "rw", "rw", femotboltPropertyAccessor);
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
@@ -335,7 +318,6 @@ void FemtoBoltDevice::initProperties() {
             propertyServer->registerProperty(OB_PROP_COLOR_SHARPNESS_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_CONTRAST_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, "rw", "rw", uvcPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_COLOR_HDR_BOOL, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_DEPTH) {
             auto vendorPropertyAccessor = std::make_shared<LazyPropertyExtensionAccessor>([this, &sourcePortInfo]() {
@@ -345,26 +327,43 @@ void FemtoBoltDevice::initProperties() {
                 return accessor;
             });
 
+            propertyServer->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMESTAMP_OFFSET_INT, "rw", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_INDICATOR_LIGHT_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_FAN_WORK_MODE_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_DEPTH_MAX_DIFF_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_EXTERNAL_SIGNAL_RESET_BOOL, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_DEVICE_COMMUNICATION_TYPE_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_SWITCH_IR_MODE_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_FAN_WORK_LEVEL_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_FAN_WORK_SPEED_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_USB_POWER_STATE_INT, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DC_POWER_STATE_INT, "r", "r", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_VERSION, "", "r", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_DEVICE_SERIAL_NUMBER, "r", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_DEVICE_IP_ADDR_CONFIG, "rw", "rw", vendorPropertyAccessor);
+            //  propertyServer->registerProperty(OB_STRUCT_PERIPHERAL_ID_INFO, "", "r", vendorPropertyAccessor);
+            //  propertyServer->registerProperty(OB_STRUCT_LED_CONTROL, "", "w", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_RAW_DATA_CAMERA_CALIB_JSON_FILE, "r", "r", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_DEVICE_TIME, "rw", "rw", vendorPropertyAccessor);
+            // propertyServer->registerProperty(OB_RAW_DATA_MCU_UPGRADE_FILE, "rw", "rw", vendorPropertyPort);
+            // propertyServer->registerProperty(OB_RAW_DATA_HARDWARE_ALIGN_PARAM, "rw", "rw", vendorPropertyPort);
+            propertyServer->registerProperty(OB_PROP_INDICATOR_LIGHT_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_BOOT_INTO_RECOVERY_MODE_BOOL, "w", "w", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_ENABLE_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "w", "w", vendorPropertyAccessor);
-            //  propertyServer->registerProperty(OB_PROP_DEVICE_IQ_DEBUG_BOOL, "", "rw", vendorPropertyPort);
-            propertyServer->registerProperty(OB_STRUCT_DEVICE_TIME, "rw", "rw", vendorPropertyAccessor);
-            //  propertyServer->registerProperty(OB_STRUCT_LED_CONTROL, "", "w", vendorPropertyPort);
-            propertyServer->registerProperty(OB_RAW_DATA_CAMERA_CALIB_JSON_FILE, "r", "r", vendorPropertyAccessor);
-            //  propertyServer->registerProperty(OB_RAW_DATA_MCU_UPGRADE_FILE, "rw", "rw", vendorPropertyPort);
-            //  propertyServer->registerProperty(OB_RAW_DATA_HARDWARE_ALIGN_PARAM, "rw", "rw", vendorPropertyPort);
-
-            //   propertyServer->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "r", "r", vendorPropertyAccessor);
-            // propertyServer->registerProperty(OB_PROP_SWITCH_IR_MODE_INT, "rw", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_RAW_DATA_ALIGN_CALIB_PARAM, "", "r", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_RAW_DATA_D2C_ALIGN_SUPPORT_PROFILE_LIST, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_RAW_DATA_IMU_CALIB_PARAM, "", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_STRUCT_VERSION, "", "r", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_DEVICE_TIME, "rw", "rw", vendorPropertyAccessor);
+            // propertyServer->registerProperty(OB_STRUCT_LED_CONTROL, "", "w", vendorPropertyPort);
+
+            propertyServer->registerProperty(OB_RAW_DATA_ALIGN_CALIB_PARAM, "", "r", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "r", "r", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_RAW_DATA_D2C_ALIGN_SUPPORT_PROFILE_LIST, "", "rw", vendorPropertyAccessor);
+            // propertyServer->registerProperty(OB_PROP_FAN_MAX_SPEED_TEST_MODE_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_GYRO_ODR_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_ACCEL_ODR_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_GYRO_FULL_SCALE_INT, "rw", "rw", vendorPropertyAccessor);
@@ -394,13 +393,10 @@ void FemtoBoltDevice::initProperties() {
 
     propertyServer->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
 
-    auto heartbeatPropertyAccessor = std::make_shared<HeartbeatPropertyAccessor>(this);
-    propertyServer->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", heartbeatPropertyAccessor);
-
     registerComponent(OB_DEV_COMPONENT_PROPERTY_SERVER, propertyServer, true);
 }
 
-std::vector<std::shared_ptr<IFilter>> FemtoBoltDevice::createRecommendedPostProcessingFilters(OBSensorType type) {
+std::vector<std::shared_ptr<IFilter>> FemtoMegaUvcDevice::createRecommendedPostProcessingFilters(OBSensorType type) {
     std::vector<std::shared_ptr<IFilter>> filters;
     if(type == OB_SENSOR_COLOR) {
         return {};

@@ -21,6 +21,7 @@ add_subdirectory(component)
 add_subdirectory(gemini330) # Gemini 330 series
 add_subdirectory(gemini2) # Gemini 2 series
 add_subdirectory(femtobolt) # FemtoBolt
+add_subdirectory(femtomega) # FemtoMega
 
 # dependecies:
 add_subdirectory(${OB_3RDPARTY_DIR}/jsoncpp jsoncpp)

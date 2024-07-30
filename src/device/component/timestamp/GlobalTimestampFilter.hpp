@@ -17,10 +17,10 @@ typedef struct {
     uint64_t checkDataY;
 } LinearFuncParam;
 
-class GlobalTimestampFitter : public DeviceComponentBase {
+class GlobalTimestampFilter : public DeviceComponentBase {
 public:
-    GlobalTimestampFitter(IDevice *owner);
-    ~GlobalTimestampFitter();
+    GlobalTimestampFilter(IDevice *owner);
+    ~GlobalTimestampFilter();
     LinearFuncParam getLinearFuncParam();
     void            reFitting();
     void            pause();

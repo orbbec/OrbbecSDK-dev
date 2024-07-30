@@ -974,7 +974,7 @@ void WmfUvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile,
 
 void WmfUvcDevicePort::stopStream(std::shared_ptr<const StreamProfile> profile) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    bool isStarted = false;  // 会重新根据是否还有流在出流状态赋值
+    bool                                  isStarted = false;  // 会重新根据是否还有流在出流状态赋值
     for(auto &item: streams_) {
         auto &stream = item.second;
         if(stream.profile == profile && stream.streaming) {

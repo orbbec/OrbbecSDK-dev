@@ -10,8 +10,8 @@
 #include <vector>
 #include <memory>
 
-namespace libobsensor {
 
+namespace libobsensor {
 class AlgParamManagerBase : public DeviceComponentBase, public IAlgParamManager {
 public:
     AlgParamManagerBase(IDevice *owner);

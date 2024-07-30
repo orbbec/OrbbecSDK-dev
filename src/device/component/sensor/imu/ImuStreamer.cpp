@@ -42,7 +42,7 @@ void ImuStreamer::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     }
     running_ = true;
 
-    backend_->startStream([this](std::shared_ptr<Frame> frame) { ImuStreamer::praseIMUData(frame); });
+    backend_->startStream([this](std::shared_ptr<Frame> frame) { ImuStreamer::parseIMUData(frame); });
 }
 
 void ImuStreamer::stop(std::shared_ptr<const StreamProfile> sp) {
@@ -66,7 +66,7 @@ void ImuStreamer::stop(std::shared_ptr<const StreamProfile> sp) {
     running_ = false;
 }
 
-void ImuStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
+void ImuStreamer::parseIMUData(std::shared_ptr<Frame> frame) {
     auto         data     = frame->getData();
     OBImuHeader *header   = (OBImuHeader *)data;
     auto         dataSize = frame->getDataSize();

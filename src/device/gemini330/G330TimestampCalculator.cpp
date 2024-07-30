@@ -4,8 +4,8 @@
 
 namespace libobsensor {
 
-G330TimestampCalculator::G330TimestampCalculator(OBFrameMetadataType frameTimestampMetadataType, std::shared_ptr<GlobalTimestampFitter> globalTspFitter)
-    : globalTspFitter_(globalTspFitter), frameTimestampMetadataType_(frameTimestampMetadataType) {}
+G330TimestampCalculator::G330TimestampCalculator(OBFrameMetadataType frameTimestampMetadataType, std::shared_ptr<GlobalTimestampFilter> globalTspFilter)
+    : globalTspFilter_(globalTspFilter), frameTimestampMetadataType_(frameTimestampMetadataType) {}
 
 void G330TimestampCalculator::calculate(std::shared_ptr<Frame> frame) {
     uint64_t frameTsp = 0;
@@ -31,8 +31,8 @@ void G330TimestampCalculator::calculateGlobalTimestamp(std::shared_ptr<Frame> fr
     const uint32_t timestampClockFreq = 1000000;
     const uint64_t srcTimestamp       = frame->getTimeStampUsec();
 
-    if(globalTspFitter_) {
-        auto   linearFuncParam = globalTspFitter_->getLinearFuncParam();
+    if(globalTspFilter_) {
+        auto   linearFuncParam = globalTspFilter_->getLinearFuncParam();
         double transformedTsp  = (double)srcTimestamp * deviceClockFreq / timestampClockFreq;
         globalTsp              = static_cast<uint64_t>(linearFuncParam.coefficientA * transformedTsp + linearFuncParam.constantB);
     }

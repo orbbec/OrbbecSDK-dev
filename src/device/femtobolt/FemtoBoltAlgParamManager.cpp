@@ -6,10 +6,11 @@
 #include "DevicePids.hpp"
 #include "exception/ObException.hpp"
 #include "publicfilters/IMUCorrector.hpp"
+#include "param/AlgParseHelper.hpp"
 
 #include <vector>
 #include <sstream>
-#define D2C_PARAMS_ITEM_SIZE 0xB0
+
 
 namespace libobsensor {
 FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : AlgParamManagerBase(owner) {
@@ -17,21 +18,21 @@ FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : AlgParamMan
     registerBasicExtrinsics();
 }
 
-std::vector<OBCameraParam> alignCalibParamParse(uint8_t *data, uint32_t size) {
-    std::vector<OBCameraParam> output;
-    for(int i = 0; i < static_cast<int>(size / D2C_PARAMS_ITEM_SIZE); i++) {
-        output.push_back(*(OBCameraParam *)(data + i * D2C_PARAMS_ITEM_SIZE));
-    }
-    return output;
-}
+// std::vector<OBCameraParam> alignCalibParamParse(uint8_t *data, uint32_t size) {
+//     std::vector<OBCameraParam> output;
+//     for(int i = 0; i < static_cast<int>(size / D2C_PARAMS_ITEM_SIZE); i++) {
+//         output.push_back(*(OBCameraParam *)(data + i * D2C_PARAMS_ITEM_SIZE));
+//     }
+//     return output;
+// }
 
-std::vector<OBD2CProfile> d2cProfileInfoParse(uint8_t *data, uint32_t size) {
-    std::vector<OBD2CProfile> output;
-    for(int i = 0; i < static_cast<int>(size / sizeof(OBD2CProfile)); i++) {
-        output.push_back(*(OBD2CProfile *)(data + i * sizeof(OBD2CProfile)));
-    }
-    return output;
-}
+// std::vector<OBD2CProfile> d2cProfileInfoParse(uint8_t *data, uint32_t size) {
+//     std::vector<OBD2CProfile> output;
+//     for(int i = 0; i < static_cast<int>(size / sizeof(OBD2CProfile)); i++) {
+//         output.push_back(*(OBD2CProfile *)(data + i * sizeof(OBD2CProfile)));
+//     }
+//     return output;
+// }
 
 void FemtoBoltAlgParamManager::fetchParams() {
     std::vector<uint8_t> data;
@@ -54,7 +55,7 @@ void FemtoBoltAlgParamManager::fetchParams() {
     })
 
     if(!data.empty()) {
-        calibrationCameraParamList_ = alignCalibParamParse(data.data(), static_cast<uint32_t>(data.size()));
+        calibrationCameraParamList_ = AlgParseHelper::alignCalibParamParse(data.data(), static_cast<uint32_t>(data.size()));
         LOG_DEBUG("Get align calibration camera params success! num={}", calibrationCameraParamList_.size());
         for(auto &&cameraParam: calibrationCameraParamList_) {
             std::stringstream ss;
@@ -83,7 +84,7 @@ void FemtoBoltAlgParamManager::fetchParams() {
     })
 
     if(!data.empty()) {
-        d2cProfileList_ = d2cProfileInfoParse(data.data(), static_cast<uint32_t>(data.size()));
+        d2cProfileList_ = AlgParseHelper::d2cProfileInfoParse(data.data(), static_cast<uint32_t>(data.size()));
         auto iter       = d2cProfileList_.begin();
         while(iter != d2cProfileList_.end()) {
             if((*iter).alignType == ALIGN_D2C_HW_MODE) {
@@ -120,7 +121,10 @@ void FemtoBoltAlgParamManager::fetchParams() {
     })
 
     if(!data.empty()) {
-        imuCalibParam_ = IMUCorrector::parserIMUCalibParamRaw(data.data(), static_cast<uint32_t>(data.size()));
+        // 由于保证读写文件保持一致性，而IMU标定参数文件携带了校验头数据，需要SDK端进行偏移，此做法与MX6600系列不一致。
+        auto realData  = data.data() + IMU_CALIBRATION_FILE_OFFSET;
+        auto realSize  = static_cast<uint32_t>(data.size()) - IMU_CALIBRATION_FILE_OFFSET;
+        imuCalibParam_ = IMUCorrector::parserIMUCalibParamRaw(realData, realSize);
         LOG_DEBUG("Get imu calibration params success!");
     }
     else {
@@ -130,7 +134,7 @@ void FemtoBoltAlgParamManager::fetchParams() {
 }
 
 void FemtoBoltAlgParamManager::registerBasicExtrinsics() {
-    auto extrinsicMgr        = StreamExtrinsicsManager::getInstance();
+    auto extrinsicMgr            = StreamExtrinsicsManager::getInstance();
     auto depthBasicStreamProfile = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_DEPTH, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
     auto colorBasicStreamProfile = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_COLOR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);
     auto irBasicStreamProfile    = StreamProfileFactory::createVideoStreamProfile(OB_STREAM_IR, OB_FORMAT_ANY, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY);

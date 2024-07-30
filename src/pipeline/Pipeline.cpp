@@ -9,6 +9,8 @@
 #include "logger/LoggerInterval.hpp"
 #include "logger/LoggerHelper.hpp"
 #include "utils/Utils.hpp"
+#include "component/frameprocessor/FrameProcessor.hpp"
+#include "component/param/AlgParamManagerBase.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -50,6 +52,7 @@ void Pipeline::applyConfig(std::shared_ptr<const Config> cfg) {
         return;
     }
     config_ = checkAndSetConfig(cfg);
+    checkHardwareD2CConfig();
 }
 
 void Pipeline::loadDefaultConfig() {
@@ -364,7 +367,7 @@ void Pipeline::disableFrameSync() {
 
 std::shared_ptr<const VideoStreamProfile> Pipeline::getCurrentVideoStreamProfile(OBStreamType type) {
     if(!config_) {
-        return {};
+        return nullptr;
     }
 
     for(const auto &sp: config_->getEnabledStreamProfileList()) {
@@ -372,7 +375,25 @@ std::shared_ptr<const VideoStreamProfile> Pipeline::getCurrentVideoStreamProfile
             return sp->as<const VideoStreamProfile>();
         }
     }
-    return {};
+    return nullptr;
+}
+
+void Pipeline::checkHardwareD2CConfig() {
+    if(config_->getAlignMode() != ALIGN_D2C_HW_MODE) {
+        LOG_DEBUG("current align mode is not hardware d2c mode.");
+        return;
+    }
+    auto algParamManager     = device_->getComponentT<AlgParamManagerBase>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+    auto frameProcessor      = device_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+    auto depthFrameProcessor = std::dynamic_pointer_cast<DepthFrameProcessor>(frameProcessor.get());
+    auto colorProfile        = getCurrentVideoStreamProfile(OB_STREAM_COLOR);
+    auto depthProfile        = getCurrentVideoStreamProfile(OB_STREAM_DEPTH);
+    if(algParamManager && depthFrameProcessor && colorProfile && depthProfile) {
+        auto calibrationCameraParams = algParamManager->getCalibrationCameraParamList();
+        auto d2cProfileList          = algParamManager->getD2CProfileList();
+        depthFrameProcessor->setHardwareD2CProcessParams(colorProfile->getWidth(), colorProfile->getHeight(), depthProfile->getWidth(),
+                                                         depthProfile->getHeight(), calibrationCameraParams, d2cProfileList);
+    }
 }
 
 }  // namespace libobsensor

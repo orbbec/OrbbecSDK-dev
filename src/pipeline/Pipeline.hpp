@@ -48,6 +48,8 @@ private:
     void                    applyConfig(std::shared_ptr<const Config> cfg);
     std::shared_ptr<Config> checkAndSetConfig(std::shared_ptr<const Config> cfg);
 
+    void checkHardwareD2CConfig();
+
 private:
     std::shared_ptr<IDevice>      device_;
     std::shared_ptr<const Config> config_;

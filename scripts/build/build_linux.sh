@@ -5,7 +5,7 @@ CURRNET_DIR=$(pwd)
 SCRIPT_DIR=$(dirname "$0")
 cd $SCRIPT_DIR/../../
 
-$PROJECT_ROOT=$(pwd)
+PROJECT_ROOT=$(pwd)
 
 # Define the platform
 ARCH=$(uname -m)

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(OpenOrbbecSDK VERSION 2.0.1 LANGUAGES CXX C)
+project(OpenOrbbecSDK VERSION 2.0.2 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)

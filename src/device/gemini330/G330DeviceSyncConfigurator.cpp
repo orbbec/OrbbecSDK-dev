@@ -36,7 +36,7 @@ OBMultiDeviceSyncConfig G330DeviceSyncConfigurator::getSyncConfig() {
     currentMultiDevSyncConfig_.trigger2ImageDelayUs = configInternal.trigger2ImageDelayUs;
     currentMultiDevSyncConfig_.triggerOutEnable     = configInternal.triggerOutEnable;
     currentMultiDevSyncConfig_.triggerOutDelayUs    = configInternal.triggerOutDelayUs;
-    currentMultiDevSyncConfig_.framesPerTrigger     = configInternal.framesPerTrigger;
+    currentMultiDevSyncConfig_.framesPerTrigger     = 1;  // configInternal.framesPerTrigger; set to 1 at default
 
     isSyncConfigInit_ = true;
     return currentMultiDevSyncConfig_;

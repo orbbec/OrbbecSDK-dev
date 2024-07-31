@@ -13,7 +13,6 @@ G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner
     auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
     auto depthWorkModeList    = depthWorkModeManager->getDepthWorkModeList();
 
-    availablePresets_.emplace_back("Custom");
     for(auto &mode: depthWorkModeList) {
         availablePresets_.emplace_back(mode.name);
     }
@@ -55,6 +54,7 @@ G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner
                 currentPreset_ = "Custom";
             }
         });
+     storeCurrentParamsAsCustomPreset("Custom");
 }
 
 void G330PresetManager::loadPreset(const std::string &presetName) {
@@ -279,7 +279,6 @@ void G330PresetManager::storeCurrentParamsAsCustomPreset(const std::string &pres
         availablePresets_.emplace_back(presetName);
     }
     customPresets_[presetName] = preset;
-    currentPreset_             = presetName;
 }
 
 }  // namespace libobsensor

@@ -237,7 +237,7 @@ void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint3
         }
     }
 
-    if(currentD2CProfile.paramIndex + 1 > calibrationCameraParams.size()) {
+    if(static_cast<size_t>(currentD2CProfile.paramIndex) + 1 > calibrationCameraParams.size()) {
         throw invalid_value_exception("Current stream profile is not support hardware d2c process");
         return;
     }

@@ -1,7 +1,11 @@
 #!/bin/bash
 
 CURRNET_DIR=$(pwd)
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
+
+SCRIPT_DIR=$(dirname "$0")
+cd $SCRIPT_DIR/../../
+
+PROJECT_ROOT=$(pwd)
 
 # get arch from arg
 ARCH=$1

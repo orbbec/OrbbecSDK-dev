@@ -379,16 +379,20 @@ std::shared_ptr<const VideoStreamProfile> Pipeline::getCurrentVideoStreamProfile
 }
 
 void Pipeline::checkHardwareD2CConfig() {
+    auto frameProcessor      = device_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+    auto depthFrameProcessor = std::dynamic_pointer_cast<DepthFrameProcessor>(frameProcessor.get());
+    if(!depthFrameProcessor) {
+        return;
+    }
     if(config_->getAlignMode() != ALIGN_D2C_HW_MODE) {
+        depthFrameProcessor->enableHardwareD2CProcess(false);
         LOG_DEBUG("current align mode is not hardware d2c mode.");
         return;
     }
-    auto algParamManager     = device_->getComponentT<AlgParamManagerBase>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
-    auto frameProcessor      = device_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
-    auto depthFrameProcessor = std::dynamic_pointer_cast<DepthFrameProcessor>(frameProcessor.get());
-    auto colorProfile        = getCurrentVideoStreamProfile(OB_STREAM_COLOR);
-    auto depthProfile        = getCurrentVideoStreamProfile(OB_STREAM_DEPTH);
-    if(algParamManager && depthFrameProcessor && colorProfile && depthProfile) {
+    auto algParamManager = device_->getComponentT<AlgParamManagerBase>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+    auto colorProfile    = getCurrentVideoStreamProfile(OB_STREAM_COLOR);
+    auto depthProfile    = getCurrentVideoStreamProfile(OB_STREAM_DEPTH);
+    if(algParamManager && colorProfile && depthProfile) {
         auto calibrationCameraParams = algParamManager->getCalibrationCameraParamList();
         auto d2cProfileList          = algParamManager->getD2CProfileList();
         depthFrameProcessor->enableHardwareD2CProcess(true);

@@ -231,13 +231,14 @@ void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint3
     OBD2CProfile  currentD2CProfile  = {};
     for(const auto &d2cProfile: d2cProfiles) {
         if(d2cProfile.colorWidth == colorWidth && d2cProfile.colorHeight == colorHeight && d2cProfile.depthWidth == depthWidth
-           && d2cProfile.depthHeight == depthHeight) {
+           && d2cProfile.depthHeight == depthHeight && (d2cProfile.alignType & ALIGN_D2C_HW)) {
             currentD2CProfile = d2cProfile;
             break;
         }
     }
 
     if(currentD2CProfile.paramIndex + 1 > calibrationCameraParams.size()) {
+        throw invalid_value_exception("Current stream profile is not support hardware d2c process");
         return;
     }
 

@@ -376,8 +376,7 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
     int metadataBufferIndex = -1;
     try {
 
-        int            max_fd    = std::max({ devHandle->fd, devHandle->metadataFd, devHandle->stopPipeFd[0], devHandle->stopPipeFd[1] });
-        struct timeval remaining = { 0, 500000 };  // 500ms
+        int max_fd = std::max({ devHandle->fd, devHandle->metadataFd, devHandle->stopPipeFd[0], devHandle->stopPipeFd[1] });
 
         if(devHandle->metadataFd >= 0) {
             v4l2_buffer buf = {};
@@ -408,7 +407,8 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
             if(devHandle->stopPipeFd[1] >= 0) {
                 FD_SET(devHandle->stopPipeFd[1], &fds);
             }
-            int val = select(max_fd + 1, &fds, nullptr, nullptr, &remaining);
+            struct timeval remaining = { 0, 500000 };  // 500ms
+            int            val       = select(max_fd + 1, &fds, nullptr, nullptr, &remaining);
             if(val < 0) {
                 if(errno == EINTR) {
                     LOG_DEBUG("select interrupted: {}", strerror(errno));
@@ -462,22 +462,25 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
                     auto timestamp = (double)buf.timestamp.tv_sec * 1000.f + (double)buf.timestamp.tv_usec / 1000.f;
                     (void)timestamp;
 
-                    auto rawframe  = FrameFactory::createFrameFromStreamProfile(devHandle->profile);
-                    auto videoFrame    = rawframe->as<VideoFrame>();
-                    videoFrame->updateData(static_cast<const uint8_t *>(devHandle->buffers[buf.index].ptr),buf.bytesused);
+                    auto rawframe   = FrameFactory::createFrameFromStreamProfile(devHandle->profile);
+                    auto videoFrame = rawframe->as<VideoFrame>();
+                    videoFrame->updateData(static_cast<const uint8_t *>(devHandle->buffers[buf.index].ptr), buf.bytesused);
                     if(metadataBufferIndex >= 0 && devHandle->metadataBuffers[metadataBufferIndex].sequence == buf.sequence) {
                         auto uvc_payload_header     = devHandle->metadataBuffers[metadataBufferIndex].ptr + sizeof(V4L2UvcMetaHeader);
                         auto uvc_payload_header_len = devHandle->metadataBuffers[metadataBufferIndex].actual_length - sizeof(V4L2UvcMetaHeader);
                         if(uvc_payload_header_len >= sizeof(StandardUvcFramePayloadHeader)) {
-                            auto payloadHeader      = (StandardUvcFramePayloadHeader *)uvc_payload_header;
-                            videoFrame->updateMetadata(static_cast<const uint8_t *>(payloadHeader->scrSourceClock),sizeof(StandardUvcFramePayloadHeader::scrSourceClock));
-                            videoFrame->appendMetadata(static_cast<const uint8_t *>(uvc_payload_header + sizeof(StandardUvcFramePayloadHeader)),uvc_payload_header_len - sizeof(StandardUvcFramePayloadHeader));
+                            auto payloadHeader = (StandardUvcFramePayloadHeader *)uvc_payload_header;
+                            videoFrame->updateMetadata(static_cast<const uint8_t *>(payloadHeader->scrSourceClock),
+                                                       sizeof(StandardUvcFramePayloadHeader::scrSourceClock));
+                            videoFrame->appendMetadata(static_cast<const uint8_t *>(uvc_payload_header + sizeof(StandardUvcFramePayloadHeader)),
+                                                       uvc_payload_header_len - sizeof(StandardUvcFramePayloadHeader));
                             videoFrame->setTimeStampUsec(payloadHeader->dwPresentationTime);
                         }
                     }
 
                     auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
                     videoFrame->setSystemTimeStampUsec(realtime);
+                    videoFrame->setNumber(buf.sequence);
                     devHandle->frameCallback(videoFrame);
                 }
 

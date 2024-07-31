@@ -454,6 +454,7 @@ void ObLibuvcDevicePort::onFrameCallback(uvc_frame *frame, void *userPtr) {
     auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     videoFrame->setSystemTimeStampUsec(realtime);
     videoFrame->setTimeStampUsec(frame->pts);
+    videoFrame->setNumber(frame->sequence);
 
     handle->callback(videoFrame);
 }

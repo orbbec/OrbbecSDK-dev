@@ -111,18 +111,18 @@ int main(void) try {
 
     // int count = 0;
     while(true) {
-        auto key = ob_smpl::waitForKeyPressed(5);
-        if(key == 27) {
-            break;
-        }
-
         auto frameset = pipeline->waitForFrameset(1000);
         if(!frameset) {
             continue;
         }
 
+        auto key = ob_smpl::waitForKeyPressed();
+        if(key == 27) {
+            break;
+        }
+
         if(key == 'r' || key == 'R') {
-            std::cout << "Save RGBD PointCloud ply file, this will take some time..." << std::endl;
+            std::cout << "Save RGBD? PointCloud ply file, this will take some time..." << std::endl;
 
             // align depth frame to color frame
             auto alignedFrameset = align->process(frameset);

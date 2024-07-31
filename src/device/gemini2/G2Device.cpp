@@ -191,12 +191,13 @@ void G2Device::initSensorList() {
                 }
 
                 auto propServer = getPropertyServer();
-                propServer->setPropertyValueT(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PRECISION_1MM);
-                sensor->setDepthUnit(1.0f);
 
                 propServer->setPropertyValueT<bool>(OB_PROP_DISPARITY_TO_DEPTH_BOOL, false);
                 propServer->setPropertyValueT<bool>(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, true);
                 sensor->markOutputDisparityFrame(true);
+
+                propServer->setPropertyValueT(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PRECISION_1MM);
+                sensor->setDepthUnit(1.0f);
 
                 initSensorStreamProfile(sensor);
 

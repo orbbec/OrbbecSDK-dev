@@ -124,11 +124,11 @@ public:
      * @brief Set int type of device property
      *
      * @param propertyId Property id
-     * @param property Property to be set
+     * @param value Property value to be set
      */
-    void setIntProperty(OBPropertyID propertyId, int32_t property) const {
+    void setIntProperty(OBPropertyID propertyId, int32_t value) const {
         ob_error *error = nullptr;
-        ob_device_set_int_property(impl_, propertyId, property, &error);
+        ob_device_set_int_property(impl_, propertyId, value, &error);
         Error::handle(&error);
     }
 
@@ -136,11 +136,11 @@ public:
      * @brief Set float type of device property
      *
      * @param propertyId Property id
-     * @param property Property to be set
+     * @param value Property value to be set
      */
-    void setFloatProperty(OBPropertyID propertyId, float property) const {
+    void setFloatProperty(OBPropertyID propertyId, float value) const {
         ob_error *error = nullptr;
-        ob_device_set_float_property(impl_, propertyId, property, &error);
+        ob_device_set_float_property(impl_, propertyId, value, &error);
         Error::handle(&error);
     }
 
@@ -148,11 +148,11 @@ public:
      * @brief Set bool type of device property
      *
      * @param propertyId Property id
-     * @param property Property to be set
+     * @param value Property value to be set
      */
-    void setBoolProperty(OBPropertyID propertyId, bool property) const {
+    void setBoolProperty(OBPropertyID propertyId, bool value) const {
         ob_error *error = nullptr;
-        ob_device_set_bool_property(impl_, propertyId, property, &error);
+        ob_device_set_bool_property(impl_, propertyId, value, &error);
         Error::handle(&error);
     }
 

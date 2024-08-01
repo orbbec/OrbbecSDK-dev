@@ -18,7 +18,7 @@ G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner
     }
 
     if(availablePresets_.size() > 1) {
-        currentPreset_ = availablePresets_[1];
+        currentPreset_ = availablePresets_[0];
         depthWorkModeManager->switchDepthWorkMode(currentPreset_.c_str());
     }
 

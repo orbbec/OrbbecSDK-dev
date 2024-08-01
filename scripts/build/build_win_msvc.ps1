@@ -24,8 +24,8 @@ if ($args.Length -eq 1) {
     }
 }
 
-
-$PROJECT_ROOT = $(git rev-parse --show-toplevel)
+$SCRIPT_DIR = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+$PROJECT_ROOT = "$SCRIPT_DIR/../../"
 Set-Location $PROJECT_ROOT
 
 Write-Output  "Building openorbbecsdk for ${fullPlatform}"

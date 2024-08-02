@@ -57,30 +57,29 @@ void censusStd(const T* ir, int width, int height, uint8_t* std, uint8_t ws = 7)
     int thresh = 10;
     memset(std, 0, sizeof(uint8_t) * width * height);
     for(int v = ws_2; v < height - ws_2; v++) {
+        int      row_start_idx = v * width + ws_2;
+        const T *p_ir_center   = ir + row_start_idx;
+        uint8_t *p_std         = std + row_start_idx;
+
         for(int u = ws_2; u < width - ws_2; u++) {
-            T val = ir[v * width + u];
+			uint8_t  count         = 0;
+
+            const T *p_ir_row = p_ir_center - ws_2 * width - ws_2;
             for(int wv = -ws_2; wv < ws_2; wv++) {
+                const T *p_ir_col = p_ir_row;
                 for(int wu = -ws_2; wu < ws_2; wu++) {
-                    T c = ir[(v + wv) * width + (u + wu)];
-                    if((c - val < -thresh) || (c - val > thresh))
-                        std[v * width + u]++;
+                    if((*p_ir_col - *p_ir_center < -thresh) || (*p_ir_col - *p_ir_center > thresh))
+                        count++;
+					p_ir_col++;
                 }
+                p_ir_row += width;
             }
+
+            p_ir_center++;
+            *p_std++ = count;
         }
     }
 }
-
-    //void triangleWeights(float exp_n, float *w, int min = 0, int max = 0) {
-//    if(!w) 
-//        return;
-//    if(!min)
-//        min = 0;
-//    if(!max)
-//        max = (1 << sizeof(T) * 8) - 1;
-//
-//    for(int i = 0; i < length; i++) {
-//    }
-//}
 
 template <typename T> void generateConfidenceMap(const T *ir, uint8_t *map, int width, int height, int exposure, uint8_t ws = 7) {
     std::cout << exposure << std::endl;
@@ -88,30 +87,22 @@ template <typename T> void generateConfidenceMap(const T *ir, uint8_t *map, int 
     float EXP_LUT[256];
     triangleWeights<uint8_t>(EXP_LUT);
 
-    float *exp_w = (float *)malloc(width * height * sizeof(float));
-    memset(exp_w, 0, width * height * sizeof(float));
-
     uint8_t *std_w = (uint8_t *)malloc(width * height * sizeof(uint8_t));
     memset(std_w, 0, width * height * sizeof(uint8_t));
     censusStd<uint8_t>(ir, width, height, std_w, ws);
 
+    const uint8_t *p_ir = ir;
+    uint8_t       *p_std = std_w;
+    uint8_t *      p_map = map;
+
+    float s = 256.f / (ws * ws);
     for(int i = 0; i < height; i++) {
         for(int j = 0; j < width; j++) {
-            //float tmp = EXP_LUT[*ir++];
-            //*exp_w++ = EXP_LUT[*ir++];
-            //*exp_w++ = tmp;
-            //*map++   = static_cast<uint8_t>(tmp * (*std_w++));
-            //if(0 == *ir++)
-                //*map++ = 0;
-            int     idx               = i * width + j;
-            uint8_t gray              = ir[idx];
-            float   tmp               = EXP_LUT[gray];
-            exp_w[idx] = tmp;
-            map[idx]                  = static_cast<uint8_t>(tmp * std_w[idx]);
+            float exp                 = EXP_LUT[*p_ir++];
+            *p_map++ = static_cast<uint8_t>(exp * (*p_std++) * s);
         }
     }
 
-    free(exp_w);
     free(std_w);
 }
 

@@ -34,7 +34,7 @@ public:
 #if defined(BUILD_USB_PORT)
 public:
     std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
-    SourcePortInfoList             queryUsbSourcePort() override;
+    SourcePortInfoList             queryUsbSourcePortInfos() override;
 
 private:
     void loadXmlConfig();

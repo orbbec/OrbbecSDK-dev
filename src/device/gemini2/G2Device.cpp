@@ -18,15 +18,15 @@
 #include "sensor/imu/ImuStreamer.hpp"
 #include "sensor/imu/AccelSensor.hpp"
 #include "sensor/imu/GyroSensor.hpp"
-#include "timestamp/GlobalTimestampFitter.hpp"
+#include "timestamp/GlobalTimestampFilter.hpp"
 #include "property/VendorPropertyAccessor.hpp"
 #include "property/UvcPropertyAccessor.hpp"
 #include "property/PropertyServer.hpp"
 #include "property/CommonPropertyAccessors.hpp"
 #include "property/FilterPropertyAccessors.hpp"
 #include "monitor/DeviceMonitor.hpp"
-#include "param/AlgParamManager.hpp"
 
+#include "G2AlgParamManager.hpp"
 #include "G2StreamProfileFilter.hpp"
 #include "G2PropertyAccessors.hpp"
 #include "G2DepthWorkModeManager.hpp"
@@ -51,19 +51,19 @@ void G2Device::init() {
 
     fetchDeviceInfo();
 
-    auto globalTimestampFitter = std::make_shared<GlobalTimestampFitter>(this);
-    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER, globalTimestampFitter);
+   // auto GlobalTimestampFilter = std::make_shared<GlobalTimestampFilter>(this);
+   // registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, GlobalTimestampFilter);
 
     // // todo: make timestamp calculator as a component
     // auto iter = std::find(G2LDevPids.begin(), G2LDevPids.end(), deviceInfo_->pid_);
     // if(iter != G2LDevPids.end()) {
-    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFitter);
+    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, GlobalTimestampFilter);
     // }
     // else {
-    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, globalTimestampFitter);
+    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, GlobalTimestampFilter);
     // }
 
-    auto algParamManager = std::make_shared<AlgParamManager>(this);
+    auto algParamManager = std::make_shared<G2AlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
     auto depthWorkModeManager = std::make_shared<G2DepthWorkModeManager>(this);
@@ -111,12 +111,18 @@ void G2Device::fetchDeviceInfo() {
 
 void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
 
-    {
-        auto streamProfileFilter = getComponentT<IStreamProfileFilter>(OB_DEV_COMPONENT_STREAM_PROFILE_FILTER);
-        sensor->setStreamProfileFilter(streamProfileFilter.get());
-    }
+    auto streamProfileFilter = getComponentT<IStreamProfileFilter>(OB_DEV_COMPONENT_STREAM_PROFILE_FILTER);
+    sensor->setStreamProfileFilter(streamProfileFilter.get());
 
-    auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensor->getSensorType());
+    auto        depthWorkModeManager = getComponentT<IDepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+    auto        workMode             = depthWorkModeManager->getCurrentDepthWorkMode();
+    std::string workModeName         = workMode.name;
+    auto        sensorType           = sensor->getSensorType();
+    auto        streamProfile        = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType, workModeName);
+    if(!streamProfile) {
+        // if not found, try to get default stream profile without work mode
+        streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType);
+    }
     if(streamProfile) {
         sensor->updateDefaultStreamProfile(streamProfile);
     }
@@ -124,11 +130,10 @@ void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<AlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<IAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 
-    auto sensorType = sensor->getSensorType();
     LOG_INFO("Sensor {} created! Found {} stream profiles.", sensorType, profiles.size());
     for(auto &profile: profiles) {
         LOG_INFO(" - {}", profile);
@@ -137,10 +142,10 @@ void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // sensor->registerStreamStateChangedCallback([this](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
     //     auto streamStrategy = getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
     //     if(state == STREAM_STATE_STARTING) {
-    //         streamStrategy->markStreamStarted(sp);
+    //         streamStrategy->markStreamActivated (sp);
     //     }
     //     else if(state == STREAM_STATE_STOPPED) {
-    //         streamStrategy->markStreamStopped(sp);
+    //         streamStrategy->markStreamDeactivated(sp);
     //     }
     // });
 }
@@ -186,12 +191,13 @@ void G2Device::initSensorList() {
                 }
 
                 auto propServer = getPropertyServer();
-                propServer->setPropertyValueT(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PRECISION_1MM);
-                sensor->setDepthUnit(1.0f);
 
                 propServer->setPropertyValueT<bool>(OB_PROP_DISPARITY_TO_DEPTH_BOOL, false);
                 propServer->setPropertyValueT<bool>(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, true);
                 sensor->markOutputDisparityFrame(true);
+
+                propServer->setPropertyValueT(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PRECISION_1MM);
+                sensor->setDepthUnit(1.0f);
 
                 initSensorStreamProfile(sensor);
 
@@ -207,6 +213,7 @@ void G2Device::initSensorList() {
             return frameProcessor;
         });
 
+        // right ir stream is using depth stream port when depth work mode optionCode is MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL
         registerComponent(
             OB_DEV_COMPONENT_RIGHT_IR_SENSOR,
             [this, depthPortInfo]() {
@@ -294,6 +301,7 @@ void G2Device::initSensorList() {
             return frameProcessor;
         });
 
+        // left ir stream is using the same port as the ir stream when depth work mode optionCode is MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL
         registerComponent(
             OB_DEV_COMPONENT_LEFT_IR_SENSOR,
             [this, irPortInfo]() {
@@ -426,8 +434,9 @@ void G2Device::initSensorList() {
 
 void G2Device::fixSensorList() {
     auto depthWorkModeManager = getComponentT<G2DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
-    auto currentMode          = depthWorkModeManager->getCurrentDepthWorkModeChecksum();
+    auto currentMode          = depthWorkModeManager->getCurrentDepthWorkMode();
 
+    // deregister unsupported sensors according to depth work mode option code
     if(currentMode.optionCode == OBDepthModeOptionCode::MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL) {
         deregisterSensor(OB_SENSOR_IR);
         deregisterSensor(OB_SENSOR_DEPTH);
@@ -470,7 +479,7 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_IR) {
-            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, sourcePortInfo]() {
                 auto pal      = ObPal::getInstance();
                 auto port     = pal->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
@@ -486,14 +495,15 @@ void G2Device::initProperties() {
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
-            auto vendorPropertyAccessor = std::make_shared<LazyPropertyExtensionAccessor>([this, &sourcePortInfo]() {
+
+            auto vendorPropertyAccessor = std::make_shared<LazyExtensionPropertyAccessor>([this, &sourcePortInfo]() {
                 auto pal                    = ObPal::getInstance();
                 auto port                   = pal->getSourcePort(sourcePortInfo);
                 auto vendorPropertyAccessor = std::make_shared<VendorPropertyAccessor>(this, port);
                 return vendorPropertyAccessor;
             });
 
-            propertyServer->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_IR_EXPOSURE_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", vendorPropertyAccessor);  // using vendor property accessor
             propertyServer->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyAccessor);
 
@@ -533,14 +543,20 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_DEPTH_RM_FILTER_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_WATCHDOG_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_EXTERNAL_SIGNAL_RESET_BOOL, "rw", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", vendorPropertyAccessor);  // todo: map to device monitor
             propertyServer->registerProperty(OB_PROP_LASER_POWER_ACTUAL_LEVEL_INT, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_STRUCT_DEVICE_TIME, "rw", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_GYRO_ODR_INT, "", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_ACCEL_ODR_INT, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_GYRO_ODR_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_ACCEL_ODR_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_ACCEL_SWITCH_BOOL, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_GYRO_SWITCH_BOOL, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_GYRO_FULL_SCALE_INT, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_ACCEL_FULL_SCALE_INT, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_ODR_LIST, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_GET_ACCEL_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_ODR_LIST, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DEVICE_USB2_REPEAT_IDENTIFY_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);
@@ -560,7 +576,10 @@ void G2Device::initProperties() {
 
     propertyServer->aliasProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, OB_PROP_IR_AUTO_EXPOSURE_BOOL);
     propertyServer->aliasProperty(OB_PROP_DEPTH_GAIN_INT, OB_PROP_IR_GAIN_INT);
-    propertyServer->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
+    propertyServer->aliasProperty(OB_PROP_DEPTH_EXPOSURE_INT, OB_PROP_IR_EXPOSURE_INT);
+
+    auto heartbeatPropertyAccessor = std::make_shared<HeartbeatPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", heartbeatPropertyAccessor);
 
     registerComponent(OB_DEV_COMPONENT_PROPERTY_SERVER, propertyServer, true);
 }

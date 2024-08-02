@@ -68,33 +68,22 @@ uint64_t ob_smpl_get_current_timestamp_ms() {
     return milliseconds;
 }
 
-char ob_smpl_wait_for_key_press(uint32_t timeout_ms) {
-    struct termios oldt, newt;
-    int            ch;
-    int            oldf;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-    if(timeout_ms > 0) {
-        struct timeval tv;
-        tv.tv_sec  = timeout_ms / 1000;
-        tv.tv_usec = (timeout_ms % 1000) * 1000;
-        select(STDIN_FILENO + 1, NULL, NULL, NULL, &tv);
+char ob_smpl_wait_for_key_press(uint32_t timeout_ms) {  // 获取当前时间
+    struct timeval te;
+    gettimeofday(&te, NULL);
+    long long start_time = te.tv_sec * 1000LL + te.tv_usec / 1000;
+
+    while(true) {
+        if(kbhit()) {
+            return getch();
+        }
+        gettimeofday(&te, NULL);
+        long long current_time = te.tv_sec * 1000LL + te.tv_usec / 1000;
+        if(timeout_ms > 0 && current_time - start_time > timeout_ms) {
+            return 0;
+        }
+        usleep(100);
     }
-    else {
-        select(STDIN_FILENO + 1, NULL, NULL, NULL, NULL);
-    }
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
-    if(ch != EOF) {
-        ungetc(ch, stdin);
-        return ch;
-    }
-    return 0;
 }
 
 #else  // Windows

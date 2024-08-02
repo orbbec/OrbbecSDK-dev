@@ -2,8 +2,10 @@
 
 CURRNET_DIR=$(pwd)
 
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
-cd $PROJECT_ROOT
+SCRIPT_DIR=$(dirname "$0")
+cd $SCRIPT_DIR/../../
+
+PROJECT_ROOT=$(pwd)
 
 # Define the platform
 ARCH=$(uname -m)

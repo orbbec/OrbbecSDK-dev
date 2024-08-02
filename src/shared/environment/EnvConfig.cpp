@@ -45,6 +45,15 @@ EnvConfig::EnvConfig(const std::string &configFile) {
     xmlReaders_.push_back(defXmlReader);
 }
 
+bool EnvConfig::isNodeContained(const std::string &nodePathName) {
+    for(auto xmlReader: xmlReaders_) {
+        if(xmlReader->isNodeContained(nodePathName)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool EnvConfig::getIntValue(const std::string &nodePathName, int &t) {
     for(auto xmlReader: xmlReaders_) {
         if(xmlReader->getIntValue(nodePathName, t)) {

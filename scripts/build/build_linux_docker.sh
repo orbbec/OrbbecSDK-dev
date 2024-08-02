@@ -1,7 +1,14 @@
 #!/bin/bash
 
 CURRNET_DIR=$(pwd)
-PROJECT_ROOT=$(git rev-parse --show-toplevel)
+
+SCRIPT_DIR=$(dirname "$0")
+cd $SCRIPT_DIR/../../
+
+PROJECT_ROOT=$(pwd)
+cd $PROJECT_ROOT
+
+FOLDER_NAME=$(basename "$PROJECT_ROOT")
 
 # get arch from arg
 ARCH=$1
@@ -55,12 +62,12 @@ GROUP_ID=$(id -g)
 
 # run docker container and build openorbbecsdk
 docker run --rm -u $USER_ID:$GROUP_ID \
-    -v $PROJECT_ROOT:/workspace \
-    -w /workspace \
+    -v $PROJECT_ROOT/../:/workspace \
+    -w /workspace/$FOLDER_NAME \
     --name OpenOrbbecSDK_Build_Liunx_$ARCH \
     -it \
     --entrypoint /bin/bash \
     openorbbecsdk-env.$ARCH \
-    -c "cd /workspace && bash ./scripts/build/build_linux.sh"
+    -c "cd /workspace/$FOLDER_NAME && bash ./scripts/build/build_linux.sh"
 
 echo "Done building openorbbecsdk for linux $ARCH via docker"

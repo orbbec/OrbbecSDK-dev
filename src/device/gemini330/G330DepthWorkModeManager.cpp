@@ -8,25 +8,25 @@ G330DepthWorkModeManager::G330DepthWorkModeManager(IDevice *owner) : DeviceCompo
 
     auto propServer = owner->getPropertyServer();
 
-    depthWorkModeChecksumList_ = propServer->getStructureDataListProtoV1_1_T<OBDepthWorkModeChecksum, 0>(OB_RAW_DATA_DEPTH_ALG_MODE_LIST);
-    currentWorkMode_           = propServer->getStructureDataProtoV1_1_T<OBDepthWorkModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE);
+    depthWorkModeList_ = propServer->getStructureDataListProtoV1_1_T<OBDepthWorkMode_Internal, 0>(OB_RAW_DATA_DEPTH_ALG_MODE_LIST);
+    currentWorkMode_   = propServer->getStructureDataProtoV1_1_T<OBDepthWorkMode_Internal, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE);
 }
 
-std::vector<OBDepthWorkModeChecksum> G330DepthWorkModeManager::getDepthWorkModeList() const {
-    return depthWorkModeChecksumList_;
+std::vector<OBDepthWorkMode_Internal> G330DepthWorkModeManager::getDepthWorkModeList() const {
+    return depthWorkModeList_;
 }
 
-const OBDepthWorkModeChecksum &G330DepthWorkModeManager::getCurrentDepthWorkModeChecksum() const {
+const OBDepthWorkMode_Internal &G330DepthWorkModeManager::getCurrentDepthWorkMode() const {
     return currentWorkMode_;
 }
 
 void G330DepthWorkModeManager::switchDepthWorkMode(const std::string &modeName) {
-    auto iter = std::find_if(depthWorkModeChecksumList_.begin(), depthWorkModeChecksumList_.end(),
-                             [&modeName](const OBDepthWorkModeChecksum &mode) { return modeName == mode.name; });
+    auto iter =
+        std::find_if(depthWorkModeList_.begin(), depthWorkModeList_.end(), [&modeName](const OBDepthWorkMode_Internal &mode) { return modeName == mode.name; });
 
-    if(iter == depthWorkModeChecksumList_.end()) {
+    if(iter == depthWorkModeList_.end()) {
         std::string totalNames;
-        std::for_each(depthWorkModeChecksumList_.begin(), depthWorkModeChecksumList_.end(), [&totalNames](const OBDepthWorkModeChecksum &mode) {
+        std::for_each(depthWorkModeList_.begin(), depthWorkModeList_.end(), [&totalNames](const OBDepthWorkMode_Internal &mode) {
             if(!totalNames.empty()) {
                 totalNames += ",";
             }
@@ -35,11 +35,11 @@ void G330DepthWorkModeManager::switchDepthWorkMode(const std::string &modeName) 
         throw unsupported_operation_exception("Invalid depth mode: " + modeName + ", support depth work mode list: " + totalNames);
     }
 
-    OBDepthWorkModeChecksum dstMode = *iter;
+    OBDepthWorkMode_Internal dstMode = *iter;
     switchDepthWorkMode(dstMode);
 }
 
-void G330DepthWorkModeManager::switchDepthWorkMode(const OBDepthWorkModeChecksum &targetDepthMode) {
+void G330DepthWorkModeManager::switchDepthWorkMode(const OBDepthWorkMode_Internal &targetDepthMode) {
     auto owner      = getOwner();
     auto propServer = owner->getPropertyServer();  // get property server first to lock resource to avoid start stream at the same time
 
@@ -53,7 +53,7 @@ void G330DepthWorkModeManager::switchDepthWorkMode(const OBDepthWorkModeChecksum
         return;
     }
 
-    propServer->setStructureDataProtoV1_1_T<OBDepthWorkModeChecksum, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, targetDepthMode);
+    propServer->setStructureDataProtoV1_1_T<OBDepthWorkMode_Internal, 0>(OB_STRUCT_CURRENT_DEPTH_ALG_MODE, targetDepthMode);
     currentWorkMode_ = targetDepthMode;
     LOG_DEBUG("switchDepthWorkMode done with mode: {1}", currentWorkMode_.name, targetDepthMode.name);
 }

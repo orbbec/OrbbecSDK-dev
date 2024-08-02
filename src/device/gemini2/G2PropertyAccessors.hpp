@@ -3,7 +3,7 @@
 #include "IDevice.hpp"
 
 namespace libobsensor {
-class G2Disp2DepthPropertyAccessor : public IPropertyAccessor {
+class G2Disp2DepthPropertyAccessor : public IBasicPropertyAccessor {
 public:
     explicit G2Disp2DepthPropertyAccessor(IDevice *owner);
     virtual ~G2Disp2DepthPropertyAccessor() noexcept = default;

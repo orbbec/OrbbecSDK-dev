@@ -13,41 +13,41 @@ G330SensorStreamStrategy::G330SensorStreamStrategy(IDevice *owner) : DeviceCompo
 
 G330SensorStreamStrategy::~G330SensorStreamStrategy() noexcept {}
 
-void G330SensorStreamStrategy::markStreamStarted(const std::shared_ptr<const StreamProfile> &profile) {
+void G330SensorStreamStrategy::markStreamActivated(const std::shared_ptr<const StreamProfile> &profile) {
     std::lock_guard<std::mutex> lock(startedStreamListMutex_);
     auto                        streamType = profile->getType();
-    auto                        iter       = std::find_if(startedStreamList_.begin(), startedStreamList_.end(),
+    auto                        iter       = std::find_if(activatedStreamList_.begin(), activatedStreamList_.end(),
                                                           [streamType](const std::shared_ptr<const StreamProfile> &sp) { return sp->getType() == streamType; });
-    if(iter != startedStreamList_.end()) {
+    if(iter != activatedStreamList_.end()) {
         throw unsupported_operation_exception(utils::string::to_string() << "The " << streamType << " has already been started.");
     }
 
-    startedStreamList_.push_back(profile);
+    activatedStreamList_.push_back(profile);
 }
 
-void G330SensorStreamStrategy::markStreamStopped(const std::shared_ptr<const StreamProfile> &profile) {
+void G330SensorStreamStrategy::markStreamDeactivated(const std::shared_ptr<const StreamProfile> &profile) {
     std::lock_guard<std::mutex> lock(startedStreamListMutex_);
     auto                        streamType = profile->getType();
-    auto                        iter       = std::find_if(startedStreamList_.begin(), startedStreamList_.end(),
+    auto                        iter       = std::find_if(activatedStreamList_.begin(), activatedStreamList_.end(),
                                                           [streamType](const std::shared_ptr<const StreamProfile> &sp) { return sp->getType() == streamType; });
-    if(iter == startedStreamList_.end()) {
+    if(iter == activatedStreamList_.end()) {
         throw unsupported_operation_exception(utils::string::to_string() << "The " << streamType << " has not been started.");
     }
-    startedStreamList_.erase(iter);
+    activatedStreamList_.erase(iter);
 }
 
-void G330SensorStreamStrategy::validateStartStream(const std::shared_ptr<const StreamProfile> &profile) {
-    validateStartStream(std::vector<std::shared_ptr<const StreamProfile>>{ profile });
+void G330SensorStreamStrategy::validateStream(const std::shared_ptr<const StreamProfile> &profile) {
+    validateStream(std::vector<std::shared_ptr<const StreamProfile>>{ profile });
 }
 
-void G330SensorStreamStrategy::validateStartStream(const std::vector<std::shared_ptr<const StreamProfile>> &profiles) {
+void G330SensorStreamStrategy::validateStream(const std::vector<std::shared_ptr<const StreamProfile>> &profiles) {
     {
         std::lock_guard<std::mutex> lock(startedStreamListMutex_);
         for(auto profile: profiles) {
             auto streamType = profile->getType();
-            auto iter       = std::find_if(startedStreamList_.begin(), startedStreamList_.end(),
+            auto iter       = std::find_if(activatedStreamList_.begin(), activatedStreamList_.end(),
                                            [streamType](const std::shared_ptr<const StreamProfile> &sp) { return sp->getType() == streamType; });
-            if(iter != startedStreamList_.end()) {
+            if(iter != activatedStreamList_.end()) {
                 throw unsupported_operation_exception(utils::string::to_string() << "The " << streamType << " has already been started.");
             }
         }
@@ -58,7 +58,7 @@ void G330SensorStreamStrategy::validateStartStream(const std::vector<std::shared
 
 void G330SensorStreamStrategy::validateDepthAndIrStream(const std::vector<std::shared_ptr<const StreamProfile>> &profiles) {
     std::lock_guard<std::mutex> lock(startedStreamListMutex_);
-    auto                        tempStartedStreamList = startedStreamList_;
+    auto                        tempStartedStreamList = activatedStreamList_;
     for(auto &profile: profiles) {
         auto streamType = profile->getType();
         if(streamType != OB_STREAM_DEPTH && streamType != OB_STREAM_IR_LEFT && streamType != OB_STREAM_IR_RIGHT) {
@@ -82,12 +82,12 @@ void G330SensorStreamStrategy::validateDepthAndIrStream(const std::vector<std::s
 }
 
 void G330SensorStreamStrategy::validatePreset(const std::vector<std::shared_ptr<const StreamProfile>> &profiles) {
-    OBDepthWorkModeChecksum currentDepthMode;
+    OBDepthWorkMode_Internal currentDepthMode;
 
     {
         auto owner               = getOwner();
         auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
-        currentDepthMode          = depthWorkModeManager->getCurrentDepthWorkModeChecksum();
+        currentDepthMode          = depthWorkModeManager->getCurrentDepthWorkMode();
     }
 
     for(auto profile: profiles) {

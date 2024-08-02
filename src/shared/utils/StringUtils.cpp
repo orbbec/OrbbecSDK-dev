@@ -50,6 +50,12 @@ std::string remove(const std::string &s, const std::string &rm) {
     return outStr;
 }
 
+std::string removeSpace(const std::string &s) {
+    std::string outStr = s;
+    outStr.erase(std::remove(outStr.begin(), outStr.end(), ' '), outStr.end());
+    return outStr;
+}
+
 std::string replace(const std::string &s, const std::string &src, const std::string &rep) {
     std::string outStr = s;
     auto        place  = outStr.find(src);

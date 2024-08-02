@@ -150,11 +150,11 @@ void SensorBase::updateStreamState(OBStreamState state) {
     streamStateCv_.notify_all();
 }
 
-void SensorBase::enableStreamRecovery(bool enable, uint32_t maxRecoveryCount, int noStreamTimeoutMs, int streamInterruptTimeoutMs) {
+void SensorBase::enableStreamRecovery(uint32_t maxRecoveryCount, int noStreamTimeoutMs, int streamInterruptTimeoutMs) {
     {
         std::unique_lock<std::mutex> lock(streamStateMutex_);
         recoveryCount_            = 0;
-        recoveryEnabled_          = enable;
+        recoveryEnabled_          = true;
         maxRecoveryCount_         = maxRecoveryCount == 0 ? maxRecoveryCount_ : maxRecoveryCount;
         noStreamTimeoutMs_        = noStreamTimeoutMs == 0 ? noStreamTimeoutMs_ : noStreamTimeoutMs;
         streamInterruptTimeoutMs_ = streamInterruptTimeoutMs == 0 ? streamInterruptTimeoutMs_ : streamInterruptTimeoutMs;
@@ -176,16 +176,19 @@ void SensorBase::disableStreamRecovery() {
 void SensorBase::watchStreamState() {
     recoveryCount_ = 0;
     while(recoveryEnabled_) {
-        std::unique_lock<std::mutex> lock(streamStateMutex_);
         if(streamState_ == STREAM_STATE_STOPPED || streamState_ == STREAM_STATE_STOPPING || streamState_ == STREAM_STATE_ERROR) {
+            std::unique_lock<std::mutex> lock(streamStateMutex_);
             streamStateCv_.wait(lock);
             recoveryCount_ = 0;
         }
         else if(streamState_ == STREAM_STATE_STARTING && noStreamTimeoutMs_ > 0) {
-            streamStateCv_.wait_for(lock, std::chrono::milliseconds(noStreamTimeoutMs_));
-            if(streamState_ != STREAM_STATE_STARTING || recoveryEnabled_ == false) {
-                recoveryCount_ = 0;
-                continue;
+            {
+                std::unique_lock<std::mutex> lock(streamStateMutex_);
+                streamStateCv_.wait_for(lock, std::chrono::milliseconds(noStreamTimeoutMs_));
+                if(streamState_ != STREAM_STATE_STARTING || recoveryEnabled_ == false) {
+                    recoveryCount_ = 0;
+                    continue;
+                }
             }
             if(recoveryCount_ < maxRecoveryCount_) {
                 onRecovering_ = true;
@@ -198,10 +201,13 @@ void SensorBase::watchStreamState() {
             LOG_ERROR("Failed to start stream for sensor after {} retries", maxRecoveryCount_);
         }
         else if(streamState_ == STREAM_STATE_STREAMING && streamInterruptTimeoutMs_ > 0) {
-            auto sts = streamStateCv_.wait_for(lock, std::chrono::milliseconds(streamInterruptTimeoutMs_));
-            if(sts != std::cv_status::timeout || streamState_ != STREAM_STATE_STREAMING || recoveryEnabled_ == false) {
-                recoveryCount_ = 0;
-                continue;
+            {
+                std::unique_lock<std::mutex> lock(streamStateMutex_);
+                auto                         sts = streamStateCv_.wait_for(lock, std::chrono::milliseconds(streamInterruptTimeoutMs_));
+                if(sts != std::cv_status::timeout || streamState_ != STREAM_STATE_STREAMING || recoveryEnabled_ == false) {
+                    recoveryCount_ = 0;
+                    continue;
+                }
             }
             if(recoveryCount_ < maxRecoveryCount_) {
                 onRecovering_ = true;

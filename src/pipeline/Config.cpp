@@ -9,7 +9,6 @@ void Config::enableStream(std::shared_ptr<const StreamProfile> prf) {
     auto iter = std::find_if(enabledStreamProfileList_.begin(), enabledStreamProfileList_.end(),
                              [prf](const std::shared_ptr<const StreamProfile> &p) { return p->getType() == prf->getType(); });
     if(iter != enabledStreamProfileList_.end()) {
-        LOG_INFO("The same type of stream is exist, will be replaced by the new stream profile");
         enabledStreamProfileList_.erase(iter);
     }
     enabledStreamProfileList_.push_back(prf);
@@ -23,7 +22,6 @@ void Config::enableStream(OBStreamType type) {
 void Config::enableVideoStream(OBStreamType type, uint32_t width, uint32_t height, uint32_t fps, OBFormat format) {
     auto prf = StreamProfileFactory::createVideoStreamProfile(type, format, width, height, fps);
     enableStream(prf);
-
 }
 void Config::enableAccelStream(OBAccelFullScaleRange fullScaleRange, ob_accel_sample_rate sampleRate) {
     auto prf = StreamProfileFactory::createAccelStreamProfile(fullScaleRange, sampleRate);

@@ -8,7 +8,8 @@ namespace libobsensor {
 
 class IMUCorrector : public FilterBase {
 public:
-    static OBIMUCalibrateParams parserIMUCalibrationParamsRaw(uint8_t *data, uint32_t size);
+    static OBIMUCalibrateParams parserIMUCalibParamRaw(uint8_t *data, uint32_t size);
+    static OBIMUCalibrateParams getDefaultImuCalibParam();
     static float                calculateAccelGravity(int16_t accelValue, uint8_t accelFSR);
     static float                calculateGyroDPS(int16_t gyroValue, uint8_t gyroFSR);
     static float                calculateRegisterTemperature(int16_t tempValue);
@@ -25,8 +26,8 @@ public:
 private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
-    OBPoint3f correctAccel(const OBPoint3f &accelVec, OBAccelIntrinsic *intrinsic);
-    OBPoint3f correctGyro(const OBPoint3f &gyroVec, OBGyroIntrinsic *intrinsic);
+    OBAccelValue correctAccel(const OBAccelValue &accelValue, OBAccelIntrinsic *intrinsic);
+    OBGyroValue  correctGyro(const OBGyroValue &gyroValue, OBGyroIntrinsic *intrinsic);
 
 protected:
     static constexpr float GYRO_MAX  = 32800 / 0.017453293f;

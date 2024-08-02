@@ -37,18 +37,18 @@ std::shared_ptr<Frame> IMUFrameReversion::processFunc(std::shared_ptr<const Fram
     auto frameSet   = newFrame->as<FrameSet>();
     auto accelFrame = frameSet->getFrame(OB_FRAME_ACCEL);
     if(accelFrame) {
-        AccelFrame::OBAccelFrameData *frameData = (AccelFrame::OBAccelFrameData *)accelFrame->getData();
-        frameData->accelData[0] *= -1;
-        frameData->accelData[1] *= -1;
-        frameData->accelData[2] *= -1;
+        AccelFrame::Data *frameData = (AccelFrame::Data *)accelFrame->getData();
+        frameData->value.x *= -1;
+        frameData->value.y *= -1;
+        frameData->value.z *= -1;
     }
 
     auto gyroFrame = frameSet->getFrame(OB_FRAME_GYRO);
     if(gyroFrame) {
-        GyroFrame::OBGyroFrameData *gyroFrameData = (GyroFrame::OBGyroFrameData *)gyroFrame->getData();
-        gyroFrameData->gyroData[0] *= -1;
-        gyroFrameData->gyroData[1] *= -1;
-        gyroFrameData->gyroData[2] *= -1;
+        GyroFrame::Data *gyroFrameData = (GyroFrame::Data *)gyroFrame->getData();
+        gyroFrameData->value.x *= -1;
+        gyroFrameData->value.y *= -1;
+        gyroFrameData->value.z *= -1;
     }
 
     return newFrame;

@@ -268,7 +268,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(false, device, property_id, permission)
 
 bool ob_device_is_global_timestamp_supported(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    return device->device->isComponentExists(libobsensor::OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FITTER);
+    return device->device->isComponentExists(libobsensor::OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER);
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, device)
 

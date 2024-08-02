@@ -45,12 +45,15 @@ private:
 
     std::shared_ptr<const VideoStreamProfile> getCurrentVideoStreamProfile(OBStreamType type);
 
+    void                    applyConfig(std::shared_ptr<const Config> cfg);
     std::shared_ptr<Config> checkAndSetConfig(std::shared_ptr<const Config> cfg);
+
+    void checkHardwareD2CConfig();
 
 private:
     std::shared_ptr<IDevice>      device_;
     std::shared_ptr<const Config> config_;
-    
+
     OBStreamState streamState_;
     std::mutex    streamMutex_;
 
@@ -59,8 +62,7 @@ private:
 
     std::shared_ptr<FrameAggregator> frameAggregator_;
 
-
-    int MAX_FRAME_QUEUE_SIZE = 10;
+    int maxFrameQueueSize_ = 10;
 };
 
 }  // namespace libobsensor

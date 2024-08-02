@@ -27,7 +27,7 @@ public:
 #if defined(BUILD_USB_PORT)
 public:
     virtual std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
-    virtual SourcePortInfoList             queryUsbSourcePort() override;
+    virtual SourcePortInfoList              queryUsbSourcePortInfos() override;
     virtual std::shared_ptr<ISourcePort>    createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo>) override;
     virtual std::shared_ptr<ISourcePort>    createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
     virtual std::shared_ptr<ISourcePort>    createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo>) override;

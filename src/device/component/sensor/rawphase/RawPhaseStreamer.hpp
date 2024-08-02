@@ -132,28 +132,22 @@ public:
 
     IDevice *getOwner() const override;
 
-    bool isInitialized() {
-        return initialized_;
-    }
     void setIsPassiveIR(bool isPassiveIR);
+    void setNvramDataStreamStopFunc(std::function<void()> stopFunc);
 
 private:
     virtual void parseRawPhaseFrame(std::shared_ptr<Frame> frame);
-    void         updateStreamProfileList();
 
     // Nvram
-    void initNvramData();
-    void onNvramDataCallback(std::shared_ptr<const Frame> frame);
-    void startDepthEngineThread(std::shared_ptr<const StreamProfile> profile);
-
-    void terminateDepthEngineThread();
-
-    void refreshCallback();
-    void depthEngineThreadFunc(std::shared_ptr<const StreamProfile> profile);
-    bool initDepthEngine(std::shared_ptr<const StreamProfile> profile);
-
-    void outputFrameSet(std::shared_ptr<Frame> frame);
-    void deinitDepthEngine();
+    void                  initNvramData();
+    void                  onNvramDataCallback(std::shared_ptr<const Frame> frame);
+    std::function<void()> stopNvramDataFunc_ = nullptr;
+    void                  stopGetNvramDataStream();
+    void                  startDepthEngineThread(std::shared_ptr<const StreamProfile> profile);
+    void                  terminateDepthEngineThread();
+    bool                  initDepthEngine(std::shared_ptr<const StreamProfile> profile);
+    void                  depthEngineThreadFunc(std::shared_ptr<const StreamProfile> profile);
+    void                  deinitDepthEngine();
 
     // #if !defined(OS_ARM32) && !defined(OS_MACOS) && !defined(__ANDROID__)
     k4a_depth_engine_mode_t getDepthEngineMode(std::shared_ptr<const StreamProfile> profile);
@@ -163,16 +157,14 @@ private:
     IDevice                          *owner_;
     std::shared_ptr<IVideoStreamPort> backend_;
 
-    std::mutex                                                                           cbMtx_;
-    std::map<std::shared_ptr<const StreamProfile>, FrameCallback>                        callbacks_;
+    std::mutex                                                    cbMtx_;
+    std::map<std::shared_ptr<const StreamProfile>, FrameCallback> callbacks_;
     std::atomic_bool                                                                     running_;
-    uint64_t                                                                             frameIndex_;
     std::vector<std::pair<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>>> profileVector_;
     std::vector<std::shared_ptr<StreamProfile>>                                          streamProfileList_;
-    std::shared_ptr<StreamProfile>                                                       profile_;
+    std::shared_ptr<const StreamProfile>                                                 realSp = nullptr;
     // nvram
-    uint8_t *nvramData_ = nullptr;
-
+    uint8_t             *nvramData_   = nullptr;
     uint32_t             nvramSize_   = 0;
     bool                 isPassiveIR_ = false;
     std::recursive_mutex streamMutex_;
@@ -189,10 +181,10 @@ private:
     std::thread                             depthEngineThread_;
     std::condition_variable                 deInitCv_;
     std::shared_ptr<const StreamProfile>    firmwareDataProfile = nullptr;
-    bool                                    initialized_        = false;
-    std::queue<std::shared_ptr<Frame>>      videoFrameObjectVec_;
-    std::mutex                              frameQueueMutex_;
-    std::condition_variable                 frameQueueCV_;
+
+    std::queue<std::shared_ptr<Frame>> videoFrameObjectVec_;
+    std::mutex                         frameQueueMutex_;
+    std::condition_variable            frameQueueCV_;
 };
 
 }  // namespace libobsensor

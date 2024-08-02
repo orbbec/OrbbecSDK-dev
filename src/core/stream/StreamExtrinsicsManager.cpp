@@ -193,8 +193,10 @@ OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamP
 
     // Calculate the extrinsics according to the path
     auto extrinsics = calculateExtrinsics(path);
+
     // register the extrinsics if it is not the identity extrinsics to avoid redundant calculation
     registerExtrinsics(from, to, extrinsics);
+
     return extrinsics;
 }
 

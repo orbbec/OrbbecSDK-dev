@@ -12,8 +12,6 @@ typedef std::function<void(uint64_t stateCode, const std::string &message)> Devi
 class IDeviceMonitor {
 public:
     virtual ~IDeviceMonitor() = default;
-    virtual void start()      = 0;
-    virtual void stop()       = 0;
 
     virtual OBDeviceState getCurrentDeviceState() const                                     = 0;
     virtual int           registerStateChangedCallback(DeviceStateChangedCallback callback) = 0;
@@ -21,6 +19,7 @@ public:
 
     virtual void enableHeartbeat()  = 0;
     virtual void disableHeartbeat() = 0;
+    virtual bool isHeartbeatEnabled() const = 0;
     virtual void pauseHeartbeat()   = 0;
     virtual void resumeHeartbeat()  = 0;
 

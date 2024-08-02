@@ -1,35 +1,32 @@
-#include "GlobalTimestampFitter.hpp"
+#include "GlobalTimestampFilter.hpp"
 #include "utils/Utils.hpp"
 #include "logger/Logger.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "InternalTypes.hpp"
 #include "property/InternalProperty.hpp"
+#include "environment/EnvConfig.hpp"
 
 namespace libobsensor {
-GlobalTimestampFitter::GlobalTimestampFitter(IDevice *owner) : DeviceComponentBase(owner), sampleLoopExit_(false), linearFuncParam_({ 0, 0, 0, 0 }) {
+GlobalTimestampFilter::GlobalTimestampFilter(IDevice *owner) : DeviceComponentBase(owner), sampleLoopExit_(false), linearFuncParam_({ 0, 0, 0, 0 }) {
+    auto envConfig = EnvConfig::getInstance();
+    int  value     = 0;
+    if(envConfig->getIntValue("Misc.GlobalTimestampFilterQueueSize", value) && value >= 4) {
+        maxQueueSize_ = value;
+    }
+    value = 0;
+    if(envConfig->getIntValue("Misc.GlobalTimestampFilterInterval", value) && value >= 100) {
+        refreshIntervalMsec_ = value;
+    }
 
-    // todo: read config from xml
-
-    // auto config = Context::getInstance()->getXmlConfig();
-
-    // int value = 0;
-    // if(config->getIntValue("Misc.GlobalTimestampFitterQueueSize", value) && value >= 4) {
-    //     maxQueueSize_ = value;
-    // }
-    // value = 0;
-    // if(config->getIntValue("Misc.GlobalTimestampFitterInterval", value) && value >= 100) {
-    //     refreshIntervalMsec_ = value;
-    // }
-
-    sampleThread_ = std::thread(&GlobalTimestampFitter::fittingLoop, this);
+    sampleThread_ = std::thread(&GlobalTimestampFilter::fittingLoop, this);
 
     std::unique_lock<std::mutex> lock(linearFuncParamMutex_);
     linearFuncParamCondVar_.wait_for(lock, std::chrono::milliseconds(1000));
 
-    LOG_DEBUG("GlobalTimestampFitter created: maxQueueSize_={}, refreshIntervalMsec_={}", maxQueueSize_, refreshIntervalMsec_);
+    LOG_DEBUG("GlobalTimestampFilter created: maxQueueSize_={}, refreshIntervalMsec_={}", maxQueueSize_, refreshIntervalMsec_);
 }
 
-GlobalTimestampFitter::~GlobalTimestampFitter() {
+GlobalTimestampFilter::~GlobalTimestampFilter() {
     sampleLoopExit_ = true;
     sampleCondVar_.notify_one();
     if(sampleThread_.joinable()) {
@@ -37,18 +34,18 @@ GlobalTimestampFitter::~GlobalTimestampFitter() {
     }
 }
 
-LinearFuncParam GlobalTimestampFitter::getLinearFuncParam() {
+LinearFuncParam GlobalTimestampFilter::getLinearFuncParam() {
     std::unique_lock<std::mutex> lock(linearFuncParamMutex_);
     return linearFuncParam_;
 }
 
-void GlobalTimestampFitter::reFitting() {
+void GlobalTimestampFilter::reFitting() {
     std::unique_lock<std::mutex> lock(sampleMutex_);
     samplingQueue_.clear();
     sampleCondVar_.notify_one();
 }
 
-void GlobalTimestampFitter::pause() {
+void GlobalTimestampFilter::pause() {
     sampleLoopExit_ = true;
     sampleCondVar_.notify_one();
     if(sampleThread_.joinable()) {
@@ -56,12 +53,12 @@ void GlobalTimestampFitter::pause() {
     }
 }
 
-void GlobalTimestampFitter::resume() {
+void GlobalTimestampFilter::resume() {
     sampleLoopExit_ = false;
-    sampleThread_   = std::thread(&GlobalTimestampFitter::fittingLoop, this);
+    sampleThread_   = std::thread(&GlobalTimestampFilter::fittingLoop, this);
 }
 
-void GlobalTimestampFitter::fittingLoop() {
+void GlobalTimestampFilter::fittingLoop() {
     std::unique_lock<std::mutex> lock(sampleMutex_);
     const int                    MAX_RETRY_COUNT = 5;
 
@@ -83,7 +80,7 @@ void GlobalTimestampFitter::fittingLoop() {
             auto sysTsp2Usec = utils::getNowTimesUs();
             sysTspUsec       = (sysTsp2Usec + sysTsp1Usec) / 2;
             devTime.rtt      = sysTsp2Usec - sysTsp1Usec;
-            if(devTime.rtt > 10000) {
+            if(devTime.rtt > 2000) {
                 LOG_DEBUG("Get device time rtt is too large! rtt={}", devTime.rtt);
                 throw std::runtime_error("RTT too large");
             }
@@ -105,7 +102,7 @@ void GlobalTimestampFitter::fittingLoop() {
 
         samplingQueue_.push_back({ sysTspUsec, devTime.time });
 
-        if(samplingQueue_.size() < 10) {
+        if(samplingQueue_.size() < 4) {
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             continue;
         }
@@ -140,7 +137,7 @@ void GlobalTimestampFitter::fittingLoop() {
             // auto fixDiff   = fixDevTsp -sysTspUsec;
             // LOG_TRACE("a = {}, b = {}, fix={}, diff={}", linearFuncParam_.coefficientA, linearFuncParam_.constantB, fixDevTsp, fixDiff);
 
-            LOG_DEBUG_INTVL("GlobalTimestampFitter update: coefficientA = {}, constantB = {}", linearFuncParam_.coefficientA, linearFuncParam_.constantB);
+            LOG_DEBUG_INTVL("GlobalTimestampFilter update: coefficientA = {}, constantB = {}", linearFuncParam_.coefficientA, linearFuncParam_.constantB);
             linearFuncParamCondVar_.notify_all();
         }
 
@@ -153,10 +150,10 @@ void GlobalTimestampFitter::fittingLoop() {
     } while(!sampleLoopExit_ && retryCount <= MAX_RETRY_COUNT);
 
     if(retryCount > MAX_RETRY_COUNT) {
-        LOG_ERROR("GlobalTimestampFitter fittingLoop retry count exceed max retry count!");
+        LOG_ERROR("GlobalTimestampFilter fittingLoop retry count exceed max retry count!");
     }
 
-    LOG_DEBUG("GlobalTimestampFitter fittingLoop exit");
+    LOG_DEBUG("GlobalTimestampFilter fittingLoop exit");
 }
 
 }  // namespace libobsensor

@@ -208,9 +208,12 @@ bool Frame::hasMetadata(OBFrameMetadataType type) const {
 
 int64_t Frame::getMetadataValue(OBFrameMetadataType type) const {
     if(!metadataPhasers_) {
-        throw unsupported_operation_exception(utils::string::to_string() << "Unsupported metadata type: " << type);
+        throw unsupported_operation_exception(utils::string::to_string() << "Metadata phasers are not registered! Unsupported to get metadata for type: " << type);
     }
     auto parser = metadataPhasers_->get(type);
+    if(!parser->isSupported(metadata_, metadataSize_)) {
+        throw unsupported_operation_exception(utils::string::to_string() << "Current metadata does not contain metadata for type: " << type);
+    }
     return parser->getValue(metadata_, metadataSize_);
 }
 
@@ -325,7 +328,7 @@ OBAccelValue AccelFrame::value() {
 }
 
 float AccelFrame::temperature() {
-    return ((OBAccelFrameData *)getData())->temp;
+    return ((AccelFrame::Data *)getData())->temp;
 }
 
 GyroFrame::GyroFrame(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc)
@@ -336,7 +339,7 @@ OBGyroValue GyroFrame ::value() {
 }
 
 float GyroFrame ::temperature() {
-    return ((OBGyroFrameData *)getData())->temp;
+    return ((GyroFrame::Data *)getData())->temp;
 }
 
 FrameSet::FrameSet(uint8_t *data, size_t dataBufSize, FrameBufferReclaimFunc bufferReclaimFunc) : Frame(data, dataBufSize, OB_FRAME_SET, bufferReclaimFunc) {}

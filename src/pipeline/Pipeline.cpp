@@ -3,11 +3,14 @@
 
 #include "Pipeline.hpp"
 
+#include "DevicePids.hpp"
+#include "context/Context.hpp"
+#include "stream/StreamProfileFactory.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "logger/LoggerHelper.hpp"
-#include "context/Context.hpp"
-#include "DevicePids.hpp"
 #include "utils/Utils.hpp"
+#include "component/frameprocessor/FrameProcessor.hpp"
+#include "component/param/AlgParamManagerBase.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -22,7 +25,7 @@ Pipeline::Pipeline(std::shared_ptr<IDevice> dev) : device_(dev), config_(nullptr
 
     loadFrameQueueSizeConfig();
 
-    outputFrameQueue_ = std::make_shared<FrameQueue<const Frame>>(MAX_FRAME_QUEUE_SIZE);
+    outputFrameQueue_ = std::make_shared<FrameQueue<const Frame>>(maxFrameQueueSize_);
     frameAggregator_  = std::make_shared<FrameAggregator>();
     frameAggregator_->setCallback([&](std::shared_ptr<const Frame> frame) { outputFrame(frame); });
 
@@ -43,96 +46,68 @@ Pipeline::~Pipeline() noexcept {
     LOG_INFO("Pipeline destroyed! @0x{:X}", (uint64_t)this);
 }
 
+void Pipeline::applyConfig(std::shared_ptr<const Config> cfg) {
+    if(!cfg) {
+        loadDefaultConfig();
+        return;
+    }
+    config_ = checkAndSetConfig(cfg);
+    checkHardwareD2CConfig();
+}
+
 void Pipeline::loadDefaultConfig() {
-    // todo: implement this function
+    auto config = std::make_shared<Config>();
 
-    // config_ = std::make_shared<Config>();
+    auto envConfig      = EnvConfig::getInstance();
+    auto sensorTypeList = device_->getSensorTypeList();
 
-    // auto ctx                = Context::getInstance();
-    // auto xmlConfig          = ctx->getXmlConfig();
-    // bool loadFromConfigFile = (xmlConfig->isLoadConfigFileSuccessful() && xmlConfig->isNodeContained("Pipeline"));
+    bool loaded = false;
+    for(auto &sensorType: sensorTypeList) {
+        auto        sensorTypeName = utils::obSensorToStr(sensorType);
+        std::string nodeName       = std::string("Pipeline.Stream.") + sensorTypeName;
+        if(!envConfig->isNodeContained(nodeName)) {
+            continue;
+        }
 
-    // for(auto &sensorType: device_->getSensorTypeList()) {
-    //     // 配置文件加载失败或不兼容时，尝试启用深度和彩色流
-    //     if(!loadFromConfigFile && sensorType != OB_SENSOR_DEPTH && sensorType != OB_SENSOR_COLOR) {
-    //         continue;
-    //     }
+        std::shared_ptr<const StreamProfile> profile;
 
-    //     bool UseDefaultStreamProfile = true;
-    //     if(loadFromConfigFile) {
-    //         auto        sensorTypeName = mapSensorTypeToString(sensorType);
-    //         std::string nodeName       = std::string("Pipeline.Stream.") + sensorTypeName;
-    //         if(!xmlConfig->isNodeContained(nodeName)) {
-    //             continue;  // 未找到改类型Sensor配置，跳过
-    //         }
-    //         xmlConfig->getBooleanValue(nodeName + ".UseDefaultStreamProfile", UseDefaultStreamProfile);
-    //     }
+        bool UseDefaultStreamProfile = true;
+        envConfig->getBooleanValue(nodeName + ".UseDefaultStreamProfile", UseDefaultStreamProfile);
+        if(!UseDefaultStreamProfile) {
+            profile = StreamProfileFactory::getStreamProfileFromEnvConfig(nodeName, sensorType);
+        }
 
-    //     auto resLock     = device_->tryLockResource();
-    //     auto sensor      = device_->getSensor(resLock, sensorType);
-    //     auto profileList = sensor->getStreamProfileList();
-    //     if(!profileList.empty()) {
-    //         if(!UseDefaultStreamProfile) {  // 加载指定配置
-    //             // defaultConfig->enableStream(profileList.front());
-    //             int         width, height, fps;
-    //             std::string formatStr;
-    //             bool        loaded         = true;
-    //             auto        sensorTypeName = mapSensorTypeToString(sensorType);
-    //             std::string nodeName       = std::string("Pipeline.Stream.") + sensorTypeName;
-    //             loaded &= xmlConfig->getIntValue(nodeName + ".Width", width);
-    //             loaded &= xmlConfig->getIntValue(nodeName + ".Height", height);
-    //             loaded &= xmlConfig->getIntValue(nodeName + ".FPS", fps);
-    //             loaded &= xmlConfig->getStringValue(nodeName + ".Format", formatStr);
-    //             if(loaded) {
-    //                 auto format             = mapFormatStrToFormat(formatStr);
-    //                 auto matchedProfileList = matchVideoStreamProfile(profileList, width, height, fps, format);
-    //                 if(!matchedProfileList.empty()) {
-    //                     config_->enableStream(matchedProfileList.front());  // 使用默认配置，第一项是默认配置
-    //                     continue;                                           // 成功
-    //                 }
-    //                 else {
-    //                     LOG_WARN("No matched profile found, use the default profile!");
-    //                 }
-    //             }
-    //             // else if load failed, usr default profile
-    //         }
+        if(profile) {
+            config->enableStream(profile);
+        }
+        else {
+            auto streamType = utils::mapSensorTypeToStreamType(sensorType);
+            config->enableStream(streamType);
+        }
+        loaded = true;
+    }
 
-    //         // 使用默认配置或者加载指定配置失败
-    //         config_->enableStream(profileList.front());  // 使用默认配置，第一项是默认配置
-    //     }
-    // }
-    // if(loadFromConfigFile) {
-    //     int alignMode = 0;
-    //     xmlConfig->getIntValue("Pipeline.AlignMode", alignMode);
-    //     config_->setAlignMode(OBAlignMode(alignMode));
-
-    //     bool frameSync = false;
-    //     xmlConfig->getBooleanValue("Pipeline.FrameSync", frameSync);
-    //     if(frameSync) {
-    //         TRY_EXECUTE(enableFrameSync());
-    //     }
-    //     else {
-    //         TRY_EXECUTE(disableFrameSync());
-    //     }
-    // }
+    if(!loaded) {
+        if(std::find(sensorTypeList.begin(), sensorTypeList.end(), OB_SENSOR_DEPTH) != sensorTypeList.end()) {
+            config->enableStream(OB_STREAM_DEPTH);
+        }
+        if(std::find(sensorTypeList.begin(), sensorTypeList.end(), OB_SENSOR_COLOR) != sensorTypeList.end()) {
+            config->enableStream(OB_STREAM_COLOR);
+        }
+    }
+    config_ = checkAndSetConfig(config);
 }
 
 void Pipeline::loadFrameQueueSizeConfig() {
-    // todo: implement this function
+    auto envConfig = EnvConfig::getInstance();
 
-    // auto ctx       = Context::getInstance();
-    // auto xmlConfig = ctx->getXmlConfig();
-    // if(xmlConfig->isLoadConfigFileSuccessful()) {
-    //     xmlConfig->getIntValue("Memory.PipelineFrameQueueSize", MAX_FRAME_QUEUE_SIZE);
-    //     if(MAX_FRAME_QUEUE_SIZE <= 0) {
-    //         LOG_WARN("Read xml config:pipeline frame queue size is invalid!");
-    //         MAX_FRAME_QUEUE_SIZE = 10;
-    //     }
-    // }
-    // else {
-    //     LOG_WARN("Default config file is not loaded!");
-    // }
-    // LOG_DEBUG("loadFrameQueueSizeConfig() config queue size: {}", MAX_FRAME_QUEUE_SIZE);
+    envConfig->getIntValue("Memory.PipelineFrameQueueSize", maxFrameQueueSize_);
+    if(maxFrameQueueSize_ <= 0) {
+        LOG_WARN("Read xml config:pipeline frame queue size is invalid!");
+        maxFrameQueueSize_ = 10;
+    }
+
+    LOG_DEBUG("loadFrameQueueSizeConfig() config queue size: {}", maxFrameQueueSize_);
 }
 
 StreamProfileList Pipeline::getEnabledStreamProfileList() {
@@ -187,16 +162,7 @@ std::shared_ptr<Config> Pipeline::checkAndSetConfig(std::shared_ptr<const Config
 void Pipeline::start(std::shared_ptr<const Config> cfg) {
     LOG_DEBUG("Pipeline start() start!");
 
-    if(cfg) {
-        config_ = checkAndSetConfig(cfg);
-    }
-    else {
-        LOG_DEBUG("start pipeline with default config");
-        auto defConfig = std::make_shared<Config>();
-        defConfig->enableStream(OB_STREAM_DEPTH);
-        defConfig->enableStream(OB_STREAM_COLOR);
-        config_ = checkAndSetConfig(defConfig);
-    }
+    applyConfig(cfg);
 
     if(config_->isStreamEnabled(OB_STREAM_DEPTH) || config_->isStreamEnabled(OB_STREAM_COLOR)) {
         configAlignMode();
@@ -401,7 +367,7 @@ void Pipeline::disableFrameSync() {
 
 std::shared_ptr<const VideoStreamProfile> Pipeline::getCurrentVideoStreamProfile(OBStreamType type) {
     if(!config_) {
-        return {};
+        return nullptr;
     }
 
     for(const auto &sp: config_->getEnabledStreamProfileList()) {
@@ -409,7 +375,30 @@ std::shared_ptr<const VideoStreamProfile> Pipeline::getCurrentVideoStreamProfile
             return sp->as<const VideoStreamProfile>();
         }
     }
-    return {};
+    return nullptr;
+}
+
+void Pipeline::checkHardwareD2CConfig() {
+    auto frameProcessor      = device_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+    auto depthFrameProcessor = std::dynamic_pointer_cast<DepthFrameProcessor>(frameProcessor.get());
+    if(!depthFrameProcessor) {
+        return;
+    }
+    if(config_->getAlignMode() != ALIGN_D2C_HW_MODE) {
+        depthFrameProcessor->enableHardwareD2CProcess(false);
+        LOG_DEBUG("current align mode is not hardware d2c mode.");
+        return;
+    }
+    auto algParamManager = device_->getComponentT<AlgParamManagerBase>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+    auto colorProfile    = getCurrentVideoStreamProfile(OB_STREAM_COLOR);
+    auto depthProfile    = getCurrentVideoStreamProfile(OB_STREAM_DEPTH);
+    if(algParamManager && colorProfile && depthProfile) {
+        auto calibrationCameraParams = algParamManager->getCalibrationCameraParamList();
+        auto d2cProfileList          = algParamManager->getD2CProfileList();
+        depthFrameProcessor->enableHardwareD2CProcess(true);
+        depthFrameProcessor->setHardwareD2CProcessParams(colorProfile->getWidth(), colorProfile->getHeight(), depthProfile->getWidth(),
+                                                         depthProfile->getHeight(), calibrationCameraParams, d2cProfileList);
+    }
 }
 
 }  // namespace libobsensor

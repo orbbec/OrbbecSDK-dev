@@ -16,6 +16,7 @@ public:
 
     ~EnvConfig() noexcept = default;
 
+    bool isNodeContained(const std::string &nodePathName);
     bool getIntValue(const std::string &nodePathName, int &t);
     bool getBooleanValue(const std::string &nodePathName, bool &t);
     bool getFloatValue(const std::string &nodePathName, float &t);

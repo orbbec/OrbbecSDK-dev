@@ -272,7 +272,7 @@ float mapIMUSampleRateToValue(OBIMUSampleRate rate) {
 // type to string map
 const std::map<OBSensorType, std::string> Sensor_Str_Map = {
     { OB_SENSOR_IR, "IR" },           { OB_SENSOR_COLOR, "Color" },    { OB_SENSOR_DEPTH, "Depth" },      { OB_SENSOR_ACCEL, "Accel" },
-    { OB_SENSOR_GYRO, "Gyro" },       { OB_SENSOR_IR_LEFT, "LeftIR" }, { OB_SENSOR_IR_RIGHT, "RightIR" }, { OB_SENSOR_RAW_PHASE, "RAW_PHASE" },
+    { OB_SENSOR_GYRO, "Gyro" },       { OB_SENSOR_IR_LEFT, "LeftIR" }, { OB_SENSOR_IR_RIGHT, "RightIR" }, { OB_SENSOR_RAW_PHASE, "RawPhase" },
     { OB_SENSOR_UNKNOWN, "Unknown" },
 };
 

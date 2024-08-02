@@ -14,10 +14,10 @@ public:
     G330SensorStreamStrategy(IDevice *owner);
     virtual ~G330SensorStreamStrategy() noexcept;
 
-    void validateStartStream(const std::shared_ptr<const StreamProfile> &profile) override;
-    void validateStartStream(const std::vector<std::shared_ptr<const StreamProfile>> &profiles) override;
-    void markStreamStarted(const std::shared_ptr<const StreamProfile> &profile) override;
-    void markStreamStopped(const std::shared_ptr<const StreamProfile> &profile) override;
+    void validateStream(const std::shared_ptr<const StreamProfile> &profile) override;
+    void validateStream(const std::vector<std::shared_ptr<const StreamProfile>> &profiles) override;
+    void markStreamActivated(const std::shared_ptr<const StreamProfile> &profile) override;
+    void markStreamDeactivated(const std::shared_ptr<const StreamProfile> &profile) override;
 
 private:
     void validateDepthAndIrStream(const std::vector<std::shared_ptr<const StreamProfile>> &profiles);
@@ -25,7 +25,7 @@ private:
 
 private:
     std::mutex                                        startedStreamListMutex_;
-    std::vector<std::shared_ptr<const StreamProfile>> startedStreamList_;
+    std::vector<std::shared_ptr<const StreamProfile>> activatedStreamList_;
 };
 
 }  // namespace libobsensor

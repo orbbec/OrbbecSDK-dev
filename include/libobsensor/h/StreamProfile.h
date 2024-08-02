@@ -17,7 +17,7 @@ extern "C" {
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile* return the stream profile object
  */
-OB_EXPORT ob_stream_profile* ob_create_stream_profile(ob_stream_type type, ob_format format,ob_error **error);
+OB_EXPORT ob_stream_profile *ob_create_stream_profile(ob_stream_type type, ob_format format, ob_error **error);
 
 /**
  * @brief Create a video stream profile object
@@ -30,7 +30,8 @@ OB_EXPORT ob_stream_profile* ob_create_stream_profile(ob_stream_type type, ob_fo
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile* return the video stream profile object
  */
-OB_EXPORT ob_stream_profile* ob_create_video_stream_profile(ob_stream_type type, ob_format format, uint32_t width, uint32_t height, uint32_t fps,ob_error **error);
+OB_EXPORT ob_stream_profile *ob_create_video_stream_profile(ob_stream_type type, ob_format format, uint32_t width, uint32_t height, uint32_t fps,
+                                                            ob_error **error);
 
 /**
  * @brief Create a accel stream profile object
@@ -40,7 +41,7 @@ OB_EXPORT ob_stream_profile* ob_create_video_stream_profile(ob_stream_type type,
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile* return the accel stream profile object
  */
-OB_EXPORT ob_stream_profile* ob_create_accel_stream_profile(ob_accel_full_scale_range full_scale_range, ob_accel_sample_rate sample_rate,ob_error **error);
+OB_EXPORT ob_stream_profile *ob_create_accel_stream_profile(ob_accel_full_scale_range full_scale_range, ob_accel_sample_rate sample_rate, ob_error **error);
 
 /**
  * @brief Create a gyro stream profile object
@@ -50,10 +51,20 @@ OB_EXPORT ob_stream_profile* ob_create_accel_stream_profile(ob_accel_full_scale_
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  * @return ob_stream_profile* return the accel stream profile object
  */
-OB_EXPORT ob_stream_profile* ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate,ob_error **error);
+OB_EXPORT ob_stream_profile *ob_create_gyro_stream_profile(ob_gyro_full_scale_range full_scale_range, ob_gyro_sample_rate sample_rate, ob_error **error);
 
 /**
- * @brief Clone the stream profile object as a new format object
+ * @brief Copy the stream profile object from an other stream profile object
+ *
+ * @param[in] srcProfile Source stream profile object
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ *
+ * @return ob_stream_profile* return the new stream profile object
+ */
+OB_EXPORT ob_stream_profile *ob_create_stream_profile_from_other_stream_profile(const ob_stream_profile *srcProfile, ob_error **error);
+
+/**
+ * @brief Copy the stream profile object with a new format object
  *
  * @param[in] profile Stream profile object
  * @param[in] new_format New format
@@ -61,7 +72,7 @@ OB_EXPORT ob_stream_profile* ob_create_gyro_stream_profile(ob_gyro_full_scale_ra
  *
  * @return ob_stream_profile* return the new stream profile object with the new format
  */
-OB_EXPORT ob_stream_profile *ob_clone_stream_profile_as_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error);
+OB_EXPORT ob_stream_profile *ob_create_stream_profile_with_new_format(const ob_stream_profile *profile, ob_format new_format, ob_error **error);
 
 /**
  * @brief Delete the stream configuration.
@@ -81,6 +92,15 @@ OB_EXPORT void ob_delete_stream_profile(const ob_stream_profile *profile, ob_err
 OB_EXPORT ob_format ob_stream_profile_get_format(const ob_stream_profile *profile, ob_error **error);
 
 /**
+ * @brief Set stream profile format
+ *
+ * @param[in] profile Stream profile object
+ * @param[in] format The format of the stream
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_stream_profile_set_format(ob_stream_profile *profile, ob_format format, ob_error **error);
+
+/**
  * @brief Get stream profile type
  *
  * @param[in] profile Stream profile object
@@ -88,6 +108,15 @@ OB_EXPORT ob_format ob_stream_profile_get_format(const ob_stream_profile *profil
  * @return ob_stream_type stream type
  */
 OB_EXPORT ob_stream_type ob_stream_profile_get_type(const ob_stream_profile *profile, ob_error **error);
+
+/**
+ * @brief Set stream profile type
+ *
+ * @param[in] profile Stream profile object
+ * @param[in] type The type of the stream
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_stream_profile_set_type(const ob_stream_profile *profile, ob_stream_type type, ob_error **error);
 
 /**
  * @brief Get the extrinsic for source stream to target stream
@@ -128,6 +157,15 @@ OB_EXPORT uint32_t ob_video_stream_profile_get_fps(const ob_stream_profile *prof
 OB_EXPORT uint32_t ob_video_stream_profile_get_width(const ob_stream_profile *profile, ob_error **error);
 
 /**
+ * @brief Set the width of the video stream
+ *
+ * @param[in] profile Stream profile object , If the profile is not a video stream configuration, an error will be returned
+ * @param[in] width The width of the stream
+ * @param[out] error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_video_stream_profile_set_width(ob_stream_profile *profile, uint32_t width, ob_error **error);
+
+/**
  * @brief Get the height of the video stream
  *
  * @param[in] profile Stream profile object , If the profile is not a video stream configuration, an error will be returned
@@ -135,6 +173,15 @@ OB_EXPORT uint32_t ob_video_stream_profile_get_width(const ob_stream_profile *pr
  * @return uint32_t return the height of the stream
  */
 OB_EXPORT uint32_t ob_video_stream_profile_get_height(const ob_stream_profile *profile, ob_error **error);
+
+/**
+ * @brief Set the height of the video stream
+ *
+ * @param[in] profile Stream profile object , If the profile is not a video stream configuration, an error will be returned
+ * @param[in] height The height of the stream
+ * @param[out] error  Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_video_stream_profile_set_height(ob_stream_profile *profile, uint32_t height, ob_error **error);
 
 /**
  * @brief Get the intrinsic of the video stream
@@ -339,7 +386,6 @@ OB_EXPORT ob_stream_profile *ob_stream_profile_list_get_gyro_stream_profile(cons
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_delete_stream_profile_list(const ob_stream_profile_list *profile_list, ob_error **error);
-
 
 #ifdef __cplusplus
 }

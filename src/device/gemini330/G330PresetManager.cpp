@@ -13,13 +13,12 @@ G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner
     auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
     auto depthWorkModeList    = depthWorkModeManager->getDepthWorkModeList();
 
-    availablePresets_.emplace_back("Custom");
     for(auto &mode: depthWorkModeList) {
         availablePresets_.emplace_back(mode.name);
     }
 
     if(availablePresets_.size() > 1) {
-        currentPreset_ = availablePresets_[1];
+        currentPreset_ = availablePresets_[0];
         depthWorkModeManager->switchDepthWorkMode(currentPreset_.c_str());
     }
 
@@ -55,6 +54,7 @@ G330PresetManager::G330PresetManager(IDevice *owner) : DeviceComponentBase(owner
                 currentPreset_ = "Custom";
             }
         });
+     storeCurrentParamsAsCustomPreset("Custom");
 }
 
 void G330PresetManager::loadPreset(const std::string &presetName) {
@@ -219,15 +219,15 @@ void G330PresetManager::loadCustomPreset(const std::string &presetName, const G3
 
     setPropertyValue(owner, OB_PROP_LASER_CONTROL_INT, preset.laserState);
     setPropertyValue(owner, OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, preset.laserPowerLevel);
-    setPropertyValue(owner, OB_PROP_IR_EXPOSURE_INT, preset.depthExposureTime);  // using ir exposures for depth due to access property manager directly
+    setPropertyValue(owner, OB_PROP_IR_EXPOSURE_INT, preset.depthExposureTime);
     setPropertyValue(owner, OB_PROP_IR_GAIN_INT, preset.depthGain);
     setPropertyValue(owner, OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, (bool)preset.depthAutoExposure);
     setPropertyValue(owner, OB_PROP_IR_BRIGHTNESS_INT, preset.depthBrightness);
+    setPropertyValue(owner, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, (bool)preset.colorAutoExposure);
     setPropertyValue(owner, OB_PROP_COLOR_EXPOSURE_INT, preset.colorExposureTime);
     setPropertyValue(owner, OB_PROP_COLOR_GAIN_INT, preset.colorGain);
-    setPropertyValue(owner, OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, (bool)preset.colorAutoExposure);
-    setPropertyValue(owner, OB_PROP_COLOR_WHITE_BALANCE_INT, preset.colorWhiteBalance);
     setPropertyValue(owner, OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, (bool)preset.colorAutoWhiteBalance);
+    setPropertyValue(owner, OB_PROP_COLOR_WHITE_BALANCE_INT, preset.colorWhiteBalance);
     setPropertyValue(owner, OB_PROP_COLOR_CONTRAST_INT, preset.colorContrast);
     setPropertyValue(owner, OB_PROP_COLOR_SATURATION_INT, preset.colorSaturation);
     setPropertyValue(owner, OB_PROP_COLOR_SHARPNESS_INT, preset.colorSharpness);
@@ -272,14 +272,13 @@ void G330PresetManager::storeCurrentParamsAsCustomPreset(const std::string &pres
 
     {
         auto depthWorkModeManager = owner->getComponentT<G330DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
-        preset.depthWorkMode      = depthWorkModeManager->getCurrentDepthWorkModeChecksum().name;
+        preset.depthWorkMode      = depthWorkModeManager->getCurrentDepthWorkMode().name;
     }
 
     if(customPresets_.find(presetName) == customPresets_.end()) {
         availablePresets_.emplace_back(presetName);
     }
     customPresets_[presetName] = preset;
-    currentPreset_             = presetName;
 }
 
 }  // namespace libobsensor

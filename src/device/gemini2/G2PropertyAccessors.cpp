@@ -17,7 +17,7 @@ void G2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPrope
         // close hw disparity if sw disparity is on
         // if(value.intValue == 1) {
         //     OBPropertyValue hwDisparityValue;
-        //     auto            commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+        //     auto            commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         //     commandPort->getPropertyValue(OB_PROP_DISPARITY_TO_DEPTH_BOOL, &hwDisparityValue);
         //     if(hwDisparityValue.intValue == 1) {
         //         hwDisparityValue.intValue = 0;
@@ -30,7 +30,7 @@ void G2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPrope
         markOutputDisparityFrame(!hwDisparityToDepthEnabled_);
     } break;
     case OB_PROP_DISPARITY_TO_DEPTH_BOOL: {
-        auto propertyAccessor = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+        auto propertyAccessor = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         propertyAccessor->setPropertyValue(propertyId, value);
         hwDisparityToDepthEnabled_ = static_cast<bool>(value.intValue);
 
@@ -53,7 +53,7 @@ void G2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPrope
             processor->setPropertyValue(propertyId, value);
         }
         else {
-            auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+            auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
             commandPort->setPropertyValue(propertyId, value);
         }
 
@@ -66,7 +66,7 @@ void G2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPrope
     } break;
 
     default: {
-        auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+        auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         commandPort->setPropertyValue(propertyId, value);
     } break;
     }
@@ -87,12 +87,12 @@ void G2Disp2DepthPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPrope
             processor->getPropertyValue(propertyId, value);
         }
         else {
-            auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+            auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
             commandPort->getPropertyValue(propertyId, value);
         }
     } break;
     default: {
-        auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+        auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         commandPort->getPropertyValue(propertyId, value);
     } break;
     }
@@ -112,12 +112,12 @@ void G2Disp2DepthPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPrope
             processor->getPropertyRange(propertyId, range);
         }
         else {
-            auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+            auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
             commandPort->getPropertyRange(propertyId, range);
         }
     } break;
     default: {
-        auto commandPort = owner_->getComponentT<IPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+        auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
         commandPort->getPropertyRange(propertyId, range);
     } break;
     }

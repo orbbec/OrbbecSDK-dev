@@ -14,7 +14,7 @@ extern "C" {
 ob_depth_work_mode ob_device_get_current_depth_work_mode(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     auto               workModeMgr = device->device->getComponentT<libobsensor::IDepthWorkModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
-    auto               checksum    = workModeMgr->getCurrentDepthWorkModeChecksum();
+    auto               checksum    = workModeMgr->getCurrentDepthWorkMode();
     ob_depth_work_mode work_mode;
     memcpy(work_mode.checksum, checksum.checksum, sizeof(checksum.checksum));
     memcpy(work_mode.name, checksum.name, sizeof(work_mode.name));
@@ -113,11 +113,14 @@ HANDLE_EXCEPTIONS_NO_RETURN(device, json_file_path)
 
 ob_device_preset_list *ob_device_get_available_preset_list(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto presetMgr  = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER);
-    auto presetList = presetMgr->getAvailablePresetList();
+    auto impl = new ob_device_preset_list();
 
-    auto impl        = new ob_device_preset_list();
-    impl->presetList = presetList;
+    auto presetMgr = device->device->getComponentT<libobsensor::IPresetManager>(libobsensor::OB_DEV_COMPONENT_PRESET_MANAGER, false);
+    if(presetMgr) {
+        auto presetList  = presetMgr->getAvailablePresetList();
+        impl->presetList = presetList;
+    }
+
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)

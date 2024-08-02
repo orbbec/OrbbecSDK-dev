@@ -107,7 +107,7 @@ typedef struct {
     uint8_t  checksum[16];  ///< The camera depth mode corresponds to the hash binary array
     char     name[32];      ///< name
     uint32_t optionCode;    // OBDepthModeOptionCode
-} OBDepthAlgModeChecksum, OBDepthWorkModeChecksum;
+} OBDepthWorkMode_Internal;
 
 typedef enum {
     NORMAL                             = 0,           // Normal mode, no special processing required

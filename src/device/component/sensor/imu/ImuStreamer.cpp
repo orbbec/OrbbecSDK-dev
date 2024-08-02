@@ -42,7 +42,7 @@ void ImuStreamer::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     }
     running_ = true;
 
-    backend_->startStream([this](std::shared_ptr<Frame> frame) { ImuStreamer::praseIMUData(frame); });
+    backend_->startStream([this](std::shared_ptr<Frame> frame) { ImuStreamer::parseIMUData(frame); });
 }
 
 void ImuStreamer::stop(std::shared_ptr<const StreamProfile> sp) {
@@ -66,7 +66,7 @@ void ImuStreamer::stop(std::shared_ptr<const StreamProfile> sp) {
     running_ = false;
 }
 
-void ImuStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
+void ImuStreamer::parseIMUData(std::shared_ptr<Frame> frame) {
     auto         data     = frame->getData();
     OBImuHeader *header   = (OBImuHeader *)data;
     auto         dataSize = frame->getDataSize();
@@ -78,14 +78,14 @@ void ImuStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
 
     const auto computeDataSize = sizeof(OBImuHeader) + sizeof(OBImuOriginData) * header->groupCount;
     if(dataSize < computeDataSize) {
-        LOG_WARN_INTVL("Imu header is invalid,drop imu package!, invalid data size. dataSize={}, computeDataSize={}, groupCount={}", dataSize, computeDataSize,
+        LOG_WARN_INTVL("Imu header is invalid, drop imu package!, invalid data size. dataSize={}, computeDataSize={}, groupCount={}", dataSize, computeDataSize,
                        header->groupCount);
         return;
     }
 
     const auto computeDataSizeP = sizeof(OBImuHeader) + header->groupLen * header->groupCount;
     if(dataSize < computeDataSizeP) {
-        LOG_WARN_INTVL("Imu header is invalid,drop imu package!, invalid data size. dataSize={}, computeDataSizeP={}, groupCount={}", dataSize,
+        LOG_WARN_INTVL("Imu header is invalid, drop imu package!, invalid data size. dataSize={}, computeDataSizeP={}, groupCount={}", dataSize,
                        computeDataSizeP, header->groupCount);
         return;
     }
@@ -112,13 +112,13 @@ void ImuStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
 
         if(accelStreamProfile) {
             auto              accelFrame     = FrameFactory::createFrameFromStreamProfile(accelStreamProfile);
-            OBAccelFrameData *accelFrameData = (OBAccelFrameData *)accelFrame->getData();
+            auto              accelFrameData = (AccelFrame::Data *)accelFrame->getData();
             auto              fs             = static_cast<uint8_t>(accelStreamProfile->getFullScaleRange());
 
-            accelFrameData->accelData[0] = IMUCorrector::calculateAccelGravity(static_cast<int16_t>(imuData->accelX), fs);
-            accelFrameData->accelData[1] = IMUCorrector::calculateAccelGravity(static_cast<int16_t>(imuData->accelY), fs);
-            accelFrameData->accelData[2] = IMUCorrector::calculateAccelGravity(static_cast<int16_t>(imuData->accelZ), fs);
-            accelFrameData->temp         = imuData->temperature;
+            accelFrameData->value.x = IMUCorrector::calculateAccelGravity(static_cast<int16_t>(imuData->accelX), fs);
+            accelFrameData->value.y = IMUCorrector::calculateAccelGravity(static_cast<int16_t>(imuData->accelY), fs);
+            accelFrameData->value.z = IMUCorrector::calculateAccelGravity(static_cast<int16_t>(imuData->accelZ), fs);
+            accelFrameData->temp    = IMUCorrector::calculateRegisterTemperature(imuData->temperature);
 
             accelFrame->setNumber(frameIndex);
             accelFrame->setTimeStampUsec(timestamp);
@@ -128,12 +128,12 @@ void ImuStreamer::praseIMUData(std::shared_ptr<Frame> frame) {
 
         if(gyroStreamProfile) {
             auto             gyroFrame     = FrameFactory::createFrameFromStreamProfile(gyroStreamProfile);
-            OBGyroFrameData *gyroFrameData = (OBGyroFrameData *)gyroFrame->getData();
+            auto             gyroFrameData = (GyroFrame::Data *)gyroFrame->getData();
             auto             fs            = static_cast<uint8_t>(gyroStreamProfile->getFullScaleRange());
-            gyroFrameData->gyroData[0]     = IMUCorrector::calculateGyroDPS(static_cast<int16_t>(imuData->gyroX), fs);
-            gyroFrameData->gyroData[1]     = IMUCorrector::calculateGyroDPS(static_cast<int16_t>(imuData->gyroY), fs);
-            gyroFrameData->gyroData[2]     = IMUCorrector::calculateGyroDPS(static_cast<int16_t>(imuData->gyroZ), fs);
-            gyroFrameData->temp            = imuData->temperature;
+            gyroFrameData->value.x         = IMUCorrector::calculateGyroDPS(static_cast<int16_t>(imuData->gyroX), fs);
+            gyroFrameData->value.y         = IMUCorrector::calculateGyroDPS(static_cast<int16_t>(imuData->gyroY), fs);
+            gyroFrameData->value.z         = IMUCorrector::calculateGyroDPS(static_cast<int16_t>(imuData->gyroZ), fs);
+            gyroFrameData->temp            = IMUCorrector::calculateRegisterTemperature(imuData->temperature);
 
             gyroFrame->setNumber(frameIndex);
             gyroFrame->setTimeStampUsec(timestamp);

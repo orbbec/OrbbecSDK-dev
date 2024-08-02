@@ -354,18 +354,20 @@ const std::vector<UsbInterfaceInfo> &UsbEnumeratorLibusb::queryUsbInterfaces() {
             continue;
         }
 
-        if(desc.idVendor != ORBBEC_USB_VID) {  // 通过vid==0X2bc5过滤掉非奥比设备
+        if(desc.idVendor != ORBBEC_USB_VID) {  // filter out non-orbbec devices
             continue;
         }
 
+        // todo: remove interface info from devInterfaceList_ when device is removed
         auto path  = getDevicePath(device);
         bool found = false;
         for(auto devInfoIter = devInterfaceList_.begin(); devInfoIter != devInterfaceList_.end();) {
             if(devInfoIter->url == path) {
                 tempInfoList.push_back(*devInfoIter);
+                found = true;
             }
+            ++devInfoIter;
         }
-
         if(found) {
             continue;
         }

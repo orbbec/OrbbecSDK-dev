@@ -24,13 +24,16 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBa
         context_->process_frame     = dylib_->get_function<ob_frame *(ob_frame_processor *, ob_frame *, ob_error **)>("ob_frame_processor_process_frame");
         context_->destroy_processor = dylib_->get_function<void(ob_frame_processor *, ob_error **)>("ob_destroy_frame_processor");
         context_->destroy_context   = dylib_->get_function<void(ob_frame_processor_context *, ob_error **)>("ob_destroy_frame_processor_context");
+        context_->set_hardware_d2c_params =
+            dylib->get_function<void(ob_frame_processor *, ob_camera_param, uint8_t, float, int16_t, int16_t, int16_t, int16_t, ob_error **error)>(
+                "ob_frame_processor_set_hardware_d2c_params");
     }
 
     if(context_->create_context && !context_->context) {
-        ob_device cDevice;
-        cDevice.device    = owner->shared_from_this();
+        cDevice_          = new ob_device;
+        cDevice_->device  = owner->shared_from_this();
         ob_error *error   = nullptr;
-        context_->context = context_->create_context(&cDevice, &error);
+        context_->context = context_->create_context(cDevice_, &error);
         if(error) {
             // TODO
             throw std::runtime_error("create frame processor context failed");
@@ -38,7 +41,12 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBa
     }
 }
 
-FrameProcessorFactory::~FrameProcessorFactory() noexcept = default;
+FrameProcessorFactory::~FrameProcessorFactory() noexcept {
+    if(cDevice_) {
+        delete cDevice_;
+        cDevice_ = nullptr;
+    }
+}
 
 std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSensorType sensorType) {
     if(context_ && (!context_->context || context_->create_processor == nullptr)) {
@@ -52,7 +60,17 @@ std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSe
 
     auto                            owner = getOwner();
     std::shared_ptr<FrameProcessor> processor;
-    TRY_EXECUTE({ processor = std::make_shared<FrameProcessor>(owner, context_, sensorType); })
+    TRY_EXECUTE({
+        switch(sensorType) {
+        case OB_SENSOR_DEPTH: {
+            processor = std::make_shared<DepthFrameProcessor>(owner, context_);
+        } break;
+
+        default:
+            processor = std::make_shared<FrameProcessor>(owner, context_, sensorType);
+            break;
+        }
+    })
     frameProcessors_.insert({ sensorType, processor });
     return processor;
 }
@@ -201,4 +219,45 @@ void FrameProcessor::getPropertyRange(uint32_t propertyId, OBPropertyRange *rang
         throw invalid_value_exception("Invalid property id");
     }
 }
+
+// Depth frame processor
+DepthFrameProcessor::DepthFrameProcessor(IDevice *owner, std::shared_ptr<FrameProcessorContext> context) : FrameProcessor(owner, context, OB_SENSOR_DEPTH) {}
+
+DepthFrameProcessor::~DepthFrameProcessor() noexcept {}
+
+void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth, uint32_t depthHeight,
+                                                      std::vector<OBCameraParam> calibrationCameraParams, std::vector<OBD2CProfile> d2cProfiles) {
+    OBCameraParam currentCameraParam = {};
+    OBD2CProfile  currentD2CProfile  = {};
+    for(const auto &d2cProfile: d2cProfiles) {
+        if(d2cProfile.colorWidth == colorWidth && d2cProfile.colorHeight == colorHeight && d2cProfile.depthWidth == depthWidth
+           && d2cProfile.depthHeight == depthHeight && (d2cProfile.alignType & ALIGN_D2C_HW)) {
+            currentD2CProfile = d2cProfile;
+            break;
+        }
+    }
+
+    if(static_cast<size_t>(currentD2CProfile.paramIndex) + 1 > calibrationCameraParams.size()) {
+        throw invalid_value_exception("Current stream profile is not support hardware d2c process");
+        return;
+    }
+
+    currentCameraParam = calibrationCameraParams.at(currentD2CProfile.paramIndex);
+
+    if(context_->set_hardware_d2c_params) {
+        ob_error *error = nullptr;
+        context_->set_hardware_d2c_params(privateProcessor_, currentCameraParam, currentD2CProfile.paramIndex, currentD2CProfile.postProcessParam.depthScale,
+                                          currentD2CProfile.postProcessParam.alignLeft, currentD2CProfile.postProcessParam.alignTop,
+                                          currentD2CProfile.postProcessParam.alignRight, currentD2CProfile.postProcessParam.alignBottom, &error);
+        if(error) {
+            LOG_ERROR("set hardware d2c params failed");
+            delete error;
+        }
+    }
+}
+
+void DepthFrameProcessor::enableHardwareD2CProcess(bool enable) {
+    setConfigValue("HardwareD2CProcessor#255", static_cast<double>(enable));
+}
+
 }  // namespace libobsensor

@@ -44,8 +44,8 @@ void StreamIntrinsicsManager::registerVideoStreamIntrinsics(const std::shared_pt
             return;
         }
     }
-    
-    videoStreamIntrinsicsMap_.insert({ std::weak_ptr<const StreamProfile>(profile), intrinsics });
+
+    videoStreamIntrinsicsMap_[std::weak_ptr<const StreamProfile>(profile)] = intrinsics;
 }
 
 OBCameraIntrinsic StreamIntrinsicsManager::getVideoStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile) {
@@ -100,7 +100,7 @@ void StreamIntrinsicsManager::registerVideoStreamDistortion(const std::shared_pt
         }
     }
 
-    videoStreamDistortionMap_.insert({ std::weak_ptr<const StreamProfile>(profile), distortion });
+    videoStreamDistortionMap_[std::weak_ptr<const StreamProfile>(profile)] = distortion;
 }
 
 OBCameraDistortion StreamIntrinsicsManager::getVideoStreamDistortion(const std::shared_ptr<const StreamProfile> &profile) {
@@ -155,7 +155,7 @@ void StreamIntrinsicsManager::registerGyroStreamIntrinsics(const std::shared_ptr
         }
     }
 
-    gyroStreamIntrinsicsMap_.insert({ std::weak_ptr<const StreamProfile>(profile), intrinsics });
+    gyroStreamIntrinsicsMap_[std::weak_ptr<const StreamProfile>(profile)] = intrinsics;
 }
 
 OBGyroIntrinsic StreamIntrinsicsManager::getGyroStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile) {
@@ -210,7 +210,7 @@ void StreamIntrinsicsManager::registerAccelStreamIntrinsics(const std::shared_pt
         }
     }
 
-    accelStreamIntrinsicsMap_.insert({ std::weak_ptr<const StreamProfile>(profile), intrinsics });
+    accelStreamIntrinsicsMap_[std::weak_ptr<const StreamProfile>(profile)] = intrinsics;
 }
 
 OBAccelIntrinsic StreamIntrinsicsManager::getAccelStreamIntrinsics(const std::shared_ptr<const StreamProfile> &profile) {
@@ -266,7 +266,7 @@ void StreamIntrinsicsManager::registerDisparityBasedStreamDisparityParam(const s
         }
     }
 
-    disparityParamMap_.insert({ std::weak_ptr<const StreamProfile>(profile), disparityParam });
+    disparityParamMap_[std::weak_ptr<const StreamProfile>(profile)] = disparityParam;
 }
 
 OBDisparityParam StreamIntrinsicsManager::getDisparityBasedStreamDisparityParam(const std::shared_ptr<const StreamProfile> &profile) {

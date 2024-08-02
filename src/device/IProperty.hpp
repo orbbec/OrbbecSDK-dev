@@ -32,23 +32,27 @@ using GetDataCallback = std::function<void(OBDataTranState state, OBDataChunk *d
 
 class IPropertyAccessor {
 public:
-    virtual ~IPropertyAccessor() noexcept                                      = default;
+    virtual ~IPropertyAccessor() noexcept = default;
+};
+class IBasicPropertyAccessor : virtual public IPropertyAccessor {
+public:
+    virtual ~IBasicPropertyAccessor() noexcept                                 = default;
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value)  = 0;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) = 0;
     virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) = 0;
 };
 
-class IPropertyExtensionAccessor : virtual public IPropertyAccessor {
+class IExtensionPropertyAccessor : virtual public IPropertyAccessor {
 public:
-    virtual ~IPropertyExtensionAccessor() noexcept                                                              = default;
+    virtual ~IExtensionPropertyAccessor() noexcept                                                              = default;
     virtual void                        setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) = 0;
     virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId)                                   = 0;
     virtual void                        getRawData(uint32_t propertyId, GetDataCallback callback)               = 0;
 };
 
-class IPropertyExtensionAccessorV1_1 : virtual public IPropertyAccessor {
+class IExtensionPropertyAccessorV1_1 : virtual public IPropertyAccessor {
 public:
-    virtual ~IPropertyExtensionAccessorV1_1() noexcept = default;
+    virtual ~IExtensionPropertyAccessorV1_1() noexcept = default;
 
     virtual uint16_t                    getCmdVersionProtoV1_1(uint32_t propertyId)                                                           = 0;
     virtual const std::vector<uint8_t> &getStructureDataProtoV1_1(uint32_t propertyId, uint16_t cmdVersion)                                   = 0;
@@ -79,10 +83,10 @@ public:
     virtual void registerProperty(uint32_t propertyId, OBPermissionType userPerms, OBPermissionType intPerms, std::shared_ptr<IPropertyAccessor> accessor) = 0;
     virtual void registerProperty(uint32_t propertyId, const std::string &userPerms, const std::string &intPerms,
                                   std::shared_ptr<IPropertyAccessor> accessor)                                                                             = 0;
-    virtual void aliasProperty(uint32_t aliasId, uint32_t propertyId)                                                                                  = 0;
+    virtual void aliasProperty(uint32_t aliasId, uint32_t propertyId)                                                                                      = 0;
 
-    virtual bool isPropertySupported(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const                         = 0;
-    virtual const std::vector<OBPropertyItem> &getAvailableProperties(PropertyAccessType accessType)                                                        = 0;
+    virtual bool isPropertySupported(uint32_t propertyId, PropertyOperationType operationType, PropertyAccessType accessType) const = 0;
+    virtual const std::vector<OBPropertyItem> &getAvailableProperties(PropertyAccessType accessType)                                = 0;
 
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value, PropertyAccessType accessType)  = 0;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value, PropertyAccessType accessType) = 0;

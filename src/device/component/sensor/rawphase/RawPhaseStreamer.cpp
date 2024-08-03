@@ -221,7 +221,7 @@ void RawPhaseStreamer::parseRawPhaseFrame(std::shared_ptr<Frame> frame) {
                                                                  outputBuffer.get(), outputBytes, &outputFrameInfo, &inputFrameInfo);
 
         if(K4A_DEPTH_ENGINE_RESULT_SUCCEEDED != retCode) {
-            LOG_ERROR("Process frame failed!{}", retCode);
+            LOG_ERROR("Process frame failed! Error code:{}", retCode);
             return;
         }
 
@@ -316,15 +316,18 @@ void RawPhaseStreamer::depthEngineThreadFunc(std::shared_ptr<const StreamProfile
     }
     deInitCv_.notify_all();
 
+    std::shared_ptr<Frame> videoFrame;
     while(!threadExit_) {
-        std::unique_lock<std::mutex> lock(frameQueueMutex_);
-        frameQueueCV_.wait(lock, [&]() { return !videoFrameObjectVec_.empty() || threadExit_; });
-        if(threadExit_) {
-            break;
-        }
+        {
+            std::unique_lock<std::mutex> lock(frameQueueMutex_);
+            frameQueueCV_.wait(lock, [&]() { return !videoFrameObjectVec_.empty() || threadExit_; });
+            if(threadExit_) {
+                break;
+            }
 
-        auto videoFrame = videoFrameObjectVec_.front();
-        videoFrameObjectVec_.pop();
+            videoFrame = videoFrameObjectVec_.front();
+            videoFrameObjectVec_.pop();
+        }
         parseRawPhaseFrame(videoFrame);
     }
 

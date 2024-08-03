@@ -103,12 +103,6 @@ void G330Device::fetchDeviceInfo() {
     deviceInfo_->vid_                 = enumInfo_->getVid();
     deviceInfo_->uid_                 = enumInfo_->getUid();
     deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
-
-    // add prefix "Orbbec " to device name if it doesn't have it
-    if(deviceInfo_->name_.find("Orbbec") == std::string::npos) {
-        deviceInfo_->name_ = "Orbbec " + deviceInfo_->name_;
-    }
-
     // todo: fetch and parse extension info
 }
 

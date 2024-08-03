@@ -15,7 +15,7 @@ namespace libobsensor {
 const std::map<uint16_t, std::string> pidToNameMap = {
     { 0x0669, "Femto Mega" },
     { 0x06c0, "Femto Mega i" },
-    { 0x0671, "Orbbec Gemini2 XL" },
+    { 0x0671, "Gemini2 XL" },
 };
 
 NetDeviceEnumerator::NetDeviceEnumerator(std::shared_ptr<ObPal> obPal, DeviceChangedCallback callback)

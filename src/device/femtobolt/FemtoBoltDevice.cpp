@@ -67,10 +67,6 @@ void FemtoBoltDevice::fetchDeviceInfo() {
     deviceInfo_->vid_                 = enumInfo_->getVid();
     deviceInfo_->uid_                 = enumInfo_->getUid();
     deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
-
-    if(deviceInfo_->name_.find("Orbbec") == std::string::npos) {
-        deviceInfo_->name_ = "Orbbec " + deviceInfo_->name_;
-    }
 }
 
 void FemtoBoltDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {

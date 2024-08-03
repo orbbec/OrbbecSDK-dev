@@ -73,7 +73,7 @@ void FemtoMegaUvcDevice::fetchDeviceInfo() {
     deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
 
     if(deviceInfo_->name_.find("Orbbec") == std::string::npos) {
-        deviceInfo_->name_ = "Orbbec " + deviceInfo_->name_;
+        deviceInfo_->name_ = "" + deviceInfo_->name_;
     }
 }
 

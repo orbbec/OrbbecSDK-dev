@@ -15,7 +15,7 @@ add_custom_command(
 add_custom_command(
     TARGET extensions
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/depthengine/${OB_CURRENT_OS}" "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/extensions/depthengine")
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_LIST_DIR}/depthengine/${OB_CURRENT_OS}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/extensions/depthengine")
 
 set_target_properties(extensions PROPERTIES FOLDER "modules")
 

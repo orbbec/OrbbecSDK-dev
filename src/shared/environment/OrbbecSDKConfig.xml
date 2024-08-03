@@ -12,7 +12,7 @@
         <FileLogLevel>0</FileLogLevel>
         <!--Console log output level-->
         <ConsoleLogLevel>3</ConsoleLogLevel>
-        <!--Default log output file path, string type. If this item is not configured, the default path will be used: Win/Linux: "./Log"; Android: "/sdcard/Orbbec/Log"-->
+        <!--Default log output file path, string type. If this item is not configured, the default path will be used: Win/Linux: "./Log"; Android: "/sdcard//Log"-->
         <!--<OutputDir>./log</OutputDir>-->
         <!--Default log output file size, int type, unit: MB-->
         <MaxFileSize>100</MaxFileSize>
@@ -313,9 +313,9 @@
         <FemtoBolt>
             <Depth>
                 <!--The width of the default resolution, int type-->
-                <Width>1024</Width>
+                <Width>640</Width>
                 <!--The height of the default resolution, int type-->
-                <Height>1024</Height>
+                <Height>576</Height>
                 <!--Default frame rate, int type-->
                 <FPS>15</FPS>
                 <!--Default frame format-->
@@ -1353,7 +1353,7 @@
             </IR>
         </GeminiELite>
         <!--Gemini2 config-->
-        <OrbbecGemini2>
+        <Gemini2>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaultHeartBeat>0</DefaultHeartBeat>
 			<!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
@@ -1520,7 +1520,7 @@
 					<Format>Y8</Format>
 				</RightIR>
 			</In-sceneCalibration>
-        </OrbbecGemini2>
+        </Gemini2>
 
         <!--DaBaiDCL config-->
         <DaBaiDCL>
@@ -1666,8 +1666,8 @@
 				</RightIR>
 			</In-sceneCalibration>
         </DaBaiDCL>
-        <!--OrbbecGemini2L config-->
-        <OrbbecGemini2L>
+        <!--Gemini2L config-->
+        <Gemini2L>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaulHeartBeat>0</DefaulHeartBeat>
 
@@ -1831,9 +1831,9 @@
 				    <StreamFailedRetry>0</StreamFailedRetry>
 				</RightIR>
 			</In-sceneCalibration>
-        </OrbbecGemini2L>
+        </Gemini2L>
         <!--Astra2 config-->
-        <OrbbecAstra2>
+        <Astra2>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaulHeartBeat>0</DefaulHeartBeat>
 
@@ -1933,9 +1933,9 @@
 					<Format>Y8</Format>
 				</IR>
 			</ClassicResolution>
-        </OrbbecAstra2>
+        </Astra2>
         <!-- Gemini2VL config -->
-        <OrbbecGemini2VL>
+        <Gemini2VL>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaulHeartBeat>0</DefaulHeartBeat>
 
@@ -2080,9 +2080,9 @@
 				    <StreamFailedRetry>0</StreamFailedRetry>
 				</RightIR>
 			</In-sceneCalibration>
-        </OrbbecGemini2VL>
+        </Gemini2VL>
         <!-- Gemini2XL config -->
-        <OrbbecGemini2XL>
+        <Gemini2XL>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaulHeartBeat>0</DefaulHeartBeat>
 
@@ -2318,10 +2318,10 @@
                     <MaxFrameIntervalMs>5000</MaxFrameIntervalMs>
 				</RightIR>
 			</In-sceneCalibration>
-        </OrbbecGemini2XL>
+        </Gemini2XL>
 
          <!--Gemini2R config-->
-        <OrbbecGemini335>
+        <Gemini335>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaultHeartBeat>0</DefaultHeartBeat>
 			<!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
@@ -2384,9 +2384,9 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </RightIR>
-        </OrbbecGemini335>
+        </Gemini335>
 		   <!--Gemini2RL config-->
-        <OrbbecGemini335L>
+        <Gemini335L>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaultHeartBeat>0</DefaultHeartBeat>
 			<!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
@@ -2449,9 +2449,9 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </RightIR>
-        </OrbbecGemini335L>
+        </Gemini335L>
         <!--Gemini 336 config-->
-        <OrbbecGemini336>
+        <Gemini336>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaultHeartBeat>0</DefaultHeartBeat>
 			<!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
@@ -2514,9 +2514,9 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </RightIR>
-        </OrbbecGemini336>
+        </Gemini336>
 		<!--Gemini 336L config-->
-        <OrbbecGemini336L>
+        <Gemini336L>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaultHeartBeat>0</DefaultHeartBeat>
 			<!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
@@ -2579,9 +2579,9 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </RightIR>
-        </OrbbecGemini336L>
+        </Gemini336L>
         <!--Gemini 215 config-->
-        <OrbbecGemini215>
+        <Gemini215>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaultHeartBeat>0</DefaultHeartBeat>
 			<!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
@@ -2641,9 +2641,9 @@
 				</profile>
 				</ProfileFilter>
             </RightIR>
-        </OrbbecGemini215>
+        </Gemini215>
         <!--Gemini 210 config-->
-        <OrbbecGemini210>
+        <Gemini210>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaultHeartBeat>0</DefaultHeartBeat>
 			<!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
@@ -2703,6 +2703,6 @@
 				</profile>
 				</ProfileFilter>
             </RightIR>
-        </OrbbecGemini210>
+        </Gemini210>
     </Device>
 </Config>

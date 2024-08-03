@@ -170,7 +170,7 @@ const std::vector<OBFilterConfigSchemaItem> &FilterBase::getConfigSchemaVec() {
 void FilterBase::setConfigValue(const std::string &configName, double value) {
     auto schemaVec = getConfigSchemaVec();
     if(schemaVec.empty()) {
-        throw invalid_value_exception(utils::string::to_string() << "Filter" << name_ << ": config schema is empty, doesn't have any config value");
+        throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config schema is empty, doesn't have any config value");
     }
 
     if(configMap_.empty()) {
@@ -182,10 +182,10 @@ void FilterBase::setConfigValue(const std::string &configName, double value) {
     auto it =
         std::find_if(configSchemaVec_.begin(), configSchemaVec_.end(), [&configName](const OBFilterConfigSchemaItem &item) { return item.name == configName; });
     if(it == configSchemaVec_.end()) {
-        throw invalid_value_exception(utils::string::to_string() << "Filter" << name_ << ": config item " << configName << " doesn't exist");
+        throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config item " << configName << " doesn't exist");
     }
     if(value < it->min || value > it->max) {
-        throw invalid_value_exception(utils::string::to_string() << "Filter" << name_ << ": config item " << configName << " value " << value
+        throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config item " << configName << " value " << value
                                                                  << " out of range [" << it->min << ", " << it->max << "]");
     }
 
@@ -198,7 +198,7 @@ void FilterBase::setConfigValue(const std::string &configName, double value) {
 double FilterBase::getConfigValue(const std::string &configName) {
     auto schemaVec = getConfigSchemaVec();
     if(schemaVec.empty()) {
-        throw invalid_value_exception(utils::string::to_string() << "Filter" << name_ << ": config schema is empty, doesn't have any config value");
+        throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config schema is empty, doesn't have any config value");
     }
 
     if(configMap_.empty()) {
@@ -209,7 +209,7 @@ double FilterBase::getConfigValue(const std::string &configName) {
 
     auto it = configMap_.find(configName);
     if(it == configMap_.end()) {
-        throw invalid_value_exception(utils::string::to_string() << "Filter" << name_ << ": config item " << configName << " doesn't exist");
+        throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config item " << configName << " doesn't exist");
     }
     return it->second;
 }
@@ -236,7 +236,7 @@ void FilterBase::checkAndUpdateConfig() {
         for(auto &item: configSchemaVec_) {
             auto it = configMap_.find(item.name);
             if(it == configMap_.end()) {
-                throw invalid_value_exception(utils::string::to_string() << "Filter" << name_ << ": config item " << item.name << " doesn't exist");
+                throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config item " << item.name << " doesn't exist");
             }
             auto valueStr = filterConfigValueToString(it->second, item.type);
             configVec.push_back(valueStr);

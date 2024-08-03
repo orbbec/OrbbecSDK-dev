@@ -8,11 +8,7 @@ int main(void) try {
 
     // Start the pipeline with default config.
     // Modify the default configuration by the configuration file: "OrbbecSDKConfig.xml"
-    auto config = std::make_shared<ob::Config>();
-    config->enableVideoStream(OB_STREAM_DEPTH, 848, 480, OB_FPS_ANY, OB_FORMAT_Y16);
-    config->enableVideoStream(OB_STREAM_COLOR, 640, 480, OB_FPS_ANY, OB_FORMAT_RGB);
-
-    pipe.start(config);
+    pipe.start();
 
     // Create a window for showing the frames, and set the size of the window.
     ob_smpl::CVWindow win("QuickStart", 1280, 720, ob_smpl::ARRANGE_ONE_ROW);

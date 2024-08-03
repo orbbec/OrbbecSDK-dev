@@ -147,7 +147,7 @@ Based on the device's timestamp and considering data transmission delays, the ti
         <LinuxUVCBackend>LibUVC</LinuxUVCBackend>
 
             <!--Gemini 335 config-->
-        <OrbbecGemini335>
+        <Gemini335>
 	        <!--Whether to enable heartbeat by default-->
 	        <DefaultHeartBeat>0</DefaultHeartBeat>
 
@@ -204,7 +204,7 @@ Based on the device's timestamp and considering data transmission delays, the ti
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </RightIR>
-        </OrbbecGemini335>
+        </Gemini335>
     </Device>
 ```
 

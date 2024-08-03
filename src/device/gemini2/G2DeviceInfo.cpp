@@ -7,7 +7,7 @@
 
 namespace libobsensor {
 
-const std::map<int, std::string> G2DeviceNameMap = { { 0x0670, "Orbbec Gemini2" }, { 0x0673, "Orbbec Gemini2 L" }, { 0x0671, "Orbbec Gemini2 XL" } };
+const std::map<int, std::string> G2DeviceNameMap = { { 0x0670, "Gemini2" }, { 0x0673, "Gemini2 L" }, { 0x0671, "Gemini2 XL" } };
 
 G2DeviceInfo::G2DeviceInfo(const SourcePortInfoList groupedInfoList) {
     auto portInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(groupedInfoList.front());
@@ -17,7 +17,7 @@ G2DeviceInfo::G2DeviceInfo(const SourcePortInfoList groupedInfoList) {
         name_ = iter->second;
     }
     else {
-        name_ = "Orbbec Gemini2 series device";
+        name_ = "Gemini2 series device";
     }
 
     pid_                = portInfo->pid;

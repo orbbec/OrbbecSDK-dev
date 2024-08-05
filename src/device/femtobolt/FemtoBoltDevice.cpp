@@ -126,10 +126,15 @@ void FemtoBoltDevice::initSensorList() {
             auto depthEngineLoaderPtr = depthEngineLoader.get();
 
             auto dataStreamPort   = std::dynamic_pointer_cast<IVideoStreamPort>(port);
-            auto rawPhaseStreamer = std::make_shared<RawPhaseStreamer>(this, dataStreamPort, depthEngineLoaderPtr);
-            if(rawPhaseStreamer) {
-                rawPhaseStreamer->setNvramDataStreamStopFunc([&]() { LOG_INFO("setNvramDataStreamStopFunc succeed"); });
-            }
+            std::shared_ptr<RawPhaseStreamer> rawPhaseStreamer;
+            BEGIN_TRY_EXECUTE({
+                rawPhaseStreamer = std::make_shared<RawPhaseStreamer>(this, dataStreamPort, depthEngineLoaderPtr);
+                if(rawPhaseStreamer) {
+                    rawPhaseStreamer->setNvramDataStreamStopFunc([&]() { LOG_INFO("setNvramDataStreamStopFunc succeed"); });
+                }
+            })
+            CATCH_EXCEPTION_AND_LOG(WARN, "create RawPhaseStreamer failed.")
+
             return rawPhaseStreamer;
         });
         registerComponent(
@@ -146,6 +151,10 @@ void FemtoBoltDevice::initSensorList() {
                 // if(frameProcessor) {
                 //     sensor->setFrameProcessor(frameProcessor.get());
                 // }
+
+                auto propServer = getPropertyServer();
+                auto passiveIrValue = propServer->getPropertyValueT<int>(OB_PROP_SWITCH_IR_MODE_INT);
+                rawphaseStreamer->setIsPassiveIR(static_cast<bool>(passiveIrValue));
 
                 initSensorStreamProfile(sensor);
                 return sensor;

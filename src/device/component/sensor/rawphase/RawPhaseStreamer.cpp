@@ -8,6 +8,10 @@
 namespace libobsensor {
 RawPhaseStreamer::RawPhaseStreamer(IDevice *owner, const std::shared_ptr<IVideoStreamPort> &backend, std::shared_ptr<DepthEngineLoadFactory> &depthEngineLoader)
     : owner_(owner), backend_(backend), depthEngineLoader_(depthEngineLoader) {
+    if(depthEngineLoader_ == nullptr) {
+        throw invalid_value_exception("depthEngineLoader_ is nullptr");
+    }
+
     profileVector_.push_back({ { 320, 288 }, { 7680, 434 } });
     profileVector_.push_back({ { 640, 576 }, { 7680, 434 } });
     profileVector_.push_back({ { 1024, 1024 }, { 8192, 130 } });
@@ -87,6 +91,7 @@ void RawPhaseStreamer::start(std::shared_ptr<const StreamProfile> sp, FrameCallb
         videoFrameObjectVec_.push(frame);
         frameQueueCV_.notify_one();
     });
+    callbacks_[sp] = callback;
     startDepthEngineThread(sp);
 
     running_ = true;

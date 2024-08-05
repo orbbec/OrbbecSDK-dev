@@ -56,6 +56,9 @@ void RawPhaseConvertSensor::start(std::shared_ptr<const StreamProfile> sp, Frame
     auto propServer = owner->getPropertyServer();
 
     if(sensorType_ == OB_SENSOR_DEPTH || sensorType_ == OB_SENSOR_IR) {
+        if(!streamer_){
+            throw libobsensor::unsupported_operation_exception("The streamer is nullptr.");
+        }
         auto streamSp = sp->as<VideoStreamProfile>();
         streamer_->start(streamSp, [this](std::shared_ptr<const Frame> frame) {
             updateStreamState(STREAM_STATE_STREAMING);

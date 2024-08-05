@@ -7,21 +7,6 @@
 
 namespace libobsensor {
 
-struct dataStreamWatcherWeakPtrCompare {
-    bool operator()(const std::weak_ptr<DataStreamWatcher> &a, const std::weak_ptr<DataStreamWatcher> &b) const {
-        auto aItem = a.lock();
-        auto bItem = b.lock();
-        if(!aItem) {
-            return true;
-        }
-        if(!bItem) {
-            return false;
-        }
-        return aItem.get() < bItem.get();
-    }
-};
-
-
 struct NetDataStreamPortInfo : public NetSourcePortInfo {
     NetDataStreamPortInfo(std::string address, uint16_t port, uint16_t vendorPort, std::string mac = "unknown", std::string serialNumber = "unknown",
                           uint32_t pid = 0)
@@ -42,9 +27,12 @@ class NetDataStreamPort : public IDataStreamPort {
 public:
     NetDataStreamPort(std::shared_ptr<const NetDataStreamPortInfo> portInfo);
     virtual ~NetDataStreamPort() noexcept;
-    virtual std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override {
+    std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override {
         return portInfo_;
     }
+
+    void startStream(MutableFrameCallback callback) override;
+    void stopStream() override;
 
 public:
     void readData();
@@ -52,14 +40,11 @@ public:
 private:
     std::shared_ptr<const NetDataStreamPortInfo> portInfo_;
 
-    std::set<std::weak_ptr<DataStreamWatcher>, dataStreamWatcherWeakPtrCompare> watchers_;
-    std::mutex                                                                  watchersMutex_;
-
     std::shared_ptr<VendorTCPClient> tcpClient_;
-    std::mutex                       clientMutex_;
+    bool                             isStreaming_;
     std::thread                      readDataThread_;
 
-    bool isStreaming_;
+    MutableFrameCallback callback_;
 };
 
 }  // namespace libobsensor

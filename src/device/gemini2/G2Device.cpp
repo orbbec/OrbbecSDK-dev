@@ -3,7 +3,7 @@
 #include "DevicePids.hpp"
 #include "InternalTypes.hpp"
 
-#include "ObPal.hpp"
+#include "Platform.hpp"
 #include "utils/Utils.hpp"
 #include "environment/EnvConfig.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
@@ -154,7 +154,7 @@ void G2Device::initSensorList() {
 
     registerComponent(OB_DEV_COMPONENT_STREAM_PROFILE_FILTER, [this]() { return std::make_shared<G2StreamProfileFilter>(this); });
 
-    auto        pal                = ObPal::getInstance();
+    auto        platform           = Platform::getInstance();
     const auto &sourcePortInfoList = enumInfo_->getSourcePortInfoList();
     auto depthPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {
         return portInfo->portType == SOURCE_PORT_USB_UVC && std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->infIndex == INTERFACE_DEPTH;
@@ -165,8 +165,8 @@ void G2Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_DEPTH_SENSOR,
             [this, depthPortInfo]() {
-                auto pal    = ObPal::getInstance();
-                auto port   = pal->getSourcePort(depthPortInfo);
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(depthPortInfo);
                 auto sensor = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
@@ -212,8 +212,8 @@ void G2Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_RIGHT_IR_SENSOR,
             [this, depthPortInfo]() {
-                auto pal    = ObPal::getInstance();
-                auto port   = pal->getSourcePort(depthPortInfo);
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(depthPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
 
                 // std::vector<FormatFilterConfig> formatFilterConfigs = {
@@ -248,16 +248,16 @@ void G2Device::initSensorList() {
 
         // the main property accessor is using the depth port(uvc xu)
         registerComponent(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR, [this, depthPortInfo]() {
-            auto pal      = ObPal::getInstance();
-            auto port     = pal->getSourcePort(depthPortInfo);
+            auto platform = Platform::getInstance();
+            auto port     = platform->getSourcePort(depthPortInfo);
             auto accessor = std::make_shared<VendorPropertyAccessor>(this, port);
             return accessor;
         });
 
         // The device monitor is using the depth port(uvc xu)
         registerComponent(OB_DEV_COMPONENT_DEVICE_MONITOR, [this, depthPortInfo]() {
-            auto pal        = ObPal::getInstance();
-            auto port       = pal->getSourcePort(depthPortInfo);
+            auto platform   = Platform::getInstance();
+            auto port       = platform->getSourcePort(depthPortInfo);
             auto devMonitor = std::make_shared<DeviceMonitor>(this, port);
             return devMonitor;
         });
@@ -272,8 +272,8 @@ void G2Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_IR_SENSOR,
             [this, irPortInfo]() {
-                auto pal    = ObPal::getInstance();
-                auto port   = pal->getSourcePort(irPortInfo);
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(irPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR, port);
 
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
@@ -300,8 +300,8 @@ void G2Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_LEFT_IR_SENSOR,
             [this, irPortInfo]() {
-                auto pal    = ObPal::getInstance();
-                auto port   = pal->getSourcePort(irPortInfo);
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(irPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
 
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
@@ -334,8 +334,8 @@ void G2Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_COLOR_SENSOR,
             [this, colorPortInfo]() {
-                auto pal    = ObPal::getInstance();
-                auto port   = pal->getSourcePort(colorPortInfo);
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(colorPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
@@ -381,8 +381,8 @@ void G2Device::initSensorList() {
 
         registerComponent(OB_DEV_COMPONENT_IMU_STREAMER, [this, imuPortInfo]() {
             // the gyro and accel are both on the same port and share the same filter
-            auto pal                = ObPal::getInstance();
-            auto port               = pal->getSourcePort(imuPortInfo);
+            auto platform           = Platform::getInstance();
+            auto port               = platform->getSourcePort(imuPortInfo);
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
             if(!imuCorrectorFilter) {
                 throw not_implemented_exception("Cannot find IMU correcter filter!");
@@ -396,8 +396,8 @@ void G2Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_ACCEL_SENSOR,
             [this, imuPortInfo]() {
-                auto pal                  = ObPal::getInstance();
-                auto port                 = pal->getSourcePort(imuPortInfo);
+                auto platform             = Platform::getInstance();
+                auto port                 = platform->getSourcePort(imuPortInfo);
                 auto imuStreamer          = getComponentT<ImuStreamer>(OB_DEV_COMPONENT_IMU_STREAMER);
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<AccelSensor>(this, port, imuStreamerSharedPtr);
@@ -412,8 +412,8 @@ void G2Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_GYRO_SENSOR,
             [this, imuPortInfo]() {
-                auto pal                  = ObPal::getInstance();
-                auto port                 = pal->getSourcePort(imuPortInfo);
+                auto platform             = Platform::getInstance();
+                auto port                 = platform->getSourcePort(imuPortInfo);
                 auto imuStreamer          = getComponentT<ImuStreamer>(OB_DEV_COMPONENT_IMU_STREAMER);
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<GyroSensor>(this, port, imuStreamerSharedPtr);
@@ -452,12 +452,12 @@ void G2Device::initProperties() {
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
-        auto  pal            = ObPal::getInstance();
+        auto  platform       = Platform::getInstance();
         auto &sourcePortInfo = getSensorPortInfo(sensor);
         if(sensor == OB_SENSOR_COLOR) {
             auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
-                auto pal      = ObPal::getInstance();
-                auto port     = pal->getSourcePort(sourcePortInfo);
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
@@ -475,8 +475,8 @@ void G2Device::initProperties() {
         }
         else if(sensor == OB_SENSOR_IR) {
             auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, sourcePortInfo]() {
-                auto pal      = ObPal::getInstance();
-                auto port     = pal->getSourcePort(sourcePortInfo);
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
@@ -484,16 +484,16 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_DEPTH) {
-            auto uvcPropertyAccessor    = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
-                auto pal      = ObPal::getInstance();
-                auto port     = pal->getSourcePort(sourcePortInfo);
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
 
             auto vendorPropertyAccessor = std::make_shared<LazyExtensionPropertyAccessor>([this, &sourcePortInfo]() {
-                auto pal                    = ObPal::getInstance();
-                auto port                   = pal->getSourcePort(sourcePortInfo);
+                auto platform               = Platform::getInstance();
+                auto port                   = platform->getSourcePort(sourcePortInfo);
                 auto vendorPropertyAccessor = std::make_shared<VendorPropertyAccessor>(this, port);
                 return vendorPropertyAccessor;
             });

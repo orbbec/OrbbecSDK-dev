@@ -523,7 +523,7 @@ uint32_t phaseProfileFormatToFourcc(std::shared_ptr<const VideoStreamProfile> pr
     return (const utils::big_endian<int> &)(formatFourcc);
 }
 
-void ObV4lUvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) {
+void ObV4lUvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile, MutableFrameCallback callback) {
     std::shared_ptr<V4lDeviceHandle> devHandle    = nullptr;
     auto                             videoProfile = profile->as<VideoStreamProfile>();
     foreachProfile(deviceHandles_, [&](std::shared_ptr<V4lDeviceHandle> handle, std::shared_ptr<VideoStreamProfile> prof) {

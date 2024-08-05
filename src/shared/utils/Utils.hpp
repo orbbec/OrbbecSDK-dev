@@ -31,19 +31,14 @@ public:
 };
 #pragma pack(pop)
 
-template <typename T>
-void unusedVar(T& var){
+template <typename T> void unusedVar(T &var) {
     (void)var;
-}
-
-template <class T> bool contains(const T &first, const T &second) {
-    return *first == *second;
 }
 
 template <class T> std::vector<std::shared_ptr<T>> subtract_sets(const std::vector<std::shared_ptr<T>> &first, const std::vector<std::shared_ptr<T>> &second) {
     std::vector<std::shared_ptr<T>> results;
     std::for_each(first.begin(), first.end(), [&](std::shared_ptr<T> data) {
-        if(std::find_if(second.begin(), second.end(), [&](std::shared_ptr<T> new_dev) { return contains(data, new_dev); }) == second.end()) {
+        if(std::find_if(second.begin(), second.end(), [&](std::shared_ptr<T> new_dev) { return *data == *new_dev; }) == second.end()) {
             results.push_back(data);
         }
     });
@@ -53,7 +48,7 @@ template <class T> std::vector<std::shared_ptr<T>> subtract_sets(const std::vect
 template <class T> std::vector<T> subtract_sets(const std::vector<T> &first, const std::vector<T> &second) {
     std::vector<T> results;
     std::for_each(first.begin(), first.end(), [&](T data) {
-        if(std::find_if(second.begin(), second.end(), [&](T new_dev) { return contains(data, new_dev); }) == second.end()) {
+        if(std::find_if(second.begin(), second.end(), [&](T new_dev) { return data == new_dev; }) == second.end()) {
             results.push_back(data);
         }
     });

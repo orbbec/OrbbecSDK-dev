@@ -29,7 +29,7 @@ public:
 class Frame;
 
 typedef std::function<void(std::shared_ptr<const Frame>)> FrameCallback;
-typedef std::function<void(std::shared_ptr<Frame>)> FrameCallbackUnsafe;
+typedef std::function<void(std::shared_ptr<Frame>)> MutableFrameCallback;
 
 class IFrameTimestampCalculator {
 public:

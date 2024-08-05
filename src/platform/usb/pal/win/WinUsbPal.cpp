@@ -1,7 +1,7 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec  Corporation. All Rights Reserved.
 
-#include "WinPal.hpp"
+#include "WinUsbPal.hpp"
 
 #if(_MSC_FULL_VER < 180031101)
 #error At least Visual Studio 2013 Update 4 is required to compile this backend
@@ -37,9 +37,9 @@ constexpr GUID     GUID_DEVINTERFACE_USB_DEVICE = { 0xA5DCBF10, 0x6530, 0x11D2, 
 constexpr uint16_t PID_BOOTLOADER_UVC           = 0x0501;
 namespace libobsensor {
 
-class WinUsbDeviceWatcher : public DeviceWatcher {
+class WinUsbDeviceWatcher : public IDeviceWatcher {
 public:
-    WinUsbDeviceWatcher(const ObPal *backend);
+    WinUsbDeviceWatcher(const IPal *backend);
     ~WinUsbDeviceWatcher() noexcept override;
 
     void start(deviceChangedCallback callback) override;
@@ -54,7 +54,7 @@ private:
     std::thread eventThread_;
     std::mutex  mutex_;
     struct extra_data {
-        const ObPal          *backend_;
+        const IPal           *backend_;
         deviceChangedCallback callback_;
         bool                  stopped_;
         HWND                  hWnd;
@@ -116,37 +116,29 @@ bool parseSymbolicLink(const std::string &symbolicLink, uint16_t &vid, uint16_t 
     return true;
 }
 
-std::weak_ptr<WinPal>  WinPal::instanceWeakPtr_;
-std::mutex             WinPal::instanceMutex_;
-std::shared_ptr<ObPal> ObPal::getInstance() {
-    std::lock_guard<std::mutex> lock(WinPal::instanceMutex_);
-    auto                        instance = WinPal::instanceWeakPtr_.lock();
-    if(instance == nullptr) {
-        instance                 = std::shared_ptr<WinPal>(new WinPal());
-        WinPal::instanceWeakPtr_ = instance;
-    }
-    return instance;
+std::shared_ptr<IPal> createUsbPal() {
+    return std::make_shared<WinUsbPal>();
 }
 
-WinPal::WinPal() {
-    LOG_DEBUG("WinPal init ...");
+WinUsbPal::WinUsbPal() {
+    LOG_DEBUG("WinUsbPal init ...");
     // when using COINIT_APARTMENTTHREADED, calling _pISensor->SetEventSink(NULL) to stop sensor can take several seconds
     CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
 
     usbEnumerator_ = IUsbEnumerator::getInstance();
-    LOG_DEBUG("WinPal created!");
+    LOG_DEBUG("WinUsbPal created!");
 }
 
-WinPal::~WinPal() noexcept {
+WinUsbPal::~WinUsbPal() noexcept {
     TRY_EXECUTE({
         MFShutdown();
         CoUninitialize();
     });
-    LOG_DEBUG("WinPal destroyed!");
+    LOG_DEBUG("WinUsbPal destroyed!");
 }
 
-std::shared_ptr<ISourcePort> WinPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> WinUsbPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
     std::shared_ptr<ISourcePort> port;
 
@@ -201,12 +193,12 @@ std::shared_ptr<ISourcePort> WinPal::getSourcePort(std::shared_ptr<const SourceP
     return port;
 }
 
-std::shared_ptr<DeviceWatcher> WinPal::createUsbDeviceWatcher() const {
+std::shared_ptr<IDeviceWatcher> WinUsbPal::createDeviceWatcher() const {
     LOG_DEBUG("Create WinUsbDeviceWatcher!");
     return std::make_shared<WinUsbDeviceWatcher>(this);
 }
 
-SourcePortInfoList WinPal::queryUsbSourcePortInfos() {
+SourcePortInfoList WinUsbPal::querySourcePortInfos() {
     SourcePortInfoList portInfoList;
 
     auto action = [&](const UsbInterfaceInfo &info, IMFActivate *) {
@@ -260,7 +252,7 @@ SourcePortInfoList WinPal::queryUsbSourcePortInfos() {
     return portInfoList;
 }
 
-WinUsbDeviceWatcher::WinUsbDeviceWatcher(const ObPal *backend) {
+WinUsbDeviceWatcher::WinUsbDeviceWatcher(const IPal *backend) {
     extraData_.backend_ = backend;
     extraData_.stopped_ = true;
 }

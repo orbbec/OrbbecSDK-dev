@@ -14,11 +14,11 @@ endif()
 
 # load project options
 include(cmake/options.cmake)
-if(OB_BUILD_USB_PORT)
+if(OB_BUILD_USB_PAL)
     add_definitions(-DBUILD_USB_PORT)
 endif()
 
-if(OB_BUILD_NET_PORT)
+if(OB_BUILD_NET_PAL)
     add_definitions(-DBUILD_NET_PORT)
 endif()
 

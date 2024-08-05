@@ -1,7 +1,7 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 
-#include "LinuxPal.hpp"
+#include "LinuxUsbPal.hpp"
 
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
@@ -36,7 +36,7 @@ template <class T> static bool isMatchDeviceByPid(uint16_t pid, T &pids) {
 #if defined(BUILD_USB_PORT)
 int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-class LibusbDeviceWatcher : public DeviceWatcher {
+class LibusbDeviceWatcher : public IDeviceWatcher {
 public:
     LibusbDeviceWatcher() = default;
     ~LibusbDeviceWatcher() noexcept override {
@@ -110,27 +110,19 @@ int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hot
 }
 #endif
 
-std::weak_ptr<LinuxPal> LinuxPal::instanceWeakPtr_;
-std::mutex              LinuxPal::instanceMutex_;
-std::shared_ptr<ObPal>  ObPal::getInstance() {
-    std::lock_guard<std::mutex> lock(LinuxPal::instanceMutex_);
-    auto                        instance = LinuxPal::instanceWeakPtr_.lock();
-    if(instance == nullptr) {
-        instance                   = std::shared_ptr<LinuxPal>(new LinuxPal());
-        LinuxPal::instanceWeakPtr_ = instance;
-    }
-    return instance;
+std::shared_ptr<IPal> createUsbPal() {
+    return std::make_shared<LinuxUsbPal>();
 }
 
-LinuxPal::LinuxPal() {
+LinuxUsbPal::LinuxUsbPal() {
 #if defined(BUILD_USB_PORT)
     usbEnumerator_ = IUsbEnumerator::getInstance();
 #endif
 }
 
-LinuxPal::~LinuxPal() noexcept {}
+LinuxUsbPal::~LinuxUsbPal() noexcept {}
 
-std::shared_ptr<ISourcePort> LinuxPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> LinuxUsbPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
     std::shared_ptr<ISourcePort> port;
 
@@ -228,7 +220,7 @@ std::shared_ptr<ISourcePort> LinuxPal::getSourcePort(std::shared_ptr<const Sourc
 }
 
 #if defined(BUILD_USB_PORT)
-std::shared_ptr<DeviceWatcher> LinuxPal::createUsbDeviceWatcher() const {
+std::shared_ptr<IDeviceWatcher> LinuxUsbPal::createDeviceWatcher() const {
     LOG_INFO("Create PollingDeviceWatcher!");
 
     if(LibusbDeviceWatcher::hasCapability()) {
@@ -238,7 +230,7 @@ std::shared_ptr<DeviceWatcher> LinuxPal::createUsbDeviceWatcher() const {
     return nullptr;
 }
 
-SourcePortInfoList LinuxPal::queryUsbSourcePortInfos() {
+SourcePortInfoList LinuxUsbPal::querySourcePortInfos() {
     SourcePortInfoList portInfoList;
 
     const auto &interfaceInfoList = usbEnumerator_->queryUsbInterfaces();
@@ -261,7 +253,7 @@ SourcePortInfoList LinuxPal::queryUsbSourcePortInfos() {
 }
 
 #if defined(BUILD_USB_PORT)
-void LinuxPal::loadXmlConfig() {
+void LinuxUsbPal::loadXmlConfig() {
     // FIXME
     // auto ctx       = Context::getInstance();
     //    auto xmlConfig = ctx->getXmlConfig();

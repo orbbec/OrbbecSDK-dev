@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ObPal.hpp"
+#include "IPal.hpp"
 
 #include <memory>
 
@@ -13,16 +13,16 @@
 
 namespace libobsensor {
 
-class AndroidPal : public ObPal {
+class AndroidUsbPal : public IPal {
 public:
-    AndroidPal();
-    virtual ~AndroidPal() noexcept;
+    AndroidUsbPal();
+    virtual ~AndroidUsbPal() noexcept;
 
     virtual std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
 #if defined(BUILD_USB_PORT)
-    virtual std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
-    virtual SourcePortInfoList              queryUsbSourcePortInfos() override;
+    virtual std::shared_ptr<IDeviceWatcher> createDeviceWatcher() const override;
+    virtual SourcePortInfoList              querySourcePortInfos() override;
     virtual std::shared_ptr<ISourcePort>    createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo>) override;
     virtual std::shared_ptr<ISourcePort>    createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
     virtual std::shared_ptr<ISourcePort>    createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo>) override;
@@ -33,8 +33,8 @@ public:
     }
 
 private:
-    std::shared_ptr<AndroidUsbDeviceManager>                                   androidUsbManager_;
-    std::mutex                                                                 sourcePortMapMutex_;
+    std::shared_ptr<AndroidUsbDeviceManager>                                    androidUsbManager_;
+    std::mutex                                                                  sourcePortMapMutex_;
     std::map<std::shared_ptr<const SourcePortInfo>, std::weak_ptr<ISourcePort>> sourcePortMap_;
 };
 

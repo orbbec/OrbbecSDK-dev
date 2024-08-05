@@ -1,7 +1,7 @@
 #pragma once
 #include "IDeviceEnumerator.hpp"
-#include "DeviceWatcher.hpp"
-#include "ObPal.hpp"
+#include "IDeviceWatcher.hpp"
+#include "Platform.hpp"
 
 #include <memory>
 
@@ -14,7 +14,7 @@ public:
     void                     setDeviceChangedCallback(DeviceChangedCallback callback) override;
 
 private:
-    void               onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid);
+    void               onPlatformDeviceChanged(OBDeviceChangedType changeType, std::string devUid);
     DeviceEnumInfoList queryRemovedDevice(std::string rmDevUid);
     DeviceEnumInfoList queryArrivalDevice();
 
@@ -23,10 +23,10 @@ private:
     static DeviceEnumInfoList usbDeviceInfoMatch(const SourcePortInfoList infoList);
 
 private:
-    std::shared_ptr<ObPal> obPal_;
+    std::shared_ptr<Platform> platform_;
     bool                   destroy_ = false;
 
-    std::shared_ptr<DeviceWatcher> deviceWatcher_;
+    std::shared_ptr<IDeviceWatcher> deviceWatcher_;
 
     DeviceChangedCallback devChangedCallback_ = nullptr;
     std::thread           devChangedCallbackThread_;

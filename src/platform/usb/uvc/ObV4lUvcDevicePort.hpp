@@ -69,7 +69,7 @@ struct V4lDeviceHandle {
     int                                           metadataFd = -1;
     std::array<V4L2FrameBuffer, MAX_BUFFER_COUNT> metadataBuffers;
 
-    FrameCallbackUnsafe                       frameCallback;
+    MutableFrameCallback                      frameCallback;
     std::shared_ptr<const VideoStreamProfile> profile = nullptr;
 
     int                          stopPipeFd[2] = { -1, -1 };  // pipe to signal the capture thread to stop
@@ -86,7 +86,7 @@ public:
 
     StreamProfileList getStreamProfileList() override;
 
-    void startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
+    void startStream(std::shared_ptr<const StreamProfile> profile, MutableFrameCallback callback) override;
     void stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void stopAllStream() override;
 

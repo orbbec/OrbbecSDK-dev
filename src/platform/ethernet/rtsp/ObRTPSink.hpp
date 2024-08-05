@@ -1,8 +1,10 @@
 #pragma once
+#include "IFrame.hpp"
+#include "IStreamProfile.hpp"
+#include "exception/ObException.hpp"
+
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
-#include "ISourcePort.hpp"
-#include "usb/uvc/UvcTypes.hpp"
 
 #include <queue>
 #include <atomic>
@@ -12,43 +14,111 @@
 
 namespace libobsensor {
 
-
-struct ObRTPFrame {
-    ObRTPFrame(uint32_t maxDataSize) : maxBuffSize(maxDataSize) {
-        frameObj        = new VideoFrameObject();
-        frameDataBuffer = new uint8_t[maxDataSize];
-        frameHeaderSize = 0;
+class ObRTPBuffer {
+public:
+    ObRTPBuffer(uint32_t maxDataSize) : bufferSize_(maxDataSize), sequenceNumber_(0), timestamp_(0), staticHeaderSize_(0), recvdDataSize_(0) {
+        buffer_ = new uint8_t[maxDataSize];
     }
 
-    ~ObRTPFrame() {
-        delete[] frameDataBuffer;
-        delete frameObj;
+    ~ObRTPBuffer() {
+        delete[] buffer_;
     }
 
-    std::shared_ptr<ObRTPFrame> cloneHeader() {
-        auto rstFrame = std::make_shared<ObRTPFrame>(maxBuffSize);
-        memcpy(rstFrame->frameDataBuffer, frameDataBuffer, frameHeaderSize);
-        rstFrame->frameHeaderSize = frameHeaderSize;
-        return rstFrame;
+    void setSequenceNumber(uint64_t seq) {
+        sequenceNumber_ = seq;
     }
 
-    VideoFrameObject *frameObj;
-    uint8_t          *frameDataBuffer;
-    uint32_t          frameHeaderSize;  // h264&h265的帧头可以直接解析SDP或得，后续接受的数据要放在帧头之后
-    uint32_t          maxBuffSize;
+    uint64_t getSequenceNumber() const {
+        return sequenceNumber_;
+    }
+
+    void setTimestamp(uint64_t ts) {
+        timestamp_ = ts;
+    }
+
+    uint64_t getTimestamp() const {
+        return timestamp_;
+    }
+
+    void setCodecName(const std::string &name) {
+        codecName_ = name;
+    }
+
+    const std::string &getCodecName() const {
+        return codecName_;
+    }
+
+    uint8_t *getBuffer() const {
+        return buffer_;
+    }
+
+    uint32_t getBufferSize() const {
+        return bufferSize_;
+    }
+
+    void setHeaderSize(uint32_t size) {
+        staticHeaderSize_ = size;
+    }
+
+    void setRecvdDataSize(uint32_t size) {
+        recvdDataSize_ = size;
+    }
+
+    uint32_t getRecvdDataSize() const {
+        return recvdDataSize_;
+    }
+
+    template <typename T> T *getStaticHeader() const {
+        if(staticHeaderSize_ < sizeof(T)) {
+            throw invalid_value_exception("Header size is too small to cast to type T");
+        }
+        return reinterpret_cast<T *>(buffer_);
+    }
+
+    uint32_t getStaticHeaderSize() const {
+        return staticHeaderSize_;
+    }
+
+    template <typename T> T *getDynamicHeader() const {
+        if(dynamicHeaderSize_ < sizeof(T)) {
+            throw invalid_value_exception("Custom header size is too small to cast to type T");
+        }
+        return reinterpret_cast<T *>(buffer_ + staticHeaderSize_);
+    }
+
+    uint8_t *getRecvdDataBuffer(uint16_t offset = 0) const {
+        return buffer_ + staticHeaderSize_ + offset;
+    }
+
+    std::shared_ptr<ObRTPBuffer> cloneAndCopyHeader() {
+        auto frame = std::make_shared<ObRTPBuffer>(bufferSize_);
+        memcpy(frame->getBuffer(), buffer_, staticHeaderSize_);
+        frame->setHeaderSize(staticHeaderSize_);
+        return frame;
+    }
+
+private:
+    uint8_t *buffer_;
+    uint32_t bufferSize_;
+
+    uint64_t    sequenceNumber_;
+    uint64_t    timestamp_;
+    std::string codecName_;
+    uint32_t    staticHeaderSize_;
+    uint32_t    recvdDataSize_;  // size of data received = dataSize_ + dynamicHeaderSize_
 };
 
 class ObRTPSink : public MediaSink {
 public:
-    static ObRTPSink *createNew(UsageEnvironment  &env,
-                                MediaSubsession   &subsession,  // identifies the kind of data that's being received
-                                FrameCallbackUnsafe callback,
-                                char const        *streamId = NULL);  // identifies the stream itself (optional)
+    static ObRTPSink *createNew(UsageEnvironment    &env,
+                                MediaSubsession     &subsession,  // identifies the kind of data that's being received
+                                MutableFrameCallback callback,
+                                char const          *streamId = NULL);  // identifies the stream itself (optional)
 
     virtual ~ObRTPSink() noexcept;
 
 protected:
-    ObRTPSink(UsageEnvironment &env, MediaSubsession &subsession, FrameCallbackUnsafe callback, char const *streamId = NULL);
+    ObRTPSink(UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId = NULL);
 
 private:
     static void afterGettingFrame(void *clientData, unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime,
@@ -61,24 +131,24 @@ private:
     void            outputFrameFunc();
 
 private:
-    MediaSubsession   &subsession_;
-    char              *streamId_;
-    VideoFrameCallback frameCallback_;
-    uint64_t           frameCount_;
-    std::atomic<bool>  destroy_;
+    MediaSubsession                     &subsession_;
+    char                                *streamId_;
+    MutableFrameCallback                 frameCallback_;
+    std::shared_ptr<const StreamProfile> streamProfile_;
+    uint64_t                             frameCount_;
+    std::atomic<bool>                    destroy_;
 
-    std::queue<std::shared_ptr<ObRTPFrame>> reclaimedRTPFrameQueue_;
-    std::mutex                              reclaimedRTPFrameMutex_;
-    std::queue<std::shared_ptr<ObRTPFrame>> outputRTPFrameQueue_;
-    std::mutex                              outputRTPFrameQueueMutex_;
-    std::condition_variable                 frameAvailableCv_;
-    std::shared_ptr<ObRTPFrame>             currentFrame_;
+    std::queue<std::shared_ptr<ObRTPBuffer>> reclaimedRTPBufferQueue_;
+    std::mutex                               reclaimedRTPBufferMutex_;
+    std::queue<std::shared_ptr<ObRTPBuffer>> outputRTPBufferQueue_;
+    std::mutex                               outputRTPBufferQueueMutex_;
+    std::condition_variable                  frameAvailableCv_;
+    std::shared_ptr<ObRTPBuffer>             currentBuffer_;
 
     const uint8_t  MAX_FRAME_NUM       = 4;
     const uint32_t MAX_FRAME_DATA_SIZE = 3 * 3840 * 2160;
 
     std::thread outputFrameThread_;
 };
-
 
 }  // namespace libobsensor

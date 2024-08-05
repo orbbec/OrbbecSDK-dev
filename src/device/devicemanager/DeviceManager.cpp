@@ -53,8 +53,7 @@ DeviceManager::DeviceManager() : destroy_(false), multiDeviceSyncIntervalMs_(0) 
     if(false) {  // todo: qurey if net enum is enabled form global config
         LOG_DEBUG("Enable Net Device Enumerator ...");
         auto netDeviceEnumerator =
-            std::make_shared<NetDeviceEnumerator>([&](std::vector<std::shared_ptr<IDeviceEnumInfo>> removed,
-                                                      std::vector<std::shared_ptr<IDeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
+            std::make_shared<NetDeviceEnumerator>([&](const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added) { onDeviceChanged(removed, added); });
         deviceEnumerators_.emplace_back(netDeviceEnumerator);
     }
 #endif
@@ -80,37 +79,40 @@ DeviceManager::~DeviceManager() noexcept {
 std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uint16_t port) {
 #if defined(BUILD_NET_PORT)
     LOG_DEBUG("DeviceManager createNetDevice...");
-    std::string uid = address + ":" + std::to_string(port);
-    {
-        std::unique_lock<std::mutex> lock(createdDevicesMutex_);
-        auto                         iter = createdDevices_.begin();
-        for(; iter != createdDevices_.end(); ++iter) {
-            if(iter->first == uid) {
-                auto dev = iter->second.lock();
-                if(dev) {
-                    throw invalid_value_exception("Attempting to create a device that has already been created!! address=" + address
-                                                  + ", port=" + std::to_string(port));
-                }
-                else {
-                    createdDevices_.erase(iter);
-                    break;
-                }
-            }
-        }
-    }
+    // std::string uid = address + ":" + std::to_string(port);
+    // {
+    //     std::unique_lock<std::mutex> lock(createdDevicesMutex_);
+    //     auto                         iter = createdDevices_.begin();
+    //     for(; iter != createdDevices_.end(); ++iter) {
+    //         if(iter->first == uid) {
+    //             auto dev = iter->second.lock();
+    //             if(dev) {
+    //                 throw invalid_value_exception("Attempting to create a device that has already been created!! address=" + address
+    //                                               + ", port=" + std::to_string(port));
+    //             }
+    //             else {
+    //                 createdDevices_.erase(iter);
+    //                 break;
+    //             }
+    //         }
+    //     }
+    // }
 
-    auto device = NetDeviceEnumerator::createDevice(address, port);
-    if(device == nullptr) {
-        throw libobsensor::invalid_value_exception("Failed to create Net Device, address=" + address + ", port=" + std::to_string(port));
-        return nullptr;
-    }
+    // auto device = NetDeviceEnumerator::createDevice(address, port);
+    // if(device == nullptr) {
+    //     throw libobsensor::invalid_value_exception("Failed to create Net Device, address=" + address + ", port=" + std::to_string(port));
+    //     return nullptr;
+    // }
 
-    {
-        std::unique_lock<std::mutex> lock(createdDevicesMutex_);
-        createdDevices_.insert({ uid, device });
-    }
-    LOG_INFO("create Net Device success! address={0}, port={1}", address, port);
-    return device;
+    // {
+    //     std::unique_lock<std::mutex> lock(createdDevicesMutex_);
+    //     createdDevices_.insert({ uid, device });
+    // }
+    // LOG_INFO("create Net Device success! address={0}, port={1}", address, port);
+    // return device;
+     utils::unusedVar(address);
+    utils::unusedVar(port);
+    throw libobsensor::unsupported_operation_exception("Unsupported operation, please use createDevice() instead.");
 #else
     utils::unusedVar(address);
     utils::unusedVar(port);
@@ -292,14 +294,8 @@ void DeviceManager::enableNetDeviceEnumeration(bool enable) {
         return typeid(*enumerator) == typeid(NetDeviceEnumerator);
     });
     if(enable && iter == deviceEnumerators_.end()) {
-<<<<<<< HEAD
         auto netDeviceEnumerator =
-            std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<IDeviceEnumInfo>> removed,
-                                                              std::vector<std::shared_ptr<IDeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
-        == == == = auto netDeviceEnumerator =
-            std::make_shared<NetDeviceEnumerator>(obPal_, [&](std::vector<std::shared_ptr<IDeviceEnumInfo>> removed,
-                                                              std::vector<std::shared_ptr<IDeviceEnumInfo>> added) { onDeviceChanged(removed, added); });
->>>>>>> 2b5680b (Implementing Context and Device Manager.)
+            std::make_shared<NetDeviceEnumerator>([&](DeviceEnumInfoList removed, DeviceEnumInfoList added) { onDeviceChanged(removed, added); });
         deviceEnumerators_.emplace_back(netDeviceEnumerator);
         auto deviceInfoList = getDeviceInfoList();
         printDeviceList("Current device(s) list", deviceInfoList);

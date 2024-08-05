@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
+add_subdirectory(pal)
 add_subdirectory(enumerator)
 add_subdirectory(uvc)
 add_subdirectory(hid)

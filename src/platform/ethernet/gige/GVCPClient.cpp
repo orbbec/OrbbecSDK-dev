@@ -1,5 +1,6 @@
 
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
+#define _WINSOCK_DEPRECATED_NO_WARNINGS disable
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
@@ -23,7 +24,6 @@
 
 namespace libobsensor {
 
-
 GVCPClient::GVCPClient() {
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
     WSADATA wsaData;
@@ -42,7 +42,7 @@ GVCPClient::~GVCPClient() {
     closeClientSockets();
 }
 
-std::vector<NetDeviceInfo> GVCPClient::queryNetDeviceList() {
+std::vector<GVCPDeviceInfo> GVCPClient::queryNetDeviceList() {
     std::lock_guard<std::mutex> lck(queryMtx_);
     devInfoList_.clear();
 
@@ -57,11 +57,11 @@ std::vector<NetDeviceInfo> GVCPClient::queryNetDeviceList() {
         thread.join();
     }
 
-    // devInfoList_去重
+    // devInfoList_ remove duplication
     if(!devInfoList_.empty()) {
         auto iter = devInfoList_.begin();
         while(iter != devInfoList_.end()) {
-            auto it = std::find_if(iter + 1, devInfoList_.end(), [&](const NetDeviceInfo &other) { return *iter == other; });
+            auto it = std::find_if(iter + 1, devInfoList_.end(), [&](const GVCPDeviceInfo &other) { return *iter == other; });
             if(it != devInfoList_.end()) {
                 devInfoList_.erase(it);
                 continue;
@@ -72,7 +72,7 @@ std::vector<NetDeviceInfo> GVCPClient::queryNetDeviceList() {
 
     LOG_TRACE("queryNetDevice completed ({}):", devInfoList_.size());
     for(auto &&info: devInfoList_) {
-        // LOG_INFO("\t- mac:{}, ip:{}, sn:{}, pid:0x{:04x}", info.mac, info.ip, info.sn, info.pid);
+        // LOG_INFO("\t-mac:{}, ip:{}, sn:{}, pid:0x{:04x}", info.mac, info.ip, info.sn, info.pid);
         LOG_INTVL(LOG_INTVL_OBJECT_TAG + "queryNetDevice", DEF_MIN_LOG_INTVL, spdlog::level::info, "\t- mac:{}, ip:{}, sn:{}, pid:0x{:04x}", info.mac, info.ip,
                   info.sn, info.pid);
     }
@@ -183,13 +183,13 @@ void GVCPClient::closeClientSockets() {
 }
 
 SOCKET GVCPClient::openClientSocket(SOCKADDR_IN addr) {
-    // 创建套接字
+    // Create socket
     SOCKET sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(sock == INVALID_SOCKET) {
         throw libobsensor::invalid_value_exception(utils::string::to_string() << "Failed to create socket! err_code=" << GET_LAST_ERROR());
     }
 
-    // 设置广播选项
+    // Set broadcast options
     int bBroadcast = 1;
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
     int err = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&bBroadcast, sizeof(bBroadcast));
@@ -205,7 +205,7 @@ SOCKET GVCPClient::openClientSocket(SOCKADDR_IN addr) {
     }
 #endif
 
-// 设置接收超时选项
+// Set receive timeout options
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
     uint32_t dwTimeout = 5000;
 #else
@@ -237,10 +237,10 @@ void GVCPClient::sendGVCPDiscovery(SOCKET sock) {
 
     SOCKADDR_IN destAddr;
     destAddr.sin_family      = AF_INET;
-    destAddr.sin_addr.s_addr = INADDR_BROADCAST;  // 广播地址
+    destAddr.sin_addr.s_addr = INADDR_BROADCAST;  // Broadcast address
     destAddr.sin_port        = htons(GVCP_PORT);
 
-    // 设备发现
+    // device discovery
     gvcp_cmd_header cmdHeader;
     cmdHeader.cMsgKeyCode = GVCP_VERSION;
     cmdHeader.cFlag       = GVCP_DISCOVERY_FLAGS;
@@ -250,16 +250,16 @@ void GVCPClient::sendGVCPDiscovery(SOCKET sock) {
 
     discoverCmd.header = cmdHeader;
 
-    ////获取本地的ip
+    ////Get local ip
     // struct sockaddr_in addr;
-    // socklen_t          addrLen = sizeof(addr);
+    // socklen_t addrLen = sizeof(addr);
 
-    //// 获取套接字的地址信息
+    ////Get the address information of the socket
     // if(getsockname(sock, (struct sockaddr *)&addr, &addrLen) == 0) {
-    //     LOG_INFO("cur addr {}:{}", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+    // LOG_INFO("cur addr {}:{}", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
     // }
 
-    // 发送数据
+    // send data
     int err = sendto(sock, (const char *)&discoverCmd, sizeof(discoverCmd), 0, (SOCKADDR *)&destAddr, sizeof(destAddr));
     if(err == SOCKET_ERROR) {
         LOG_INTVL(LOG_INTVL_OBJECT_TAG + "GVCP sendto", MAX_LOG_INTERVAL, spdlog::level::debug, "sendto failed with error:{}", GET_LAST_ERROR());
@@ -278,13 +278,13 @@ void GVCPClient::sendGVCPDiscovery(SOCKET sock) {
         int    nfds = 0;
         fd_set readfs;
         FD_ZERO(&readfs);
-        nfds = sock + 1;
+        nfds = static_cast<int>(sock) + 1;
         FD_SET(sock, &readfs);
 
         res = select(nfds, &readfs, 0, 0, &timeout);
         if(res > 0) {
             if(FD_ISSET(sock, &readfs)) {
-                // 接收数据
+                // Receive data
                 SOCKADDR_IN srcAddr;
                 socklen_t   srcAddrLen = sizeof(srcAddr);
 
@@ -299,7 +299,7 @@ void GVCPClient::sendGVCPDiscovery(SOCKET sock) {
                     }
                 }
 
-                // 解析响应数据
+                // Parse response data
                 gvcp_ack_header ackHeader = {};
                 memcpy(&ackHeader, recvBuf, sizeof(gvcp_ack_header));
 
@@ -316,28 +316,28 @@ void GVCPClient::sendGVCPDiscovery(SOCKET sock) {
                     gvcp_ack_payload ackPayload = {};
                     memcpy(&ackPayload, recvBuf + sizeof(gvcp_ack_header), sizeof(gvcp_ack_payload));
 
-                    uint16_t specVer  = ntohl(ackPayload.dwSpecVer);
-                    uint16_t devMode  = ntohl(ackPayload.dwDevMode);
-                    uint16_t supIpSet = ntohl(ackPayload.dwSupIpSet);
-                    uint16_t curIpSet = ntohl(ackPayload.dwCurIpSet);
-                    uint32_t curPID   = ntohl(ackPayload.dwPID);
+                    auto specVer  = ntohl(ackPayload.dwSpecVer);
+                    auto devMode  = ntohl(ackPayload.dwDevMode);
+                    auto supIpSet = ntohl(ackPayload.dwSupIpSet);
+                    auto curIpSet = ntohl(ackPayload.dwCurIpSet);
+                    auto curPID   = ntohl(ackPayload.dwPID);
 
-                    // 获取Mac地址
+                    // Get Mac address
                     char macStr[18];
                     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", ackPayload.Mac[2], ackPayload.Mac[3], ackPayload.Mac[4], ackPayload.Mac[5],
                             ackPayload.Mac[6], ackPayload.Mac[7]);
 
-                    // 读取 CurIP 字段
+                    // Read CurIP field
                     uint32_t curIP = *((uint32_t *)&ackPayload.CurIP[12]);
                     char     curIPStr[INET_ADDRSTRLEN];
                     inet_ntop(AF_INET, &curIP, curIPStr, INET_ADDRSTRLEN);
 
-                    // 读取 SubMask 字段
+                    // Read the SubMask field
                     uint32_t subMask = *((uint32_t *)&ackPayload.SubMask[12]);
                     char     subMaskStr[INET_ADDRSTRLEN];
                     inet_ntop(AF_INET, &subMask, subMaskStr, INET_ADDRSTRLEN);
 
-                    // 读取 Gateway 字段
+                    // Read the Gateway field
                     uint32_t gateway = *((uint32_t *)&ackPayload.Gateway[12]);
                     char     gatewayStr[INET_ADDRSTRLEN];
                     inet_ntop(AF_INET, &gateway, gatewayStr, INET_ADDRSTRLEN);
@@ -354,11 +354,11 @@ void GVCPClient::sendGVCPDiscovery(SOCKET sock) {
 
                     discoverAck.payload = ackPayload;
 
-                    // 过滤非Orbbec设备
+                    // Filter non-Orbbec devices
                     if(strcmp(ackPayload.szFacName, "Orbbec") != 0)
                         continue;
 
-                    NetDeviceInfo info;
+                    GVCPDeviceInfo info;
                     info.mac     = macStr;
                     info.ip      = curIPStr;
                     info.mask    = subMaskStr;
@@ -385,7 +385,7 @@ void GVCPClient::sendGVCPForceIP(SOCKET sock, std::string mac, const OBNetIpConf
 
     SOCKADDR_IN destAddr;
     destAddr.sin_family      = AF_INET;
-    destAddr.sin_addr.s_addr = INADDR_BROADCAST;  // 广播地址
+    destAddr.sin_addr.s_addr = INADDR_BROADCAST;  // Broadcast address
     destAddr.sin_port        = htons(GVCP_PORT);
 
     gvcp_cmd_header cmdHeader = {};
@@ -409,9 +409,9 @@ void GVCPClient::sendGVCPForceIP(SOCKET sock, std::string mac, const OBNetIpConf
     // char m_szLocalGateway[32];
     // strcpy(m_szLocalGateway, config.gateway);
 
-    // *((uint32_t *)&payload.CurIP[12])   = inet_addr(m_szLocalIp);       // last 4 byte
-    // *((uint32_t *)&payload.SubMask[12]) = inet_addr(m_szLocalMask);     // last 4 byte
-    // *((uint32_t *)&payload.Gateway[12]) = inet_addr(m_szLocalGateway);  // last 4 byte
+    //*((uint32_t *)&payload.CurIP[12])   = inet_addr(m_szLocalIp);       //last 4 byte
+    //*((uint32_t *)&payload.SubMask[12]) = inet_addr(m_szLocalMask);     //last 4 byte
+    //*((uint32_t *)&payload.Gateway[12]) = inet_addr(m_szLocalGateway);  //last 4 byte
 
     memcpy(payload.CurIP, config.address, 4);
     memcpy(payload.SubMask, config.mask, 4);
@@ -419,7 +419,7 @@ void GVCPClient::sendGVCPForceIP(SOCKET sock, std::string mac, const OBNetIpConf
 
     forceIPCmd.payload = payload;
 
-    // 发送数据
+    // send data
     int err = sendto(sock, (const char *)&forceIPCmd, sizeof(forceIPCmd), 0, (SOCKADDR *)&destAddr, sizeof(destAddr));
     if(err == SOCKET_ERROR) {
         LOG_TRACE("sendto failed with error: {}", GET_LAST_ERROR());
@@ -481,7 +481,7 @@ void GVCPClient::checkAndUpdateSockets() {
             }
 
             if(!found) {
-                int socketFd = openClientSocket(addrSrv);
+                auto socketFd = openClientSocket(addrSrv);
                 if(socketFd != 0) {
                     socks_[index++] = socketFd;
                     LOG_INFO("new ip segment found,new ip addr:{}", ipStr);
@@ -545,6 +545,5 @@ void GVCPClient::checkAndUpdateSockets() {
     freeifaddrs(ifaddr);
 #endif
 }
-
 
 }  // namespace libobsensor

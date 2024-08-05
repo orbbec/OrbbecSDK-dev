@@ -12,7 +12,7 @@ struct DeviceInfo {
     // identifier of the device
     int         pid_ = 0;
     int         vid_ = 0;
-    std::string uid_;  // Unique identifier of the port the device is connected to (pal specific)
+    std::string uid_;  // Unique identifier of the port the device is connected to (platform specific)
     std::string name_;
 
     std::string connectionType_;  // Device connection type

@@ -1,6 +1,8 @@
 #include "RTSPStreamPort.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
+#include "stream/StreamProfileFactory.hpp"
+
 #include <map>
 namespace libobsensor {
 std::string mapFormatToString(OBFormat format) {
@@ -42,213 +44,213 @@ RTSPStreamPort::~RTSPStreamPort() {
     live555Env_ = NULL;
 }
 
-std::vector<std::shared_ptr<const VideoStreamProfile>> RTSPStreamPort::getStreamProfileList() {
+StreamProfileList RTSPStreamPort::getStreamProfileList() {
     if(streamProfileList_.empty()) {
-        // todo: std::vector<std::shared_ptr<const VideoStreamProfile>> 从设备获取
+        // todo: StreamProfileList 从设备获取
         if(portInfo_->streamType == OB_STREAM_DEPTH) {
             // todo-lingyi 增加了注释
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 30));
 
             // todo-lingyi 增加网络模式加载基础分辨率列表 Gemini2XL
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 400, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 400, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 400, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 400, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 1280, 800, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 400, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 400, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 400, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 1280, 800, 10));
 
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_RVL, 640, 400, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_RVL, 640, 400, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_RVL, 640, 400, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_RVL, 640, 400, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_RVL, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_RVL, 1280, 800, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_RVL, 640, 400, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_RVL, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_RVL, 640, 400, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_RVL, 640, 400, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_RVL, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_RVL, 1280, 800, 10));
         }
         else if(portInfo_->streamType == OB_STREAM_COLOR) {
             // todo-lingyi 增加网络模式加载基础分辨率列表 Gemini2XL
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 800, 600, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 800, 600, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 800, 600, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 800, 600, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 360, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 360, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 360, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 360, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 800, 600, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 800, 600, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 800, 600, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 800, 600, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 360, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 360, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 360, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 360, 20));
 
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 1280, 800, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 640, 360, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 640, 360, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 640, 360, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 640, 360, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 640, 400, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 640, 400, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 640, 400, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 640, 400, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 800, 600, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 800, 600, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 800, 600, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 800, 600, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 1280, 720, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_YUYV, 1280, 720, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 1280, 800, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 640, 360, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 640, 360, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 640, 360, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 640, 360, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 640, 400, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 640, 400, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 640, 400, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 800, 600, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 800, 600, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 800, 600, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 800, 600, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 1280, 720, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_YUYV, 1280, 720, 10));
 
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 3840, 2160, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 3840, 2160, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 3840, 2160, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 2560, 1440, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 2560, 1440, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 2560, 1440, 25));
-            //// streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 2560, 1440, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1920, 1080, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1920, 1080, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1920, 1080, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1920, 1080, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 960, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 960, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 960, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 960, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 3840, 2160, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 3840, 2160, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 3840, 2160, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 2560, 1440, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 2560, 1440, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 2560, 1440, 25));
+            //// streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 2560, 1440, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1920, 1080, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1920, 1080, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1920, 1080, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1920, 1080, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 720, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 960, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 960, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 960, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 960, 30));
 
             // todo-lingyi 增加了注释
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 3840, 2160, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 3840, 2160, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 3840, 2160, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 2560, 1440, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 2560, 1440, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 2560, 1440, 25));
-            //// streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 2560, 1440, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1920, 1080, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1920, 1080, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1920, 1080, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1920, 1080, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1280, 720, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1280, 720, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1280, 720, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1280, 720, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1280, 960, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1280, 960, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1280, 960, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H264, 1280, 960, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 3840, 2160, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 3840, 2160, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 3840, 2160, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 2560, 1440, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 2560, 1440, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 2560, 1440, 25));
-            //// streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 2560, 1440, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1920, 1080, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1920, 1080, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1920, 1080, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1920, 1080, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1280, 720, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1280, 720, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1280, 720, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1280, 720, 30));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1280, 960, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1280, 960, 15));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1280, 960, 25));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_H265, 1280, 960, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 3840, 2160, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 3840, 2160, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 3840, 2160, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 2560, 1440, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 2560, 1440, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 2560, 1440, 25));
+            //// streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 2560, 1440, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1920, 1080, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1920, 1080, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1920, 1080, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1920, 1080, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1280, 720, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1280, 720, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1280, 720, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1280, 720, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1280, 960, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1280, 960, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1280, 960, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H264, 1280, 960, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 3840, 2160, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 3840, 2160, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 3840, 2160, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 2560, 1440, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 2560, 1440, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 2560, 1440, 25));
+            //// streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 2560, 1440, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1920, 1080, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1920, 1080, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1920, 1080, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1920, 1080, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1280, 720, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1280, 720, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1280, 720, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1280, 720, 30));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1280, 960, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1280, 960, 15));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1280, 960, 25));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_H265, 1280, 960, 30));
         }
         else if(portInfo_->streamType == OB_STREAM_IR) {
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 25));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 30));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 25));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 30));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 25));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 30));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 25));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 30));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 25));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 1024, 1024, 30));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 25));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 512, 512, 30));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 25));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 640, 576, 30));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 25));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y16, 320, 288, 30));
         }
         // todo-lingyi fGemini2XL增加左右IR
         else if(portInfo_->streamType == OB_STREAM_IR_LEFT) {
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 20));
 
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 20));
 
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y10, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y10, 1280, 800, 10));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y10, 640, 400, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y10, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y10, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y10, 1280, 800, 10));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y10, 640, 400, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y10, 640, 400, 10));
         }
         else if(portInfo_->streamType == OB_STREAM_IR_RIGHT) {
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 1280, 800, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y8, 640, 400, 20));
 
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 20));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 10));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 15));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 1280, 800, 20));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 15));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_MJPG, 640, 400, 20));
 
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y10, 1280, 800, 5));
-            streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y10, 1280, 800, 10));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y10, 640, 400, 5));
-            // streamProfileList_.emplace_back(std::make_shared<VideoStreamProfile>(portInfo_->streamType, OB_FORMAT_Y10, 640, 400, 10));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y10, 1280, 800, 5));
+            streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y10, 1280, 800, 10));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y10, 640, 400, 5));
+            // streamProfileList_.emplace_back(StreamProfileFactory::createVideoStreamProfile(portInfo_->streamType, OB_FORMAT_Y10, 640, 400, 10));
         }
     }
     return streamProfileList_;
 }
 
-void RTSPStreamPort::startStream(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) {
+void RTSPStreamPort::startStream(std::shared_ptr<const StreamProfile> profile, MutableFrameCallback callback) {
     if(streamStarted_) {
         LOG_WARN("Stream already started!");
     }
@@ -265,9 +267,7 @@ void RTSPStreamPort::startStream(std::shared_ptr<const VideoStreamProfile> profi
         LOG_DEBUG("Stream started!");
     }
 }
-void RTSPStreamPort::stopStream(std::shared_ptr<const VideoStreamProfile> profile) {
-    // 当前RTSPStreamPort只支持一路数据流
-    // todo: 增加profile与currentStreamProfile_校验
+void RTSPStreamPort::stopStream(std::shared_ptr<const StreamProfile> profile) {
     stopStream();
 }
 
@@ -293,16 +293,17 @@ void RTSPStreamPort::stopStream() {
     }
 }
 
-void RTSPStreamPort::createClient(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) {
+void RTSPStreamPort::createClient(std::shared_ptr<const StreamProfile> profile, MutableFrameCallback callback) {
     destroy_         = 0;
     eventLoopThread_ = std::thread([&]() { live555Env_->taskScheduler().doEventLoop(&destroy_); });
+    currentStreamProfile_ = profile;
+    auto vsp              = currentStreamProfile_->as<VideoStreamProfile>();
 
-    currentStreamProfile_ = std::dynamic_pointer_cast<const VideoStreamProfile>(profile);
-    std::string formatStr = std::to_string(currentStreamProfile_->width) + "_" + std::to_string(currentStreamProfile_->height) + "_"
-                            + std::to_string(currentStreamProfile_->fps) + "_" + mapFormatToString(currentStreamProfile_->format);
-    std::string url = std::string("rtsp://") + portInfo_->address + ":" + std::to_string(portInfo_->port) + "/"
-                      + mapStreamTypeToString(currentStreamProfile_->streamType) + "/" + formatStr;
-    currentRtspClient_ = ObRTSPClient::createNew(*live555Env_, url.c_str(), callback, 1, "OrbbecSDK");
+    std::string formatStr = std::to_string(vsp->getWidth()) + "_" + std::to_string(vsp->getHeight()) + "_" + std::to_string(vsp->getFps()) + "_"
+                            + mapFormatToString(vsp->getFormat());
+    std::string url =
+        std::string("rtsp://") + portInfo_->address + ":" + std::to_string(portInfo_->port) + "/" + mapStreamTypeToString(vsp->getType()) + "/" + formatStr;
+    currentRtspClient_ = ObRTSPClient::createNew(*live555Env_, url.c_str(), callback, 1);
     LOG_DEBUG("ObRTSPClient created! url={}", url);
 }
 

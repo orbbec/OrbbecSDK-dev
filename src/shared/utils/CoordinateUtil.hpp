@@ -27,9 +27,10 @@ public:
                                      const float sourceDepthPixelValue, const OBCameraIntrinsic targetIntrinsic, const OBCameraDistortion targetDistortion,
                                      OBD2CTransform transSourceToTarget, OBPoint2f *targetPoint2f);
 
-    static bool tranformationColor2dToDepth2d(const OBCameraIntrinsic colorIntrinsic, const OBCameraDistortion colorDistortion, const OBPoint2f colorPixel,
-                                              uint16_t *depthMap, float depthScalemm, const OBCameraIntrinsic depthIntrinsic, const OBCameraDistortion depthDistortion,
-                                              OBD2CTransform transDepthToColor, OBD2CTransform transColorToDepth, OBPoint2f *depthPixel);
+    static bool transformationColor2dToDepth2d(const OBCameraIntrinsic colorIntrinsic, const OBCameraDistortion colorDistortion, const OBPoint2f colorPixel,
+                                               uint16_t *depthMap, float depthScaleMm, const OBCameraIntrinsic depthIntrinsic,
+                                               const OBCameraDistortion depthDistortion, OBD2CTransform transDepthToColor, OBD2CTransform transColorToDepth,
+                                               OBPoint2f *depthPixel);
 
     /*static std::shared_ptr<Frame> transformationDepthFrameToColorCamera(std::shared_ptr<IDevice> device, std::shared_ptr<Frame> depthFrame,
     uint32_t targetColorCameraWidth, uint32_t targetColorCameraHeight);*/

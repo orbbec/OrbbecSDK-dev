@@ -9,9 +9,9 @@ class VendorNetDataPort : public IVendorDataPort {
 public:
     VendorNetDataPort(std::shared_ptr<const NetSourcePortInfo> portInfo);
     virtual ~VendorNetDataPort() noexcept;
-    virtual bool                                  sendData(const uint8_t *data, const uint32_t dataLen);
-    virtual bool                                  recvData(uint8_t *data, uint32_t *dataLen);
-    virtual std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const;
+
+    std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override;
+    uint32_t sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) override;
 
 private:
     std::shared_ptr<VendorTCPClient>         tcpClient_;

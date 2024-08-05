@@ -107,7 +107,7 @@ void ImuStreamer::parseIMUData(std::shared_ptr<Frame> frame) {
 
         OBImuOriginData *imuData    = (OBImuOriginData *)((uint8_t *)imuOrgData + groupIndex * sizeof(OBImuOriginData));
         uint64_t         timestamp  = ((uint64_t)imuData->timestamp[0] | ((uint64_t)imuData->timestamp[1] << 32));
-        auto             sysTspUs   = utils::getNowTimesUs();
+        auto             sysTspUs   = frame->getSystemTimeStampUsec();
         auto             frameIndex = frameIndex_++;
 
         if(accelStreamProfile) {

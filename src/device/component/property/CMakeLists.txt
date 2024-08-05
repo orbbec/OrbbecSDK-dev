@@ -14,7 +14,7 @@ target_sources(
             ${CMAKE_CURRENT_LIST_DIR}/InternalProperty.hpp
 )
 
-if(OB_BUILD_USB_PORT)
+if(OB_BUILD_USB_PAL)
     target_sources(
         ${OB_TARGET_DEVICE} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/UvcPropertyAccessor.cpp
                                     ${CMAKE_CURRENT_LIST_DIR}/UvcPropertyAccessor.hpp

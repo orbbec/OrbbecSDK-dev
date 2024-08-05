@@ -81,7 +81,7 @@ bool check(const char *call, HRESULT hr, bool to_throw) {
     std::string descr = utils::string::to_string() << call << " returned: " << hr_to_string(hr);
     if(to_throw) {
         LOG_ERROR(descr);
-        throw windows_pal_exception(descr);
+        throw pal_exception(descr);
     }
     LOG_DEBUG(descr);
     return false;

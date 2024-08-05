@@ -23,7 +23,7 @@ static bool judgeIntrinsicValid(OBCameraIntrinsic param) {
     if(param.width == 0 || param.height == 0) {
         return false;
     }
-    
+
     if((param.fx < 1.0f) || (param.fy < 1.0f )||(param.cx < 1.0f) || (param.cy <1.0f)) {
         return false;
     }
@@ -163,7 +163,7 @@ static void project3dPointToPixelWithDistortion(const OBCameraIntrinsic intrinsi
             a3    = r2 + 2 * y * y;
             cdist = (1 + distortion.k1 * r2 + distortion.k2 * r4 + distortion.k3 * r6) / (1 + distortion.k4 * r2 + distortion.k5 * r4 + distortion.k6 * r6);
             xd    = x * cdist + distortion.p1 * a1 + distortion.p2 * a2;
-            yd    = y * cdist + distortion.p1 * a3 + distortion.p2 * a1;   
+            yd    = y * cdist + distortion.p1 * a3 + distortion.p2 * a1;
         }
     }
 
@@ -172,19 +172,19 @@ static void project3dPointToPixelWithDistortion(const OBCameraIntrinsic intrinsi
 
     if(pixel->x > intrinsic.width - 1 || pixel->y > intrinsic.height - 1) {
         valid = 0;
-    } 
+    }
     if(pixel->x < 0 || pixel->y < 0) {
         valid = 0;
     }
 
 }
- 
+
 bool CoordinateUtil::transformation3dTo3d(const OBPoint3f sourcePoint3f, OBD2CTransform transSourceToTarget, OBPoint3f *targetPoint3f) {
     // step 1: parameter validity judgment
     if(!judgeTransformValid(transSourceToTarget)) {
-        return false; 
+        return false;
     }
-    
+
     if(fabsf(sourcePoint3f.z) < EPS) {
         return false;
     }
@@ -200,7 +200,7 @@ bool CoordinateUtil::transformation3dTo3d(const OBPoint3f sourcePoint3f, OBD2CTr
 
     (*targetPoint3f).x = rx + transSourceToTarget.trans[0];
     (*targetPoint3f).y = ry + transSourceToTarget.trans[1];
-    (*targetPoint3f).z = rz + transSourceToTarget.trans[2];   
+    (*targetPoint3f).z = rz + transSourceToTarget.trans[2];
 
     return true;
 }
@@ -220,11 +220,11 @@ bool CoordinateUtil::transformation2dTo3d(const OBCameraIntrinsic sourceIntrinsi
     if(sourcePoint2f.x < 0 || sourcePoint2f.y < 0) {
         return false;
     }
- 
+
     if(sourcePoint2f.x > (sourceIntrinsic.width - 1) || sourcePoint2f.y > (sourceIntrinsic.height - 1)) {
         return false;
     }
-   
+
     // step 2: Convert 2D to 3D point
     OBPoint3f source_3f;
     source_3f.z = sourceDepthPixelValue;  // Assignment in z direction
@@ -265,7 +265,7 @@ bool CoordinateUtil::transformation2dTo3d(const OBCameraIntrinsic sourceIntrinsi
     // Convert 2d to 3d (same as converting point cloud)
     OBPoint2f pointUnitFocalPlane;
     bool      valid = undistortIterativeUnproject(sourceIntrinsic, sourceDistortion, sourcePoint2f, &pointUnitFocalPlane);
-    
+
     if(valid == false) {
         return false;
     }
@@ -281,7 +281,7 @@ bool CoordinateUtil::transformation2dTo3d(const OBCameraIntrinsic sourceIntrinsi
 
 bool CoordinateUtil::transformation3dTo2d(const OBPoint3f sourcePoint3f, const OBCameraIntrinsic targetIntrinsic, const OBCameraDistortion targetDistortion,
                                           OBD2CTransform transSourceToTarget, OBPoint2f *targetPoint2f) {
-    
+
     // step 1: Convert the 3D point under the source to the target camera coordinates
     OBPoint3f targetPoint3f;
     bool ret = transformation3dTo3d(sourcePoint3f, transSourceToTarget, &targetPoint3f);
@@ -299,34 +299,32 @@ bool CoordinateUtil::transformation3dTo2d(const OBPoint3f sourcePoint3f, const O
 bool CoordinateUtil::transformation2dTo2d(const OBCameraIntrinsic sourceIntrinsic, const OBCameraDistortion sourceDistortion, const OBPoint2f sourcePoint2f,
                                           const float sourceDepthPixelValue, const OBCameraIntrinsic targetIntrinsic,
                                           const OBCameraDistortion targetDistortion,OBD2CTransform transSourceToTarget, OBPoint2f *targetPoint2f) {
-  
 
     // step 1: First convert the 2d of the source into the 3d of the target.
     OBPoint3f targetPoint3f;
-    bool ret = transformation2dTo3d(sourceIntrinsic, sourceDistortion, sourcePoint2f, sourceDepthPixelValue, transSourceToTarget,
-                                                &targetPoint3f);
+    bool      ret = transformation2dTo3d(sourceIntrinsic, sourceDistortion, sourcePoint2f, sourceDepthPixelValue, transSourceToTarget, &targetPoint3f);
     if(!ret) {
         return ret;
     }
 
-    // step 2: Convert the 3D point under the target camera coordinates to the 2D point under the image  
+    // step 2: Convert the 3D point under the target camera coordinates to the 2D point under the image
     int valid = 1;
     project3dPointToPixelWithDistortion(targetIntrinsic, targetDistortion, targetPoint3f, targetPoint2f, valid);
 
     return valid;
 }
 
-bool CoordinateUtil::tranformationColor2dToDepth2d(const OBCameraIntrinsic colorIntrinsic, const OBCameraDistortion colorDistortion, const OBPoint2f colorPixel,
-                                                   uint16_t *depthMap, float depthScalemm, const OBCameraIntrinsic depthIntrinsic,
-                                                   const OBCameraDistortion depthDistortion,
-                                                   OBD2CTransform transDepthToColor, OBD2CTransform transColorToDepth, OBPoint2f *depthPixel) {
- 
-    float depthRangemm[2] = { 60.f, 16000.f };
+bool CoordinateUtil::transformationColor2dToDepth2d(const OBCameraIntrinsic colorIntrinsic, const OBCameraDistortion colorDistortion,
+                                                    const OBPoint2f colorPixel, uint16_t *depthMap, float depthScaleMm, const OBCameraIntrinsic depthIntrinsic,
+                                                    const OBCameraDistortion depthDistortion, OBD2CTransform transDepthToColor,
+                                                    OBD2CTransform transColorToDepth, OBPoint2f *depthPixel) {
+
+    float depthRangeMm[2] = { 60.f, 16000.f };
     OBPoint2f nearPixelDepth, farthestPixelDepth;
     bool   nearValid = 0, farthestValid = 0;
 
-    //color pixel to depth pixel when z= depthRangemm[0]
-    nearValid = transformation2dTo2d(colorIntrinsic, colorDistortion, colorPixel, depthRangemm[0], depthIntrinsic, depthDistortion, transColorToDepth,
+    //color pixel to depth pixel when z= depthRangeMm[0]
+    nearValid = transformation2dTo2d(colorIntrinsic, colorDistortion, colorPixel, depthRangeMm[0], depthIntrinsic, depthDistortion, transColorToDepth,
                                   &nearPixelDepth);
     if(!nearValid) {
         if(nearPixelDepth.x< 0) {
@@ -342,9 +340,9 @@ bool CoordinateUtil::tranformationColor2dToDepth2d(const OBCameraIntrinsic color
             nearPixelDepth.y = (float)depthIntrinsic.height - 1;
         }
     }
-   
-    // color pixel to depth pixel when z= depthRangemm[1]
-    farthestValid = transformation2dTo2d(colorIntrinsic, colorDistortion, colorPixel, depthRangemm[1], depthIntrinsic, depthDistortion, transColorToDepth,
+
+    // color pixel to depth pixel when z= depthRangeMm[1]
+    farthestValid = transformation2dTo2d(colorIntrinsic, colorDistortion, colorPixel, depthRangeMm[1], depthIntrinsic, depthDistortion, transColorToDepth,
                                   &farthestPixelDepth);
     if(!farthestValid) {
         if(farthestPixelDepth.x < 0) {
@@ -373,9 +371,9 @@ bool CoordinateUtil::tranformationColor2dToDepth2d(const OBCameraIntrinsic color
         if(depthMap[index] == 0)
             continue;
 
-        float depth = depthScalemm * depthMap[index];
-        
-        // depth pixel to color pixel 
+        float depth = depthScaleMm * depthMap[index];
+
+        // depth pixel to color pixel
         OBPoint2f curColorPixel{};
         transformation2dTo2d(depthIntrinsic, depthDistortion, curPixel, depth, colorIntrinsic, colorDistortion, transDepthToColor, &curColorPixel);
         float errDist = (float)(pow((curColorPixel.x - colorPixel.x), 2) + pow((curColorPixel.y - colorPixel.y), 2));
@@ -483,7 +481,7 @@ bool CoordinateUtil::transformationInitXYTables(const OBCameraIntrinsic intrinsi
             for(int x = 0; x < width; x++, idx++) {
                 point2d.x = (float)x;
 
-                //pixel to point without distortion on the unit focal plane 
+                // pixel to point without distortion on the unit focal plane
                 if(!undistortIterativeUnproject(intrinsic, distortion, point2d, &outPoint2d)) {
                     // x table value of NAN marks invalid
                     xyTables->xTable[idx] = NAN;
@@ -547,7 +545,7 @@ bool CoordinateUtil::transformationInitAddDistortionUVTables(const OBCameraIntri
                      xd = x * cdist + distortion.p1 * a1 + distortion.p2 * a2;
                      yd = y * cdist + distortion.p1 * a3 + distortion.p2 * a1;
                 }
-                
+
                 float x_proj = (float)xd * intrinsic.fx + intrinsic.cx;
                 float y_proj = (float)yd * intrinsic.fy + intrinsic.cy;
 

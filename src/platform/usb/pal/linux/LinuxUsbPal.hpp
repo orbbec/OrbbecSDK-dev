@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ObPal.hpp"
+#include "IPal.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 #include "logger/Logger.hpp"
@@ -18,23 +18,17 @@
 #endif
 namespace libobsensor {
 
-class LinuxPal : public ObPal {
-private:
-    LinuxPal();
-
-    static std::weak_ptr<LinuxPal> instanceWeakPtr_;
-    static std::mutex              instanceMutex_;
-    friend std::shared_ptr<ObPal>  ObPal::getInstance();
-
+class LinuxUsbPal : public IPal {
 public:
-    ~LinuxPal() noexcept override;
+    LinuxUsbPal();
+    ~LinuxUsbPal() noexcept override;
 
     std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
 #if defined(BUILD_USB_PORT)
 public:
-    std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
-    SourcePortInfoList             queryUsbSourcePortInfos() override;
+    std::shared_ptr<IDeviceWatcher> createDeviceWatcher() const override;
+    SourcePortInfoList              querySourcePortInfos() override;
 
 private:
     void loadXmlConfig();

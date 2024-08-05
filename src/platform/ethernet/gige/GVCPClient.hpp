@@ -81,7 +81,7 @@ struct gvcp_forceip_ack {
 };
 #pragma pack(pop)
 
-struct NetDeviceInfo {
+struct GVCPDeviceInfo {
     std::string mac     = "unknown";
     std::string ip      = "unknown";
     std::string mask    = "unknown";
@@ -92,7 +92,7 @@ struct NetDeviceInfo {
     // std::string version      = "";
     // std::string manufacturer = "";
 
-    virtual bool operator==(const NetDeviceInfo &other) const {
+    virtual bool operator==(const GVCPDeviceInfo &other) const {
         return other.mac == mac && other.sn == sn && other.ip == ip;
     }
 };
@@ -103,7 +103,7 @@ class GVCPClient {
 public:
     ~GVCPClient();
 
-    std::vector<NetDeviceInfo> queryNetDeviceList();
+    std::vector<GVCPDeviceInfo> queryNetDeviceList();
     bool                       changeNetDeviceIpConfig(std::string mac, const OBNetIpConfig &config);
 
     static GVCPClient &instance() {
@@ -125,7 +125,7 @@ private:
 private:
     SOCKET                     socks_[MAX_SOCKETS];
     int                        sockCount_ = 0;
-    std::vector<NetDeviceInfo> devInfoList_;
+    std::vector<GVCPDeviceInfo> devInfoList_;
     std::mutex                 queryMtx_;
     std::mutex                 devInfoListMtx_;
 

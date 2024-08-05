@@ -7,7 +7,7 @@
 #include "femtomega/FemtoMegaDeviceInfo.hpp"
 
 namespace libobsensor {
-UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(ObPal::getInstance()) {
+UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : platform_(Platform::getInstance()) {
     devChangedCallback_ = [callback, this](const DeviceEnumInfoList &removedList, const DeviceEnumInfoList &addedList) {
         (void)this;
 #ifdef __ANDROID__
@@ -33,8 +33,8 @@ UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal
 
     deviceArrivalHandleThread_ = std::thread(&UsbDeviceEnumerator::deviceArrivalHandleThreadFunc, this);
 
-    deviceWatcher_ = obPal_->createUsbDeviceWatcher();
-    deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPalDeviceChanged(changedType, url); });
+    deviceWatcher_ = platform_->createUsbDeviceWatcher();
+    deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPlatformDeviceChanged(changedType, url); });
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
     if(!deviceInfoList_.empty()) {
@@ -60,11 +60,11 @@ UsbDeviceEnumerator::~UsbDeviceEnumerator() noexcept {
     if(devChangedCallbackThread_.joinable()) {
         devChangedCallbackThread_.join();
     }
-    deviceWatcher_.reset();  // deviceWatcher should be released before obPal_
-    obPal_.reset();
+    deviceWatcher_.reset();  // deviceWatcher should be released before platform_
+    platform_.reset();
 }
 
-void UsbDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {
+void UsbDeviceEnumerator::onPlatformDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {
     if(changeType == OB_DEVICE_REMOVED) {
         std::vector<std::shared_ptr<const IDeviceEnumInfo>> removedDevList;
         {
@@ -136,7 +136,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid)
 
 DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    auto                                   portInfoList = obPal_->queryUsbSourcePortInfos();
+    auto                                   portInfoList = platform_->queryUsbSourcePortInfos();
     if(portInfoList != currentUsbPortInfoList_) {
         currentUsbPortInfoList_ = portInfoList;
         LOG_DEBUG("Current usb device port list:");

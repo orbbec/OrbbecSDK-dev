@@ -71,7 +71,7 @@ void HidDevicePort::stopStream() {
     isStreaming_         = false;
     auto libusbDevice    = std::dynamic_pointer_cast<UsbDeviceLibusb>(usbDevice_);
     auto libusbDevHandle = libusbDevice->getLibusbDeviceHandle();
-    auto res             = libusb_interrupt_transfer(libusbDevHandle, endpointAddress_, nullptr, 0, nullptr, 0);
+    auto res             = libusb_interrupt_transfer(libusbDevHandle, endpointAddress_, nullptr, 0, nullptr, 1000/*original param:0*/);
     if(res != LIBUSB_SUCCESS) {
         LOG_WARN("interrupt transfer failed, error: {}", libusb_strerror(res));
     }

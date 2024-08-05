@@ -2,6 +2,7 @@
 #include <fstream>
 #include <regex>
 #include <string>
+#include <chrono>
 
 template <typename T>
 int loadFile(char *filename, uint32_t num_element, T* data, bool swap_endianess) {
@@ -56,6 +57,7 @@ void censusStd(const T* ir, int width, int height, uint8_t* std, uint8_t ws = 7)
     int ws_2 = ws / 2;
     int thresh = 10;
     memset(std, 0, sizeof(uint8_t) * width * height);
+
     for(int v = ws_2; v < height - ws_2; v++) {
         int      row_start_idx = v * width + ws_2;
         const T *p_ir_center   = ir + row_start_idx;
@@ -65,9 +67,9 @@ void censusStd(const T* ir, int width, int height, uint8_t* std, uint8_t ws = 7)
 			uint8_t  count         = 0;
 
             const T *p_ir_row = p_ir_center - ws_2 * width - ws_2;
-            for(int wv = -ws_2; wv < ws_2; wv++) {
+            for(int wv = -ws_2; wv < ws_2; wv+=1) {
                 const T *p_ir_col = p_ir_row;
-                for(int wu = -ws_2; wu < ws_2; wu++) {
+                for(int wu = -ws_2; wu < ws_2; wu+=1) {
                     if((*p_ir_col - *p_ir_center < -thresh) || (*p_ir_col - *p_ir_center > thresh))
                         count++;
 					p_ir_col++;
@@ -81,29 +83,34 @@ void censusStd(const T* ir, int width, int height, uint8_t* std, uint8_t ws = 7)
     }
 }
 
-template <typename T> void generateConfidenceMap(const T *ir, uint8_t *map, int width, int height, int exposure, uint8_t ws = 7) {
-    std::cout << exposure << std::endl;
+float EXP_LUT[256];
+bool  LUT_Inited = false;
+float s_global = 256.f / (7 * 7);
 
-    float EXP_LUT[256];
-    triangleWeights<uint8_t>(EXP_LUT);
+template <typename T> void generateConfidenceMap(const T *ir, uint8_t *map, int width, int height, uint8_t ws = 7) {
+    std::cout << ws;
 
-    uint8_t *std_w = (uint8_t *)malloc(width * height * sizeof(uint8_t));
-    memset(std_w, 0, width * height * sizeof(uint8_t));
-    censusStd<uint8_t>(ir, width, height, std_w, ws);
+    if (!LUT_Inited) {
+		triangleWeights<uint8_t>(EXP_LUT);
+    }
+
+    //uint8_t *std_w = (uint8_t *)malloc(width * height * sizeof(uint8_t));
+    //memset(std_w, 0, width * height * sizeof(uint8_t));
+    //censusStd<uint8_t>(ir, width, height, std_w, ws);
 
     const uint8_t *p_ir = ir;
-    uint8_t       *p_std = std_w;
+    //uint8_t       *p_std = std_w;
     uint8_t *      p_map = map;
 
-    float s = 256.f / (ws * ws);
     for(int i = 0; i < height; i++) {
         for(int j = 0; j < width; j++) {
             float exp                 = EXP_LUT[*p_ir++];
-            *p_map++ = static_cast<uint8_t>(exp * (*p_std++) * s);
+            //*p_map++ = static_cast<uint8_t>(exp * (*p_std++) * s_global);
+            *p_map++ = static_cast<uint8_t>(exp * 255);
         }
     }
 
-    free(std_w);
+    //free(std_w);
 }
 
 void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, uint16_t *d1, uint8_t* first_ir,
@@ -118,8 +125,8 @@ void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, uint16_t *d1, uint8_t*
     memset(confidence0, 0, sizeof(uint8_t) * pix_num);
     memset(confidence1, 0, sizeof(uint8_t) * pix_num);
 
-	generateConfidenceMap<uint8_t>(first_ir, confidence0, width, height, 1000);
-	generateConfidenceMap<uint8_t>(second_ir, confidence1, width, height, 100);
+	generateConfidenceMap<uint8_t>(first_ir, confidence0, width, height);
+	generateConfidenceMap<uint8_t>(second_ir, confidence1, width, height);
 
     for(int i = 0; i < pix_num; i++) {
         new_data[i] = confidence0[i] > confidence1[i] ? d0[i] : d1[i];
@@ -167,8 +174,14 @@ int main(int argc, char *argv[]) try{
 	sprintf(nname, "%s_depthonly.raw", argv[5]);
     saveImage<uint16_t>(depth_output, pix_num, nname);
 
-
-    mergeFramesUsingIr(depth_output, depth0, depth1, ir0, ir1, width, height);
+    std::chrono::steady_clock::time_point start, end;
+    for(size_t i = 0; i < 100; i++) {
+        start = std::chrono::high_resolution_clock::now();
+		mergeFramesUsingIr(depth_output, depth0, depth1, ir0, ir1, width, height);
+        end = std::chrono::high_resolution_clock::now();
+        std::chrono::microseconds d = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        std::cout << d.count() << std::endl;
+    }
 	sprintf(nname, "%s_withir.raw", argv[5]);
     saveImage<uint16_t>(depth_output, pix_num, nname);
 

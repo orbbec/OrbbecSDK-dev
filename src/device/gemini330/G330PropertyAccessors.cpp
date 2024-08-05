@@ -45,16 +45,14 @@ void G330Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPro
         markOutputDisparityFrame(!hwDisparityToDepthEnabled_);
     } break;
     case OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT: {
-        auto            commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
-        OBPropertyValue hwDisparityValue;
-        commandPort->getPropertyValue(OB_PROP_DISPARITY_TO_DEPTH_BOOL, &hwDisparityValue);
-        if(hwDisparityValue.intValue == 0) {
-            auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
-            processor->setPropertyValue(propertyId, value);
+        auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
+        if(commandPort) {
             commandPort->setPropertyValue(propertyId, value);
         }
-        else {
-            commandPort->setPropertyValue(propertyId, value);
+
+        auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
+        if(processor) {
+            processor->setPropertyValue(propertyId, value);
         }
 
         // update depth unit

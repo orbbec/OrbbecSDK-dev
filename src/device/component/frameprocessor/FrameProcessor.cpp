@@ -30,22 +30,23 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBa
     }
 
     if(context_->create_context && !context_->context) {
-        cDevice_          = new ob_device;
-        cDevice_->device  = owner->shared_from_this();
+        auto cDevice          = new ob_device;
+        cDevice->device  = owner->shared_from_this();
         ob_error *error   = nullptr;
-        context_->context = context_->create_context(cDevice_, &error);
+        context_->context = context_->create_context(cDevice, &error);
         if(error) {
             // TODO
             throw std::runtime_error("create frame processor context failed");
+        }
+
+        if(cDevice) {
+            delete cDevice;
+            cDevice = nullptr;
         }
     }
 }
 
 FrameProcessorFactory::~FrameProcessorFactory() noexcept {
-    if(cDevice_) {
-        delete cDevice_;
-        cDevice_ = nullptr;
-    }
 }
 
 std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSensorType sensorType) {

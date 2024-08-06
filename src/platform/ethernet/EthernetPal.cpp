@@ -28,31 +28,32 @@ void NetDeviceWatcher::start(deviceChangedCallback callback) {
             auto removed = utils::subtract_sets(netDevInfoList_, list);
             for(auto &&info: removed) {
                 bool    disconnected = true;
-                bool    exception    = false;
-                uint8_t retry        = 1;
-                if(info.pid == PID_GEMINI2XL) {
-                    do {
-                        // todo: fixme
-                        // BEGIN_TRY_EXECUTE({
-                        //     auto netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, info.ip, DEFAULT_CMD_PORT);
-                        //     // auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo, 500, 500);
-                        //     auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
-                        //     auto            Protocol      = std::make_shared<Protocol>(netVendorPort);
-                        //     auto            command       = std::make_shared<VendorCommand>(Protocol);
-                        //     OBPropertyValue pidValue{};
-                        //     command->getPropertyValue(OB_PROP_PID_INT, &pidValue);
-                        //     if(pidValue.intValue != PID_GEMINI2XL) {
-                        //         LOG_WARN("Create socket succeed ip:{} port:{},but pid is invalid {}", info.ip, DEFAULT_CMD_PORT, pidValue.intValue);
-                        //     }
-                        //     netDevInfoList_.push_back(info);
-                        //     disconnected = false;
-                        // })
-                        // CATCH_EXCEPTION_AND_EXECUTE({
-                        //     exception = true;
-                        //     LOG_WARN("Create socket failed ip:{} port:{},device is disconnect.", info.ip, DEFAULT_CMD_PORT);
-                        // })
-                    } while(exception && retry-- > 0);
-                }
+                // bool    exception    = false;
+                // uint8_t retry        = 1;
+
+                // todo: recover this part for Gemini2XL
+                // if(info.pid == PID_GEMINI2XL) {
+                //     do {
+                //         BEGIN_TRY_EXECUTE({
+                //             auto netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, info.ip, DEFAULT_CMD_PORT);
+                //             // auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo, 500, 500);
+                //             auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
+                //             auto            Protocol      = std::make_shared<Protocol>(netVendorPort);
+                //             auto            command       = std::make_shared<VendorCommand>(Protocol);
+                //             OBPropertyValue pidValue{};
+                //             command->getPropertyValue(OB_PROP_PID_INT, &pidValue);
+                //             if(pidValue.intValue != PID_GEMINI2XL) {
+                //                 LOG_WARN("Create socket succeed ip:{} port:{},but pid is invalid {}", info.ip, DEFAULT_CMD_PORT, pidValue.intValue);
+                //             }
+                //             netDevInfoList_.push_back(info);
+                //             disconnected = false;
+                //         })
+                //         CATCH_EXCEPTION_AND_EXECUTE({
+                //             exception = true;
+                //             LOG_WARN("Create socket failed ip:{} port:{},device is disconnect.", info.ip, DEFAULT_CMD_PORT);
+                //         })
+                //     } while(exception && retry-- > 0);
+                // }
                 if(disconnected) {
                     callback_(OB_DEVICE_REMOVED, info.mac);
                 }
@@ -77,9 +78,44 @@ void NetDeviceWatcher::stop() {
 }
 
 std::shared_ptr<ISourcePort> EthernetPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
-    // todo: implement this
-    utils::unusedVar(portInfo);
-    return nullptr;
+    std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
+    std::shared_ptr<ISourcePort> port;
+    // clear expired weak_ptr
+    for(auto it = sourcePortMap_.begin(); it != sourcePortMap_.end();) {
+        if(it->second.expired()) {
+            it = sourcePortMap_.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    // check if the port already exists in the map
+    for(const auto &pair: sourcePortMap_) {
+        if(pair.first == portInfo) {
+            port = pair.second.lock();
+            if(port != nullptr) {
+                return port;
+            }
+        }
+    }
+
+    const auto &portType = portInfo->portType;
+    switch(portType) {
+    case SOURCE_PORT_NET_VENDOR:
+        port = std::make_shared<VendorNetDataPort>(std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo));
+        break;
+    case SOURCE_PORT_NET_VENDOR_STREAM:
+        port = std::make_shared<NetDataStreamPort>(std::dynamic_pointer_cast<const NetDataStreamPortInfo>(portInfo));
+        break;
+    case SOURCE_PORT_NET_RTSP:
+        port = std::make_shared<RTSPStreamPort>(std::dynamic_pointer_cast<const RTSPStreamPortInfo>(portInfo));
+        break;
+    default:
+        throw invalid_value_exception("Invalid port type!");
+    }
+    sourcePortMap_.insert(std::make_pair(portInfo, port));
+    return port;
 }
 
 SourcePortInfoList EthernetPal::querySourcePortInfos() {

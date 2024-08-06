@@ -7,10 +7,10 @@
 #include <memory>
 
 namespace libobsensor {
-class FemtoMegaUvcDevice : public DeviceBase {
+class FemtoMegaDevice : public DeviceBase {
 public:
-    FemtoMegaUvcDevice(const std::shared_ptr<const IDeviceEnumInfo> &info);
-    virtual ~FemtoMegaUvcDevice() noexcept;
+    FemtoMegaDevice(const std::shared_ptr<const IDeviceEnumInfo> &info);
+    virtual ~FemtoMegaDevice() noexcept;
 
     std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) override;
 

@@ -1,4 +1,5 @@
 #include "NetDeviceEnumerator.hpp"
+#include "femtomega/FemtoMegaDeviceInfo.hpp"
 
 #include "utils/Utils.hpp"
 
@@ -7,47 +8,48 @@
 
 namespace libobsensor {
 
-// const std::map<uint16_t, std::string> pidToNameMap = {
-//     { 0x0669, "Femto Mega" },
-//     { 0x06c0, "Femto Mega i" },
-//     { 0x0671, "Gemini2 XL" },
-// };
+const std::map<uint16_t, std::string> pidToNameMap = {
+    { static_cast<uint16_t>(0x0669), "Femto Mega" },
+    { static_cast<uint16_t>(0x06c0), "Femto Mega i" },
+    { static_cast<uint16_t>(0x0671), "Gemini2 XL" },
+};
 
 NetDeviceEnumerator::NetDeviceEnumerator(DeviceChangedCallback callback) : deviceChangedCallback_(callback), platform_(Platform::getInstance()) {
-    // deviceInfoList_ = queryDeviceList();
-    // if(!deviceInfoList_.empty()) {
-    //     LOG_DEBUG("Current net device list: ({})", deviceInfoList_.size());
-    //     for(auto &&item: deviceInfoList_) {
-    //         auto info = std::dynamic_pointer_cast<const NetSourcePortInfo>(item->sourcePortInfoList_.front());
-    //         LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->name_, item->pid_, item->deviceSn_, info->mac, info->address);
-    //     }
-    // }
-    // else {
-    //     LOG_DEBUG("No net device found!");
-    // }
+    deviceInfoList_ = queryDeviceList();
+    if(!deviceInfoList_.empty()) {
+        LOG_DEBUG("Current net device list: ({})", deviceInfoList_.size());
+        for(auto &&item: deviceInfoList_) {
+            auto firstPortInfo = item->getSourcePortInfoList().front();
+            auto info          = std::dynamic_pointer_cast<const NetSourcePortInfo>(firstPortInfo);
+            LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->getName(), item->getPid(), item->getDeviceSn(), info->mac, info->address);
+        }
+    }
+    else {
+        LOG_DEBUG("No net device found!");
+    }
 
-    // deviceWatcher_ = platform_->createNetDeviceWatcher();
-    // deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPlatformDeviceChanged(changedType, url); });
+    deviceWatcher_ = platform_->createNetDeviceWatcher();
+    deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPlatformDeviceChanged(changedType, url); });
 }
 
 NetDeviceEnumerator::~NetDeviceEnumerator() {
-    // deviceWatcher_->stop();
+    deviceWatcher_->stop();
 }
 
 DeviceEnumInfoList NetDeviceEnumerator::queryDeviceList() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    // sourcePortInfoList_ = platform_->queryNetSourcePort();
+    sourcePortInfoList_ = platform_->queryNetSourcePort();
 
-    // if(sourcePortInfoList_.empty()) {
-    //     LOG_DEBUG("No net source port found!");
-    //     return std::vector<std::shared_ptr<IDeviceEnumInfo>>();
-    // }
+    if(sourcePortInfoList_.empty()) {
+        LOG_DEBUG("No net source port found!");
+        return {};
+    }
 
-    // LOG_DEBUG("Current net source port list:");
-    // for(const auto &item: sourcePortInfoList_) {
-    //     auto info = std::dynamic_pointer_cast<const NetSourcePortInfo>(item);
-    //     LOG_DEBUG(" - mac:{}, ip:{}, port:{}", info->mac, info->address, info->port);
-    // }
+    LOG_DEBUG("Current net source port list:");
+    for(const auto &item: sourcePortInfoList_) {
+        auto info = std::dynamic_pointer_cast<const NetSourcePortInfo>(item);
+        LOG_DEBUG(" - mac:{}, ip:{}, port:{}", info->mac, info->address, info->port);
+    }
     return deviceInfoMatch(sourcePortInfoList_);
 }
 
@@ -57,92 +59,71 @@ DeviceEnumInfoList NetDeviceEnumerator::getDeviceInfoList() {
 }
 
 DeviceEnumInfoList NetDeviceEnumerator::deviceInfoMatch(const SourcePortInfoList infoList) {
-    utils::unusedVar(infoList);
     DeviceEnumInfoList deviceInfoList;
-    // std::map<std::string, SourcePortInfoList>     infoGroups;
-    // for(auto &&item: infoList) {
-    //     auto info = std::dynamic_pointer_cast<const NetSourcePortInfo>(item);
-    //     auto iter = infoGroups.find(info->mac);
-    //     if(iter == infoGroups.end()) {
-    //         iter = infoGroups.insert(iter, { info->mac, SourcePortInfoList() });
-    //     }
-    //     iter->second.push_back(info);
-    // }
-
-    // for(auto &&group: infoGroups) {
-    //     auto                            &item    = group.second.front();
-    //     auto                             info    = std::dynamic_pointer_cast<const NetSourcePortInfo>(item);
-    //     std::shared_ptr<IDeviceEnumInfo> devInfo = std::make_shared<IDeviceEnumInfo>();
-
-    //     auto pidToNameIter = pidToNameMap.find(info->pid);
-    //     devInfo->name_     = pidToNameIter == pidToNameMap.end() ? "Unknown" : pidToNameIter->second;
-
-    //     devInfo->uid_                = info->mac;
-    //     devInfo->pid_                = info->pid;
-    //     devInfo->vid_                = 0x2BC5;
-    //     devInfo->deviceSn_           = info->serialNumber;
-    //     devInfo->connectionType_     = "Ethernet";
-    //     devInfo->sourcePortInfoList_ = group.second;
-    //     deviceInfoList.emplace_back(devInfo);
-    // }
+    auto               megaDevices = FemtoMegaDeviceInfo::pickDevices(infoList);
+    deviceInfoList.insert(deviceInfoList.end(), megaDevices.begin(), megaDevices.end());
 
     return deviceInfoList;
 }
 
 void NetDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callback) {
     std::unique_lock<std::mutex> lock(deviceChangedCallbackMutex_);
-    deviceChangedCallback_ = callback;
-    // deviceChangedCallback_ = [callback, this](DeviceEnumInfoList removed, DeviceEnumInfoList added) {
-    //     if(devChangedCallbackThread_.joinable()) {
-    //         devChangedCallbackThread_.join();
-    //     }
-    //     devChangedCallbackThread_ = std::thread(callback, removed, added);
-    // };
+    deviceChangedCallback_ = [callback, this](DeviceEnumInfoList removed, DeviceEnumInfoList added) {
+        if(devEnumChangedCallbackThread_.joinable()) {
+            devEnumChangedCallbackThread_.join();
+        }
+        devEnumChangedCallbackThread_ = std::thread(callback, removed, added);
+    };
 }
 
 void NetDeviceEnumerator::onPlatformDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {
     utils::unusedVar(changeType);
     utils::unusedVar(devUid);
 
-    // DeviceEnumInfoList addDevs;
-    // DeviceEnumInfoList rmDevs;
+    DeviceEnumInfoList addDevs;
+    DeviceEnumInfoList rmDevs;
 
-    // {
-    //     auto                                   devices = queryDeviceList();
-    //     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    //     addDevs         = utils ::subtract_sets(devices, deviceInfoList_);
-    //     rmDevs          = utils ::subtract_sets(deviceInfoList_, devices);
-    //     deviceInfoList_ = devices;
-    // }
+    {
+        auto                                   devices = queryDeviceList();
+        std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
+        addDevs         = utils ::subtract_sets(devices, deviceInfoList_);
+        rmDevs          = utils ::subtract_sets(deviceInfoList_, devices);
+        deviceInfoList_ = devices;
+    }
 
-    // // callback
-    // std::unique_lock<std::mutex> lock(deviceChangedCallbackMutex_);
-    // if(deviceChangedCallback_ && (!addDevs.empty() || !rmDevs.empty())) {
-    //     LOG_DEBUG("Net device list changed!");
-    //     if(!addDevs.empty()) {
-    //         LOG_DEBUG("{} net device(s) found:", addDevs.size());
-    //         for(auto &&item: addDevs) {
-    //             auto info = std::dynamic_pointer_cast<const NetSourcePortInfo>(item->sourcePortInfoList_.front());
-    //             LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->name_, item->pid_, item->deviceSn_, info->mac, info->address);
-    //         }
-    //     }
+    // callback
+    std::unique_lock<std::mutex> lock(deviceChangedCallbackMutex_);
+    if(deviceChangedCallback_ && (!addDevs.empty() || !rmDevs.empty())) {
+        LOG_DEBUG("Net device list changed!");
+        if(!addDevs.empty()) {
+            LOG_DEBUG("{} net device(s) found:", addDevs.size());
+            for(auto &&item: addDevs) {
+                auto firstPortInfo = item->getSourcePortInfoList().front();
+                auto info          = std::dynamic_pointer_cast<const NetSourcePortInfo>(firstPortInfo);
+                LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->getName(), item->getPid(), item->getDeviceSn(), info->mac,
+                          info->address);
+            }
+        }
 
-    //     if(!rmDevs.empty()) {
-    //         LOG_DEBUG("{} net device(s) removed:", rmDevs.size());
-    //         for(auto &&item: rmDevs) {
-    //             auto info = std::dynamic_pointer_cast<const NetSourcePortInfo>(item->sourcePortInfoList_.front());
-    //             LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->name_, item->pid_, item->deviceSn_, info->mac, info->address);
-    //         }
-    //     }
+        if(!rmDevs.empty()) {
+            LOG_DEBUG("{} net device(s) removed:", rmDevs.size());
+            for(auto &&item: rmDevs) {
+                auto firstPortInfo = item->getSourcePortInfoList().front();
+                auto info          = std::dynamic_pointer_cast<const NetSourcePortInfo>(firstPortInfo);
+                LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->getName(), item->getPid(), item->getDeviceSn(), info->mac,
+                          info->address);
+            }
+        }
 
-    //     LOG_DEBUG("Current net device list: ({})", deviceInfoList_.size());
-    //     for(auto &&item: deviceInfoList_) {
-    //         auto info = std::dynamic_pointer_cast<const NetSourcePortInfo>(item->sourcePortInfoList_.front());
-    //         LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->name_, item->pid_, item->deviceSn_, info->mac, info->address);
-    //     }
+        LOG_DEBUG("Current net device list: ({})", deviceInfoList_.size());
+        for(auto &&item: deviceInfoList_) {
+            auto firstPortInfo = item->getSourcePortInfoList().front();
+            auto info          = std::dynamic_pointer_cast<const NetSourcePortInfo>(firstPortInfo);
+            LOG_DEBUG("  - Name: {}, PID: 0x{:04X}, SN/ID: {}, MAC:{}, IP:{}", item->getName(), item->getPid(), item->getDeviceSn(), info->mac, info->address);
+        }
 
-    //     deviceChangedCallback_(rmDevs, addDevs);
-    // }
+        deviceChangedCallback_(rmDevs, addDevs);
+    }
 }
 
 std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::string address, uint16_t port) {

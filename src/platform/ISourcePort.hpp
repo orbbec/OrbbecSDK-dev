@@ -20,6 +20,9 @@ enum SourcePortType {
     SOURCE_PORT_UNKNOWN = 0xff,
 };
 
+#define IS_USB_PORT(type) ((type) >= SOURCE_PORT_USB_VENDOR && (type) <= SOURCE_PORT_USB_HID)
+#define IS_NET_PORT(type) ((type) >= SOURCE_PORT_NET_VENDOR && (type) <= SOURCE_PORT_NET_RTSP)
+
 struct SourcePortInfo {
     SourcePortInfo(SourcePortType portType) : portType(portType) {}
     virtual ~SourcePortInfo() noexcept                                      = default;

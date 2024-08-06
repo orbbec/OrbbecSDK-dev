@@ -3,7 +3,7 @@
 
 #include "AndroidUsbPal.hpp"
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include <pal/android/AndroidUsbDeviceManager.hpp>
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
@@ -13,19 +13,19 @@
 #include "exception/ObException.hpp"
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
 #include "ethernet/Ethernet.hpp"
 #endif
 
 namespace libobsensor {
 
 AndroidUsbPal::AndroidUsbPal() {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     androidUsbManager_ = std::make_shared<AndroidUsbDeviceManager>();
 #endif
 }
 AndroidUsbPal::~AndroidUsbPal() noexcept {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     androidUsbManager_ = nullptr;
 #endif
 };
@@ -55,7 +55,7 @@ std::shared_ptr<ISourcePort> AndroidUsbPal::getSourcePort(std::shared_ptr<const 
     }
 
     switch(portInfo->portType) {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     case SOURCE_PORT_USB_VENDOR: {
         auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
@@ -82,7 +82,7 @@ std::shared_ptr<ISourcePort> AndroidUsbPal::getSourcePort(std::shared_ptr<const 
     }
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
     case SOURCE_PORT_NET_VENDOR:
         port = std::make_shared<VendorNetDataPort>(std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo));
         break;
@@ -103,7 +103,7 @@ std::shared_ptr<ISourcePort> AndroidUsbPal::getSourcePort(std::shared_ptr<const 
     return port;
 }
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 std::shared_ptr<IDeviceWatcher> AndroidUsbPal::createDeviceWatcher() const {
     LOG_INFO("Create AndroidUsbDeviceManager!");
     return androidUsbManager_;

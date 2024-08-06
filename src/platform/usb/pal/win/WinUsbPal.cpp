@@ -187,9 +187,8 @@ std::shared_ptr<ISourcePort> WinUsbPal::getSourcePort(std::shared_ptr<const Sour
     default:
         throw libobsensor::invalid_value_exception("unsupported source port type!");
     }
-    if(port != nullptr) {
-        sourcePortMap_.insert(std::make_pair(portInfo, port));
-    }
+
+    sourcePortMap_.insert(std::make_pair(portInfo, port));
     return port;
 }
 

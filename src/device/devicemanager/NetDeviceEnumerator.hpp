@@ -26,7 +26,7 @@ private:
 
     std::mutex            deviceChangedCallbackMutex_;
     DeviceChangedCallback deviceChangedCallback_;
-    // std::thread           devChangedCallbackThread_;
+    std::thread           devEnumChangedCallbackThread_;
 
     std::recursive_mutex deviceInfoListMutex_;
     DeviceEnumInfoList   deviceInfoList_;

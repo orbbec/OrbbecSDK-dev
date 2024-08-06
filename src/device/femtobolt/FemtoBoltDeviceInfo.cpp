@@ -1,9 +1,8 @@
 #include "FemtoBoltDeviceInfo.hpp"
 #include "FemtoBoltDevice.hpp"
-#include "usb/UsbGroup.hpp"
 #include "DevicePids.hpp"
-
-
+#include "usb/UsbPortGroup.hpp"
+#include "utils/Utils.hpp"
 namespace libobsensor {
 FemtoBoltDeviceInfo::FemtoBoltDeviceInfo(const SourcePortInfoList groupedInfoList) {
     auto portInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(groupedInfoList.front());
@@ -24,10 +23,10 @@ std::shared_ptr<IDevice> FemtoBoltDeviceInfo::createDevice() const {
     return device;
 }
 
-std::vector<std::shared_ptr<IDeviceEnumInfo>> FemtoBoltDeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
+std::vector<std::shared_ptr<IDeviceEnumInfo>> FemtoBoltDeviceInfo::pickDevices(const SourcePortInfoList infoList) {
     std::vector<std::shared_ptr<IDeviceEnumInfo>> femtoBoltDeviceInfos;
     auto                                          remainder = FilterUSBPortInfoByPid(infoList, FemtoBoltDevPids);
-    auto                                          groups    = GroupUSBSourcePortInfo(remainder, GroupUSBSourcePortByUrl);
+    auto                                          groups    = utils::groupVector<std::shared_ptr<const SourcePortInfo>>(remainder, GroupUSBSourcePortByUrl);
     auto                                          iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 2) {

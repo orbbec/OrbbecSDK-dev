@@ -55,6 +55,24 @@ template <class T> std::vector<T> subtract_sets(const std::vector<T> &first, con
     return results;
 }
 
+template <typename T> std::vector<std::vector<T>> groupVector(const std::vector<T> &vec, std::function<bool(const T &elm0, const T &elm1)> compareFunc) {
+    std::vector<std::vector<T>> group;
+    for(const auto &elm0: vec) {
+        auto itVec = group.begin();
+        while(itVec != group.end()) {
+            if(compareFunc(elm0, itVec->front())) {
+                itVec->push_back(elm0);
+                break;
+            }
+            itVec++;
+        }
+        if(itVec == group.end()) {
+            group.push_back(std::vector<T>({ elm0 }));
+        }
+    }
+    return group;
+}
+
 bool checkJpgImageData(const uint8_t *data, size_t dataLen);
 
 }  // namespace utils

@@ -7,7 +7,7 @@
 #include <vector>
 #include <functional>
 
-#if !defined(WIN32) && defined(BUILD_USB_PORT)
+#if !defined(WIN32) && defined(BUILD_USB_PAL)
 #include <libuvc/libuvc.h>
 #endif
 namespace libobsensor {

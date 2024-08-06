@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include <pal/android/AndroidUsbDeviceManager.hpp>
 #endif
 
@@ -20,7 +20,7 @@ public:
 
     virtual std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     virtual std::shared_ptr<IDeviceWatcher> createDeviceWatcher() const override;
     virtual SourcePortInfoList              querySourcePortInfos() override;
     virtual std::shared_ptr<ISourcePort>    createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo>) override;

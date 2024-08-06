@@ -1,4 +1,4 @@
-#include "FemtoMegaUvcDevice.hpp"
+#include "FemtoMegaDevice.hpp"
 #include "Platform.hpp"
 #include "environment/EnvConfig.hpp"
 #include "stream/StreamProfileFactory.hpp"
@@ -30,13 +30,13 @@
 //  #include "G330SensorStreamStrategy.hpp"
 
 namespace libobsensor {
-FemtoMegaUvcDevice::FemtoMegaUvcDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
+FemtoMegaDevice::FemtoMegaDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
     init();
 }
 
-FemtoMegaUvcDevice::~FemtoMegaUvcDevice() noexcept {}
+FemtoMegaDevice::~FemtoMegaDevice() noexcept {}
 
-void FemtoMegaUvcDevice::init() {
+void FemtoMegaDevice::init() {
     initSensorList();
     initProperties();
 
@@ -55,7 +55,7 @@ void FemtoMegaUvcDevice::init() {
     // registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 }
 
-void FemtoMegaUvcDevice::fetchDeviceInfo() {
+void FemtoMegaDevice::fetchDeviceInfo() {
     auto propServer = getPropertyServer();
 
     auto version                      = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
@@ -77,7 +77,7 @@ void FemtoMegaUvcDevice::fetchDeviceInfo() {
     }
 }
 
-void FemtoMegaUvcDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
+void FemtoMegaDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     auto sensorType    = sensor->getSensorType();
     auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType);
     if(streamProfile) {
@@ -107,7 +107,7 @@ void FemtoMegaUvcDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor
     // });
 }
 
-void FemtoMegaUvcDevice::initSensorList() {
+void FemtoMegaDevice::initSensorList() {
     registerComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY, [this]() {
         std::shared_ptr<FrameProcessorFactory> factory;
         TRY_EXECUTE({ factory = std::make_shared<FrameProcessorFactory>(this); })
@@ -293,7 +293,7 @@ void FemtoMegaUvcDevice::initSensorList() {
     }
 }
 
-void FemtoMegaUvcDevice::initProperties() {
+void FemtoMegaDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
     auto sensors = getSensorTypeList();
@@ -396,7 +396,7 @@ void FemtoMegaUvcDevice::initProperties() {
     registerComponent(OB_DEV_COMPONENT_PROPERTY_SERVER, propertyServer, true);
 }
 
-std::vector<std::shared_ptr<IFilter>> FemtoMegaUvcDevice::createRecommendedPostProcessingFilters(OBSensorType type) {
+std::vector<std::shared_ptr<IFilter>> FemtoMegaDevice::createRecommendedPostProcessingFilters(OBSensorType type) {
     std::vector<std::shared_ptr<IFilter>> filters;
     if(type == OB_SENSOR_COLOR) {
         return {};

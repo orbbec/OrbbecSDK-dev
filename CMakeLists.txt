@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(OpenOrbbecSDK VERSION 2.0.2 LANGUAGES CXX C)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # check if current project is a sub project of other project
@@ -15,11 +15,11 @@ endif()
 # load project options
 include(cmake/options.cmake)
 if(OB_BUILD_USB_PAL)
-    add_definitions(-DBUILD_USB_PORT)
+    add_definitions(-DBUILD_USB_PAL)
 endif()
 
 if(OB_BUILD_NET_PAL)
-    add_definitions(-DBUILD_NET_PORT)
+    add_definitions(-DBUILD_NET_PAL)
 endif()
 
 # load macros

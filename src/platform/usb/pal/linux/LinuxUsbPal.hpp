@@ -13,7 +13,7 @@
 #include <vector>
 #include <map>
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include "usb/enumerator/IUsbEnumerator.hpp"
 #endif
 namespace libobsensor {
@@ -25,7 +25,7 @@ public:
 
     std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 public:
     std::shared_ptr<IDeviceWatcher> createDeviceWatcher() const override;
     SourcePortInfoList              querySourcePortInfos() override;

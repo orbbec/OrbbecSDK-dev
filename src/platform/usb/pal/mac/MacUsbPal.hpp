@@ -11,7 +11,7 @@
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include "usb/enumerator/Enumerator.hpp"
 #include <libusb.h>
 #endif
@@ -24,7 +24,7 @@ public:
 
     virtual std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 public:
     virtual std::shared_ptr<IDeviceWatcher> createDeviceWatcher() const override;
     virtual SourcePortInfoList              querySourcePortInfos() override;
@@ -41,7 +41,7 @@ private:
     std::map<std::shared_ptr<const SourcePortInfo>, std::weak_ptr<ISourcePort>> sourcePortMap_;
 };
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 class LibusbDeviceWatcher : public IDeviceWatcher {

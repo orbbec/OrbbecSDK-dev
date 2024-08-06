@@ -6,7 +6,7 @@
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include "usb/hid/HidDevicePort.hpp"
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
@@ -14,7 +14,7 @@
 #include "usb/enumerator/UsbEnumeratorLibusb.hpp"
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
 #include "ethernet/Ethernet.hpp"
 #endif
 
@@ -33,7 +33,7 @@ template <class T> static bool isMatchDeviceByPid(uint16_t pid, T &pids) {
     return std::any_of(pids.begin(), pids.end(), [pid](uint16_t pid_) { return pid_ == pid; });
 }
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 class LibusbDeviceWatcher : public IDeviceWatcher {
@@ -115,7 +115,7 @@ std::shared_ptr<IPal> createUsbPal() {
 }
 
 LinuxUsbPal::LinuxUsbPal() {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     usbEnumerator_ = IUsbEnumerator::getInstance();
 #endif
 }
@@ -146,12 +146,12 @@ std::shared_ptr<ISourcePort> LinuxUsbPal::getSourcePort(std::shared_ptr<const So
         }
     }
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     loadXmlConfig();
 #endif
 
     switch(portInfo->portType) {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     case SOURCE_PORT_USB_VENDOR: {
         auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
@@ -197,7 +197,7 @@ std::shared_ptr<ISourcePort> LinuxUsbPal::getSourcePort(std::shared_ptr<const So
     }
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
     case SOURCE_PORT_NET_VENDOR:
         port = std::make_shared<VendorNetDataPort>(std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo));
         break;
@@ -219,7 +219,7 @@ std::shared_ptr<ISourcePort> LinuxUsbPal::getSourcePort(std::shared_ptr<const So
     return port;
 }
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 std::shared_ptr<IDeviceWatcher> LinuxUsbPal::createDeviceWatcher() const {
     LOG_INFO("Create PollingDeviceWatcher!");
 
@@ -252,7 +252,7 @@ SourcePortInfoList LinuxUsbPal::querySourcePortInfos() {
     return portInfoList;
 }
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 void LinuxUsbPal::loadXmlConfig() {
     // FIXME
     // auto ctx       = Context::getInstance();

@@ -9,6 +9,7 @@
 #include "gige/GVCPClient.hpp"
 
 #include <vector>
+#include <map>
 
 namespace libobsensor {
 
@@ -47,6 +48,9 @@ public:
 private:
     std::vector<GVCPDeviceInfo> netDeviceInfoList_;
     SourcePortInfoList          sourcePortInfoList_;
+
+    std::mutex                                                                  sourcePortMapMutex_;
+    std::map<std::shared_ptr<const SourcePortInfo>, std::weak_ptr<ISourcePort>> sourcePortMap_;
 };
 
 }  // namespace libobsensor

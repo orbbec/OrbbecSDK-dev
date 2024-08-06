@@ -152,16 +152,16 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
 
 DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
     DeviceEnumInfoList deviceInfoList;
-    auto               g330Devs = G330DeviceInfo::createDeviceInfos(portInfoList);
+    auto               g330Devs = G330DeviceInfo::pickDevices(portInfoList);
     std::copy(g330Devs.begin(), g330Devs.end(), std::back_inserter(deviceInfoList));
 
-    auto g2Devs = G2DeviceInfo::createDeviceInfos(portInfoList);
+    auto g2Devs = G2DeviceInfo::pickDevices(portInfoList);
     std::copy(g2Devs.begin(), g2Devs.end(), std::back_inserter(deviceInfoList));
 
-    auto femtoBoltDevs = FemtoBoltDeviceInfo::createDeviceInfos(portInfoList);
+    auto femtoBoltDevs = FemtoBoltDeviceInfo::pickDevices(portInfoList);
     std::copy(femtoBoltDevs.begin(), femtoBoltDevs.end(), std::back_inserter(deviceInfoList));
 
-    auto femtoMegaDevs = FemtoMegaDeviceInfo::createDeviceInfos(portInfoList);
+    auto femtoMegaDevs = FemtoMegaDeviceInfo::pickDevices(portInfoList);
     std::copy(femtoMegaDevs.begin(), femtoMegaDevs.end(), std::back_inserter(deviceInfoList));
 
     return deviceInfoList;

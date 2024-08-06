@@ -6,7 +6,7 @@
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include "usb/hid/HidDevicePort.hpp"
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
@@ -15,7 +15,7 @@
 #include "core/device/DeviceInfoConfig.hpp"
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
 #include "ethernet/Ethernet.hpp"
 #endif
 
@@ -25,7 +25,7 @@
 namespace libobsensor {
 
 MacUsbPal::MacUsbPal() {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     usbEnumerator_ = std::make_shared<UsbEnumerator>();
 #endif
 }
@@ -57,7 +57,7 @@ std::shared_ptr<ISourcePort> MacUsbPal::getSourcePort(std::shared_ptr<const Sour
     }
 
     switch(portInfo->portType) {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     case SOURCE_PORT_USB_VENDOR: {
         auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
@@ -87,7 +87,7 @@ std::shared_ptr<ISourcePort> MacUsbPal::getSourcePort(std::shared_ptr<const Sour
     }
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
     case SOURCE_PORT_NET_VENDOR:
         port = std::make_shared<VendorNetDataPort>(std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo));
         break;
@@ -108,7 +108,7 @@ std::shared_ptr<ISourcePort> MacUsbPal::getSourcePort(std::shared_ptr<const Sour
     return port;
 }
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 std::shared_ptr<IDeviceWatcher> MacUsbPal::createDeviceWatcher() const {
     LOG_INFO("Create PollingDeviceWatcher!");
 

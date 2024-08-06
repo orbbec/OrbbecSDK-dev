@@ -17,11 +17,11 @@ public:
     virtual std::shared_ptr<IDeviceWatcher> createDeviceWatcher() const                          = 0;
 };
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 std::shared_ptr<IPal> createUsbPal();
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
 std::shared_ptr<IPal> createNetPal();
 #endif
 

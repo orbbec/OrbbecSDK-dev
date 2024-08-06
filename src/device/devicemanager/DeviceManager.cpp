@@ -1,11 +1,11 @@
 #include "DeviceManager.hpp"
 #include "utils/Utils.hpp"
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include "UsbDeviceEnumerator.hpp"
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
 #include "NetDeviceEnumerator.hpp"
 #endif
 
@@ -41,7 +41,7 @@ std::shared_ptr<DeviceManager> DeviceManager::getInstance() {
 DeviceManager::DeviceManager() : destroy_(false), multiDeviceSyncIntervalMs_(0) {
     LOG_DEBUG("DeviceManager init ...");
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     LOG_DEBUG("Enable USB Device Enumerator ...");
     auto usbDeviceEnumerator =
         std::make_shared<UsbDeviceEnumerator>([&](const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added) { onDeviceChanged(removed, added); });
@@ -49,13 +49,11 @@ DeviceManager::DeviceManager() : destroy_(false), multiDeviceSyncIntervalMs_(0) 
     deviceEnumerators_.emplace_back(usbDeviceEnumerator);
 #endif
 
-#if defined(BUILD_NET_PORT)
-    if(false) {  // todo: qurey if net enum is enabled form global config
-        LOG_DEBUG("Enable Net Device Enumerator ...");
-        auto netDeviceEnumerator =
-            std::make_shared<NetDeviceEnumerator>([&](const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added) { onDeviceChanged(removed, added); });
-        deviceEnumerators_.emplace_back(netDeviceEnumerator);
-    }
+#if defined(BUILD_NET_PAL)
+    LOG_DEBUG("Enable Net Device Enumerator ...");
+    auto netDeviceEnumerator =
+        std::make_shared<NetDeviceEnumerator>([&](const DeviceEnumInfoList &removed, const DeviceEnumInfoList &added) { onDeviceChanged(removed, added); });
+    deviceEnumerators_.emplace_back(netDeviceEnumerator);
 #endif
 
     auto deviceInfoList = getDeviceInfoList();
@@ -77,7 +75,7 @@ DeviceManager::~DeviceManager() noexcept {
 }
 
 std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uint16_t port) {
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
     LOG_DEBUG("DeviceManager createNetDevice...");
     // std::string uid = address + ":" + std::to_string(port);
     // {
@@ -110,14 +108,14 @@ std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uin
     // }
     // LOG_INFO("create Net Device success! address={0}, port={1}", address, port);
     // return device;
-     utils::unusedVar(address);
+    utils::unusedVar(address);
     utils::unusedVar(port);
     throw libobsensor::unsupported_operation_exception("Unsupported operation, please use createDevice() instead.");
 #else
     utils::unusedVar(address);
     utils::unusedVar(port);
     throw libobsensor::unsupported_operation_exception("The OrbbecSDK library currently compiled does not support network functions."
-                                                       "Please turn on the CMAKE \"BUILD_NET_PORT\" option and recompile.");
+                                                       "Please turn on the CMAKE \"BUILD_NET_PAL\" option and recompile.");
 #endif
 }
 
@@ -288,7 +286,7 @@ void DeviceManager::enableDeviceClockSync(uint64_t repeatInterval) {
 }
 
 void DeviceManager::enableNetDeviceEnumeration(bool enable) {
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
     LOG_INFO("Enable net device enumeration: {0}", enable);
     auto iter = std::find_if(deviceEnumerators_.begin(), deviceEnumerators_.end(), [](const std::shared_ptr<IDeviceEnumerator> &enumerator) {  //
         return typeid(*enumerator) == typeid(NetDeviceEnumerator);
@@ -309,7 +307,7 @@ void DeviceManager::enableNetDeviceEnumeration(bool enable) {
 }
 
 bool DeviceManager::isNetDeviceEnumerationEnable() {
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
 
     auto iter = std::find_if(deviceEnumerators_.begin(), deviceEnumerators_.end(), [](const std::shared_ptr<IDeviceEnumerator> &enumerator) {  //
         return typeid(*enumerator) == typeid(NetDeviceEnumerator);

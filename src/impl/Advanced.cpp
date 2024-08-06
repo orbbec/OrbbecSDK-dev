@@ -24,8 +24,8 @@ HANDLE_EXCEPTIONS_AND_RETURN({}, device)
 
 const char *ob_device_get_current_depth_work_mode_name(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto  algModeMgr = device->device->getComponentT<libobsensor::IDepthAlgModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_ALG_MODE_MANAGER);
-    auto &checksum   = algModeMgr->getCurrentDepthAlgModeChecksum();
+    auto               workModeMgr = device->device->getComponentT<libobsensor::IDepthWorkModeManager>(libobsensor::OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
+    auto               &checksum    = workModeMgr->getCurrentDepthWorkMode();
     return checksum.name;
 }
 HANDLE_EXCEPTIONS_AND_RETURN({}, device)

@@ -27,7 +27,7 @@ void NetDeviceWatcher::start(deviceChangedCallback callback) {
             auto added   = utils::subtract_sets(list, netDevInfoList_);
             auto removed = utils::subtract_sets(netDevInfoList_, list);
             for(auto &&info: removed) {
-                bool    disconnected = true;
+                bool disconnected = true;
                 // bool    exception    = false;
                 // uint8_t retry        = 1;
 
@@ -36,7 +36,7 @@ void NetDeviceWatcher::start(deviceChangedCallback callback) {
                 //     do {
                 //         BEGIN_TRY_EXECUTE({
                 //             auto netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, info.ip, DEFAULT_CMD_PORT);
-                //             // auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo, 500, 500);
+                //             //auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo, 500, 500);
                 //             auto            netVendorPort = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
                 //             auto            Protocol      = std::make_shared<Protocol>(netVendorPort);
                 //             auto            command       = std::make_shared<VendorCommand>(Protocol);
@@ -52,7 +52,7 @@ void NetDeviceWatcher::start(deviceChangedCallback callback) {
                 //             exception = true;
                 //             LOG_WARN("Create socket failed ip:{} port:{},device is disconnect.", info.ip, DEFAULT_CMD_PORT);
                 //         })
-                //     } while(exception && retry-- > 0);
+                //     } while(exception && retry--> 0);
                 // }
                 if(disconnected) {
                     callback_(OB_DEVICE_REMOVED, info.mac);
@@ -125,7 +125,7 @@ SourcePortInfoList EthernetPal::querySourcePortInfos() {
     auto removed       = utils::subtract_sets(netDeviceInfoList_, infos);
     netDeviceInfoList_ = infos;
 
-    // 只对新上线的设备重新查询端口信息
+    // Only re-query port information for newly online devices
     for(auto &&info: added) {
         // todo: fixme
         // if(info.pid == 0) {
@@ -146,7 +146,7 @@ SourcePortInfoList EthernetPal::querySourcePortInfos() {
         sourcePortInfoList_.push_back(std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, info.ip, DEFAULT_CMD_PORT, info.mac, info.sn, info.pid));
     }
 
-    // 删除列表中已经下线的设备
+    // Delete devices that have been offline from the list
     for(auto &&info: removed) {
         auto iter = sourcePortInfoList_.begin();
         while(iter != sourcePortInfoList_.end()) {
@@ -167,6 +167,7 @@ std::shared_ptr<IPal> createNetPal() {
 }
 
 std::shared_ptr<NetSourcePortInfo> EthernetPal::queryNetVendorPort(std::string address, uint16_t port) {
+    // todo：move this code to device business layer
     //  SourcePortInfoList list;
     // auto               netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, address, DEFAULT_CMD_PORT);
     // auto               netVendorPort     = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
@@ -180,7 +181,7 @@ std::shared_ptr<NetSourcePortInfo> EthernetPal::queryNetVendorPort(std::string a
     //     pid = pidValue.intValue;
     // });
 
-    // 当前所有适配的设备的端口号都为8090（DEFAULT_CMD_PORT），且不可更改
+    // The port numbers of all currently adapted devices are 8090 (DEFAULT_CMD_PORT) and cannot be changed.
     return std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, address, DEFAULT_CMD_PORT, address + ":" + std::to_string(port), "Unknown", pid);
 }
 
@@ -195,6 +196,7 @@ bool EthernetPal::changeNetDeviceIpConfig(std::string ipAddress, const OBNetIpCo
 SourcePortInfoList EthernetPal::queryAssociatedNetSourcePort(const std::shared_ptr<NetSourcePortInfo> info) {
     SourcePortInfoList list;
 
+    // todo: move this call to device business layer
     if(info->pid == PID_FEMTO_MEGA || info->pid == PID_FEMTO_MEGA_I) {
         list.emplace_back(std::make_shared<RTSPStreamPortInfo>(info->address, static_cast<uint16_t>(8888), info->port, OB_STREAM_COLOR, info->mac,
                                                                info->serialNumber, info->pid));

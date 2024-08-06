@@ -2,6 +2,7 @@
 #include "FemtoMegaDevice.hpp"
 #include "DevicePids.hpp"
 #include "usb/UsbPortGroup.hpp"
+#include "ethernet/NetPortGroup.hpp"
 #include "utils/Utils.hpp"
 #include "exception/ObException.hpp"
 namespace libobsensor {
@@ -48,6 +49,18 @@ std::vector<std::shared_ptr<IDeviceEnumInfo>> FemtoMegaDeviceInfo::pickDevices(c
     auto                                          iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 2) {
+            auto info = std::make_shared<FemtoMegaDeviceInfo>(*iter);
+            femtoMegaDeviceInfos.push_back(info);
+        }
+        iter++;
+    }
+
+    // pick ethernet device
+    remainder = FilterNetPortInfoByPid(infoList, FemtoMegaDevPids);
+    groups    = utils::groupVector<std::shared_ptr<const SourcePortInfo>>(remainder, GroupNetSourcePortByMac);
+    iter      = groups.begin();
+    while(iter != groups.end()) {
+        if(iter->size() >= 1) {
             auto info = std::make_shared<FemtoMegaDeviceInfo>(*iter);
             femtoMegaDeviceInfos.push_back(info);
         }

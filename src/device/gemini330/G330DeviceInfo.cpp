@@ -66,6 +66,7 @@ std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfo::pickDevices(const 
             auto info = std::make_shared<G330DeviceInfo>(*iter);
             G330DeviceInfos.push_back(info);
         }
+        iter++;
     }
 
     return G330DeviceInfos;

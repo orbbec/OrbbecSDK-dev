@@ -19,7 +19,7 @@ void VendorPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyVal
 
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
     uint16_t respDataSize = 0;
-    auto     res = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);  // todo: check respDataSize, here and below
+    auto     res = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);  // todo: check respDataSize, here and below
     protocol::checkStatus(res);
 }
 
@@ -30,7 +30,7 @@ void VendorPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyVal
 
     uint16_t respDataSize = 0;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
 
     protocol::checkStatus(res);
 
@@ -45,7 +45,7 @@ void VendorPropertyAccessor::getPropertyRange(uint32_t propertyId, OBPropertyRan
 
     uint16_t respDataSize = 0;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 
     auto resp            = protocol::parseGetPropertyResp(recvData_.data(), respDataSize);
@@ -63,7 +63,7 @@ void VendorPropertyAccessor::setStructureData(uint32_t propertyId, const std::ve
 
     uint16_t respDataSize = 0;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 }
 
@@ -74,7 +74,7 @@ const std::vector<uint8_t> &VendorPropertyAccessor::getStructureData(uint32_t pr
 
     uint16_t respDataSize = 0;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 
     auto resp              = protocol::parseGetStructureDataResp(recvData_.data(), respDataSize);
@@ -104,7 +104,7 @@ void VendorPropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback cal
         auto     req          = protocol::initGetRawData(sendData_.data(), propertyId, 0);
         uint16_t respDataSize = 64;
         auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-        auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+        auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
         protocol::checkStatus(res);
         auto resp = protocol::parseGetRawDataResp(recvData_.data(), respDataSize);
         dataSize  = resp->dataSize;
@@ -117,7 +117,7 @@ void VendorPropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback cal
         auto     req          = protocol::initReadRawData(sendData_.data(), propertyId, packetOffset, packetLen);
         uint16_t respDataSize = 1024;
         auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-        auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+        auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
         protocol::checkStatus(res);
 
         if(callback) {
@@ -135,7 +135,7 @@ void VendorPropertyAccessor::getRawData(uint32_t propertyId, GetDataCallback cal
         auto     req          = protocol::initGetRawData(sendData_.data(), propertyId, 1);
         uint16_t respDataSize = 64;
         auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-        auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+        auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
         protocol::checkStatus(res);
     }
     dataChunk.data         = nullptr;
@@ -151,7 +151,7 @@ uint16_t VendorPropertyAccessor::getCmdVersionProtoV1_1(uint32_t propertyId) {
     auto     req          = protocol::initGetCmdVersionReq(sendData_.data(), propertyId);
     uint16_t respDataSize = 64;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 
     auto resp = protocol::parseGetCmdVerDataResp(recvData_.data(), respDataSize);
@@ -165,7 +165,7 @@ const std::vector<uint8_t> &VendorPropertyAccessor::getStructureDataProtoV1_1(ui
     auto     req          = protocol::initGetStructureDataReqV1_1(sendData_.data(), propertyId);
     uint16_t respDataSize = 0;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 
     auto resp = protocol::parseGetStructureDataRespV1_1(recvData_.data(), respDataSize);
@@ -194,7 +194,7 @@ void VendorPropertyAccessor::setStructureDataProtoV1_1(uint32_t propertyId, cons
     auto     req          = protocol::initSetStructureDataReqV1_1(sendData_.data(), propertyId, cmdVersion, data.data(), static_cast<uint16_t>(data.size()));
     uint16_t respDataSize = 64;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 }
 
@@ -207,7 +207,7 @@ const std::vector<uint8_t> &VendorPropertyAccessor::getStructureDataListProtoV1_
     auto     req          = protocol::initStartGetStructureDataList(sendData_.data(), propertyId);
     uint16_t respDataSize = 64;
     auto     port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-    auto     res          = protocol::execute(port, sendData_.data(), sizeof(req), recvData_.data(), &respDataSize);
+    auto     res          = protocol::execute(port, sendData_.data(), sizeof(*req), recvData_.data(), &respDataSize);
     protocol::checkStatus(res);
 
     auto resp = protocol::parseStartStructureDataListResp(recvData_.data(), respDataSize);
@@ -227,7 +227,7 @@ const std::vector<uint8_t> &VendorPropertyAccessor::getStructureDataListProtoV1_
             auto req1    = protocol::initGetStructureDataList(sendData_.data(), propertyId, packetOffset, packetSize);
             respDataSize = 1024;
             port         = std::dynamic_pointer_cast<IVendorDataPort>(backend_);
-            res          = protocol::execute(port, sendData_.data(), sizeof(req1), recvData_.data(), &respDataSize);
+            res          = protocol::execute(port, sendData_.data(), sizeof(*req1), recvData_.data(), &respDataSize);
             protocol::checkStatus(res);
             memcpy(outputData_.data() + packetOffset, recvData_.data() + sizeof(protocol::RespHeader), packetSize);
         }
@@ -236,7 +236,7 @@ const std::vector<uint8_t> &VendorPropertyAccessor::getStructureDataListProtoV1_
     {
         clearBuffers();
         auto req2 = protocol::initFinishGetStructureDataList(sendData_.data(), propertyId);
-        res       = protocol::execute(port, sendData_.data(), sizeof(req2), recvData_.data(), &respDataSize);
+        res       = protocol::execute(port, sendData_.data(), sizeof(*req2), recvData_.data(), &respDataSize);
         protocol::checkStatus(res);
     }
 

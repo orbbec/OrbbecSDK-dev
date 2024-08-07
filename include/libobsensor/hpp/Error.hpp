@@ -101,7 +101,6 @@ public:
         return impl_->message;
     }
 
-    /***************Below functions are deprecated, leave here for compatibility***************/
     /**
      * @brief (Deprecated) Returns the name of the function where the exception occurred.
      * @brief Use the getFunction() function instead.

@@ -137,8 +137,12 @@ OB_EXPORT void ob_set_logger_to_callback(ob_log_severity severity, ob_log_callba
  */
 OB_EXPORT void ob_set_logger_to_console(ob_log_severity severity, ob_error **error);
 
-// for backward compatibility
+/**
+ * In order to be compatible with the closed source version of orbbecsdk's interface.
+ * We recommend using the latest interface names for a better experience.
+*/
 #define ob_enable_multi_device_sync ob_enable_device_clock_sync
+#define ob_set_logger_callback ob_set_logger_to_callback
 
 #ifdef __cplusplus
 }

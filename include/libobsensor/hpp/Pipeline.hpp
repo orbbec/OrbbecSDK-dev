@@ -388,6 +388,14 @@ public:
         ob_pipeline_disable_frame_sync(impl_, &error);
         Error::handle(&error);
     }
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+    */
+    OB_DEPRECATED std::shared_ptr<FrameSet> waitForFrames(uint32_t timeoutMs = 1000) const {
+        return waitForFrameset(timeoutMs);
+    }
 };
 
 }  // namespace ob

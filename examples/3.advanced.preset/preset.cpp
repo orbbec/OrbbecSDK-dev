@@ -16,7 +16,7 @@ int main() try {
         // Get preset list from device.
         std::shared_ptr<ob::DevicePresetList> presetLists = device->getAvailablePresetList();
         std::cout << "Available Presets:" << std::endl;
-        for(uint32_t index = 0; index < presetLists->count(); index++) {
+        for(uint32_t index = 0; index < presetLists->getCount(); index++) {
             // Print available preset name.
             std::cout << " - " << index << "." << presetLists->getName(index) << std::endl;
         }

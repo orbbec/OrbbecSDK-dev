@@ -24,7 +24,7 @@ void check_ob_error(ob_error **err) {
 void printf_device_list(ob_device_list *device_list) {
     ob_error *err = NULL;
 
-    uint32_t count = ob_device_list_get_device_count(device_list, &err);
+    uint32_t count = ob_device_list_get_count(device_list, &err);
     check_ob_error(&err);
 
     for(uint32_t i = 0; i < count; i++) {
@@ -89,7 +89,7 @@ void printf_device_info(ob_device_info *device_info) {
 void printf_sensor_list(ob_sensor_list *sensor_list) {
     ob_error *err = NULL;
 
-    uint32_t count = ob_sensor_list_get_sensor_count(sensor_list, &err);
+    uint32_t count = ob_sensor_list_get_count(sensor_list, &err);
     check_ob_error(&err);
 
     printf("sensor_list:\n");

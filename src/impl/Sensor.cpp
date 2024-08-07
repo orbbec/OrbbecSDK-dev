@@ -61,7 +61,7 @@ void ob_delete_sensor_list(ob_sensor_list *sensor_list, ob_error **error) BEGIN_
 }
 HANDLE_EXCEPTIONS_NO_RETURN(sensor_list)
 
-uint32_t ob_sensor_list_get_sensor_count(const ob_sensor_list *sensor_list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_sensor_list_get_count(const ob_sensor_list *sensor_list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(sensor_list);
     return static_cast<uint32_t>(sensor_list->sensorTypes.size());
 }

@@ -18,7 +18,7 @@ void ob_delete_device_list(ob_device_list *list, ob_error **error) BEGIN_API_CAL
 }
 HANDLE_EXCEPTIONS_NO_RETURN(list)
 
-uint32_t ob_device_list_get_device_count(const ob_device_list *list, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_device_list_get_count(const ob_device_list *list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     return static_cast<uint32_t>(list->list.size());
 }

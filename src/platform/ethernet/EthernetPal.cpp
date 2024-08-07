@@ -144,6 +144,13 @@ SourcePortInfoList EthernetPal::querySourcePortInfos() {
         // }
 
         sourcePortInfoList_.push_back(std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, info.ip, DEFAULT_CMD_PORT, info.mac, info.sn, info.pid));
+        if(info.pid == PID_FEMTO_MEGA) {
+            sourcePortInfoList_.push_back(std::make_shared<RTSPStreamPortInfo>(info.ip, static_cast<uint16_t>(8888), DEFAULT_CMD_PORT, OB_STREAM_COLOR, info.mac, info.sn, info.pid));
+            sourcePortInfoList_.push_back(std::make_shared<RTSPStreamPortInfo>(info.ip, static_cast<uint16_t>(8554), DEFAULT_CMD_PORT, OB_STREAM_DEPTH, info.mac, info.sn, info.pid));
+            sourcePortInfoList_.push_back(std::make_shared<RTSPStreamPortInfo>(info.ip, static_cast<uint16_t>(8554), DEFAULT_CMD_PORT, OB_STREAM_IR, info.mac, info.sn, info.pid));
+            sourcePortInfoList_.push_back(std::make_shared<NetDataStreamPortInfo>(info.ip, static_cast<uint16_t>(8900), DEFAULT_CMD_PORT, info.mac, info.sn, info.pid));
+        }
+        
     }
 
     // Delete devices that have been offline from the list

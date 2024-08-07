@@ -18,6 +18,12 @@ private:
     void init() override;
     void initSensorList();
     void initProperties();
+
+#if defined(BUILD_NET_PAL)
+    void initNetSensorList();
+    void initNetProperties();
+#endif
+
     void initSensorStreamProfile(std::shared_ptr<ISensor> sensor);
     void fetchDeviceInfo() override;
 

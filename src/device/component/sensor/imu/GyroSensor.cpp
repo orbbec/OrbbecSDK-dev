@@ -60,11 +60,9 @@ void GyroSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback ca
     propServer->setPropertyValueT(OB_PROP_GYRO_FULL_SCALE_INT, static_cast<int>(gyroSp->getFullScaleRange()));
     propServer->setPropertyValueT(OB_PROP_GYRO_SWITCH_BOOL, true);
 
-    streamer_->start(sp, [this](std::shared_ptr<const Frame> frame) {
+    streamer_->start(sp, [this](std::shared_ptr<Frame> frame) {
         updateStreamState(STREAM_STATE_STREAMING);
-        if(frameCallback_) {
-            frameCallback_(frame);
-        }
+        outputFrame(frame);
     });
 }
 

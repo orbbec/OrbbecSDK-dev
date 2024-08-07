@@ -13,7 +13,7 @@
 #include "FilterFactory.hpp"
 
 #include "component/metadata/FrameMetadataParserContainer.hpp"
-#include "component/timestamp/GlobalTimestampFilter.hpp"
+#include "component/timestamp/GlobalTimestampFitter.hpp"
 #include "component/property/VendorPropertyAccessor.hpp"
 #include "component/property/UvcPropertyAccessor.hpp"
 #include "component/property/PropertyServer.hpp"
@@ -25,7 +25,7 @@
 #include "publicfilters/IMUCorrector.hpp"
 
 #include "gemini330/G330DeviceSyncConfigurator.hpp"
-#include "timestamp/GlobalTimestampFilter.hpp"
+#include "timestamp/GlobalTimestampFitter.hpp"
 #include "femtobolt/FemtoBoltAlgParamManager.hpp"
 //  #include "G330SensorStreamStrategy.hpp"
 
@@ -42,8 +42,8 @@ void FemtoMegaUvcDevice::init() {
 
     fetchDeviceInfo();
 
-    // auto GlobalTimestampFilter = std::make_shared<GlobalTimestampFilter>(this);
-    // registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, GlobalTimestampFilter);
+    // auto GlobalTimestampFitter = std::make_shared<GlobalTimestampFitter>(this);
+    // registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, GlobalTimestampFitter);
 
     auto algParamManager = std::make_shared<FemtoBoltAlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);

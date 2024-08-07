@@ -208,7 +208,8 @@ bool Frame::hasMetadata(OBFrameMetadataType type) const {
 
 int64_t Frame::getMetadataValue(OBFrameMetadataType type) const {
     if(!metadataPhasers_) {
-        throw unsupported_operation_exception(utils::string::to_string() << "Metadata phasers are not registered! Unsupported to get metadata for type: " << type);
+        throw unsupported_operation_exception(utils::string::to_string()
+                                              << "Metadata phasers are not registered! Unsupported to get metadata for type: " << type);
     }
     auto parser = metadataPhasers_->get(type);
     if(!parser->isSupported(metadata_, metadataSize_)) {
@@ -385,6 +386,16 @@ std::shared_ptr<const Frame> FrameSet::getFrame(int index) const {
     auto pFrame = (std::shared_ptr<Frame> *)pItem;
     frame       = *pFrame;
     return frame;
+}
+
+std::shared_ptr<Frame> FrameSet::getFrameMutable(OBFrameType frameType) const {
+    auto frame = getFrame(frameType);
+    return std::const_pointer_cast<Frame>(frame);
+}
+
+std::shared_ptr<Frame> FrameSet::getFrameMutable(int index) const {
+    auto frame = getFrame(index);
+    return std::const_pointer_cast<Frame>(frame);
 }
 
 // It is recommended to use the rvalue reference interface. If you have a need, you can uncomment the following

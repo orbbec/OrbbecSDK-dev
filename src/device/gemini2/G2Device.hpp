@@ -25,7 +25,9 @@ private:
     void fetchDeviceInfo() override;
 
 private:
-    std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
+    const uint64_t                                              frameTimeFreq_  = 1000000;
+    uint64_t                                                    deviceTimeFreq_ = 1000000;
+    std::function<std::shared_ptr<IFrameTimestampCalculator>()> videoFrameTimestampCalculatorCreator_;
 };
 
 }  // namespace libobsensor

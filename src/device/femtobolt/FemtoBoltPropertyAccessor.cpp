@@ -26,7 +26,7 @@ void FemtoBoltPropertyAccessor::setPropertyValue(uint32_t propertyId, OBProperty
     commandPort->setPropertyValue(propertyId, value);
 
     if(propertyId == OB_PROP_SWITCH_IR_MODE_INT) {
-        auto rawphaseStreamer = owner_->getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAWPHASE_STREAMER);
+        auto rawphaseStreamer = owner_->getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
         rawphaseStreamer->setIsPassiveIR((bool)value.intValue);
     }
 }

@@ -113,18 +113,15 @@ bool DeviceBase::isComponentExists(DeviceComponentId compId) const {
     if(it != components_.end()) {
         return true;
     }
-
     return false;
 }
 
 bool DeviceBase::isComponentCreated(DeviceComponentId compId) const {
     std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
     auto it = std::find_if(components_.begin(), components_.end(), [compId](const ComponentItem &item) { return item.compId == compId; });
-
     if(it != components_.end()) {
         return it->component != nullptr;
     }
-
     return false;
 }
 

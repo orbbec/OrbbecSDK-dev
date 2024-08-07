@@ -18,7 +18,7 @@
 #include "sensor/imu/ImuStreamer.hpp"
 #include "sensor/imu/AccelSensor.hpp"
 #include "sensor/imu/GyroSensor.hpp"
-#include "timestamp/GlobalTimestampFilter.hpp"
+#include "timestamp/GlobalTimestampFitter.hpp"
 #include "property/VendorPropertyAccessor.hpp"
 #include "property/UvcPropertyAccessor.hpp"
 #include "property/PropertyServer.hpp"
@@ -30,6 +30,8 @@
 #include "G2StreamProfileFilter.hpp"
 #include "G2PropertyAccessors.hpp"
 #include "G2DepthWorkModeManager.hpp"
+#include "G2FrameTimestampCalculator.hpp"
+#include "G2DeviceSyncConfigurator.hpp"
 
 #include <algorithm>
 
@@ -38,6 +40,8 @@ namespace libobsensor {
 constexpr uint8_t INTERFACE_COLOR = 4;
 constexpr uint8_t INTERFACE_IR    = 2;
 constexpr uint8_t INTERFACE_DEPTH = 0;
+
+constexpr uint16_t GEMINI2XL_PID = 0x0673;
 
 G2Device::G2Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
     init();
@@ -51,17 +55,20 @@ void G2Device::init() {
 
     fetchDeviceInfo();
 
-   // auto GlobalTimestampFilter = std::make_shared<GlobalTimestampFilter>(this);
-   // registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, GlobalTimestampFilter);
+    videoFrameTimestampCalculatorCreator_ = [this]() {
+        std::shared_ptr<IFrameTimestampCalculator> calculator;
+        if(deviceInfo_->pid_ == GEMINI2XL_PID) {
+            deviceTimeFreq_ = 1000;
+            calculator      = std::make_shared<G2LVideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+        }
+        else {
+            calculator = std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+        }
+        return calculator;
+    };
 
-    // // todo: make timestamp calculator as a component
-    // auto iter = std::find(G2LDevPids.begin(), G2LDevPids.end(), deviceInfo_->pid_);
-    // if(iter != G2LDevPids.end()) {
-    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, GlobalTimestampFilter);
-    // }
-    // else {
-    //     videoFrameTimestampCalculator_ = std::make_shared<G2TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, GlobalTimestampFilter);
-    // }
+    auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
+    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
     auto algParamManager = std::make_shared<G2AlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
@@ -69,18 +76,15 @@ void G2Device::init() {
     auto depthWorkModeManager = std::make_shared<G2DepthWorkModeManager>(this);
     registerComponent(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER, depthWorkModeManager);
 
-    // auto presetManager = std::make_shared<G2PresetManager>(this);
-    // registerComponent(OB_DEV_COMPONENT_PRESET_MANAGER, presetManager);
-
     // auto sensorStreamStrategy = std::make_shared<G2SensorStreamStrategy>(this);
     // registerComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, sensorStreamStrategy);
 
-    // static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes = {
-    //     OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN,         OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,          OB_MULTI_DEVICE_SYNC_MODE_PRIMARY,
-    //     OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED, OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING, OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING
-    // };
-    // auto deviceSyncConfigurator = std::make_shared<G2DeviceSyncConfigurator>(this, supportedSyncModes);
-    // registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
+    static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes = {
+        OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN,         OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,          OB_MULTI_DEVICE_SYNC_MODE_PRIMARY,
+        OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED, OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING, OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING
+    };
+    auto deviceSyncConfigurator = std::make_shared<G2DeviceSyncConfigurator>(this, supportedSyncModes);
+    registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 
     fixSensorList();  // fix sensor list according to depth alg work mode
 }
@@ -178,7 +182,11 @@ void G2Device::initSensorList() {
                 }
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
 
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -216,16 +224,11 @@ void G2Device::initSensorList() {
                 auto port   = pal->getSourcePort(depthPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
 
-                // std::vector<FormatFilterConfig> formatFilterConfigs = {
-                //     { FormatFilterPolicy::REPLACE, OB_FORMAT_MJPG, OB_FORMAT_RLE, nullptr },
-                // };
-                // // auto formatConverter = getSensorFrameFilter("FormatConverter", OB_SENSOR_DEPTH, false);
-                // // if(formatConverter) {
-                // //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_RLE, OB_FORMAT_Y16, formatConverter });
-                // // }
-                // sensor->updateFormatFilterConfig(formatFilterConfigs);
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
 
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -276,7 +279,11 @@ void G2Device::initSensorList() {
                 auto port   = pal->getSourcePort(irPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR, port);
 
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_IR_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -304,7 +311,11 @@ void G2Device::initSensorList() {
                 auto port   = pal->getSourcePort(irPortInfo);
                 auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
 
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -351,7 +362,11 @@ void G2Device::initSensorList() {
                 }
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
 
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -484,7 +499,7 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_DEPTH) {
-            auto uvcPropertyAccessor    = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
                 auto pal      = ObPal::getInstance();
                 auto port     = pal->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
@@ -513,8 +528,9 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_MODE_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, "rw", "rw", vendorPropertyAccessor);
+            // propertyServer->registerProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->aliasProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_DELAY_US_INT, "rw", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_CAPTURE_IMAGE_SIGNAL_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DEPTH_MIRROR_MODULE_STATUS_BOOL, "", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_CAPTURE_IMAGE_FRAME_NUMBER_INT, "rw", "rw", vendorPropertyAccessor);

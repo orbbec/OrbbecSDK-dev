@@ -199,8 +199,8 @@ class AccelFrame : public Frame {
 public:
 #pragma pack(push, 1)
     typedef struct {
-        OBAccelValue value;         // Acceleration values in three directions (xyz), unit: g (9.80665 m/s^2)
-        float temp;          // Temperature in Celsius
+        OBAccelValue value;  // Acceleration values in three directions (xyz), unit: g (9.80665 m/s^2)
+        float        temp;   // Temperature in Celsius
     } Data;
 #pragma pack(pop)
 
@@ -215,8 +215,8 @@ class GyroFrame : public Frame {
 public:
 #pragma pack(push, 1)
     typedef struct {
-        OBGyroValue value;        // Acceleration values ​​in three directions (xyz), unit: dps (degrees per second)
-        float temp;         // Temperature in Celsius
+        OBGyroValue value;  // Acceleration values ​​in three directions (xyz), unit: dps (degrees per second)
+        float       temp;   // Temperature in Celsius
     } Data;
 #pragma pack(pop)
 
@@ -238,6 +238,9 @@ public:
 
     std::shared_ptr<const Frame> getFrame(OBFrameType frameType) const;
     std::shared_ptr<const Frame> getFrame(int index) const;
+
+    std::shared_ptr<Frame> getFrameMutable(OBFrameType frameType) const;
+    std::shared_ptr<Frame> getFrameMutable(int index) const;
 
     // It is recommended to use the rvalue reference interface. If you really need it, you can uncomment the following
     // void pushFrame(std::shared_ptr<Frame> frame);

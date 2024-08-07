@@ -42,10 +42,16 @@ public:
     // stop trying to recover the stream
     void disableStreamRecovery();
 
+    void setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container);
+    void setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator);
+    void setGlobalTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator);
+
 protected:
     virtual void restartStream();
     virtual void updateStreamState(OBStreamState state);
     virtual void watchStreamState();
+
+    virtual void outputFrame(std::shared_ptr<Frame> frame);
 
 protected:
     IDevice                     *owner_;
@@ -73,6 +79,10 @@ protected:
     uint32_t recoveryCount_;
     uint32_t noStreamTimeoutMs_;
     uint32_t streamInterruptTimeoutMs_;
+
+    std::shared_ptr<IFrameMetadataParserContainer> frameMetadataParserContainer_;
+    std::shared_ptr<IFrameTimestampCalculator>     frameTimestampCalculator_;
+    std::shared_ptr<IFrameTimestampCalculator>     globalTimestampCalculator_;
 };
 
 }  // namespace libobsensor

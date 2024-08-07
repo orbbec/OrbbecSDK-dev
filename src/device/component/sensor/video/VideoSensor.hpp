@@ -35,14 +35,11 @@ public:
     void stop() override;
 
     virtual void updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs);
-
-    void setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container);
-    void setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator);
     void setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcessor);
 
 protected:
-    virtual void onBackendFrameCallback(std::shared_ptr<Frame> frame);
-    virtual void outputFrame(std::shared_ptr<Frame> frame);
+    void onBackendFrameCallback(std::shared_ptr<Frame> frame);
+    void outputFrame(std::shared_ptr<Frame> frame) override;
 
 protected:
     typedef std::pair<std::shared_ptr<const StreamProfile>, const FormatFilterConfig *> StreamProfileBackendMapValue;
@@ -53,9 +50,6 @@ private:
     const FormatFilterConfig            *currentFormatFilterConfig_;
     std::shared_ptr<const StreamProfile> currentBackendStreamProfile_;
     StreamProfileList                    backendStreamProfileList_;
-
-    std::shared_ptr<IFrameMetadataParserContainer> frameMetadataParserContainer_;
-    std::shared_ptr<IFrameTimestampCalculator>     frameTimestampCalculator_;
 
     std::shared_ptr<FrameProcessor> frameProcessor_;
 };

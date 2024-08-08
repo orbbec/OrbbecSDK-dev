@@ -39,7 +39,7 @@ std::shared_ptr<Frame> SequenceIdFilter::processFunc(std::shared_ptr<const Frame
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
     if(outFrame->is<FrameSet>()) {
         LOG_WARN_INTVL("The Frame processed by SequenceIdFilter cannot be FrameSet!");
         return outFrame;

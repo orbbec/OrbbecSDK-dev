@@ -356,13 +356,13 @@ void DecimationFilter::updateOutputProfile(const std::shared_ptr<const Frame> fr
 void DecimationFilter::decimateDepth(uint16_t *frame_data_in, uint16_t *frame_data_out, size_t width_in, size_t scale) {
 
     // construct internal register buf
-    uint16_t          working_kernel[9];
-    uint16_t *        pixel_raws[10];  // max scale set 10
-    uint16_t *        block_start = const_cast<uint16_t *>(frame_data_in);
-    uint16_t *        p{};
-    int               wk_count = 0;
-    int               wk_sum   = 0;
-    MDFUNC            f;
+    uint16_t  working_kernel[9];
+    uint16_t *pixel_raws[10];  // max scale set 10
+    uint16_t *block_start = const_cast<uint16_t *>(frame_data_in);
+    uint16_t *p{};
+    int       wk_count = 0;
+    int       wk_sum   = 0;
+    MDFUNC    f;
 
     if(scale == 2 || scale == 3) {
         // loop through rows
@@ -440,8 +440,8 @@ void DecimationFilter::decimateOthers(OBFormat format, void *frame_data_in, void
 
     auto patch_size = scale * scale;
 
-    int wk_sum   = 0;
-    int wk_count = 0;
+    int wk_sum = 0;
+    // int wk_count = 0;
 
     switch(format) {
     case OB_FORMAT_YUYV: {
@@ -669,16 +669,13 @@ void DecimationFilter::decimateOthers(OBFormat format, void *frame_data_in, void
                 wk_sum = 0;
                 for(size_t n = 0; n < scale; ++n) {
                     for(size_t m = 0; m < scale; ++m) {
-                        if(*(p + m)) {
-                            wk_sum += p[m];
-                            ++wk_count;
-                        }
+                        wk_sum += p[m];
                     }
 
                     p += width_in;
                 }
 
-                *q++ = (uint8_t)(wk_count == 0 ? 0 : wk_sum / wk_count);
+                *q++ = (uint8_t)(wk_sum / patch_size);
             }
 
             for(int i = real_width_; i < padded_width_; ++i)
@@ -700,13 +697,12 @@ void DecimationFilter::decimateOthers(OBFormat format, void *frame_data_in, void
                 wk_sum = 0;
                 for(size_t n = 0; n < scale; ++n) {
                     for(size_t m = 0; m < scale; ++m) {
-                        if(*(p + m)) {
-                            wk_sum += p[m];
-                            ++wk_count;
-                        }
+                        wk_sum += p[m];
                     }
+                    p += width_in;
                 }
-                *q++ = (uint16_t)(wk_count == 0 ? 0 : wk_sum / wk_count);
+
+                *q++ = (uint16_t)(wk_sum / patch_size);
             }
 
             for(int i = real_width_; i < padded_width_; ++i)

@@ -4,12 +4,12 @@
  *
  */
 #pragma once
-
-#include "Types.hpp"
 #include "libobsensor/h/Utils.h"
-#include <memory>
-#include "Frame.hpp"
 #include "Device.hpp"
+#include "Types.hpp"
+#include "Frame.hpp"
+
+#include <memory>
 
 namespace ob {
 class Device;

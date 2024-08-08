@@ -54,8 +54,6 @@ std::ostream &operator<<(std::ostream &os, const OBIMUSampleRate &type);  // als
 std::ostream &operator<<(std::ostream &os, const OBGyroFullScaleRange &type);
 std::ostream &operator<<(std::ostream &os, const OBAccelFullScaleRange &type);
 std::ostream &operator<<(std::ostream &os, const OBCameraParam &params);
-
-
 std::ostream &operator<<(std::ostream &os, const OBCalibrationParam &type);
 std::ostream &operator<<(std::ostream &os, const OBPoint3f &type);
 std::ostream &operator<<(std::ostream &os, const OBExtrinsic &type);

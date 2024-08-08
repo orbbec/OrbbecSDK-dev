@@ -631,6 +631,7 @@ std::ostream &operator<<(std::ostream &os, const OBCalibrationParam &type) {
 
     return os;
 }
+
 std::ostream &operator<<(std::ostream &os, const OBPoint3f &type) {    
     os << "{\n"
        << "x:" << type.x << ", y:" << type.y << ", z:" << type.z << "\n"
@@ -666,4 +667,3 @@ std::ostream &operator<<(std::ostream &os, const OBCameraDistortion &type) {
        << "}\n";
     return os;
 }
-

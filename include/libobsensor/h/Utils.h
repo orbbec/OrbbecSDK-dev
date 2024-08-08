@@ -87,58 +87,20 @@ OB_EXPORT bool ob_transformation_2d_to_2d(const OBCameraIntrinsic source_intrins
                                           const OBCameraDistortion target_distortion,OBExtrinsic extrinsic, OBPoint2f *target_point2f,
                                                ob_error **error);
 
-/**
- * @brief Transforms the depth frame into the geometry of the color camera.
- *
- * @param[in] device Device handle
- * @param[in] depth_frame Input depth frame
- * @param[in] target_color_camera_width Target color camera width
- * @param[in] target_color_camera_height Target color camera height
- * @param[out] error Log error messages
- *
- * @return ob_frame* Transformed depth frame
- */
+// \deprecated This function is deprecated and will be removed in a future version.  
 OB_EXPORT ob_frame *transformation_depth_frame_to_color_camera(ob_device *device, ob_frame *depth_frame, uint32_t target_color_camera_width,
                                                      uint32_t target_color_camera_height, ob_error **error);
 
-/**
- * @brief Init transformation tables
- *
- * @param[in] calibration_param Device calibration param,see pipeline::getCalibrationParam
- * @param[in] sensor_type sensor type
- * @param[in] data input data,needs to be allocated externally.During initialization, the external allocation size is 'data_size', for example, data_size = 1920
- * * 1080 * 2*sizeof(float) (1920 * 1080 represents the image resolution, and 2 represents two LUTs, one for x-coordinate and one for y-coordinate).
- * @param[in] data_size input data size
- * @param[out] xy_tables output xy tables
- * @param[out] error Log error messages
- *
- * @return bool Transform result
- */
+// \deprecated This function is deprecated and will be removed in a future version.  
 bool transformation_init_xy_tables(const ob_calibration_param calibration_param, const ob_sensor_type sensor_type, float *data, uint32_t *data_size,
                                    ob_xy_tables *xy_tables, ob_error **error);
 
-/**
- * @brief Transform depth image to point cloud data
- *
- * @param[in] xy_tables input xy tables,see transformation_init_xy_tables
- * @param[in] depth_image_data input depth image data
- * @param[out] pointcloud_data output point cloud data
- * @param[out] error Log error messages
- */
+// \deprecated This function is deprecated and will be removed in a future version.  
 void transformation_depth_to_pointcloud(ob_xy_tables *xy_tables, const void *depth_image_data, void *pointcloud_data, ob_error **error);
 
-/**
- * @brief Transform depth image to point cloud data
- *
- * @param[in] xy_tables input xy tables,see transformation_init_xy_tables
- * @param[in] depth_image_data input depth image data
- * @param[in] color_image_data input color image data (only RGB888 support)
- * @param[out] pointcloud_data output point cloud data
- * @param[out] error Log error messages
- */
+// \deprecated This function is deprecated and will be removed in a future version.  
 void transformation_depth_to_rgbd_pointcloud(ob_xy_tables *xy_tables, const void *depth_image_data, const void *color_image_data, void *pointcloud_data,
                                              ob_error **error);
-
 
 // \deprecated This function is deprecated and will be removed in a future version.  
 //             Use the ob_transformation_3d_to_3d instead.

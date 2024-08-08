@@ -208,15 +208,15 @@ public:
      * We recommend using the latest interface names for a better experience.
      */
     OB_DEPRECATED uint32_t fps() const {
-        getFps();
+        return getFps();
     }
 
     OB_DEPRECATED uint32_t width() const {
-        getWidth();
+        return getWidth();
     }
 
     OB_DEPRECATED uint32_t height() const {
-        getHeight();
+        return getHeight();
     }
 };
 
@@ -436,7 +436,7 @@ public:
      * We recommend using the latest interface names for a better experience.
      */
     OB_DEPRECATED uint32_t count() const {
-        getCount();
+        return getCount();
     }
 };
 

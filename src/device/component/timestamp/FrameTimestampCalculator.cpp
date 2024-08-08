@@ -3,7 +3,7 @@
 #include "usb/uvc/UvcTypes.hpp"
 #include "utils/Utils.hpp"
 #include "logger/LoggerInterval.hpp"
-#include "internalTypes.hpp"
+#include "InternalTypes.hpp"
 
 namespace libobsensor {
 

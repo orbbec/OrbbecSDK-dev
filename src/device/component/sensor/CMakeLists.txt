@@ -4,4 +4,3 @@ target_sources(${OB_TARGET_DEVICE} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/SensorBase.
 
 add_subdirectory(imu)
 add_subdirectory(video)
-add_subdirectory(rawphase)

@@ -7,8 +7,6 @@
 #include "sensor/imu/ImuStreamer.hpp"
 #include "sensor/imu/AccelSensor.hpp"
 #include "sensor/imu/GyroSensor.hpp"
-#include "sensor/rawphase/RawPhaseStreamer.hpp"
-#include "sensor/rawphase/RawPhaseConvertSensor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
 #include "FilterFactory.hpp"
 
@@ -26,7 +24,7 @@
 
 #include "gemini330/G330DeviceSyncConfigurator.hpp"
 #include "timestamp/GlobalTimestampFitter.hpp"
-#include "femtobolt/FemtoBoltAlgParamManager.hpp"
+#include "param/AlgParamManager.hpp"
 //  #include "G330SensorStreamStrategy.hpp"
 
 namespace libobsensor {
@@ -45,7 +43,7 @@ void FemtoMegaUvcDevice::init() {
     // auto GlobalTimestampFitter = std::make_shared<GlobalTimestampFitter>(this);
     // registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, GlobalTimestampFitter);
 
-    auto algParamManager = std::make_shared<FemtoBoltAlgParamManager>(this);
+    auto algParamManager = std::make_shared<TOFDeviceCommandAlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
     // static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes     = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
@@ -87,7 +85,7 @@ void FemtoMegaUvcDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor
     // // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<FemtoBoltAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<TOFDeviceCommandAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 

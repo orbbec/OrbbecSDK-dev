@@ -1,15 +1,16 @@
 #pragma once
 
+#include "libobsensor/h/ObTypes.h"
+
 #include "IDevice.hpp"
 #include "IProperty.hpp"
 #include "InternalTypes.hpp"
-#include "libobsensor/h/ObTypes.h"
-#include "DeviceComponentBase.hpp"
 #include "IAlgParamManager.hpp"
+
+#include "DeviceComponentBase.hpp"
 
 #include <vector>
 #include <memory>
-
 
 namespace libobsensor {
 class AlgParamManagerBase : public DeviceComponentBase, public IAlgParamManager {
@@ -51,6 +52,16 @@ public:
 
 protected:
     OBDisparityParam disparityParam_;
+};
+
+class TOFDeviceCommandAlgParamManager : public AlgParamManagerBase {
+public:
+    TOFDeviceCommandAlgParamManager(IDevice *owner);
+    virtual ~TOFDeviceCommandAlgParamManager() noexcept = default;
+
+private:
+    void fetchParamFromDevice() override;
+    void registerBasicExtrinsics() override;
 };
 
 }  // namespace libobsensor

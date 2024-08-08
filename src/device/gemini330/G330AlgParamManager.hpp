@@ -1,6 +1,6 @@
 #pragma once
 
-#include "param/AlgParamManagerBase.hpp"
+#include "param/AlgParamManager.hpp"
 
 #include <vector>
 #include <memory>

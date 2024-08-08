@@ -10,7 +10,7 @@
 #include "logger/LoggerHelper.hpp"
 #include "utils/Utils.hpp"
 #include "component/frameprocessor/FrameProcessor.hpp"
-#include "component/param/AlgParamManagerBase.hpp"
+#include "IAlgParamManager.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -389,7 +389,7 @@ void Pipeline::checkHardwareD2CConfig() {
         LOG_DEBUG("current align mode is not hardware d2c mode.");
         return;
     }
-    auto algParamManager = device_->getComponentT<AlgParamManagerBase>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+    auto algParamManager = device_->getComponentT<IAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
     auto colorProfile    = getCurrentVideoStreamProfile(OB_STREAM_COLOR);
     auto depthProfile    = getCurrentVideoStreamProfile(OB_STREAM_DEPTH);
     if(algParamManager && colorProfile && depthProfile) {

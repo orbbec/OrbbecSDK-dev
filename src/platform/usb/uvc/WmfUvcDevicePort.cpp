@@ -3,7 +3,7 @@
 #endif
 
 #include <ntverp.h>
-#if VER_PRODUCTBUILD <= 9600  // (WinSDK 8.1)
+#if VER_PRODUCTBUILD <= 9600  //(WinSDK 8.1)
 #ifdef ENFORCE_METADATA
 #error( "libobsensor Error!: Featuring UVC Metadata requires WinSDK 10.0.10586.0. \
  Install the required toolset to proceed. Alternatively, uncheck ENFORCE_METADATA propertyId in CMake GUI tool")
@@ -404,6 +404,7 @@ UvcControlRange WmfUvcDevicePort::getPuRange(uint32_t propertyId) {
 
 uint32_t WmfUvcDevicePort::sendAndReceive(const uint8_t *sendData, uint32_t sendLen, uint8_t *recvData, uint32_t exceptedRecvLen) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
+    // checkConnection();
     if(powerState_ != kD0) {
         setPowerStateD0();
     }
@@ -985,7 +986,7 @@ void WmfUvcDevicePort::stopStream(std::shared_ptr<const StreamProfile> profile) 
                 setPowerStateD3();
                 throw;  // rethrow
             })
-            if(!stream.isFlushed.wait(WAIT_STREAM_TIMEOUT_MSEC)) {
+            if(isConnected(portInfo_) && !stream.isFlushed.wait(WAIT_STREAM_TIMEOUT_MSEC)) {
                 LOG_WARN("Wait for flush more than {}ms!", WAIT_STREAM_TIMEOUT_MSEC);
             }
         }

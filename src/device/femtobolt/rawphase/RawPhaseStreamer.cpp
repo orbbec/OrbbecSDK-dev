@@ -29,7 +29,7 @@ RawPhaseStreamer::~RawPhaseStreamer() noexcept {
     if(running_) {
         if(realSp != nullptr) {
             auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
-            vsPort->stopStream(realSp);
+            TRY_EXECUTE(vsPort->stopStream(realSp));
         }
         running_ = false;
     }

@@ -14,9 +14,9 @@ void G330Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPro
         auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);
         processor->setPropertyValue(propertyId, value);
 
-        swDisparityToDepthEnabled_ = static_cast<bool>(value.intValue);
+        // swDisparityToDepthEnabled_ = static_cast<bool>(value.intValue);
         // update convert output frame as disparity frame
-        markOutputDisparityFrame(!hwDisparityToDepthEnabled_);
+        // markOutputDisparityFrame(!hwDisparityToDepthEnabled_);
     } break;
     case OB_PROP_DISPARITY_TO_DEPTH_BOOL: {
         auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);

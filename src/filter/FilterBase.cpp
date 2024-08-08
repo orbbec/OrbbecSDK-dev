@@ -195,6 +195,11 @@ void FilterBase::setConfigValue(const std::string &configName, double value) {
     LOG_DEBUG("Filter {}: config item {} value set to {}", name_, configName, value);
 }
 
+void FilterBase::setConfigValueSync(const std::string &name, double value){
+    setConfigValue(name,value);
+    checkAndUpdateConfig();
+}
+
 double FilterBase::getConfigValue(const std::string &configName) {
     auto schemaVec = getConfigSchemaVec();
     if(schemaVec.empty()) {

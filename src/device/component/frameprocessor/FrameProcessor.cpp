@@ -232,13 +232,14 @@ void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint3
     OBD2CProfile  currentD2CProfile  = {};
     for(const auto &d2cProfile: d2cProfiles) {
         if(d2cProfile.colorWidth == colorWidth && d2cProfile.colorHeight == colorHeight && d2cProfile.depthWidth == depthWidth
-           && d2cProfile.depthHeight == depthHeight && (d2cProfile.alignType & ALIGN_D2C_HW)) {
+           && d2cProfile.depthHeight == depthHeight && (d2cProfile.alignType == ALIGN_D2C_HW)) {
             currentD2CProfile = d2cProfile;
             break;
         }
     }
 
-    if(static_cast<size_t>(currentD2CProfile.paramIndex) + 1 > calibrationCameraParams.size()) {
+    bool valid = currentD2CProfile.colorWidth != 0 && currentD2CProfile.colorHeight != 0 && currentD2CProfile.depthWidth != 0 && currentD2CProfile.depthHeight != 0;
+    if(!valid || static_cast<size_t>(currentD2CProfile.paramIndex) + 1 > calibrationCameraParams.size()) {
         throw invalid_value_exception("Current stream profile is not support hardware d2c process");
         return;
     }
@@ -258,7 +259,7 @@ void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint3
 }
 
 void DepthFrameProcessor::enableHardwareD2CProcess(bool enable) {
-    TRY_EXECUTE(setConfigValue("HardwareD2CProcessor#255", static_cast<double>(enable)));
+    TRY_EXECUTE(setConfigValueSync("HardwareD2CProcessor#255", static_cast<double>(enable)));
 }
 
 }  // namespace libobsensor

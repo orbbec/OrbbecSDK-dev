@@ -23,6 +23,7 @@ public:
 
     const std::vector<OBFilterConfigSchemaItem> &getConfigSchemaVec() override;
     void                                         setConfigValue(const std::string &name, double value) override;
+    void                                         setConfigValueSync(const std::string &name, double value) override;
     double                                       getConfigValue(const std::string &name) override;
 
     // Synchronize

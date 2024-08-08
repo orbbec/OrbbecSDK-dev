@@ -23,6 +23,7 @@ public:
     virtual const std::string                           &getConfigSchema() const                               = 0;
     virtual const std::vector<OBFilterConfigSchemaItem> &getConfigSchemaVec()                                  = 0;
     virtual void                                         setConfigValue(const std::string &name, double value) = 0;
+    virtual void                                         setConfigValueSync(const std::string &name, double value) = 0;
     virtual double                                       getConfigValue(const std::string &name)               = 0;
 
     virtual void reset()           = 0;  // Stop thread, clean memory, reset status

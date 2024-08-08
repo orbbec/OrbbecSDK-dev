@@ -3,7 +3,7 @@
 #include "sensor/video/DisparityBasedSensor.hpp"
 #include "IDeviceComponent.hpp"
 #include "property/InternalProperty.hpp"
-#include "sensor/rawphase/RawPhaseStreamer.hpp"
+#include "rawphase/RawPhaseStreamer.hpp"
 
 namespace libobsensor {
 FemtoBoltPropertyAccessor::FemtoBoltPropertyAccessor(IDevice *owner) : owner_(owner) {}

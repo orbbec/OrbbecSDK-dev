@@ -185,7 +185,7 @@ public:
      */
     OBCameraIntrinsic getIntrinsic() const {
         ob_error *error     = nullptr;
-        auto      intrinsic = ob_video_stream_get_intrinsic(impl_, &error);
+        auto      intrinsic = ob_video_stream_profile_get_intrinsic(impl_, &error);
         Error::handle(&error);
         return intrinsic;
     }
@@ -198,7 +198,7 @@ public:
      */
     OBCameraDistortion getDistortion() const {
         ob_error *error      = nullptr;
-        auto      distortion = ob_video_stream_get_distortion(impl_, &error);
+        auto      distortion = ob_video_stream_profile_get_distortion(impl_, &error);
         Error::handle(&error);
         return distortion;
     }

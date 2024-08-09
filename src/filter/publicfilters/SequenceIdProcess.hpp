@@ -20,7 +20,7 @@ protected:
     std::recursive_mutex valueUpdateMutex_;
 
     // selected id; 0 for all
-    uint32_t             selectedID_ = 0;
+    int32_t             selectedID_ = -1;
 
     std::map<std::pair<int64_t, OBFrameType>, std::shared_ptr<Frame>> recentFrames_;
 };

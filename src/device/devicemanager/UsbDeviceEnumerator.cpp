@@ -3,6 +3,7 @@
 
 #include "gemini330/G330DeviceInfo.hpp"
 #include "gemini2/G2DeviceInfo.hpp"
+#include "astra2/Astra2DeviceInfo.hpp"
 #include "femtobolt/FemtoBoltDeviceInfo.hpp"
 #include "femtomega/FemtoMegaDeviceInfo.hpp"
 
@@ -157,6 +158,9 @@ DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoL
 
     auto g2Devs = G2DeviceInfo::createDeviceInfos(portInfoList);
     std::copy(g2Devs.begin(), g2Devs.end(), std::back_inserter(deviceInfoList));
+
+    auto a2Devs = Astra2DeviceInfo::createDeviceInfos(portInfoList);
+    std::copy(a2Devs.begin(), a2Devs.end(), std::back_inserter(deviceInfoList));
 
     auto femtoBoltDevs = FemtoBoltDeviceInfo::createDeviceInfos(portInfoList);
     std::copy(femtoBoltDevs.begin(), femtoBoltDevs.end(), std::back_inserter(deviceInfoList));

@@ -9,8 +9,8 @@
 #include "logger/LoggerInterval.hpp"
 #include "logger/LoggerHelper.hpp"
 #include "utils/Utils.hpp"
-#include "component/frameprocessor/FrameProcessor.hpp"
 #include "IAlgParamManager.hpp"
+#include "component/frameprocessor/FrameProcessor.hpp"
 
 #include <cmath>
 #include <algorithm>

@@ -1,4 +1,4 @@
-#include "G2StreamProfileFilter.hpp"
+#include "Astra2StreamProfileFilter.hpp"
 
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
@@ -6,24 +6,18 @@
 #include "property/InternalProperty.hpp"
 
 namespace libobsensor {
-G2StreamProfileFilter::G2StreamProfileFilter(IDevice *owner) : DeviceComponentBase(owner) {
+Astra2StreamProfileFilter::Astra2StreamProfileFilter(IDevice *owner) : DeviceComponentBase(owner) {
     fetchEffectiveStreamProfiles();
 }
 
 static bool isMatch(OBSensorType sensorType, std::shared_ptr<const VideoStreamProfile> videoProfile, OBEffectiveStreamProfile effProfile) {
-    bool isSensorTypeEqual = sensorType == effProfile.sensorType;
-
-    // Compatibility processing, normal mode has IR, but no IR_LEFT, IR_RIGHT; calibration mode has no IR, but has IR_LEFT, IR_RIGHT
-    // IR and IR_LEFT both use the IR channel, so they are the same. IR_RIGHT uses the Depth channel, so IR_RIGHT must match accurately
-    if(!isSensorTypeEqual && sensorType != OB_SENSOR_IR_RIGHT && effProfile.sensorType != OB_SENSOR_IR_RIGHT) {
-        isSensorTypeEqual = isIRSensor(sensorType) && isIRSensor(effProfile.sensorType);
-    }
+    bool isSensorTypeEqual = sensorType == effProfile.sensorType || (sensorType == OB_SENSOR_IR && effProfile.sensorType == OB_SENSOR_IR_LEFT);
 
     return isSensorTypeEqual && (videoProfile->getFormat() == effProfile.format) && (videoProfile->getFps() <= effProfile.maxFps)
            && (videoProfile->getWidth() == effProfile.width) && (videoProfile->getHeight() == effProfile.height);
 }
 
-StreamProfileList G2StreamProfileFilter::filter(const StreamProfileList &profiles) const {
+StreamProfileList Astra2StreamProfileFilter::filter(const StreamProfileList &profiles) const {
     StreamProfileList filteredProfiles;
 
     for(const auto &profile: profiles) {
@@ -38,7 +32,6 @@ StreamProfileList G2StreamProfileFilter::filter(const StreamProfileList &profile
         for(auto &effProfile: effectiveStreamProfiles_) {
             if(isMatch(sensorType, videoProfile, effProfile)) {
                 filteredProfiles.push_back(profile);
-                continue;
             }
         }
     }
@@ -57,7 +50,7 @@ static std::vector<OBEffectiveStreamProfile> effectiveStreamProfilesParse(const 
     return output;
 }
 
-void G2StreamProfileFilter::fetchEffectiveStreamProfiles() {
+void Astra2StreamProfileFilter::fetchEffectiveStreamProfiles() {
     auto owner      = getOwner();
     auto propServer = owner->getPropertyServer();
 

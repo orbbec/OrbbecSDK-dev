@@ -18,11 +18,6 @@ std::shared_ptr<Context> Context::getInstance(const std::string &configPath) {
     return ctxInstance;
 }
 
-bool Context::hasInstance() {
-    std::unique_lock<std::mutex> lock(instanceMutex_);
-    return !instanceWeakPtr_.expired();
-}
-
 Context::Context(const std::string &configFilePath) {
     envConfig_               = EnvConfig::getInstance(configFilePath);
     logger_                  = Logger::getInstance();

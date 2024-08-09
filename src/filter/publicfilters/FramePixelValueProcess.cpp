@@ -112,12 +112,12 @@ std::shared_ptr<Frame> PixelValueScaler::processFunc(std::shared_ptr<const Frame
     return outFrame;
 }
 
-PixelValueCutOff::PixelValueCutOff(const std::string &name) : FilterBase(name) {}
-PixelValueCutOff::~PixelValueCutOff() noexcept {}
+Threshold::Threshold(const std::string &name) : FilterBase(name) {}
+Threshold::~Threshold() noexcept {}
 
-void PixelValueCutOff::updateConfig(std::vector<std::string> &params) {
+void Threshold::updateConfig(std::vector<std::string> &params) {
     if(params.size() != 2) {
-        throw invalid_value_exception("PixelValueCutOff config error: params size not match");
+        throw invalid_value_exception("Threshold config error: params size not match");
     }
     try {
         std::lock_guard<std::mutex> cutOffLock(mtx_);
@@ -132,18 +132,18 @@ void PixelValueCutOff::updateConfig(std::vector<std::string> &params) {
         }
     }
     catch(const std::exception &e) {
-        throw invalid_value_exception("PixelValueCutOff config error: " + std::string(e.what()));
+        throw invalid_value_exception("Threshold config error: " + std::string(e.what()));
     }
 }
 
-const std::string &PixelValueCutOff::getConfigSchema() const {
+const std::string &Threshold::getConfigSchema() const {
     // csv format: name，type， min，max，step，default，description
     static const std::string schema = "min, int, 0, 16000, 1, 0, min depth range\n"
                                       "max, int, 0, 16000, 1, 16000, max depth range";
     return schema;
 }
 
-std::shared_ptr<Frame> PixelValueCutOff::processFunc(std::shared_ptr<const Frame> frame) {
+std::shared_ptr<Frame> Threshold::processFunc(std::shared_ptr<const Frame> frame) {
     if(!frame) {
         return nullptr;
     }
@@ -167,7 +167,7 @@ std::shared_ptr<Frame> PixelValueCutOff::processFunc(std::shared_ptr<const Frame
                                   (uint32_t)(min_ / scale), (uint32_t)(max_ / scale));
             break;
         default:
-            LOG_ERROR_INTVL("PixelValueCutOff: unsupported format: {}", frame->getFormat());
+            LOG_ERROR_INTVL("Threshold: unsupported format: {}", frame->getFormat());
             break;
         }
     }

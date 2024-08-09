@@ -1,4 +1,4 @@
-#include "G2StreamProfileFilter.hpp"
+#include "Astra2StreamProfileFilter.hpp"
 
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
@@ -6,7 +6,7 @@
 #include "property/InternalProperty.hpp"
 
 namespace libobsensor {
-G2StreamProfileFilter::G2StreamProfileFilter(IDevice *owner) : DeviceComponentBase(owner) {
+Astra2StreamProfileFilter::Astra2StreamProfileFilter(IDevice *owner) : DeviceComponentBase(owner) {
     fetchEffectiveStreamProfiles();
 }
 
@@ -19,11 +19,11 @@ static bool isMatch(OBSensorType sensorType, std::shared_ptr<const VideoStreamPr
         isSensorTypeEqual = isIRSensor(sensorType) && isIRSensor(effProfile.sensorType);
     }
 
-    return isSensorTypeEqual && (videoProfile->getFormat() == effProfile.format) && (videoProfile->getFps() <= effProfile.maxFps)
+    return (sensorType == effProfile.sensorType) && (videoProfile->getFormat() == effProfile.format) && (videoProfile->getFps() <= effProfile.maxFps)
            && (videoProfile->getWidth() == effProfile.width) && (videoProfile->getHeight() == effProfile.height);
 }
 
-StreamProfileList G2StreamProfileFilter::filter(const StreamProfileList &profiles) const {
+StreamProfileList Astra2StreamProfileFilter::filter(const StreamProfileList &profiles) const {
     StreamProfileList filteredProfiles;
 
     for(const auto &profile: profiles) {
@@ -38,7 +38,6 @@ StreamProfileList G2StreamProfileFilter::filter(const StreamProfileList &profile
         for(auto &effProfile: effectiveStreamProfiles_) {
             if(isMatch(sensorType, videoProfile, effProfile)) {
                 filteredProfiles.push_back(profile);
-                continue;
             }
         }
     }
@@ -57,7 +56,7 @@ static std::vector<OBEffectiveStreamProfile> effectiveStreamProfilesParse(const 
     return output;
 }
 
-void G2StreamProfileFilter::fetchEffectiveStreamProfiles() {
+void Astra2StreamProfileFilter::fetchEffectiveStreamProfiles() {
     auto owner      = getOwner();
     auto propServer = owner->getPropertyServer();
 

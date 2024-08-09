@@ -25,7 +25,7 @@ namespace PublicFilterCreatorLoader {
 std::map<std::string, std::shared_ptr<IFilterCreator>> getCreators() {
     static std::map<std::string, std::shared_ptr<IFilterCreator>> filterCreators = {
         ADD_FILTER_CREATOR(PixelValueScaler),
-        ADD_FILTER_CREATOR(PixelValueCutOff),
+        ADD_FILTER_CREATOR(Threshold),
         ADD_FILTER_CREATOR(PixelValueOffset),
         ADD_FILTER_CREATOR(HdrMerge),
         ADD_FILTER_CREATOR(SequenceIdFilter),

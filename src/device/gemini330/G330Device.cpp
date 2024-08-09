@@ -651,7 +651,7 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(hdrMergeFilter);
         }
 
-        if(filterFactory->isFilterCreatorExists("SequenceIdFilter")) {
+        if(filterFactory->isFilterCureatorExists("SequenceIdFilter")) {
             auto sequenceIdFilter = filterFactory->createFilter("SequenceIdFilter");
             depthFilterList.push_back(sequenceIdFilter);
         }

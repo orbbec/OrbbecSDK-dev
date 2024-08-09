@@ -399,9 +399,9 @@ void Pipeline::checkHardwareD2CConfig() {
     if(algParamManager && colorProfile && depthProfile) {
         auto calibrationCameraParams = algParamManager->getCalibrationCameraParamList();
         auto d2cProfileList          = algParamManager->getD2CProfileList();
-        depthFrameProcessor->enableHardwareD2CProcess(true);
         depthFrameProcessor->setHardwareD2CProcessParams(colorProfile->getWidth(), colorProfile->getHeight(), depthProfile->getWidth(),
                                                          depthProfile->getHeight(), calibrationCameraParams, d2cProfileList);
+        depthFrameProcessor->enableHardwareD2CProcess(true);
     }
 }
 

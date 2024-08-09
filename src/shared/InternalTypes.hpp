@@ -158,4 +158,24 @@ typedef struct {
     uint32_t     maxFps;      ///< Maximum supported frame rate
 } OBEffectiveStreamProfile, ob_effective_stream_profile;
 
+typedef struct {
+    uint16_t sensorType;  // enum value of OBSensorType
+    union Profile {
+        struct Video {  // Color、IR、Depth使用该结构体
+            uint32_t width;
+            uint32_t height;
+            uint32_t fps;
+            uint32_t formatFourcc;  // 如： {'Y', 'U', 'Y', 'V'} // fourcc是UVC里的一个通用概念
+        } video;
+        struct Accel {                // Accel使用该结构体
+            uint16_t fullScaleRange;  // enum value of OBAccelFullScaleRange
+            uint16_t sampleRate;      // enum value of OBAccelSampleRate
+        } accel;
+        struct Gyro {                 // Gyro 使用该结构体
+            uint16_t fullScaleRange;  // enum value of OBGyroFullScaleRange
+            uint16_t sampleRate;      // enum value of OBGyroSampleRate
+        } gyro;
+    } profile;
+} OBInternalStreamProfile;
+
 #pragma pack(pop)

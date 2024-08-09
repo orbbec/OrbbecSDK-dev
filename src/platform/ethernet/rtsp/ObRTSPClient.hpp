@@ -29,7 +29,7 @@ enum RTSPState {
 
 class ObRTSPClient : public RTSPClient {
 public:
-    static ObRTSPClient *createNew(UsageEnvironment &env, char const *rtspURL, MutableFrameCallback callback, int verbosityLevel = 0,
+    static ObRTSPClient *createNew(std::shared_ptr<const StreamProfile> profile, UsageEnvironment &env, char const *rtspURL, MutableFrameCallback callback, int verbosityLevel = 0,
                                    portNumBits tunnelOverHTTPPortNum = 0, int socketNumToServer = -1);
 
     virtual ~ObRTSPClient() noexcept;
@@ -39,7 +39,7 @@ public:
     void stopStream();
 
 protected:
-    ObRTSPClient(UsageEnvironment &env, char const *rtspURL, MutableFrameCallback callback, int verbosityLevel = 0, portNumBits tunnelOverHTTPPortNum = 0,
+    ObRTSPClient(std::shared_ptr<const StreamProfile> profile, UsageEnvironment &env, char const *rtspURL, MutableFrameCallback callback, int verbosityLevel = 0, portNumBits tunnelOverHTTPPortNum = 0,
                  int socketNumToServer = -1);
 
 private:
@@ -71,6 +71,7 @@ private:
     void clearSinks();
 
 private:
+    std::shared_ptr<const StreamProfile> profile_;
     MutableFrameCallback frameCallback_;
 
     std::string                 errorMsg_;

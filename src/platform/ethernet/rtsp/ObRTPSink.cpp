@@ -52,12 +52,12 @@ OBFormat codecToOBFormat(const std::string &codec) {
     return OB_FORMAT_UNKNOWN;
 }
 
-ObRTPSink *ObRTPSink::createNew(UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId) {
-    return new ObRTPSink(env, subsession, callback, streamId);
+ObRTPSink *ObRTPSink::createNew(std::shared_ptr<const StreamProfile> streamProfile, UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId) {
+    return new ObRTPSink(streamProfile, env, subsession, callback, streamId);
 }
 
-ObRTPSink::ObRTPSink(UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId)
-    : MediaSink(env), subsession_(subsession), frameCallback_(callback), frameCount_(0), destroy_(false), currentBuffer_(nullptr) {
+ObRTPSink::ObRTPSink(std::shared_ptr<const StreamProfile> streamProfile, UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId)
+    : streamProfile_(streamProfile), MediaSink(env), subsession_(subsession), frameCallback_(callback), frameCount_(0), destroy_(false), currentBuffer_(nullptr) {
     streamId_ = strDup(streamId);
     envir() << "ObRTPSink created! streamId = " << streamId_ << "\n";
 

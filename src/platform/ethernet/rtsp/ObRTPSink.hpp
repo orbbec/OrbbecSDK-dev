@@ -110,7 +110,8 @@ private:
 
 class ObRTPSink : public MediaSink {
 public:
-    static ObRTPSink *createNew(UsageEnvironment    &env,
+    static ObRTPSink *createNew(std::shared_ptr<const StreamProfile> streamProfile,
+                                UsageEnvironment    &env,
                                 MediaSubsession     &subsession,  // identifies the kind of data that's being received
                                 MutableFrameCallback callback,
                                 char const          *streamId = NULL);  // identifies the stream itself (optional)
@@ -118,7 +119,7 @@ public:
     virtual ~ObRTPSink() noexcept;
 
 protected:
-    ObRTPSink(UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId = NULL);
+    ObRTPSink(std::shared_ptr<const StreamProfile> streamProfile, UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId = NULL);
 
 private:
     static void afterGettingFrame(void *clientData, unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime,

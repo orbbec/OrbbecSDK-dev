@@ -35,6 +35,7 @@ public:
     void stop() override;
 
     virtual void updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs);
+    void         updateStreamProfileList(const StreamProfileList &profileList) override;
 
     void setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container);
     void setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator);

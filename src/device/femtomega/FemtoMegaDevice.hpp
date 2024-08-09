@@ -20,8 +20,10 @@ private:
     void initProperties();
 
 #if defined(BUILD_NET_PAL)
-    void initNetSensorList();
-    void initNetProperties();
+    void initNetModeSensorList();
+    void initNetModeProperties();
+    void initNetModeSensorStreamProfileList(std::shared_ptr<ISensor> sensor);
+    void fetchNetModeAllProfileList();
 #endif
 
     void initSensorStreamProfile(std::shared_ptr<ISensor> sensor);
@@ -31,5 +33,10 @@ private:
     std::shared_ptr<IFrameMetadataParserContainer> colorMdParserContainer_;
     std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
     std::shared_ptr<IFrameTimestampCalculator>     videoFrameTimestampCalculator_;
+
+#if defined(BUILD_NET_PAL)
+    StreamProfileList allProfileList_;
+#endif
+
 };
 }  // namespace libobsensor

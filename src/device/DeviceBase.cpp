@@ -35,7 +35,7 @@ const std::string &DeviceBase::getExtensionInfo(const std::string &infoKey) cons
 
 DeviceBase::~DeviceBase() noexcept {
     deactivate();  // deactivate() will clear all components
-};
+}
 
 void DeviceBase::deactivate() {
     if(hasAnySensorStreamActivated()) {

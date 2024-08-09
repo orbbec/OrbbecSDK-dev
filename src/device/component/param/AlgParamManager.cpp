@@ -262,14 +262,14 @@ void TOFDeviceCommandAlgParamManager::fetchParamFromDevice() {
 
     if(!data.empty()) {
         d2cProfileList_ = AlgParseHelper::d2cProfileInfoParse(data.data(), static_cast<uint32_t>(data.size()));
-        auto iter       = d2cProfileList_.begin();
-        while(iter != d2cProfileList_.end()) {
-            if((*iter).alignType == ALIGN_D2C_HW_MODE) {
-                iter = d2cProfileList_.erase(iter);
-                continue;
-            }
-            iter++;
-        }
+        // auto iter       = d2cProfileList_.begin();
+        // while(iter != d2cProfileList_.end()) {
+        //     if((*iter).alignType == ALIGN_D2C_HW_MODE) {
+        //         iter = d2cProfileList_.erase(iter);
+        //         continue;
+        //     }
+        //     iter++;
+        // }
         LOG_DEBUG("Get depth to color profile list success! num={}", d2cProfileList_.size());
     }
 

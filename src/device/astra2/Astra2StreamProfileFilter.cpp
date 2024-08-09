@@ -11,15 +11,9 @@ Astra2StreamProfileFilter::Astra2StreamProfileFilter(IDevice *owner) : DeviceCom
 }
 
 static bool isMatch(OBSensorType sensorType, std::shared_ptr<const VideoStreamProfile> videoProfile, OBEffectiveStreamProfile effProfile) {
-    bool isSensorTypeEqual = sensorType == effProfile.sensorType;
+    bool isSensorTypeEqual = sensorType == effProfile.sensorType || (sensorType == OB_SENSOR_IR && effProfile.sensorType == OB_SENSOR_IR_LEFT);
 
-    // Compatibility processing, normal mode has IR, but no IR_LEFT, IR_RIGHT; calibration mode has no IR, but has IR_LEFT, IR_RIGHT
-    // IR and IR_LEFT both use the IR channel, so they are the same. IR_RIGHT uses the Depth channel, so IR_RIGHT must match accurately
-    if(!isSensorTypeEqual && sensorType != OB_SENSOR_IR_RIGHT && effProfile.sensorType != OB_SENSOR_IR_RIGHT) {
-        isSensorTypeEqual = isIRSensor(sensorType) && isIRSensor(effProfile.sensorType);
-    }
-
-    return (sensorType == effProfile.sensorType) && (videoProfile->getFormat() == effProfile.format) && (videoProfile->getFps() <= effProfile.maxFps)
+    return isSensorTypeEqual && (videoProfile->getFormat() == effProfile.format) && (videoProfile->getFps() <= effProfile.maxFps)
            && (videoProfile->getWidth() == effProfile.width) && (videoProfile->getHeight() == effProfile.height);
 }
 

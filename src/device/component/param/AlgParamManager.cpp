@@ -147,7 +147,6 @@ void AlgParamManagerBase::bindIntrinsic(std::vector<std::shared_ptr<const Stream
                 // mirror intrinsic
                 intrinsic.cx  = (float)1.0 * intrinsic.width - intrinsic.cx - 1;
                 distortion.p2 = -distortion.p2;
-                std::swap(postProcessParam.alignLeft, postProcessParam.alignRight);
             }
 
             if(streamType == OB_STREAM_COLOR) {

@@ -104,7 +104,7 @@ public:
      *
      * @return bool Transform result
      */
-    OB_EXPORT bool transformation2dto2d(const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, const OBPoint2f source_point2f,
+    static bool transformation2dto2d(const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, const OBPoint2f source_point2f,
                                             const float source_depth_pixel_value, const OBCameraIntrinsic target_intrinsic,
                                             const OBCameraDistortion target_distortion,OBExtrinsic extrinsic, OBPoint2f *target_point2f)  {
         ob_error *error = NULL;
@@ -187,7 +187,7 @@ public:
 
     // \deprecated This function is deprecated and will be removed in a future version.  
     //             Use the transformation3dto3d instead.  
-    static bool calibration3dTo3d(const OBCalibrationParam calibrationParam, const OBPoint3f sourcePoint3f, const OBSensorType sourceSensorType,
+    OB_DEPRECATED static bool calibration3dTo3d(const OBCalibrationParam calibrationParam, const OBPoint3f sourcePoint3f, const OBSensorType sourceSensorType,
                                   const OBSensorType targetSensorType, OBPoint3f *targetPoint3f) {
         ob_error *error = NULL;
         bool result = ob_calibration_3d_to_3d(calibrationParam, sourcePoint3f, sourceSensorType, targetSensorType, targetPoint3f, &error);
@@ -196,7 +196,7 @@ public:
     }
     // \deprecated This function is deprecated and will be removed in a future version.  
     //             Use the transformation2dto3d instead. 
-    static bool calibration2dTo3d(const OBCalibrationParam calibrationParam, const OBPoint2f sourcePoint2f, const float sourceDepthPixelValue,
+    OB_DEPRECATED static bool calibration2dTo3d(const OBCalibrationParam calibrationParam, const OBPoint2f sourcePoint2f, const float sourceDepthPixelValue,
                                   const OBSensorType sourceSensorType, const OBSensorType targetSensorType, OBPoint3f *targetPoint3f) {
         ob_error *error = NULL;
         bool result = ob_calibration_2d_to_3d(calibrationParam, sourcePoint2f, sourceDepthPixelValue, sourceSensorType, targetSensorType, targetPoint3f, &error);
@@ -205,7 +205,7 @@ public:
     }
     // \deprecated This function is deprecated and will be removed in a future version.  
     //             Use the transformation2dto3dUndistortion instead. 
-    static bool calibration2dTo3dUndistortion(const OBCalibrationParam calibrationParam, const OBPoint2f sourcePoint2f, const float sourceDepthPixelValue,
+    OB_DEPRECATED static bool calibration2dTo3dUndistortion(const OBCalibrationParam calibrationParam, const OBPoint2f sourcePoint2f, const float sourceDepthPixelValue,
                                               const OBSensorType sourceSensorType, const OBSensorType targetSensorType, OBPoint3f *targetPoint3f) {
         ob_error *error = NULL;
         bool result = ob_calibration_2d_to_3d_undistortion(calibrationParam, sourcePoint2f, sourceDepthPixelValue, sourceSensorType, targetSensorType, targetPoint3f, &error);
@@ -214,7 +214,7 @@ public:
     }
     // \deprecated This function is deprecated and will be removed in a future version.  
     //             Use the transformation3dto2d instead.
-    static bool calibration3dTo2d(const OBCalibrationParam calibrationParam, const OBPoint3f sourcePoint3f, const OBSensorType sourceSensorType,
+    OB_DEPRECATED static bool calibration3dTo2d(const OBCalibrationParam calibrationParam, const OBPoint3f sourcePoint3f, const OBSensorType sourceSensorType,
                                   const OBSensorType targetSensorType, OBPoint2f *targetPoint2f) {
         ob_error *error = NULL;
         bool result = ob_calibration_3d_to_2d(calibrationParam, sourcePoint3f, sourceSensorType, targetSensorType, targetPoint2f, &error);
@@ -223,7 +223,7 @@ public:
     }
     // \deprecated This function is deprecated and will be removed in a future version.  
     //             Use the transformation2dto2d instead.
-    static bool calibration2dTo2d(const OBCalibrationParam calibrationParam, const OBPoint2f sourcePoint2f, const float sourceDepthPixelValue,
+    OB_DEPRECATED static bool calibration2dTo2d(const OBCalibrationParam calibrationParam, const OBPoint2f sourcePoint2f, const float sourceDepthPixelValue,
                                   const OBSensorType sourceSensorType, const OBSensorType targetSensorType, OBPoint2f *targetPoint2f) {
         ob_error *error = NULL;
         bool result = ob_calibration_2d_to_2d(calibrationParam, sourcePoint2f, sourceDepthPixelValue, sourceSensorType, targetSensorType, targetPoint2f, &error);

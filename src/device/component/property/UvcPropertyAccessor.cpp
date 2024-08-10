@@ -40,8 +40,8 @@ uint32_t convertToUvcCompatibleID(uint32_t propertyId) {
     case OB_PROP_COLOR_HUE_INT:
     case OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT:
     case OB_PROP_IR_BRIGHTNESS_INT:
-        // case OB_PROP_COLOR_AE_MAX_EXPOSURE_INT:  // todo：not supported yet
-        // case OB_PROP_IR_AE_MAX_EXPOSURE_INT:
+    case OB_PROP_COLOR_AE_MAX_EXPOSURE_INT:  // todo：not supported yet
+    case OB_PROP_IR_AE_MAX_EXPOSURE_INT:
         return propertyId;
 
     default:

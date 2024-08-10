@@ -423,17 +423,22 @@ typedef enum {
     /**
      * @brief Slave/secondary device synchronization status (read-only)
      */
-    OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL            = 188,
+    OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL = 188,
+
+    /**
+     * @brief Color AE max exposure
+     */
+    OB_PROP_COLOR_AE_MAX_EXPOSURE_INT = 189,
 
     /**
      * @brief Max exposure time of IR auto exposure
      */
-    OB_PROP_IR_AE_MAX_EXPOSURE_INT                   = 190,
+    OB_PROP_IR_AE_MAX_EXPOSURE_INT = 190,
 
     /**
      * @brief Disparity search range mode, 1: 128, 2: 256
      */
-    OB_PROP_DISP_SEARCH_RANGE_MODE_INT               = 191,
+    OB_PROP_DISP_SEARCH_RANGE_MODE_INT = 191,
 
     /**
      * @brief Baseline calibration parameters

@@ -16,7 +16,8 @@ namespace libobsensor {
 
 class ObRTPBuffer {
 public:
-    ObRTPBuffer(uint32_t maxDataSize) : bufferSize_(maxDataSize), sequenceNumber_(0), timestamp_(0), staticHeaderSize_(0), recvdDataSize_(0) {
+    ObRTPBuffer(uint32_t maxDataSize)
+        : bufferSize_(maxDataSize), sequenceNumber_(0), timestamp_(0), staticHeaderSize_(0), recvdDataSize_(0), dynamicHeaderSize_(0) {
         buffer_ = new uint8_t[maxDataSize];
     }
 
@@ -58,6 +59,10 @@ public:
 
     void setHeaderSize(uint32_t size) {
         staticHeaderSize_ = size;
+    }
+
+    void setDynamicHeaderSize(uint32_t size) {
+        dynamicHeaderSize_ = size;
     }
 
     void setRecvdDataSize(uint32_t size) {
@@ -106,6 +111,7 @@ private:
     std::string codecName_;
     uint32_t    staticHeaderSize_;
     uint32_t    recvdDataSize_;  // size of data received = dataSize_ + dynamicHeaderSize_
+    uint32_t    dynamicHeaderSize_;
 };
 
 class ObRTPSink : public MediaSink {

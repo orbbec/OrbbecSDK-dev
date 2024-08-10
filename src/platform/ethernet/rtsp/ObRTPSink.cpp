@@ -32,7 +32,7 @@ typedef struct {
 #pragma pack()
 
 const std::vector<std::string> OBVendorCodecs = {
-    "OB_FMT_Y16", "OB_FMT_Y8", "OB_FMT_Y10", "OB_FMT_RVL", "OB_FMT_MJPEG",
+    "OB_FMT_Y16", "OB_FMT_Y8", "OB_FMT_Y10", "OB_FMT_RVL", "OB_FMT_MJPEG", "YUYV",
 };
 
 bool isOBVendorCodec(const std::string &codec) {
@@ -404,8 +404,22 @@ void ObRTPSink::outputFrameFunc() {
         if(format != streamProfile_->getFormat()) {
             // LOG_ERROR_INTVA
         }
+        
         auto frame = FrameFactory::createFrameFromStreamProfile(streamProfile_);
-        memcpy(frame->getDataMutable(), output->getRecvdDataBuffer(), output->getRecvdDataSize());
+
+        uint32_t frameOffset = 0;
+        if(isOBVendorCodec(codecName)) {
+            frameOffset = sizeof(OBNetworkFrameHeader);
+            output->setDynamicHeaderSize(sizeof(OBNetworkFrameHeader));
+            auto header = output->getDynamicHeader<OBNetworkFrameHeader>();
+            frame->setTimeStampUsec(header->timestamp);
+            frame->setNumber(header->frameCounter);
+        }
+        else {
+            frame->setTimeStampUsec(output->getTimestamp());
+            frame->setNumber(output->getSequenceNumber());
+        }
+        frame->updateData(output->getRecvdDataBuffer() + frameOffset, output->getRecvdDataSize() - frameOffset);
 
         frameCallback_(frame);
         {

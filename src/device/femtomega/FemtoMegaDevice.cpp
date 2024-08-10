@@ -577,7 +577,7 @@ void FemtoMegaDevice::initNetModeSensorList() {
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<AccelSensor>(this, port, imuStreamerSharedPtr);
 
-                initNetModeSensorStreamProfileList(sensor);
+                initSensorStreamProfile(sensor);
                 return sensor;
             },
             true);
@@ -691,6 +691,29 @@ void FemtoMegaDevice::initNetModeProperties() {
             propertyServer->registerProperty(OB_RAW_DATA_STREAM_PROFILE_LIST, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_RAW_DATA_ALIGN_CALIB_PARAM, "", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_RAW_DATA_D2C_ALIGN_SUPPORT_PROFILE_LIST, "", "r", vendorPropertyAccessor);
+
+            // auto        propServer = getPropertyServer();
+            // auto        version    = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
+            // std::string fwVersion  = version.firmwareVersion;
+            // int firmVer = 0;
+            // utils::getFirmwareVersionInt(fwVersion, firmVer);
+            // if(firmVer >= 10107) {
+            //     //propertyServer->registerProperty(OB_RAW_DATA_DEVICE_UPGRADE, "", "rw", vendorPropertyAccessor);
+            //     //propertyServer->registerProperty(OB_STRUCT_DEVICE_UPGRADE_STATUS, "", "rw", vendorPropertyAccessor);                                    
+            // }
+            // if(firmVer >= 10201) {                                   
+            //     propertyServer->registerProperty(OB_PROP_RESTORE_FACTORY_SETTINGS_BOOL, "w", "w", vendorPropertyAccessor);
+            //     propertyServer->registerProperty(OB_PROP_DEVICE_IN_RECOVERY_MODE_BOOL, "r", "r", vendorPropertyAccessor);
+            //     propertyServer->registerProperty(OB_PROP_DEVICE_DEVELOPMENT_MODE_INT, "rw", "rw", vendorPropertyAccessor);
+
+            // }
+            // if(firmVer >= 10202) {
+            //     propertyServer->registerProperty(OB_PROP_TIMER_RESET_ENABLE_BOOL, "rw", "rw", vendorPropertyAccessor);
+            //     propertyServer->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "w", "w", vendorPropertyAccessor);
+            // }
+            // if(firmVer >= 10203) {
+            //     propertyServer->registerProperty(OB_STRUCT_DEVICE_STATIC_IP_CONFIG_RECORD, "rw", "rw", vendorPropertyAccessor);
+            // }
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);
@@ -744,10 +767,16 @@ void FemtoMegaDevice::initNetModeSensorStreamProfileList(std::shared_ptr<ISensor
 }
 
 void FemtoMegaDevice::fetchNetModeAllProfileList() {
-    auto                 propServer = getPropertyServer();
+    auto propServer = getPropertyServer();
+    BEGIN_TRY_EXECUTE({
+        propServer->setPropertyValueT(OB_PROP_DEVICE_COMMUNICATION_TYPE_INT, OB_COMM_NET);
+    })
+    CATCH_EXCEPTION_AND_EXECUTE({ LOG_ERROR("Set device ethernet mode failed!"); })
+
     std::vector<uint8_t> data;
     BEGIN_TRY_EXECUTE({
-        propServer->getRawData(OB_RAW_DATA_STREAM_PROFILE_LIST,
+        propServer->getRawData(
+            OB_RAW_DATA_STREAM_PROFILE_LIST,
             [&](OBDataTranState state, OBDataChunk *dataChunk) {
                 if(state == DATA_TRAN_STAT_TRANSFERRING) {
                     data.insert(data.end(), dataChunk->data, dataChunk->data + dataChunk->size);
@@ -762,19 +791,19 @@ void FemtoMegaDevice::fetchNetModeAllProfileList() {
 
     if(!data.empty()) {
         std::vector<OBInternalStreamProfile> outputProfiles;
-        uint16_t dataSize = static_cast<uint16_t>(data.size());
-        outputProfiles = parseBuffer<OBInternalStreamProfile>(data.data(), dataSize);
+        uint16_t                             dataSize = static_cast<uint16_t>(data.size());
+        outputProfiles                                = parseBuffer<OBInternalStreamProfile>(data.data(), dataSize);
         allProfileList_.clear();
         for(auto item: outputProfiles) {
             OBStreamType streamType = utils::mapSensorTypeToStreamType((OBSensorType)item.sensorType);
             OBFormat     format     = utils::uvcFourccToOBFormat(item.profile.video.formatFourcc);
-            allProfileList_.push_back(StreamProfileFactory::createVideoStreamProfile(streamType, format, item.profile.video.width, item.profile.video.height,                                                                    item.profile.video.fps));
+            allProfileList_.push_back(StreamProfileFactory::createVideoStreamProfile(streamType, format, item.profile.video.width, item.profile.video.height,
+                                                                                     item.profile.video.fps));
         }
     }
     else {
         LOG_WARN("Get stream profile list failed!");
     }
-
 }
 
 std::vector<std::shared_ptr<IFilter>> FemtoMegaDevice::createRecommendedPostProcessingFilters(OBSensorType type) {

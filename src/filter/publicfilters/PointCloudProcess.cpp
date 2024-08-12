@@ -18,13 +18,13 @@ PointCloudFilter::PointCloudFilter(const std::string &name)
 PointCloudFilter::~PointCloudFilter() noexcept {}
 
 void PointCloudFilter::reset() {
+    FilterBase::reset();
     if(formatConverter_) {
         formatConverter_.reset();
     }
     if(tablesData_) {
         tablesData_.reset();
     }
-    FilterBase::reset();
 }
 
 void PointCloudFilter::updateConfig(std::vector<std::string> &params) {

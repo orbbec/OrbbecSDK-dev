@@ -59,6 +59,7 @@ const std::string &Align::getConfigSchema() const {
 }
 
 void Align::reset() {
+    FilterBase::reset();
     pImpl->reset();
 }
 

@@ -10,7 +10,7 @@ namespace libobsensor {
 
 class AlgParseHelper {
 public:
-    static std::vector<OBCameraParam> alignCalibParamParse(uint8_t *data, uint32_t size);
+    static std::vector<OBCameraParam_Internal_V0> alignCalibParamParse(uint8_t *data, uint32_t size);
     static std::vector<OBD2CProfile>  d2cProfileInfoParse(uint8_t *data, uint32_t size);
 };
 }  // namespace libobsensor

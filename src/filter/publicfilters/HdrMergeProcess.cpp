@@ -9,49 +9,51 @@ namespace libobsensor {
 
 // avoids returning too old merged frame - frame counter jumps forward
 const int SEQUENTIAL_FRAMES_THRESHOLD = 4;
-// for infrared 8 bit per pixel
-const int IR_UNDER_SATURATED_VALUE_Y8 = 0x05;  // 5
-const int IR_OVER_SATURATED_VALUE_Y8  = 0xfa;  // 250 (255 - IR_UNDER_SATURATED_VALUE_Y8)
-// for infrared 10 bit per pixel
-const int IR_UNDER_SATURATED_VALUE_Y16 = 0x14;   // 20 (4 * IR_UNDER_SATURATED_VALUE_Y8)
-const int IR_OVER_SATURATED_VALUE_Y16  = 0x3eb;  // 1003 (1023 - IR_UNDER_SATURATED_VALUE_Y16)
+std::pair<OBFormat, std::vector<uint8_t>> EXP_LUT_;
 
-template <typename T> bool isInfraredValid(T ir_value, OBFormat ir_format) {
-    bool result = false;
-    if(ir_format == OB_FORMAT_Y8)
-        result = (ir_value > IR_UNDER_SATURATED_VALUE_Y8) && (ir_value < IR_OVER_SATURATED_VALUE_Y8);
-    else if(ir_format == OB_FORMAT_Y16)
-        result = (ir_value > IR_UNDER_SATURATED_VALUE_Y16) && (ir_value < IR_OVER_SATURATED_VALUE_Y16);
-    else
-        result = false;
-    return result;
-}
-
-template <typename T>
-void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, uint16_t *d1, const std::shared_ptr<const Frame> first_ir,
-                        const std::shared_ptr<const Frame> second_ir, int width_height_prod) {
-    auto i0 = (T *)first_ir->getData();
-    auto i1 = (T *)second_ir->getData();
-
-    auto format = first_ir->getFormat();
-    for(int i = 0; i < width_height_prod; i++) {
-        if(isInfraredValid<T>(i0[i], format) && d0[i])
-            new_data[i] = d0[i];
-        else if(isInfraredValid<T>(i1[i], format) && d1[i])
-            new_data[i] = d1[i];
-        else
-            new_data[i] = 0;
+template <typename T> void generateConfidenceMap(const T *ir, uint8_t *map, int width, int height) {
+    const T *p_ir  = ir;
+    uint8_t *p_map = map;
+    for(size_t i = 0; i < height; i++) {
+        for(size_t j = 0; j < width; j++) {
+            *p_map++ = EXP_LUT_[*p_ir++];
+        }
     }
 }
 
-void mergeFramesUsingOnlyDepth(uint16_t *new_data, uint16_t *d0, uint16_t *d1, int width_height_prod) {
-    for(int i = 0; i < width_height_prod; i++) {
-        if(d0[i])
+template <typename T> void triangleWeights(std::vector<uint8_t> &w) {
+    int length = 1 << (sizeof(T) * 8);
+    int half   = length >> 2;
+    for(int i = 0; i < length; i++) {
+        uint8_t tmp = static_cast<uint8_t>(255.f * i / half);
+        if(i > half)
+            tmp = static_cast<uint8_t>(512 - 255.f * i / half);
+        w.push_back(tmp);
+    }
+}
+
+template <typename T> void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, uint16_t *d1, const T *ir0, const T *ir1, int width, int height) {
+    int pix_num = width * height;
+
+    for(int i = 0; i < pix_num; i++) {
+        uint8_t c0  = EXP_LUT_.second[ir0[i]];
+        uint8_t c1  = EXP_LUT_.second[ir1[i]];
+        new_data[i] = c0 > c1 ? d0[i] : d1[i];
+    }
+}
+
+void mergeFramesUsingOnlyDepth(uint16_t *new_data, uint16_t *d0, uint16_t *d1, int width, int height) {
+    for(int i = 0; i < width * height; i++) {
+        if(d0[i] && d1[i]) {
+            if(d0[i] == 65535)
+                new_data[i] = d1[i];
+            else
+                new_data[i] = d0[i];
+        }
+        else if(d0[i])
             new_data[i] = d0[i];
         else if(d1[i])
             new_data[i] = d1[i];
-        else
-            new_data[i] = 0;
     }
 }
 
@@ -76,47 +78,45 @@ std::shared_ptr<const IRFrame> getIRFrameFromFrameSet(std::shared_ptr<const Fram
     return nullptr;
 }
 
-bool shouldIrBeUsedForMerging(std::shared_ptr<const DepthFrame> first_depth, std::shared_ptr<const IRFrame> first_ir,
-                              std::shared_ptr<const DepthFrame> second_depth, std::shared_ptr<const IRFrame> second_ir) {
+bool checkIRAvailability(std::shared_ptr<const DepthFrame> first_depth, std::shared_ptr<const IRFrame> first_ir, std::shared_ptr<const DepthFrame> second_depth,
+                         std::shared_ptr<const IRFrame> second_ir) {
 
-    // checking ir frames are not null
     bool use_ir = (first_ir && second_ir);
 
     if(use_ir) {
-        // IR and Depth dimensions must be aligned
-        if((first_depth->getHeight() != first_ir->getHeight()) || (first_depth->getWidth() != first_ir->getWidth())
-           || (second_ir->getHeight() != first_ir->getHeight()) || (second_ir->getWidth() != first_ir->getWidth()))
+        if((first_depth->getWidth() != first_ir->getWidth()) || (first_depth->getHeight() != first_ir->getHeight())
+           || (second_ir->getWidth() != first_ir->getWidth()) || (second_ir->getHeight() != first_ir->getHeight()))
             use_ir = false;
-    }
 
-    // checking frame counter of first depth and ir are the same
-    if(use_ir) {
-        // on devices that do not support meta data on IR frames, do not use IR for hdr merging
-        int depth_frame_counter = static_cast<int>(first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER));
-        int ir_frame_counter    = static_cast<int>(first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER));
-        use_ir                  = (depth_frame_counter == ir_frame_counter);
-
-        // checking frame counter of second depth and ir are the same
         if(use_ir) {
-            depth_frame_counter = static_cast<int>(second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER));
-            ir_frame_counter    = static_cast<int>(second_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER));
-            use_ir              = (depth_frame_counter == ir_frame_counter);
+            auto depth_info = first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+            auto ir_info    = first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+            use_ir          = (depth_info == ir_info);
 
-            // checking sequence id of first depth and ir are the same
             if(use_ir) {
-                auto depth_seq_id = first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-                auto ir_seq_id    = first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-                use_ir            = (depth_seq_id == ir_seq_id);
+                depth_info = second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+                ir_info    = second_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+                use_ir     = (depth_info == ir_info);
 
-                // checking sequence id of second depth and ir are the same
                 if(use_ir) {
-                    depth_seq_id = second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-                    ir_seq_id    = second_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-                    use_ir       = (depth_seq_id == ir_seq_id);
+                    depth_info = first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+                    ir_info    = first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+                    use_ir     = (depth_info == ir_info);
 
-                    // checking both ir have the same format
                     if(use_ir) {
-                        use_ir = (first_ir->getFormat() == second_ir->getFormat());
+                        depth_info = second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+                        ir_info    = second_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+                        use_ir     = (depth_info == ir_info);
+
+                        if(use_ir) {
+                            OBFormat format = first_ir->getFormat();
+                            use_ir          = (second_ir->getFormat() == format);
+
+                            if(use_ir) {
+                                // other format not supported yet
+                                use_ir = ((OB_FORMAT_Y8 == format) || (OB_FORMAT_Y16 == format));
+                            }
+                        }
                     }
                 }
             }
@@ -124,48 +124,6 @@ bool shouldIrBeUsedForMerging(std::shared_ptr<const DepthFrame> first_depth, std
     }
 
     return use_ir;
-}
-
-bool checkFramesMergeAbility(std::shared_ptr<const Frame> first_f, std::shared_ptr<const Frame> second_f, bool &use_ir) {
-    std::shared_ptr<const DepthFrame> first_depth  = nullptr;
-    std::shared_ptr<const DepthFrame> second_depth = nullptr;
-
-    std::shared_ptr<const IRFrame> first_ir  = nullptr;
-    std::shared_ptr<const IRFrame> second_ir = nullptr;
-
-    if(first_f->is<FrameSet>()) {
-        first_depth = first_f->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
-    }
-    else {
-        first_depth = first_f->as<DepthFrame>();
-    }
-    first_ir = getIRFrameFromFrameSet(first_f);
-
-    if(second_f->is<FrameSet>()) {
-        second_depth = second_f->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
-    }
-    else {
-        second_depth = second_f->as<DepthFrame>();
-    }
-    second_ir = getIRFrameFromFrameSet(second_f);
-
-    auto first_fs_frame_counter  = first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-    auto second_fs_frame_counter = second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-
-    // The aim of this checking is that the output merged frame will have frame counter n and
-    // frame counter n and will be created by frames n and n+1
-    if(first_fs_frame_counter + 1 != second_fs_frame_counter) {
-        return false;
-    }
-
-    // Depth dimensions must align
-    if((first_depth->getHeight() != second_depth->getHeight()) || (first_depth->getWidth() != second_depth->getWidth())) {
-        return false;
-    }
-
-    use_ir = shouldIrBeUsedForMerging(first_depth, first_ir, second_depth, second_ir);
-
-    return true;
 }
 
 HdrMerge::HdrMerge(const std::string &name) : FilterBase(name) {}
@@ -187,7 +145,6 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
         return nullptr;
     }
 
-    // 1.get depth frame,check the depth frame exists
     std::shared_ptr<const DepthFrame> depthFrame = nullptr;
     if(frame->is<FrameSet>()) {
         depthFrame = frame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
@@ -209,40 +166,30 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
         return outFrame;
     }
 
-    // 2.add the frame to vector of frames
     auto depth_seq_id = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-    // condition added to ensure that frames are saved in the right order
-    // to prevent for example the saving of frame with sequence id 1 before
-    // saving frame of sequence id 0
-    // so that the merging with be deterministic - always done with frame n and n+1
-    // with frame n as basis
     int64_t frameSize = static_cast<int64_t>(frames_.size());
     if(frameSize == depth_seq_id) {
         frames_[depth_seq_id] = depthFrame;
     }
 
-    // discard merged frame if not relevant
     discardDepthMergedFrameIfNeeded(depthFrame);
 
-    // 3. check if size of this vector is at least 2 (if not - return latest merge frame)
     if(frames_.size() >= 2) {
-        // 4. pop out both framesets from the vector
-        std::shared_ptr<const Frame> frame_0 = frames_[0];
-        std::shared_ptr<const Frame> frame_1 = frames_[1];
+        auto frame_0             = frames_[0];
+        auto frame_0_framenumber = frame_0->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+        auto frame_1             = frames_[1];
+        auto frame_1_framenumber = frame_1->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
         frames_.clear();
 
-        bool use_ir = false;
-        if(checkFramesMergeAbility(frame_0, frame_1, use_ir)) {
-            // 5. apply merge algo
-            std::shared_ptr<Frame> new_frame = mergingAlgorithm(frame_0, frame_1, use_ir);
+        // two adjancent frames
+        if(1 == frame_1_framenumber - frame_0_framenumber) {
+            std::shared_ptr<Frame> new_frame = merge(frame_0, frame_1);
             if(new_frame) {
-                // 6. save merge frame as latest merge frame
                 depth_merged_frame_ = new_frame;
             }
         }
     }
 
-    // 7. return the merge frame
     if(depth_merged_frame_) {
         if(frame->is<FrameSet>()) {
             auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
@@ -261,33 +208,29 @@ std::shared_ptr<Frame> HdrMerge::processFunc(std::shared_ptr<const Frame> frame)
 
 void HdrMerge::discardDepthMergedFrameIfNeeded(std::shared_ptr<const Frame> frame) {
     if(depth_merged_frame_) {
-        // criteria for discarding saved merged_depth_frame:
-        // 1 - frame counter for merged depth is greater than the input frame
-        // 2 - resolution change
-        std::shared_ptr<const DepthFrame> newDepthFrame = nullptr;
+        std::shared_ptr<const DepthFrame> newFrame = nullptr;
         if(frame->is<FrameSet>()) {
-            newDepthFrame = frame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
+            newFrame = frame->as<FrameSet>()->getFrame(OB_FRAME_DEPTH)->as<DepthFrame>();
         }
         else {
-            newDepthFrame = frame->as<DepthFrame>();
+            newFrame = frame->as<DepthFrame>();
         }
 
         auto mergedFrame = depth_merged_frame_->as<DepthFrame>();
 
-        auto depth_merged_frame_counter           = depth_merged_frame_->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-        auto input_frame_counter                  = newDepthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-        bool counter_diff_over_threshold_detected = ((input_frame_counter - depth_merged_frame_counter) >= SEQUENTIAL_FRAMES_THRESHOLD);
-        bool restart_pipe_detected                = (depth_merged_frame_counter > input_frame_counter);
+        auto merged_counter = depth_merged_frame_->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+        auto new_counter    = newFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+        auto counter_diff   = new_counter - merged_counter;
 
-        bool resolution_change_detected = (mergedFrame->getWidth() != newDepthFrame->getWidth()) || (mergedFrame->getHeight() != newDepthFrame->getHeight());
-
-        if(restart_pipe_detected || resolution_change_detected || counter_diff_over_threshold_detected) {
+        // counter rest or, previous frame too old or, resolution changed
+        if((counter_diff < 0) || (counter_diff > 4) || (mergedFrame->getWidth() != newFrame->getWidth())
+           || (mergedFrame->getHeight() != newFrame->getHeight())) {
             depth_merged_frame_ = nullptr;
         }
     }
 }
 
-std::shared_ptr<Frame> HdrMerge::mergingAlgorithm(std::shared_ptr<const Frame> first_fs, std::shared_ptr<const Frame> second_fs, const bool use_ir) {
+std::shared_ptr<Frame> HdrMerge::merge(std::shared_ptr<const Frame> first_fs, std::shared_ptr<const Frame> second_fs) {
     std::shared_ptr<const DepthFrame> first_depth  = nullptr;
     std::shared_ptr<const DepthFrame> second_depth = nullptr;
     std::shared_ptr<const IRFrame>    first_ir     = nullptr;
@@ -309,31 +252,37 @@ std::shared_ptr<Frame> HdrMerge::mergingAlgorithm(std::shared_ptr<const Frame> f
     }
     second_ir = getIRFrameFromFrameSet(second_fs);
 
-    // new frame allocation
     auto width  = first_depth->getWidth();
     auto height = first_depth->getHeight();
+    if((width != second_depth->getWidth()) || (height != second_depth->getHeight())) {
+        return nullptr;
+    }
 
     auto newFrame = FrameFactory::createFrameFromStreamProfile(first_depth->getStreamProfile());
     if(newFrame) {
         newFrame->copyInfoFromOther(first_depth);
-        auto d0       = (uint16_t *)first_depth->getData();
-        auto d1       = (uint16_t *)second_depth->getData();
-        auto new_data = (uint16_t *)newFrame->getData();
-        memset(new_data, 0, newFrame->getDataSize());
-        int width_height_product = width * height;
-        if(use_ir) {
-            if(first_ir->getFormat() == OB_FORMAT_Y8) {
-                mergeFramesUsingIr<uint8_t>(new_data, d0, d1, first_ir, second_ir, width_height_product);
+        auto d0 = (uint16_t *)first_depth->getData();
+        auto d1 = (uint16_t *)second_depth->getData();
+        auto d  = (uint16_t *)newFrame->getData();
+        memset(d, 0, newFrame->getDataSize());
+        if(checkIRAvailability(first_depth, first_ir, second_depth, second_ir)) {
+            OBFormat ir_format = first_ir->getFormat();
+            if((EXP_LUT_.first != ir_format) || (EXP_LUT_.second.empty())) {
+                EXP_LUT_.first = ir_format;
+                if(ir_format == OB_FORMAT_Y8)
+                    triangleWeights<uint8_t>(EXP_LUT_.second);
+                else
+                    triangleWeights<uint16_t>(EXP_LUT_.second);
             }
-            else if(first_ir->getFormat() == OB_FORMAT_Y16) {
-                mergeFramesUsingIr<uint16_t>(new_data, d0, d1, first_ir, second_ir, width_height_product);
+            if(OB_FORMAT_Y8 == ir_format) {
+                mergeFramesUsingIr<uint8_t>(d, d0, d1, first_ir->getData(), second_ir->getData(), width, height);
             }
             else {
-                mergeFramesUsingOnlyDepth(new_data, d0, d1, width_height_product);
+                mergeFramesUsingIr<uint16_t>(d, d0, d1, (uint16_t *)first_ir->getData(), (uint16_t *)second_ir->getData(), width, height);
             }
         }
         else {
-            mergeFramesUsingOnlyDepth(new_data, d0, d1, width_height_product);
+            mergeFramesUsingOnlyDepth(d, d0, d1, width, height);
         }
         return newFrame;
     }

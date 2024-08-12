@@ -1,6 +1,6 @@
 #pragma once
 
-#include "param/AlgParamManagerBase.hpp"
+#include "param/AlgParamManager.hpp"
 
 namespace libobsensor {
 class G2AlgParamManager : public DisparityAlgParamManagerBase {

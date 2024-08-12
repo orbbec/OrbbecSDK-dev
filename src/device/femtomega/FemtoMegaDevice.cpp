@@ -7,13 +7,10 @@
 #include "sensor/imu/ImuStreamer.hpp"
 #include "sensor/imu/AccelSensor.hpp"
 #include "sensor/imu/GyroSensor.hpp"
-#include "sensor/rawphase/RawPhaseStreamer.hpp"
-#include "sensor/rawphase/RawPhaseConvertSensor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
 #include "FilterFactory.hpp"
-
 #include "component/metadata/FrameMetadataParserContainer.hpp"
-#include "component/timestamp/GlobalTimestampFilter.hpp"
+#include "component/timestamp/GlobalTimestampFitter.hpp"
 #include "component/property/VendorPropertyAccessor.hpp"
 #include "component/property/UvcPropertyAccessor.hpp"
 #include "component/property/PropertyServer.hpp"
@@ -25,8 +22,8 @@
 #include "publicfilters/IMUCorrector.hpp"
 
 #include "gemini330/G330DeviceSyncConfigurator.hpp"
-#include "timestamp/GlobalTimestampFilter.hpp"
-#include "femtobolt/FemtoBoltAlgParamManager.hpp"
+#include "timestamp/GlobalTimestampFitter.hpp"
+#include "param/AlgParamManager.hpp"
 #include "utils/BufferParser.hpp"
 #include "utils/PublicTypeHelper.hpp"
 
@@ -60,7 +57,7 @@ void FemtoMegaDevice::init() {
     // auto GlobalTimestampFilter = std::make_shared<GlobalTimestampFilter>(this);
     // registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, GlobalTimestampFilter);
 
-    auto algParamManager = std::make_shared<FemtoBoltAlgParamManager>(this);
+    auto algParamManager = std::make_shared<TOFDeviceCommandAlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
     // static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes     = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
@@ -102,7 +99,7 @@ void FemtoMegaDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<FemtoBoltAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<TOFDeviceCommandAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 
@@ -756,7 +753,7 @@ void FemtoMegaDevice::initNetModeSensorStreamProfileList(std::shared_ptr<ISensor
     // // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<FemtoBoltAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<TOFDeviceCommandAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 

@@ -16,7 +16,7 @@ private:
     std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) override;
 
     void                   discardDepthMergedFrameIfNeeded(std::shared_ptr<const Frame> frame);
-    std::shared_ptr<Frame> mergingAlgorithm(std::shared_ptr<const Frame> first_f, std::shared_ptr<const Frame> second_f, const bool use_ir);
+    std::shared_ptr<Frame> merge(std::shared_ptr<const Frame> first_f, std::shared_ptr<const Frame> second_f);
 
 protected:
     std::map<uint64_t, std::shared_ptr<const Frame>> frames_;

@@ -159,7 +159,7 @@ void ob_video_stream_profile_set_height(ob_stream_profile *profile, uint32_t hei
 }
 HANDLE_EXCEPTIONS_NO_RETURN(profile, height)
 
-ob_camera_intrinsic ob_video_stream_get_intrinsic(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
+ob_camera_intrinsic ob_video_stream_profile_get_intrinsic(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
     if(!profile->profile->is<libobsensor::VideoStreamProfile>()) {
         throw libobsensor::unsupported_operation_exception("It's not a video stream profile!");
@@ -169,7 +169,7 @@ ob_camera_intrinsic ob_video_stream_get_intrinsic(const ob_stream_profile *profi
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_camera_intrinsic(), profile)
 
-void ob_video_stream_set_intrinsic(ob_stream_profile *profile, ob_camera_intrinsic intrinsic, ob_error **error) BEGIN_API_CALL {
+void ob_video_stream_profile_set_intrinsic(ob_stream_profile *profile, ob_camera_intrinsic intrinsic, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
     if(!profile->profile->is<libobsensor::VideoStreamProfile>()) {
         throw libobsensor::unsupported_operation_exception("It's not a video stream profile!");
@@ -180,7 +180,7 @@ void ob_video_stream_set_intrinsic(ob_stream_profile *profile, ob_camera_intrins
 }
 HANDLE_EXCEPTIONS_NO_RETURN(profile /*, intrinsic*/)  // TODO: add ob_camera_intrinsic operator<<
 
-ob_camera_distortion ob_video_stream_get_distortion(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
+ob_camera_distortion ob_video_stream_profile_get_distortion(const ob_stream_profile *profile, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
     if(!profile->profile->is<libobsensor::VideoStreamProfile>()) {
         throw libobsensor::unsupported_operation_exception("It's not a video stream profile!");
@@ -190,7 +190,7 @@ ob_camera_distortion ob_video_stream_get_distortion(const ob_stream_profile *pro
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_camera_distortion(), profile)
 
-void ob_video_stream_set_distortion(ob_stream_profile *profile, ob_camera_distortion distortion, ob_error **error) BEGIN_API_CALL {
+void ob_video_stream_profile_set_distortion(ob_stream_profile *profile, ob_camera_distortion distortion, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(profile);
     if(!profile->profile->is<libobsensor::VideoStreamProfile>()) {
         throw libobsensor::unsupported_operation_exception("It's not a video stream profile!");

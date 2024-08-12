@@ -68,29 +68,29 @@ Based on the device's timestamp and considering data transmission delays, the ti
 
 ```cpp
     <Misc>
-        <GlobalTimestampFilterEnable>true</GlobalTimestampFilterEnable>
+        <GlobalTimestampFitterEnable>true</GlobalTimestampFitterEnable>
         <!--Global timestamp fitter refresh interval, unit: milliseconds, default value: 1000, minimum value: 100, it is recommended not to be greater than 1000 -->
-        <GlobalTimestampFilterInterval>1000</GlobalTimestampFilterInterval>
+        <GlobalTimestampFitterInterval>1000</GlobalTimestampFitterInterval>
         <!--Global timestamp fitter queue size, default value: 100, minimum value: 20 -->
-        <GlobalTimestampFilterQueueSize>100</GlobalTimestampFilterQueueSize>
+        <GlobalTimestampFitterQueueSize>100</GlobalTimestampFitterQueueSize>
     </Misc>
 ```
 
 1. By default, the device time is obtained every eight seconds to update the global timestamp fitter.
 ```cpp
-        <GlobalTimestampFilterInterval>1000</GlobalTimestampFilterInterval>
+        <GlobalTimestampFitterInterval>1000</GlobalTimestampFitterInterval>
 ```
 
 2. The default queue size of the global timestamp fitter is 10.
 ```cpp
-        <GlobalTimestampFilterQueueSize>100</GlobalTimestampFilterQueueSize>
+        <GlobalTimestampFitterQueueSize>100</GlobalTimestampFitterQueueSize>
 ```
 
 **Notes**
 
 1. The global timestamp mainly supports the Gemini 330 series. Gemini 2, Gemini 2L, Femto Mega, and Femto Bolt are also supported but not thoroughly tested. If there are stability issues with these devices, the global timestamp function can be turned off.
 ```cpp
-        <GlobalTimestampFilterEnable>false</GlobalTimestampFilterEnable>
+        <GlobalTimestampFitterEnable>false</GlobalTimestampFitterEnable>
 ```
 
 ## Pipeline Configuration

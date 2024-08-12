@@ -272,6 +272,12 @@ OB_EXPORT void ob_config_set_depth_scale_after_align_require(ob_config *config, 
  */
 OB_EXPORT void ob_config_set_frame_aggregate_output_mode(ob_config *config, ob_frame_aggregate_output_mode mode, ob_error **error);
 
+/**
+ * In order to be compatible with the closed source version of orbbecsdk's interface.
+ * We recommend using the latest interface names for a better experience.
+ */
+#define ob_config_set_depth_scale_require ob_config_set_depth_scale_after_align_require
+
 #ifdef __cplusplus
 }
 #endif

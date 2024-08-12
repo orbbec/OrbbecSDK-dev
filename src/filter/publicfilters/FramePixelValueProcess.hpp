@@ -20,10 +20,10 @@ protected:
     float scale_ = 1.0f;
 };
 
-class PixelValueCutOff : public FilterBase {
+class Threshold : public FilterBase {
 public:
-    PixelValueCutOff(const std::string &name);
-    virtual ~PixelValueCutOff() noexcept;
+    Threshold(const std::string &name);
+    virtual ~Threshold() noexcept;
 
     void               updateConfig(std::vector<std::string> &params) override;
     const std::string &getConfigSchema() const override;
@@ -36,7 +36,6 @@ protected:
     uint32_t min_ = 0;
     uint32_t max_ = 16000;
 };
-
 
 class PixelValueOffset : public FilterBase {
 public:

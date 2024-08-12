@@ -30,22 +30,23 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBa
     }
 
     if(context_->create_context && !context_->context) {
-        cDevice_          = new ob_device;
-        cDevice_->device  = owner->shared_from_this();
+        auto cDevice          = new ob_device;
+        cDevice->device  = owner->shared_from_this();
         ob_error *error   = nullptr;
-        context_->context = context_->create_context(cDevice_, &error);
+        context_->context = context_->create_context(cDevice, &error);
         if(error) {
             // TODO
             throw std::runtime_error("create frame processor context failed");
+        }
+
+        if(cDevice) {
+            delete cDevice;
+            cDevice = nullptr;
         }
     }
 }
 
 FrameProcessorFactory::~FrameProcessorFactory() noexcept {
-    if(cDevice_) {
-        delete cDevice_;
-        cDevice_ = nullptr;
-    }
 }
 
 std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSensorType sensorType) {
@@ -237,7 +238,8 @@ void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint3
         }
     }
 
-    if(static_cast<size_t>(currentD2CProfile.paramIndex) + 1 > calibrationCameraParams.size()) {
+    bool valid = currentD2CProfile.colorWidth != 0 && currentD2CProfile.colorHeight != 0 && currentD2CProfile.depthWidth != 0 && currentD2CProfile.depthHeight != 0;
+    if(!valid || static_cast<size_t>(currentD2CProfile.paramIndex) + 1 > calibrationCameraParams.size()) {
         throw invalid_value_exception("Current stream profile is not support hardware d2c process");
         return;
     }
@@ -257,7 +259,7 @@ void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint3
 }
 
 void DepthFrameProcessor::enableHardwareD2CProcess(bool enable) {
-    TRY_EXECUTE(setConfigValue("HardwareD2CProcessor#255", static_cast<double>(enable)));
+    TRY_EXECUTE(setConfigValueSync("HardwareD2CProcessor#255", static_cast<double>(enable)));
 }
 
 }  // namespace libobsensor

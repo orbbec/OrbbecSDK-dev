@@ -143,13 +143,6 @@ void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
     }
 
     updateStreamState(STREAM_STATE_STREAMING);
-    if(frameMetadataParserContainer_) {
-        frame->registerMetadataParsers(frameMetadataParserContainer_);
-    }
-
-    if(frameTimestampCalculator_) {
-        frameTimestampCalculator_->calculate(frame);
-    }
 
     if(currentFormatFilterConfig_ && currentFormatFilterConfig_->converter) {
         frame = currentFormatFilterConfig_->converter->process(frame);
@@ -171,7 +164,7 @@ void VideoSensor::outputFrame(std::shared_ptr<Frame> frame) {
             return;
         }
     }
-    frameCallback_(frame);
+    SensorBase::outputFrame(frame);
 }
 
 void VideoSensor::stop() {
@@ -286,20 +279,6 @@ void VideoSensor::updateStreamProfileList(const StreamProfileList &profileList) 
         streamProfileList_.push_back(sp);
         streamProfileBackendMap_[sp] = { backendSp, nullptr };
     }
-}
-
-void VideoSensor::setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container) {
-    if(isStreamActivated()) {
-        throw wrong_api_call_sequence_exception("Can not update frame metadata parser container while streaming");
-    }
-    frameMetadataParserContainer_ = container;
-}
-
-void VideoSensor::setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator) {
-    if(isStreamActivated()) {
-        throw wrong_api_call_sequence_exception("Can not update frame timestamp calculator while streaming");
-    }
-    frameTimestampCalculator_ = calculator;
 }
 
 void VideoSensor::setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcessor) {

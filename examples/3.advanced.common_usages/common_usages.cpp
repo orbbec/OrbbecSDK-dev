@@ -168,8 +168,8 @@ void switchDepthWorkMode() {
 
     // Get the list of camera depth modes
     auto depthModeList = device->getDepthWorkModeList();
-    std::cout << "depthModeList size: " << depthModeList->count() << std::endl;
-    for(uint32_t i = 0; i < depthModeList->count(); i++) {
+    std::cout << "depthModeList size: " << depthModeList->getCount() << std::endl;
+    for(uint32_t i = 0; i < depthModeList->getCount(); i++) {
         std::cout << "depthModeList[" << i << "]: " << (*depthModeList)[i].name << std::endl;
     }
 

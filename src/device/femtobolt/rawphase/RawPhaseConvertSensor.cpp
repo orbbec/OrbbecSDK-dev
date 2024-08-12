@@ -10,7 +10,6 @@ RawPhaseConvertSensor::RawPhaseConvertSensor(IDevice *owner, const std::shared_p
     profileVector_.push_back({ { 640, 576 }, { 7680, 434 } });
     profileVector_.push_back({ { 1024, 1024 }, { 8192, 130 } });
     profileVector_.push_back({ { 512, 512 }, { 8192, 290 } });
-    auto propServer = owner->getPropertyServer();
     updateStreamProfileList();
     LOG_DEBUG("RawPhaseConvertSensor is created!");
 }
@@ -56,8 +55,15 @@ void RawPhaseConvertSensor::start(std::shared_ptr<const StreamProfile> sp, Frame
     auto propServer = owner->getPropertyServer();
 
     if(sensorType_ == OB_SENSOR_DEPTH || sensorType_ == OB_SENSOR_IR) {
+        if(!streamer_){
+            throw libobsensor::unsupported_operation_exception("The streamer is nullptr.");
+        }
         auto streamSp = sp->as<VideoStreamProfile>();
         streamer_->start(streamSp, [this](std::shared_ptr<const Frame> frame) {
+            auto dsp = frame->getStreamProfile();
+            if(dsp!=activatedStreamProfile_){
+                throw invalid_value_exception("The stream profile is not activated.");
+            }
             updateStreamState(STREAM_STATE_STREAMING);
             if(frameCallback_) {
                 frameCallback_(frame);

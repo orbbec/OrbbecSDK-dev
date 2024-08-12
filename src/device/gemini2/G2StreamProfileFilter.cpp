@@ -10,7 +10,7 @@ G2StreamProfileFilter::G2StreamProfileFilter(IDevice *owner) : DeviceComponentBa
     fetchEffectiveStreamProfiles();
 }
 
-bool isMatch(OBSensorType sensorType, std::shared_ptr<const VideoStreamProfile> videoProfile, OBEffectiveStreamProfile effProfile) {
+static bool isMatch(OBSensorType sensorType, std::shared_ptr<const VideoStreamProfile> videoProfile, OBEffectiveStreamProfile effProfile) {
     bool isSensorTypeEqual = sensorType == effProfile.sensorType;
 
     // Compatibility processing, normal mode has IR, but no IR_LEFT, IR_RIGHT; calibration mode has no IR, but has IR_LEFT, IR_RIGHT
@@ -46,7 +46,7 @@ StreamProfileList G2StreamProfileFilter::filter(const StreamProfileList &profile
     return filteredProfiles;
 }
 
-std::vector<OBEffectiveStreamProfile> effectiveStreamProfilesParse(const std::vector<uint8_t> &data) {
+static std::vector<OBEffectiveStreamProfile> effectiveStreamProfilesParse(const std::vector<uint8_t> &data) {
     std::vector<OBEffectiveStreamProfile> output;
     const uint32_t                        typeSize  = sizeof(OBEffectiveStreamProfile);
     auto                                  itemCount = data.size() / typeSize;

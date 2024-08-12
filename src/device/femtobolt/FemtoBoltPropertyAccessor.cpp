@@ -3,18 +3,12 @@
 #include "sensor/video/DisparityBasedSensor.hpp"
 #include "IDeviceComponent.hpp"
 #include "property/InternalProperty.hpp"
-#include "sensor/rawphase/RawPhaseStreamer.hpp"
+#include "rawphase/RawPhaseStreamer.hpp"
 
 namespace libobsensor {
 FemtoBoltPropertyAccessor::FemtoBoltPropertyAccessor(IDevice *owner) : owner_(owner) {}
 
 void FemtoBoltPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
-    if(propertyId == OB_PROP_SWITCH_IR_MODE_INT) {
-        auto rawphaseStreamer = owner_->getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAWPHASE_STREAMER);
-        rawphaseStreamer->setIsPassiveIR((bool)value.intValue);
-        return;
-    }
-
     switch(propertyId) {
     case OB_PROP_DEPTH_GAIN_INT:
     case OB_PROP_IR_GAIN_INT:
@@ -30,6 +24,11 @@ void FemtoBoltPropertyAccessor::setPropertyValue(uint32_t propertyId, OBProperty
 
     auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     commandPort->setPropertyValue(propertyId, value);
+
+    if(propertyId == OB_PROP_SWITCH_IR_MODE_INT) {
+        auto rawphaseStreamer = owner_->getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
+        rawphaseStreamer->setIsPassiveIR((bool)value.intValue);
+    }
 }
 
 void FemtoBoltPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {

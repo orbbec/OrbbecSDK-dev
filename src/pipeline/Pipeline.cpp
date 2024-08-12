@@ -9,8 +9,8 @@
 #include "logger/LoggerInterval.hpp"
 #include "logger/LoggerHelper.hpp"
 #include "utils/Utils.hpp"
+#include "IAlgParamManager.hpp"
 #include "component/frameprocessor/FrameProcessor.hpp"
-#include "component/param/AlgParamManagerBase.hpp"
 
 #include <cmath>
 #include <algorithm>
@@ -320,35 +320,39 @@ void Pipeline::resetAlignMode() {
 }
 
 StreamProfileList Pipeline::getD2CDepthProfileList(std::shared_ptr<const StreamProfile> colorProfile, OBAlignMode alignMode) {
-    // todo: implement this function
-    utils::unusedVar(colorProfile);
-    utils::unusedVar(alignMode);
-    return {};
+    StreamProfileList d2cDepthProfileList;
+    d2cDepthProfileList.clear();
+    if(!device_){
+        return d2cDepthProfileList;
+    }
 
-    // StreamProfileList d2cDepthProfileList;
-    // auto              videoProfile  = colorProfile->as<VideoStreamProfile>();
-    // auto              depthProfiles = getStreamProfileList(OB_SENSOR_DEPTH);
-    // if(alignMode == ALIGN_DISABLE) {
-    //     return depthProfiles;
-    // }
+    auto algParamManager = device_->getComponentT<IAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+    auto d2cProfileList          = algParamManager->getD2CProfileList();
+    auto              colorVideoStreamProfile  = colorProfile->as<VideoStreamProfile>();
+    auto              depthSensor     = device_->getSensor(OB_SENSOR_DEPTH);
+    auto              depthProfiles = depthSensor->getStreamProfileList();
+    if(alignMode == ALIGN_DISABLE) {
+        return depthProfiles;
+    }
 
-    // auto list = device_->getD2CSupportedProfileList();
-    // for(auto sp: list) {
-    //     if(videoProfile->getWidth() == sp.colorWidth && videoProfile->getHeight() == sp.colorHeight) {
-    //         for(auto profile: depthProfiles) {
-    //             auto depthProfile = profile->as<VideoStreamProfile>();
-    //             if(sp.depthWidth == depthProfile->getWidth() && sp.depthHeight == depthProfile->getHeight()
-    //                && ((alignMode == ALIGN_D2C_HW_MODE && (sp.alignType & ALIGN_D2C_HW)) || (alignMode == ALIGN_D2C_SW_MODE && (sp.alignType &
-    //                ALIGN_D2C_SW))))
+    for(const auto &sp: d2cProfileList) {
+        if(colorVideoStreamProfile->getWidth() == sp.colorWidth && colorVideoStreamProfile->getHeight() == sp.colorHeight) {
+            for(auto profile: depthProfiles) {
+                auto depthProfile = profile->as<VideoStreamProfile>();
+                auto width = depthProfile->getWidth();
+                auto height = depthProfile->getHeight();
+                if(sp.depthWidth == width && sp.depthHeight == height
+                   && ((alignMode == ALIGN_D2C_HW_MODE && (sp.alignType & ALIGN_D2C_HW)) || (alignMode == ALIGN_D2C_SW_MODE && (sp.alignType &
+                   ALIGN_D2C_SW))))
 
-    //             {
-    //                 d2cDepthProfileList.push_back(depthProfile);
-    //             }
-    //         }
-    //     }
-    // }
+                {
+                    d2cDepthProfileList.push_back(depthProfile);
+                }
+            }
+        }
+    }
 
-    // return d2cDepthProfileList;
+    return d2cDepthProfileList;
 }
 
 void Pipeline::enableFrameSync() {
@@ -389,15 +393,15 @@ void Pipeline::checkHardwareD2CConfig() {
         LOG_DEBUG("current align mode is not hardware d2c mode.");
         return;
     }
-    auto algParamManager = device_->getComponentT<AlgParamManagerBase>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+    auto algParamManager = device_->getComponentT<IAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
     auto colorProfile    = getCurrentVideoStreamProfile(OB_STREAM_COLOR);
     auto depthProfile    = getCurrentVideoStreamProfile(OB_STREAM_DEPTH);
     if(algParamManager && colorProfile && depthProfile) {
         auto calibrationCameraParams = algParamManager->getCalibrationCameraParamList();
         auto d2cProfileList          = algParamManager->getD2CProfileList();
-        depthFrameProcessor->enableHardwareD2CProcess(true);
         depthFrameProcessor->setHardwareD2CProcessParams(colorProfile->getWidth(), colorProfile->getHeight(), depthProfile->getWidth(),
                                                          depthProfile->getHeight(), calibrationCameraParams, d2cProfileList);
+        depthFrameProcessor->enableHardwareD2CProcess(true);
     }
 }
 

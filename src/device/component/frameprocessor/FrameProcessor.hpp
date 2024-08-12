@@ -37,8 +37,6 @@ private:
     std::shared_ptr<FrameProcessorContext> context_;
 
     std::map<OBSensorType, std::shared_ptr<FrameProcessor>> frameProcessors_;
-
-    ob_device *cDevice_;
 };
 
 class FrameProcessor : public FilterBase, public IBasicPropertyAccessor, public DeviceComponentBase {

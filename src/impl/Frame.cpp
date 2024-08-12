@@ -415,7 +415,7 @@ float ob_gyro_frame_get_temperature(const ob_frame *frame, ob_error **error) BEG
 }
 HANDLE_EXCEPTIONS_AND_RETURN(0.0f, frame)
 
-uint32_t ob_frameset_get_frame_count(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
+uint32_t ob_frameset_get_count(const ob_frame *frameset, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frameset);
     if(!frameset->frame->is<libobsensor::FrameSet>()) {
         throw libobsensor::unsupported_operation_exception("It's not a frameset!");

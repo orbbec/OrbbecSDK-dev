@@ -146,6 +146,14 @@ void SensorBase::updateStreamState(OBStreamState state) {
         for(auto &callback: streamStateChangedCallbacks_) {
             callback.second(state, activatedStreamProfile_);  // call the callback function
         }
+        if(state == STREAM_STATE_STARTING) {
+            if(frameTimestampCalculator_) {
+                frameTimestampCalculator_->clear();
+            }
+            if(globalTimestampCalculator_) {
+                globalTimestampCalculator_->clear();
+            }
+        }
     }
     streamStateCv_.notify_all();
 }
@@ -221,4 +229,32 @@ void SensorBase::watchStreamState() {
         }
     }
 }
+
+void SensorBase::setFrameMetadataParserContainer(std::shared_ptr<IFrameMetadataParserContainer> container) {
+    frameMetadataParserContainer_ = container;
+}
+
+void SensorBase::setFrameTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator) {
+    frameTimestampCalculator_ = calculator;
+}
+
+void SensorBase::setGlobalTimestampCalculator(std::shared_ptr<IFrameTimestampCalculator> calculator) {
+    globalTimestampCalculator_ = calculator;
+}
+
+void SensorBase::outputFrame(std::shared_ptr<Frame> frame) {
+    if(frameMetadataParserContainer_) {
+        frame->registerMetadataParsers(frameMetadataParserContainer_);
+    }
+
+    if(frameTimestampCalculator_) {
+        frameTimestampCalculator_->calculate(frame);
+    }
+    if(globalTimestampCalculator_) {
+        globalTimestampCalculator_->calculate(frame);
+    }
+
+    frameCallback_(frame);
+}
+
 }  // namespace libobsensor

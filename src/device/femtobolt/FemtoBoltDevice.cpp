@@ -8,28 +8,26 @@
 #include "sensor/imu/ImuStreamer.hpp"
 #include "sensor/imu/AccelSensor.hpp"
 #include "sensor/imu/GyroSensor.hpp"
-#include "sensor/rawphase/RawPhaseStreamer.hpp"
-#include "sensor/rawphase/RawPhaseConvertSensor.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
 #include "FilterFactory.hpp"
 
 #include "component/metadata/FrameMetadataParserContainer.hpp"
-#include "component/timestamp/GlobalTimestampFilter.hpp"
+#include "component/timestamp/GlobalTimestampFitter.hpp"
 #include "component/property/VendorPropertyAccessor.hpp"
 #include "component/property/UvcPropertyAccessor.hpp"
 #include "component/property/PropertyServer.hpp"
 #include "component/property/CommonPropertyAccessors.hpp"
 #include "component/property/FilterPropertyAccessors.hpp"
 #include "component/monitor/DeviceMonitor.hpp"
+#include "rawphase/RawPhaseStreamer.hpp"
+#include "rawphase/RawPhaseConvertSensor.hpp"
+#include "rawphase/depthengine/DepthEngineLoader.hpp"
 
 #include "publicfilters/FormatConverterProcess.hpp"
 #include "publicfilters/IMUCorrector.hpp"
 
-#include "FemtoBoltAlgParamManager.hpp"
-#include "gemini330/G330DeviceSyncConfigurator.hpp"
-#include "sensor/rawphase/depthengine/DepthEngineLoader.hpp"
-#include "timestamp/GlobalTimestampFilter.hpp"
-
+#include "param/AlgParamManager.hpp"
+#include "timestamp/GlobalTimestampFitter.hpp"
 namespace libobsensor {
 FemtoBoltDevice::FemtoBoltDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
     init();
@@ -42,13 +40,18 @@ void FemtoBoltDevice::init() {
     initProperties();
 
     fetchDeviceInfo();
-    auto algParamManager = std::make_shared<FemtoBoltAlgParamManager>(this);
+
+    auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
+    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
+
+    auto algParamManager = std::make_shared<TOFDeviceCommandAlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
-    static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes     = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
-                                                                               OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED };
-    auto                                            deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
-    registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
+    // static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes     = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
+    //                                                                            OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED
+    //                                                                            };
+    // auto                                            deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
+    // registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 }
 
 void FemtoBoltDevice::fetchDeviceInfo() {
@@ -79,7 +82,7 @@ void FemtoBoltDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<FemtoBoltAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<TOFDeviceCommandAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 
@@ -118,18 +121,23 @@ void FemtoBoltDevice::initSensorList() {
             TRY_EXECUTE({ factory = std::make_shared<DepthEngineLoadFactory>(this); })
             return factory;
         });
-        registerComponent(OB_DEV_COMPONENT_RAWPHASE_STREAMER, [this, depthPortInfo]() {
+        registerComponent(OB_DEV_COMPONENT_RAW_PHASE_STREAMER, [this, depthPortInfo]() {
             auto platform = Platform::getInstance();
             auto port     = platform->getSourcePort(depthPortInfo);
 
             auto depthEngineLoader    = getComponentT<DepthEngineLoadFactory>(OB_DEV_COMPONENT_DEPTH_ENGINE_LOADER_FACTORY);
             auto depthEngineLoaderPtr = depthEngineLoader.get();
 
-            auto dataStreamPort   = std::dynamic_pointer_cast<IVideoStreamPort>(port);
-            auto rawPhaseStreamer = std::make_shared<RawPhaseStreamer>(this, dataStreamPort, depthEngineLoaderPtr);
-            if(rawPhaseStreamer) {
-                rawPhaseStreamer->setNvramDataStreamStopFunc([&]() { LOG_INFO("setNvramDataStreamStopFunc succeed"); });
-            }
+            auto                              dataStreamPort = std::dynamic_pointer_cast<IVideoStreamPort>(port);
+            std::shared_ptr<RawPhaseStreamer> rawPhaseStreamer;
+            BEGIN_TRY_EXECUTE({
+                rawPhaseStreamer = std::make_shared<RawPhaseStreamer>(this, dataStreamPort, depthEngineLoaderPtr);
+                if(rawPhaseStreamer) {
+                    rawPhaseStreamer->setNvramDataStreamStopFunc([&]() { LOG_INFO("setNvramDataStreamStopFunc succeed"); });
+                }
+            })
+            CATCH_EXCEPTION_AND_LOG(WARN, "create RawPhaseStreamer failed.")
+
             return rawPhaseStreamer;
         });
         registerComponent(
@@ -137,8 +145,8 @@ void FemtoBoltDevice::initSensorList() {
             [this, depthPortInfo]() {
                 auto platform                  = Platform::getInstance();
                 auto port                      = platform->getSourcePort(depthPortInfo);
-                auto rawphaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAWPHASE_STREAMER);
-                auto rawphaseStreamerSharedPtr = rawphaseStreamer.get();
+                auto rawPhaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
+                auto rawphaseStreamerSharedPtr = rawPhaseStreamer.get();
                 auto sensor                    = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_DEPTH, rawphaseStreamerSharedPtr);
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
 
@@ -146,6 +154,10 @@ void FemtoBoltDevice::initSensorList() {
                 // if(frameProcessor) {
                 //     sensor->setFrameProcessor(frameProcessor.get());
                 // }
+
+                auto propServer     = getPropertyServer();
+                auto passiveIrValue = propServer->getPropertyValueT<int>(OB_PROP_SWITCH_IR_MODE_INT);
+                rawPhaseStreamer->setIsPassiveIR(static_cast<bool>(passiveIrValue));
 
                 initSensorStreamProfile(sensor);
                 return sensor;
@@ -166,9 +178,8 @@ void FemtoBoltDevice::initSensorList() {
             [this, depthPortInfo]() {
                 auto platform                  = Platform::getInstance();
                 auto port                      = platform->getSourcePort(depthPortInfo);
-                auto rawphaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAWPHASE_STREAMER);
-                auto rawphaseStreamerSharedPtr = rawphaseStreamer.get();
-                auto sensor                    = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_IR, rawphaseStreamerSharedPtr);
+                auto rawPhaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
+                auto sensor                    = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_IR, rawPhaseStreamer.get());
 
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
 

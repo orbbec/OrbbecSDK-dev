@@ -1,9 +1,9 @@
 #include "AlgParseHelper.hpp"
 namespace libobsensor {
-std::vector<OBCameraParam> AlgParseHelper::alignCalibParamParse(uint8_t *data, uint32_t size) {
-    std::vector<OBCameraParam> output;
+std::vector<OBCameraParam_Internal_V0> AlgParseHelper::alignCalibParamParse(uint8_t *data, uint32_t size) {
+    std::vector<OBCameraParam_Internal_V0> output;
     for(int i = 0; i < static_cast<int>(size / D2C_PARAMS_ITEM_SIZE); i++) {
-        output.push_back(*(OBCameraParam *)(data + i * D2C_PARAMS_ITEM_SIZE));
+        output.push_back(*(OBCameraParam_Internal_V0 *)(data + i * D2C_PARAMS_ITEM_SIZE));
     }
     return output;
 }

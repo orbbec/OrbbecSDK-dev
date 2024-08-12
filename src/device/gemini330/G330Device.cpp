@@ -18,7 +18,8 @@
 #include "publicfilters/FormatConverterProcess.hpp"
 
 #include "metadata/FrameMetadataParserContainer.hpp"
-#include "timestamp/GlobalTimestampFilter.hpp"
+#include "timestamp/GlobalTimestampFitter.hpp"
+#include "timestamp/FrameTimestampCalculator.hpp"
 #include "property/VendorPropertyAccessor.hpp"
 #include "property/UvcPropertyAccessor.hpp"
 #include "property/PropertyServer.hpp"
@@ -28,7 +29,6 @@
 
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
-#include "G330TimestampCalculator.hpp"
 #include "G330DeviceSyncConfigurator.hpp"
 #include "G330AlgParamManager.hpp"
 #include "G330PresetManager.hpp"
@@ -56,17 +56,17 @@ void G330Device::init() {
 
     fetchDeviceInfo();
 
-    auto globalTimestampFilter = std::make_shared<GlobalTimestampFilter>(this);
-    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
+    videoFrameTimestampCalculatorCreator_ = [this]() {
+        auto metadataType = OB_FRAME_METADATA_TYPE_TIMESTAMP;
+        auto iter         = std::find(G330LDevPids.begin(), G330LDevPids.end(), deviceInfo_->pid_);
+        if(iter != G330LDevPids.end()) {
+            metadataType = OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP;
+        }
+        return std::make_shared<FrameTimestampCalculatorOverMetadata>(this, metadataType, frameTimeFreq_);
+    };
 
-    // todo: make timestamp calculator as a component
-    auto iter = std::find(G330LDevPids.begin(), G330LDevPids.end(), deviceInfo_->pid_);
-    if(iter != G330LDevPids.end()) {
-        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP, globalTimestampFilter);
-    }
-    else {
-        videoFrameTimestampCalculator_ = std::make_shared<G330TimestampCalculator>(OB_FRAME_METADATA_TYPE_TIMESTAMP, globalTimestampFilter);
-    }
+    auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
+    registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
     auto algParamManager = std::make_shared<G330AlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
@@ -156,7 +156,12 @@ void G330Device::initSensorList() {
                                                    { FormatFilterPolicy::REPLACE, OB_FORMAT_Z16, OB_FORMAT_Y16, nullptr } });
 
                 sensor->setFrameMetadataParserContainer(depthMdParserContainer_);
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -213,7 +218,12 @@ void G330Device::initSensorList() {
 
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
                 sensor->setFrameMetadataParserContainer(depthMdParserContainer_);
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -256,7 +266,12 @@ void G330Device::initSensorList() {
 
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
                 sensor->setFrameMetadataParserContainer(depthMdParserContainer_);
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -327,7 +342,12 @@ void G330Device::initSensorList() {
 
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
                 sensor->setFrameMetadataParserContainer(colorMdParserContainer_);
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR, false);
                 if(frameProcessor) {
@@ -377,6 +397,9 @@ void G330Device::initSensorList() {
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<AccelSensor>(this, port, imuStreamerSharedPtr);
 
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
+
                 initSensorStreamProfile(sensor);
 
                 return sensor;
@@ -392,6 +415,9 @@ void G330Device::initSensorList() {
                 auto imuStreamer          = getComponentT<ImuStreamer>(OB_DEV_COMPONENT_IMU_STREAMER);
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<GyroSensor>(this, port, imuStreamerSharedPtr);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
                 initSensorStreamProfile(sensor);
 
@@ -423,7 +449,7 @@ void G330Device::initProperties() {
             });
 
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
-            // propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyAccessor);  // replace by vendor property accessor
+            propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyAccessor);  // replace by vendor property accessor
             propertyServer->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyAccessor);
@@ -509,6 +535,7 @@ void G330Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_DEVICE_USB2_REPEAT_IDENTIFY_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_RAW_DATA_DEVICE_EXTENSION_INFORMATION, "", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_IR_AE_MAX_EXPOSURE_INT, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_COLOR_AE_MAX_EXPOSURE_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DISP_SEARCH_RANGE_MODE_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_SLAVE_DEVICE_SYNC_STATUS_BOOL, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DEVICE_RESET_BOOL, "", "w", vendorPropertyAccessor);
@@ -544,6 +571,7 @@ void G330Device::initProperties() {
     registerComponent(OB_DEV_COMPONENT_PROPERTY_SERVER, propertyServer, true);
 }
 
+// todo: refactor this as component
 void G330Device::initFrameMetadataParserContainer() {
     // for depth and left/right ir sensor
     depthMdParserContainer_ = std::make_shared<FrameMetadataParserContainer>();

@@ -24,7 +24,6 @@ public:
     ~Context() noexcept;
 
     static std::shared_ptr<Context> getInstance(const std::string &configPath = "");
-    static bool                     hasInstance();
 
     std::shared_ptr<DeviceManager>   getDeviceManager();
     std::shared_ptr<Logger>          getLogger() const;

@@ -32,7 +32,7 @@ ImuStreamer::~ImuStreamer() noexcept {
     }
 }
 
-void ImuStreamer::start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) {
+void ImuStreamer::start(std::shared_ptr<const StreamProfile> sp, MutableFrameCallback callback) {
     {
         std::lock_guard<std::mutex> lock(cbMtx_);
         callbacks_[sp] = callback;
@@ -157,10 +157,11 @@ void ImuStreamer::outputFrame(std::shared_ptr<Frame> frame) {
 
     std::lock_guard<std::mutex> lock(cbMtx_);
     for(auto &callback: callbacks_) {
-        std::shared_ptr<const Frame> callbackFrame = frame;
+        std::shared_ptr<Frame> callbackFrame = frame;
         if(frame->is<FrameSet>()) {
             auto frameSet = frame->as<FrameSet>();
-            callbackFrame = frameSet->getFrame(utils::mapStreamTypeToFrameType(callback.first->getType()));
+            auto frameType = utils::mapStreamTypeToFrameType(callback.first->getType());
+            callbackFrame  = frameSet->getFrameMutable(frameType);
             if(!callbackFrame) {
                 continue;
             }

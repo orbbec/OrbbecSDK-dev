@@ -139,11 +139,10 @@ HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
 
 ob_stream_profile_list *ob_get_d2c_depth_profile_list(const ob_pipeline *pipeline, const ob_stream_profile *color_profile, ob_align_mode align_mode,
                                                       ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(pipeline);
-    VALIDATE_NOT_NULL(color_profile);
-    libobsensor::utils::unusedVar(align_mode);
-    // TODO: implement this function
-    return nullptr;
+    auto innerProfiles = pipeline->pipeline->getD2CDepthProfileList(color_profile->profile, align_mode);
+    auto impl          = new ob_stream_profile_list();
+    impl->profileList  = innerProfiles;
+    return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, pipeline)
 

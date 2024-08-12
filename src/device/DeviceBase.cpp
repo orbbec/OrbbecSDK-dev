@@ -33,7 +33,9 @@ const std::string &DeviceBase::getExtensionInfo(const std::string &infoKey) cons
     throw invalid_value_exception(utils::string::to_string() << "Extension info " << infoKey << " not found!");
 }
 
-DeviceBase::~DeviceBase() noexcept = default;
+DeviceBase::~DeviceBase() noexcept {
+    deactivate();  // deactivate() will clear all components
+}
 
 void DeviceBase::deactivate() {
     if(hasAnySensorStreamActivated()) {
@@ -41,7 +43,11 @@ void DeviceBase::deactivate() {
     }
 
     std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
-    components_.clear();
+    while(!components_.empty()) {
+        // The clear order should be reversed as the order of the components are added.
+        // Otherwise, the dependency between components may be broken and cause crash.
+        components_.erase(components_.end() - 1);
+    }
     sensorPortInfos_.clear();
     isDeactivated_ = true;
 }
@@ -113,18 +119,15 @@ bool DeviceBase::isComponentExists(DeviceComponentId compId) const {
     if(it != components_.end()) {
         return true;
     }
-
     return false;
 }
 
 bool DeviceBase::isComponentCreated(DeviceComponentId compId) const {
     std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
     auto it = std::find_if(components_.begin(), components_.end(), [compId](const ComponentItem &item) { return item.compId == compId; });
-
     if(it != components_.end()) {
         return it->component != nullptr;
     }
-
     return false;
 }
 

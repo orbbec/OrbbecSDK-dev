@@ -633,10 +633,10 @@ OB_EXPORT void ob_frameset_push_frame(ob_frame *frameset, const ob_frame *frame,
         return timestamp_us / 1000;                                    \
     } while(0);
 
-#define ob_frame_system_time_stamp(frame, err)                                     \
-    do {                                                                           \
-        uint64 system_timestamp_us = ob_frame_get_system_timestamp_us(frame, err); \
-        return system_timestamp_us / 1000;                                         \
+#define ob_frame_system_time_stamp(frame, err)                                       \
+    do {                                                                             \
+        uint64_t system_timestamp_us = ob_frame_get_system_timestamp_us(frame, err); \
+        return system_timestamp_us / 1000;                                           \
     } while(0);
 
 #define ob_frame_set_system_time_stamp(frame, system_timestamp, err)           \

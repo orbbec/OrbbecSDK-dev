@@ -104,6 +104,31 @@ void G330Device::fetchDeviceInfo() {
     deviceInfo_->uid_                 = enumInfo_->getUid();
     deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
     // todo: fetch and parse extension info
+    uint8_t *data     = nullptr;
+    uint32_t dataSize = 0;
+    propServer->getRawData(
+        OB_RAW_DATA_DEVICE_EXTENSION_INFORMATION,
+        [&](OBDataTranState state, OBDataChunk *dataChunk) {
+            if(state == DATA_TRAN_STAT_TRANSFERRING) {
+                if(data == nullptr) {
+                    dataSize = dataChunk->fullDataSize;
+                    data     = new uint8_t[dataSize];
+                }
+                memcpy(data + dataChunk->offset, dataChunk->data, dataChunk->size);
+            }
+        },
+        PROP_ACCESS_INTERNAL);
+
+    if(data) {
+        std::string extensionInfo((char *)data);
+        extensionInfo_ = DeviceBase::parseExtensionInfo(extensionInfo);
+
+        delete[] data;
+        data = nullptr;
+    }
+    else {
+        LOG_ERROR("Get ExtensionInfo Data is Null!");
+    }
 }
 
 void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
@@ -146,7 +171,7 @@ void G330Device::initSensorList() {
             [this, depthPortInfo]() {
                 auto platform = Platform::getInstance();
                 auto port     = platform->getSourcePort(depthPortInfo);
-                auto sensor = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
+                auto sensor   = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
 
                 sensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
@@ -202,7 +227,7 @@ void G330Device::initSensorList() {
             [this, depthPortInfo]() {
                 auto platform = Platform::getInstance();
                 auto port     = platform->getSourcePort(depthPortInfo);
-                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
+                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },  //
@@ -248,7 +273,7 @@ void G330Device::initSensorList() {
             [this, depthPortInfo]() {
                 auto platform = Platform::getInstance();
                 auto port     = platform->getSourcePort(depthPortInfo);
-                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
+                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },   //
@@ -323,7 +348,7 @@ void G330Device::initSensorList() {
             [this, colorPortInfo]() {
                 auto platform = Platform::getInstance();
                 auto port     = platform->getSourcePort(colorPortInfo);
-                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
+                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },

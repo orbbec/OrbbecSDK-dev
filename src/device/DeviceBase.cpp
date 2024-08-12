@@ -4,6 +4,7 @@
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
 #include "property/InternalProperty.hpp"
+#include <json/json.h>
 
 namespace libobsensor {
 
@@ -278,6 +279,24 @@ void DeviceBase::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUp
     utils::unusedVar(updateCallback);
     utils::unusedVar(async);
     throw invalid_value_exception("Do not support update firmware yet!");
+}
+
+std::map<std::string, std::string> DeviceBase::parseExtensionInfo(std::string extensionInfo) {
+    Json::Value                        root;
+    Json::Reader                       reader;
+    std::map<std::string, std::string> dataMap;
+    bool                               parseResult = reader.parse(extensionInfo, root);
+    if(!parseResult) {
+        LOG_ERROR("parse extensioninfo failed");
+    }
+    else {
+        Json::Value extensionInfos = root["ExtensionInfo"];
+        for(auto const &key: extensionInfos.getMemberNames()) {
+            dataMap[key] = extensionInfos[key].asString();
+            LOG_INFO("key: {},value:{}", key, extensionInfos[key].asString());
+        }
+    }
+    return dataMap;
 }
 
 }  // namespace libobsensor

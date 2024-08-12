@@ -39,8 +39,8 @@ const std::string &PrivFilterCppWrapper::getConfigSchema() const {
 
 void PrivFilterCppWrapper::reset() {
     ob_error *error = nullptr;
-    privFilterCtx_->reset(privFilterCtx_->filter, &error);
     FilterBase::reset();
+    privFilterCtx_->reset(privFilterCtx_->filter, &error);
     if(error) {
         LOG_WARN("Private filter {} reset failed: {}", name_, error->message);
         delete error;

@@ -88,6 +88,15 @@ OB_EXPORT void ob_pipeline_stop(ob_pipeline *pipeline, ob_error **error);
 OB_EXPORT ob_config *ob_pipeline_get_config(const ob_pipeline *pipeline, ob_error **error);
 
 /**
+ * @brief Switch the corresponding configuration
+ *
+ * @param[in] pipeline The pipeline object
+ * @param[in] config The pipeline configuration
+ * @param[out] error Log error messages
+ */
+OB_EXPORT void ob_pipeline_switch_config(ob_pipeline *pipeline, ob_config *config, ob_error **error);
+
+/**
  * @brief Wait for a set of frames to be returned synchronously
  *
  * @param[in] pipeline The pipeline object
@@ -170,6 +179,14 @@ OB_EXPORT void ob_delete_config(ob_config *config, ob_error **error);
  * @param[out] error Pointer to an error object that will be set if an error occurs.
  */
 OB_EXPORT void ob_config_enable_stream(ob_config *config, ob_stream_type stream_type, ob_error **error);
+
+/**
+ * @brief Enable all streams in the pipeline configuration
+ *
+ * @param[in] config The pipeline configuration
+ * @param[out] error Log error messages
+ */
+void ob_config_enable_all_stream(ob_config *config, ob_error **error);
 
 /**
  * @brief Enable a stream according to the stream profile

@@ -54,6 +54,28 @@ void Pipeline::applyConfig(std::shared_ptr<const Config> cfg) {
     config_ = checkAndSetConfig(cfg);
     checkHardwareD2CConfig();
 }
+    
+void Pipeline::switchConfig(std::shared_ptr<const Config> cfg) {
+    if(!cfg) {
+        throw libobsensor::invalid_value_exception("Null pointer config!");
+    }
+    
+    if(config_ && *cfg == *config_) {
+        LOG_INFO("Noting will be execute due to pipeline config have no been changed!");
+        return;
+    }
+
+    bool restartRequired = streamState_ == STREAM_STATE_STREAMING || streamState_ == STREAM_STATE_STARTING;
+    if(restartRequired) {
+        stopStream();
+        std::unique_lock<std::mutex> lk(streamMutex_);
+        start(cfg);
+    }
+    else {
+        std::unique_lock<std::mutex> lk(streamMutex_);
+        applyConfig(cfg);
+    }
+}
 
 void Pipeline::loadDefaultConfig() {
     auto config = std::make_shared<Config>();

@@ -155,6 +155,16 @@ public:
     }
 
     /**
+     * @deprecated Use enableStream(std::shared_ptr<StreamProfile> streamProfile) instead
+     * @brief Enable all streams to be used in the pipeline
+     */
+    void enableAllStream() {
+        ob_error *error = nullptr;
+        ob_config_enable_all_stream(impl_, &error);
+        Error::handle(&error);
+    }
+
+    /**
      * @brief Disable a stream to be used in the pipeline
      *
      * @param streamType The stream configuration to be disabled

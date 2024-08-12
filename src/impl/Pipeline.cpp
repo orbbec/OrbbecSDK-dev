@@ -93,6 +93,11 @@ ob_config *ob_pipeline_get_config(const ob_pipeline *pipeline, ob_error **error)
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, pipeline)
 
+void ob_pipeline_switch_config(ob_pipeline *pipeline, ob_config *config, ob_error **error) BEGIN_API_CALL {
+    pipeline->pipeline->switchConfig(config->config);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(pipeline)
+
 ob_frame *ob_pipeline_wait_for_frameset(ob_pipeline *pipeline, uint32_t timeout_ms, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(pipeline);
     auto frame = pipeline->pipeline->waitForFrame(timeout_ms);
@@ -172,6 +177,14 @@ void ob_config_enable_stream(ob_config *config, ob_stream_type stream_type, ob_e
     config->config->enableStream(stream_type);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(config, stream_type)
+
+void ob_config_enable_all_stream(ob_config *config, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(config);
+    for(int i = 0; i < OB_STREAM_TYPE_COUNT; i++) {  
+        config->config->enableStream(static_cast<ob_stream_type>(i));
+    }
+}
+HANDLE_EXCEPTIONS_NO_RETURN(config)
 
 void ob_config_enable_video_stream(ob_config *config, ob_stream_type stream_type, uint32_t width, uint32_t height, uint32_t fps, ob_format format,
                                    ob_error **error) BEGIN_API_CALL {

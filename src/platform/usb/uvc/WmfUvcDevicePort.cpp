@@ -862,7 +862,7 @@ void WmfUvcDevicePort::foreachProfile(std::function<void(const MFProfile &profil
     }
 }
 
-void WmfUvcDevicePort::playProfile(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback) {
+void WmfUvcDevicePort::playProfile(std::shared_ptr<const VideoStreamProfile> profile, MutableFrameCallback callback) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     bool                                  found = false;
     foreachProfile([&](const MFProfile &mfp, CComPtr<IMFMediaType> media_type, bool &quit) {
@@ -957,7 +957,7 @@ IAMCameraControl *WmfUvcDevicePort::getCameraControl() const {
     return cameraControl_.p;
 }
 
-void WmfUvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) {
+void WmfUvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile, MutableFrameCallback callback) {
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     checkConnection();
     if(powerState_ != kD0) {
@@ -1088,7 +1088,7 @@ STDMETHODIMP WmfUvcDevicePort::OnReadSample(HRESULT hrStatus, DWORD streamIndex,
                     stream.frameCounter++;
                     vsp->setNumber(stream.frameCounter);
 
-                    auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    auto realtime = utils::getNowTimesUs();
                     vsp->setSystemTimeStampUsec(realtime);
 
                     auto metadata                     = frame->getMetadataMutable();

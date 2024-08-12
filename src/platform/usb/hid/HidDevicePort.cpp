@@ -39,7 +39,7 @@ HidDevicePort::~HidDevicePort() noexcept {
     }
 }
 
-void HidDevicePort::startStream(FrameCallbackUnsafe callback) {
+void HidDevicePort::startStream(MutableFrameCallback callback) {
     if(isStreaming_) {
         throw wrong_api_call_sequence_exception("HidDevicePort::startStream() called while streaming");
     }
@@ -58,6 +58,8 @@ void HidDevicePort::startStream(FrameCallbackUnsafe callback) {
                 LOG_WARN_INTVL(utils::string::to_string() << "interrupt transfer failed, error: " << libusb_strerror(res));
                 continue;
             }
+            auto realtime = utils::getNowTimesUs();
+            frame->setSystemTimeStampUsec(realtime);
             frameQueue_.enqueue(frame);
         }
     });

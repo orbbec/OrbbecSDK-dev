@@ -1,4 +1,4 @@
-#include "UsbGroup.hpp"
+#include "UsbPortGroup.hpp"
 
 namespace libobsensor {
 bool GroupUSBSourcePortBySN(const std::shared_ptr<const SourcePortInfo> &port0, const std::shared_ptr<const SourcePortInfo> &port1) {

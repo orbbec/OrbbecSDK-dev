@@ -1,12 +1,12 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 
-#include "MacPal.hpp"
+#include "MacUsbPal.hpp"
 
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include "usb/hid/HidDevicePort.hpp"
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
@@ -15,7 +15,7 @@
 #include "core/device/DeviceInfoConfig.hpp"
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
 #include "ethernet/Ethernet.hpp"
 #endif
 
@@ -24,19 +24,17 @@
 
 namespace libobsensor {
 
-
-
-MacPal::MacPal() {
-#if defined(BUILD_USB_PORT)
+MacUsbPal::MacUsbPal() {
+#if defined(BUILD_USB_PAL)
     usbEnumerator_ = std::make_shared<UsbEnumerator>();
 #endif
 }
 
-MacPal::~MacPal() noexcept {}
+MacUsbPal::~MacUsbPal() noexcept {}
 
-std::shared_ptr<ISourcePort> MacPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> MacUsbPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
-    std::shared_ptr<ISourcePort>  port;
+    std::shared_ptr<ISourcePort> port;
 
     // clear expired weak_ptr
     for(auto it = sourcePortMap_.begin(); it != sourcePortMap_.end();) {
@@ -59,7 +57,7 @@ std::shared_ptr<ISourcePort> MacPal::getSourcePort(std::shared_ptr<const SourceP
     }
 
     switch(portInfo->portType) {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     case SOURCE_PORT_USB_VENDOR: {
         auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
@@ -89,7 +87,7 @@ std::shared_ptr<ISourcePort> MacPal::getSourcePort(std::shared_ptr<const SourceP
     }
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
     case SOURCE_PORT_NET_VENDOR:
         port = std::make_shared<VendorNetDataPort>(std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo));
         break;
@@ -110,8 +108,8 @@ std::shared_ptr<ISourcePort> MacPal::getSourcePort(std::shared_ptr<const SourceP
     return port;
 }
 
-#if defined(BUILD_USB_PORT)
-std::shared_ptr<DeviceWatcher> MacPal::createUsbDeviceWatcher() const {
+#if defined(BUILD_USB_PAL)
+std::shared_ptr<IDeviceWatcher> MacUsbPal::createDeviceWatcher() const {
     LOG_INFO("Create PollingDeviceWatcher!");
 
     if(LibusbDeviceWatcher::hasCapability()) {
@@ -119,7 +117,7 @@ std::shared_ptr<DeviceWatcher> MacPal::createUsbDeviceWatcher() const {
     }
 }
 
-SourcePortInfoList MacPal::queryUsbSourcePortInfos() {
+SourcePortInfoList MacUsbPal::querySourcePortInfos() {
     SourcePortInfoList portInfoList;
 
     const auto &usbInfoList = usbEnumerator_->queryUsbInterfaces();
@@ -142,7 +140,7 @@ SourcePortInfoList MacPal::queryUsbSourcePortInfos() {
     return portInfoList;
 }
 
-std::shared_ptr<ISourcePort> MacPal::createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> MacUsbPal::createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     if(portInfo->portType == SOURCE_PORT_USB_VENDOR) {
         auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
@@ -154,11 +152,11 @@ std::shared_ptr<ISourcePort> MacPal::createOpenNIDevicePort(std::shared_ptr<cons
     return nullptr;
 }
 
-std::shared_ptr<ISourcePort> MacPal::createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> MacUsbPal::createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo> portInfo) {
     switch(type) {
     case RAW_PHASE_CONVERTER_MSDE: {
         std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
-        std::shared_ptr<ISourcePort>  port;
+        std::shared_ptr<ISourcePort> port;
         auto                         it = sourcePortMap_.find(portInfo);
         if(it != sourcePortMap_.end()) {
             port = it->second.lock();
@@ -181,7 +179,7 @@ std::shared_ptr<ISourcePort> MacPal::createRawPhaseConverterDevicePort(RawPhaseC
     return nullptr;
 }
 
-std::shared_ptr<ISourcePort> MacPal::createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> MacUsbPal::createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
     if(usbDev == nullptr) {
         throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");

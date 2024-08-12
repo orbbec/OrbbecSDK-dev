@@ -69,7 +69,7 @@ protected:
     // device identification info
     int         pid_;
     int         vid_;
-    std::string uid_;  // Unique identifier of the port the device is connected to (pal specific)
+    std::string uid_;  // Unique identifier of the port the device is connected to (platform specific)
 
     std::string connectionType_;  // "Ethernet", "USB2.0", "USB3.0", etc.
 

@@ -3,11 +3,11 @@
 cmake_minimum_required(VERSION 3.5)
 
 file(GLOB _src_files
-    AndroidPal.cpp
-    AndroidPal.hpp
+    AndroidUsbPal.cpp
+    AndroidUsbPal.hpp
 )
 
-if(BUILD_USB_PORT)
+if(BUILD_USB_PAL)
     file(GLOB _usb_src_files
         AndroidUsbDeviceManager.cpp
         AndroidUsbDeviceManager.hpp

@@ -1,7 +1,9 @@
 #include "G330DeviceInfo.hpp"
 #include "G330Device.hpp"
-#include "usb/UsbGroup.hpp"
 #include "DevicePids.hpp"
+#include "usb/UsbPortGroup.hpp"
+#include "ethernet/NetPortGroup.hpp"
+#include "utils/Utils.hpp"
 
 #include <map>
 
@@ -25,29 +27,43 @@ G330DeviceInfo::G330DeviceInfo(const SourcePortInfoList groupedInfoList) {
         name_ = "Gemini 300 series device";
     }
 
-    pid_            = portInfo->pid;
-    vid_            = portInfo->vid;
-    uid_            = portInfo->uid;
-    deviceSn_       = portInfo->serial;
-    connectionType_ = portInfo->connSpec;
+    pid_                = portInfo->pid;
+    vid_                = portInfo->vid;
+    uid_                = portInfo->uid;
+    deviceSn_           = portInfo->serial;
+    connectionType_     = portInfo->connSpec;
     sourcePortInfoList_ = groupedInfoList;
 }
 
 G330DeviceInfo::~G330DeviceInfo() noexcept {}
 
-std::shared_ptr<IDevice> G330DeviceInfo::createDevice() const{
+std::shared_ptr<IDevice> G330DeviceInfo::createDevice() const {
     auto device = std::make_shared<G330Device>(shared_from_this());
     return device;
 }
 
-std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
+std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfo::pickDevices(const SourcePortInfoList infoList) {
     std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfos;
+
+    // pick usb device
     auto                                          remainder = FilterUSBPortInfoByPid(infoList, G330DevPids);
-    auto                                          groups    = GroupUSBSourcePortInfo(remainder, GroupUSBSourcePortByUrl);
-    auto iter      = groups.begin();
+    auto                                          groups    = utils::groupVector<std::shared_ptr<const SourcePortInfo>>(remainder, GroupUSBSourcePortByUrl);
+    auto                                          iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 3) {
-            auto info = std::make_shared<G330DeviceInfo>( *iter);
+            auto info = std::make_shared<G330DeviceInfo>(*iter);
+            G330DeviceInfos.push_back(info);
+        }
+        iter++;
+    }
+
+    // pick ethernet device
+    remainder = FilterNetPortInfoByPid(infoList, G330DevPids);
+    groups    = utils::groupVector<std::shared_ptr<const SourcePortInfo>>(remainder, GroupNetSourcePortByMac);
+    iter      = groups.begin();
+    while(iter != groups.end()) {
+        if(iter->size() >= 3) {
+            auto info = std::make_shared<G330DeviceInfo>(*iter);
             G330DeviceInfos.push_back(info);
         }
         iter++;

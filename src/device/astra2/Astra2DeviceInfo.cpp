@@ -1,6 +1,6 @@
 #include "Astra2DeviceInfo.hpp"
 #include "Astra2Device.hpp"
-#include "usb/UsbGroup.hpp"
+#include "usb/UsbPortGroup.hpp"
 #include "DevicePids.hpp"
 
 #include <map>
@@ -38,7 +38,7 @@ std::shared_ptr<IDevice> Astra2DeviceInfo::createDevice() const {
 std::vector<std::shared_ptr<IDeviceEnumInfo>> Astra2DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
     std::vector<std::shared_ptr<IDeviceEnumInfo>> Astra2DeviceInfos;
     auto                                          remainder = FilterUSBPortInfoByPid(infoList, Astra2DevPids);
-    auto                                          groups    = GroupUSBSourcePortInfo(remainder, GroupUSBSourcePortByUrl);
+    auto                                          groups    = utils::groupVector<std::shared_ptr<const SourcePortInfo>>(remainder, GroupUSBSourcePortByUrl);
     auto                                          iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 4) {

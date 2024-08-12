@@ -29,8 +29,8 @@ enum RTSPState {
 
 class ObRTSPClient : public RTSPClient {
 public:
-    static ObRTSPClient *createNew(UsageEnvironment &env, char const *rtspURL, FrameCallbackUnsafe callback, int verbosityLevel = 0,
-                                   char const *applicationName = NULL, portNumBits tunnelOverHTTPPortNum = 0, int socketNumToServer = -1);
+    static ObRTSPClient *createNew(std::shared_ptr<const StreamProfile> profile, UsageEnvironment &env, char const *rtspURL, MutableFrameCallback callback, int verbosityLevel = 0,
+                                   portNumBits tunnelOverHTTPPortNum = 0, int socketNumToServer = -1);
 
     virtual ~ObRTSPClient() noexcept;
 
@@ -39,25 +39,25 @@ public:
     void stopStream();
 
 protected:
-    ObRTSPClient(UsageEnvironment &env, char const *rtspURL, FrameCallbackUnsafe callback, int verbosityLevel = 0, char const *applicationName = NULL,
-                 portNumBits tunnelOverHTTPPortNum = 0, int socketNumToServer = -1);
+    ObRTSPClient(std::shared_ptr<const StreamProfile> profile, UsageEnvironment &env, char const *rtspURL, MutableFrameCallback callback, int verbosityLevel = 0, portNumBits tunnelOverHTTPPortNum = 0,
+                 int socketNumToServer = -1);
 
 private:
     void DESCRIBE();
-    // DESCRIBE命令响应，解析SDP，创建media session
+    // DESCRIBE command response, parse SDP, create media session
     static void cmdResponseHandlerDESCRIBE(RTSPClient *rtspClient, int resultCode, char *resultString);
 
     void SETUP();
     void setupNextSubsession();
-    // SETUP命令响应，完善Subsession的创建（创建并绑定sink）
+    // SETUP command response, complete the creation of Subsession (create and bind sink)
     static void cmdResponseHandlerSETUP(RTSPClient *rtspClient, int resultCode, char *resultString);
 
     void PLAY();
-    // PLAY命令响应，如果流是有一定时长的，创建定时任务取关闭流
+    // PLAY command response, if the stream has a certain duration, create a scheduled task to close the stream
     static void cmdResponseHandlerPLAY(RTSPClient *rtspClient, int resultCode, char *resultString);
 
     void TEARDOWN();
-    // TEARDOWN 响应
+    // TEARDOWN response
     static void cmdResponseHandlerTEARDOWN(RTSPClient *rtspClient, int resultCode, char *resultString);
 
     // Other event handler functions:
@@ -71,7 +71,8 @@ private:
     void clearSinks();
 
 private:
-    VideoFrameCallback frameCallback_;
+    std::shared_ptr<const StreamProfile> profile_;
+    MutableFrameCallback frameCallback_;
 
     std::string                 errorMsg_;
     CommandState                commandState_;

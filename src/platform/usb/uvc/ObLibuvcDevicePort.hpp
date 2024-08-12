@@ -45,7 +45,7 @@ public:
     ~ObLibuvcDevicePort() noexcept override;
 
     StreamProfileList getStreamProfileList() override;
-    void              startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
+    void              startStream(std::shared_ptr<const StreamProfile> profile, MutableFrameCallback callback) override;
     void              stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void              stopAllStream() override;
 

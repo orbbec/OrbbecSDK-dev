@@ -14,7 +14,7 @@ public:
 
     ~HidDevicePort() noexcept override;
 
-    void startStream(FrameCallbackUnsafe callback) override;
+    void startStream(MutableFrameCallback callback) override;
     void stopStream() override;
 
     std::shared_ptr<const SourcePortInfo> getSourcePortInfo() const override;

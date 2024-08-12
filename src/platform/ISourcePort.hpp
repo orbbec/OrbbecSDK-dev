@@ -20,21 +20,24 @@ enum SourcePortType {
     SOURCE_PORT_UNKNOWN = 0xff,
 };
 
+#define IS_USB_PORT(type) ((type) >= SOURCE_PORT_USB_VENDOR && (type) <= SOURCE_PORT_USB_HID)
+#define IS_NET_PORT(type) ((type) >= SOURCE_PORT_NET_VENDOR && (type) <= SOURCE_PORT_NET_RTSP)
 
 struct SourcePortInfo {
-    virtual ~SourcePortInfo() noexcept = default;
+    SourcePortInfo(SourcePortType portType) : portType(portType) {}
+    virtual ~SourcePortInfo() noexcept                                      = default;
+    virtual bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const = 0;
+
     SourcePortType portType;
-    virtual bool   equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const = 0;
 };
 
 struct NetSourcePortInfo : public SourcePortInfo {
+    NetSourcePortInfo(SourcePortType portType, std::string address, uint16_t port, std::string mac, std::string serialNumber, uint32_t pid)
+        : SourcePortInfo(portType), address(address), port(port), mac(mac), serialNumber(serialNumber), pid(pid) {}
+
     ~NetSourcePortInfo() noexcept override = default;
-    std::string address;
-    uint16_t    port;
-    std::string mac;
-    std::string serialNumber;
-    uint32_t    pid;
-    bool        equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
+
+    bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
         if(cmpInfo->portType != portType) {
             return false;
         }
@@ -42,13 +45,18 @@ struct NetSourcePortInfo : public SourcePortInfo {
         return (address == netCmpInfo->address) && (port == netCmpInfo->port) && (mac == netCmpInfo->mac) && (serialNumber == netCmpInfo->serialNumber)
                && (pid == netCmpInfo->pid);
     }
+
+    std::string address;
+    uint16_t    port;
+    std::string mac;
+    std::string serialNumber;
+    uint32_t    pid;
 };
 
 struct ShmStreamPortInfo : public SourcePortInfo {  // shared memory stream port
+    ShmStreamPortInfo(SourcePortType portType, std::string shmName, int32_t blockSize, int32_t blockCount)
+        : SourcePortInfo(portType), shmName(shmName), blockSize(blockSize), blockCount(blockCount) {}
     ~ShmStreamPortInfo() noexcept override = default;
-    std::string  shmName;
-    int32_t      blockSize;
-    int32_t      blockCount;
     virtual bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
         if(cmpInfo->portType != portType) {
             return false;
@@ -56,14 +64,26 @@ struct ShmStreamPortInfo : public SourcePortInfo {  // shared memory stream port
         auto netCmpInfo = std::dynamic_pointer_cast<const ShmStreamPortInfo>(cmpInfo);
         return (shmName == netCmpInfo->shmName) && (blockSize == netCmpInfo->blockSize) && (blockCount == netCmpInfo->blockCount);
     };
+
+    std::string shmName;
+    int32_t     blockSize;
+    int32_t     blockCount;
 };
 
 struct USBSourcePortInfo : public SourcePortInfo {
+    USBSourcePortInfo(): SourcePortInfo(SOURCE_PORT_USB_VENDOR) {};
+    explicit USBSourcePortInfo(SourcePortType type) : SourcePortInfo(type) {}
     ~USBSourcePortInfo() noexcept override = default;
-    USBSourcePortInfo() {}
-    USBSourcePortInfo(SourcePortType type) {
-        portType = type;
-    }
+
+    bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
+        if(cmpInfo->portType != portType) {
+            return false;
+        }
+        auto netCmpInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(cmpInfo);
+        return (url == netCmpInfo->url) && (vid == netCmpInfo->vid) && (pid == netCmpInfo->pid) && (infUrl == netCmpInfo->infUrl)
+               && (infIndex == netCmpInfo->infIndex) && (infName == netCmpInfo->infName) && (hubId == netCmpInfo->hubId);
+    };
+
     std::string url;  // usb device url
     std::string uid;
     uint16_t    vid = 0;  // usb device vid
@@ -75,15 +95,6 @@ struct USBSourcePortInfo : public SourcePortInfo {
     uint8_t     infIndex = 0;  // interface index
     std::string infName;       // interface name
     std::string hubId;         // hub id
-
-    bool equal(std::shared_ptr<const SourcePortInfo> cmpInfo) const override {
-        if(cmpInfo->portType != portType) {
-            return false;
-        }
-        auto netCmpInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(cmpInfo);
-        return (url == netCmpInfo->url) && (vid == netCmpInfo->vid) && (pid == netCmpInfo->pid) && (infUrl == netCmpInfo->infUrl)
-               && (infIndex == netCmpInfo->infIndex) && (infName == netCmpInfo->infName) && (hubId == netCmpInfo->hubId);
-    };
 };
 
 typedef std::vector<std::shared_ptr<const SourcePortInfo>> SourcePortInfoList;
@@ -108,8 +119,8 @@ class IDataStreamPort : virtual public ISourcePort {  // Virtual inheritance sol
 public:
     ~IDataStreamPort() noexcept override = default;
 
-    virtual void startStream(FrameCallbackUnsafe callback) = 0;
-    virtual void stopStream()                              = 0;
+    virtual void startStream(MutableFrameCallback callback) = 0;
+    virtual void stopStream()                               = 0;
 };
 
 // for video data stream: depth, color, ir, etc.
@@ -117,9 +128,9 @@ class IVideoStreamPort : virtual public ISourcePort {  // Virtual inheritance so
 public:
     ~IVideoStreamPort() noexcept override = default;
 
-    virtual StreamProfileList getStreamProfileList()                                                                  = 0;
-    virtual void              startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) = 0;
-    virtual void              stopStream(std::shared_ptr<const StreamProfile> profile)                                = 0;
-    virtual void              stopAllStream()                                                                         = 0;
+    virtual StreamProfileList getStreamProfileList()                                                                   = 0;
+    virtual void              startStream(std::shared_ptr<const StreamProfile> profile, MutableFrameCallback callback) = 0;
+    virtual void              stopStream(std::shared_ptr<const StreamProfile> profile)                                 = 0;
+    virtual void              stopAllStream()                                                                          = 0;
 };
 }  // namespace libobsensor

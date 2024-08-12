@@ -36,7 +36,7 @@ public:
     ImuStreamer(IDevice *owner, const std::shared_ptr<IDataStreamPort> &backend, const std::shared_ptr<IFilter> &corrector);
     virtual ~ImuStreamer() noexcept;
 
-    void start(std::shared_ptr<const StreamProfile> sp, FrameCallbackUnsafe callback);
+    void start(std::shared_ptr<const StreamProfile> sp, MutableFrameCallback callback);
     void stop(std::shared_ptr<const StreamProfile> sp);
 
     IDevice *getOwner() const override;
@@ -51,7 +51,7 @@ private:
     std::shared_ptr<IFilter>         corrector_;
 
     std::mutex                                                          cbMtx_;
-    std::map<std::shared_ptr<const StreamProfile>, FrameCallbackUnsafe> callbacks_;
+    std::map<std::shared_ptr<const StreamProfile>, MutableFrameCallback> callbacks_;
 
     std::atomic_bool running_;
 

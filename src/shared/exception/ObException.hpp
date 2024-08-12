@@ -63,22 +63,7 @@ public:
 
 class pal_exception : public unrecoverable_exception {
 public:
-    pal_exception(const std::string &msg, ob_exception_type exception_type) noexcept : unrecoverable_exception(msg, exception_type) {}
-};
-
-class linux_pal_exception : public pal_exception {
-public:
-    linux_pal_exception(const std::string &msg) noexcept : pal_exception(generate_last_error_message(msg), OB_EXCEPTION_TYPE_PLATFORM) {}
-
-private:
-    std::string generate_last_error_message(const std::string &msg) const {
-        return msg + " Last Error: " + strerror(errno);
-    }
-};
-
-class windows_pal_exception : public pal_exception {
-public:
-    windows_pal_exception(const std::string &msg) noexcept : pal_exception(msg, OB_EXCEPTION_TYPE_PLATFORM) {}
+    pal_exception(const std::string &msg) noexcept : unrecoverable_exception(msg, OB_EXCEPTION_TYPE_PLATFORM) {}
 };
 
 class invalid_value_exception : public recoverable_exception {

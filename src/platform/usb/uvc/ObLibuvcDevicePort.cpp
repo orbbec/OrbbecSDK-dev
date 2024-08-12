@@ -87,7 +87,7 @@ ObLibuvcDevicePort::~ObLibuvcDevicePort() noexcept {
     LOG_INFO("~ObLibuvcDevicePort done");
 }
 
-void ObLibuvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile, libobsensor::FrameCallbackUnsafe callback) {
+void ObLibuvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile, libobsensor::MutableFrameCallback callback) {
     LOG_DEBUG("ObLibuvcDevicePort::startStream()...");
     bool       foundProfile       = false;
     uvcProfile selectedUvcProfile = { 0 };

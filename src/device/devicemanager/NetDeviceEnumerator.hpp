@@ -1,31 +1,37 @@
 #pragma once
+
 #include "IDeviceEnumerator.hpp"
+#include "IDeviceWatcher.hpp"
+#include "Platform.hpp"
+
 namespace libobsensor {
 class NetDeviceEnumerator : public IDeviceEnumerator {
 public:
-    NetDeviceEnumerator(std::shared_ptr<ObPal> obPal, DeviceChangedCallback callback);
+    NetDeviceEnumerator(DeviceChangedCallback callback);
     virtual ~NetDeviceEnumerator() noexcept;
-    virtual std::vector<std::shared_ptr<IDeviceEnumInfo>> getDeviceInfoList() override;
-    virtual void                                          setDeviceChangedCallback(DeviceChangedCallback callback) override;
+    virtual DeviceEnumInfoList getDeviceInfoList() override;
+    virtual void               setDeviceChangedCallback(DeviceChangedCallback callback) override;
 
-    static std::shared_ptr<IDevice> createDevice(std::shared_ptr<ObPal> obPal, std::string address, uint16_t port);
-
-private:
-    static std::vector<std::shared_ptr<IDeviceEnumInfo>> deviceInfoMatch(const SourcePortInfoList infoList);
-    static std::shared_ptr<IDeviceEnumInfo>              associatedSourcePortCompletion(std::shared_ptr<ObPal> obPal, std::shared_ptr<IDeviceEnumInfo> info);
-
-    void                                          onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid);
-    std::vector<std::shared_ptr<IDeviceEnumInfo>> queryDeviceList();
+    static std::shared_ptr<IDevice> createDevice(std::string address, uint16_t port);
 
 private:
+    static DeviceEnumInfoList               deviceInfoMatch(const SourcePortInfoList infoList);
+    static std::shared_ptr<IDeviceEnumInfo> associatedSourcePortCompletion(std::shared_ptr<IDeviceEnumInfo> info);
+
+    void               onPlatformDeviceChanged(OBDeviceChangedType changeType, std::string devUid);
+    DeviceEnumInfoList queryDeviceList();
+
+private:
+    std::shared_ptr<Platform> platform_;
+
     std::mutex            deviceChangedCallbackMutex_;
     DeviceChangedCallback deviceChangedCallback_;
-    // std::thread           devChangedCallbackThread_;
+    std::thread           devEnumChangedCallbackThread_;
 
-    std::recursive_mutex                          deviceInfoListMutex_;
-    std::vector<std::shared_ptr<IDeviceEnumInfo>> deviceInfoList_;
-    SourcePortInfoList                            sourcePortInfoList_;
+    std::recursive_mutex deviceInfoListMutex_;
+    DeviceEnumInfoList   deviceInfoList_;
+    SourcePortInfoList   sourcePortInfoList_;
 
-    std::shared_ptr<DeviceWatcher> deviceWatcher_;
+    std::shared_ptr<IDeviceWatcher> deviceWatcher_;
 };
 }  // namespace libobsensor

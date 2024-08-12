@@ -15,7 +15,7 @@ public:
     ~FemtoMegaDeviceInfo() noexcept;
 
     std::shared_ptr<IDevice>                             createDevice() const override;
-    static std::vector<std::shared_ptr<IDeviceEnumInfo>> createDeviceInfos(const SourcePortInfoList infoList);
+    static std::vector<std::shared_ptr<IDeviceEnumInfo>> pickDevices(const SourcePortInfoList infoList);
 };
 
 }  // namespace libobsensor

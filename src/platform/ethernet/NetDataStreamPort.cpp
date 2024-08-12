@@ -1,6 +1,8 @@
 #include "NetDataStreamPort.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
+#include "frame/FrameFactory.hpp"
+#include "utils/Utils.hpp"
 
 namespace libobsensor {
 
@@ -17,95 +19,64 @@ NetDataStreamPort::~NetDataStreamPort() {
     }
 }
 
-void NetDataStreamPort::removeWatcher(std::weak_ptr<DataStreamWatcher> watcher) {
-    LOG_DEBUG("NetDataStreamPort::removeWatcher start");
-    bool watchersEmpty = false;
-    {
-        std::unique_lock<std::mutex> lk(watchersMutex_);
-        auto                         iter = watchers_.find(watcher);
-        if(iter != watchers_.end()) {
-            watchers_.erase(iter);
-        }
-        watchersEmpty = watchers_.empty();
+void NetDataStreamPort::startStream(MutableFrameCallback callback) {
+    if(isStreaming_) {
+        throw wrong_api_call_sequence_exception("NetDataStreamPort::startStream() called when streaming");
     }
+    callback_        = callback;
+    auto netPortInfo = std::const_pointer_cast<NetDataStreamPortInfo>(portInfo_);
+    tcpClient_       = std::make_shared<VendorTCPClient>(netPortInfo->address, netPortInfo->port);
 
-    if(watchersEmpty) {
-        LOG_DEBUG("NetDataStreamPort::removeWatcher reset client");
-        isStreaming_ = false;
-        if(tcpClient_) {
-            tcpClient_->flush();
-        }
-        if(readDataThread_.joinable()) {
-            readDataThread_.join();
-        }
-        std::unique_lock<std::mutex> lk(clientMutex_);
-        if(tcpClient_) {
-            tcpClient_.reset();
-        }
-    }
-
-    LOG_DEBUG("NetDataStreamPort::removeWatcher done");
+    isStreaming_    = true;
+    readDataThread_ = std::thread(&NetDataStreamPort::readData, this);
 }
 
-void NetDataStreamPort::addWatcher(std::weak_ptr<DataStreamWatcher> watcher) {
-    LOG_DEBUG("NetDataStreamPort::addWatcher start");
-    {
-        std::unique_lock<std::mutex> lk(watchersMutex_);
-        watchers_.insert(watcher);
+void NetDataStreamPort::stopStream() {
+    if(!isStreaming_) {
+        throw wrong_api_call_sequence_exception("NetDataStreamPort::stopStream() called when not streaming");
     }
-    if(isStreaming_ == false) {
-        std::unique_lock<std::mutex> lk(clientMutex_);
-        isStreaming_ = true;
-        LOG_DEBUG("NetDataStreamPort::addWatcher create client");
-        auto noConstPortInfo = std::const_pointer_cast<NetDataStreamPortInfo>(portInfo_);
-        tcpClient_ = std::make_shared<VendorTCPClient>(noConstPortInfo->address, noConstPortInfo->port);
-        readDataThread_ = std::thread(&NetDataStreamPort::readData, this);
+
+    isStreaming_ = false;
+    if(readDataThread_.joinable()) {
+        readDataThread_.join();
     }
-    LOG_DEBUG("NetDataStreamPort::addWatcher done");
+
+    if(tcpClient_) {
+        tcpClient_.reset();
+    }
 }
 
 void NetDataStreamPort::readData() {
-    const int                IMU_PACKS_SIZE = 248;
-    std::shared_ptr<uint8_t> buffPtr(new uint8_t[IMU_PACKS_SIZE], std::default_delete<uint8_t[]>());
-    uint8_t                 *data         = buffPtr.get();
-    int                      dataFillSize = 0;
-    int                      readSize     = 0;
+    const int              PACK_SIZE     = 248;
+    int                    dataRecvdSize = 0;
+    int                    readSize      = 0;
+    std::shared_ptr<Frame> frame;
+    uint8_t               *data = nullptr;
     while(isStreaming_) {
-        {
-            std::unique_lock<std::mutex> lk(clientMutex_);
-            BEGIN_TRY_EXECUTE({ readSize = tcpClient_->read(data + dataFillSize, IMU_PACKS_SIZE - dataFillSize); })
-            CATCH_EXCEPTION_AND_EXECUTE({
-                LOG_WARN("read data failed!");
-                readSize = -1;
-            })
+        if(!frame) {
+            frame         = FrameFactory::createFrame(OB_FRAME_UNKNOWN, OB_FORMAT_UNKNOWN, PACK_SIZE);
+            data          = frame->getDataMutable();
+            dataRecvdSize = 0;
         }
+
+        BEGIN_TRY_EXECUTE({ readSize = tcpClient_->read(data + dataRecvdSize, PACK_SIZE - dataRecvdSize); })
+        CATCH_EXCEPTION_AND_EXECUTE({
+            LOG_WARN("read data failed!");
+            readSize = -1;
+        })
 
         if(readSize < 0) {
-            dataFillSize = 0;
-            memset(data, 0, IMU_PACKS_SIZE);
+            dataRecvdSize = 0;
         }
         else {
-            dataFillSize += readSize;
+            dataRecvdSize += readSize;
         }
 
-        if(IMU_PACKS_SIZE == dataFillSize && isStreaming_) {
-            std::set<std::weak_ptr<DataStreamWatcher>, dataStreamWatcherWeakPtrCompare> tempWatchers;
-
-            {
-                // 避免对watchers_加锁锁住item->onDataReceived的调用过程
-                std::unique_lock<std::mutex> lk(watchersMutex_);
-                tempWatchers = watchers_;
-            }
-
-            for(auto &watcher: tempWatchers) {
-                auto item = watcher.lock();
-                if(item) {
-                    item->onDataReceived(data, IMU_PACKS_SIZE);
-                }
-            }
-
-            dataFillSize = 0;
-            memset(data, 0, IMU_PACKS_SIZE);
+        if(PACK_SIZE == dataRecvdSize && isStreaming_) {
+            auto realtime = utils::getNowTimesUs();
+            frame->setSystemTimeStampUsec(realtime);
+            callback_(frame);
+            frame.reset();
         }
     }
 }

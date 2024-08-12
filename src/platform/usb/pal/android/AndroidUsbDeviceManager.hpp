@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ObPal.hpp"
+#include "IPal.hpp"
 #include "usb/enumerator/Device.hpp"
 #include "usb/enumerator/ContextLibusb.hpp"
 
@@ -24,7 +24,7 @@ struct AndroidUsbDeviceHandle {
     uint16_t ref = 0;
 };
 
-class AndroidUsbDeviceManager : public DeviceWatcher, public std::enable_shared_from_this<AndroidUsbDeviceManager> {
+class AndroidUsbDeviceManager : public IDeviceWatcher, public std::enable_shared_from_this<AndroidUsbDeviceManager> {
 public:
     AndroidUsbDeviceManager();
     ~AndroidUsbDeviceManager();

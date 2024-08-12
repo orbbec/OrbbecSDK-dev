@@ -11,9 +11,9 @@ typedef enum {
 
 typedef std::function<void(OBDeviceChangedType changeType, std::string devUid)> deviceChangedCallback;
 
-class DeviceWatcher {
+class IDeviceWatcher {
 public:
-    virtual ~DeviceWatcher() noexcept = default;
+    virtual ~IDeviceWatcher() noexcept = default;
 
     virtual void start(deviceChangedCallback callback) = 0;
     virtual void stop()                                = 0;

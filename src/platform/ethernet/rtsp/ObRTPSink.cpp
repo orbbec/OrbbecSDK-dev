@@ -1,8 +1,16 @@
 #include "ObRTPSink.hpp"
 
 #include "H264VideoRTPSource.hh"
+
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
+#include "frame/FrameFactory.hpp"
+#include "stream/StreamProfile.hpp"
+
+#include <vector>
+#include <map>
+#include <string>
+#include <algorithm>
 
 namespace libobsensor {
 
@@ -23,16 +31,40 @@ typedef struct {
 } OBNetworkFrameHeader;
 #pragma pack()
 
-ObRTPSink *ObRTPSink::createNew(UsageEnvironment &env, MediaSubsession &subsession, FrameCallbackUnsafe callback, char const *streamId) {
-    return new ObRTPSink(env, subsession, callback, streamId);
+const std::vector<std::string> OBVendorCodecs = {
+    "OB_FMT_Y16", "OB_FMT_Y8", "OB_FMT_Y10", "OB_FMT_RVL", "OB_FMT_MJPEG", "YUYV",
+};
+
+bool isOBVendorCodec(const std::string &codec) {
+    return std::find(OBVendorCodecs.begin(), OBVendorCodecs.end(), codec) != OBVendorCodecs.end();
 }
 
-ObRTPSink::ObRTPSink(UsageEnvironment &env, MediaSubsession &subsession, FrameCallbackUnsafe callback, char const *streamId)
-    : MediaSink(env), subsession_(subsession), frameCallback_(callback), frameCount_(0), destroy_(false), currentFrame_(nullptr) {
+const std::map<std::string, OBFormat> CodecToFormatMap = {
+    { "H264", OB_FORMAT_H264 },    { "H265", OB_FORMAT_H265 },      { "JPEG", OB_FORMAT_MJPG },      { "OB_FMT_Y16", OB_FORMAT_Y16 },
+    { "OB_FMT_Y8", OB_FORMAT_Y8 }, { "OB_FMT_Y10", OB_FORMAT_Y10 }, { "OB_FMT_RVL", OB_FORMAT_RVL }, { "OB_FMT_MJPEG", OB_FORMAT_MJPG },
+};
+
+OBFormat codecToOBFormat(const std::string &codec) {
+    auto it = CodecToFormatMap.find(codec);
+    if(it != CodecToFormatMap.end()) {
+        return it->second;
+    }
+    return OB_FORMAT_UNKNOWN;
+}
+
+ObRTPSink *ObRTPSink::createNew(std::shared_ptr<const StreamProfile> streamProfile, UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId) {
+    return new ObRTPSink(streamProfile, env, subsession, callback, streamId);
+}
+
+ObRTPSink::ObRTPSink(std::shared_ptr<const StreamProfile> streamProfile, UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId)
+    : streamProfile_(streamProfile), MediaSink(env), subsession_(subsession), frameCallback_(callback), frameCount_(0), destroy_(false), currentBuffer_(nullptr) {
     streamId_ = strDup(streamId);
     envir() << "ObRTPSink created! streamId = " << streamId_ << "\n";
 
-    auto frame = std::make_shared<ObRTPFrame>(MAX_FRAME_DATA_SIZE);
+    auto     frame       = std::make_shared<ObRTPBuffer>(MAX_FRAME_DATA_SIZE);
+    auto     frameBuffer = frame->getBuffer();
+    uint32_t headerSize  = 0;
+
     // Load vps/pps/sps into the frame header
     if(strcmp(subsession_.codecName(), "H264") == 0) {
         unsigned int  nalUnitNum;
@@ -41,13 +73,15 @@ ObRTPSink::ObRTPSink(UsageEnvironment &env, MediaSubsession &subsession, FrameCa
 
         pSPropRecord = parseSPropParameterSets(subsession_.fmtp_spropparametersets(), nalUnitNum);
         for(unsigned int i = 0; i < nalUnitNum; i++) {
-            memcpy(frame->frameDataBuffer + frame->frameHeaderSize, &nalUnitStartCode[0], 4);
-            frame->frameHeaderSize += 4;
-            memcpy(frame->frameDataBuffer + frame->frameHeaderSize, pSPropRecord[i].sPropBytes, pSPropRecord[i].sPropLength);
-            frame->frameHeaderSize += pSPropRecord[i].sPropLength;
+            memcpy(frameBuffer + headerSize, &nalUnitStartCode[0], 4);
+            headerSize += 4;
+            memcpy(frameBuffer + headerSize, pSPropRecord[i].sPropBytes, pSPropRecord[i].sPropLength);
+            headerSize += pSPropRecord[i].sPropLength;
         }
-        memcpy(frame->frameDataBuffer + frame->frameHeaderSize, &nalUnitStartCode[0], 4);
-        frame->frameHeaderSize += 4;
+
+        memcpy(frameBuffer + headerSize, &nalUnitStartCode[0], 4);
+        headerSize += 4;
+        frame->setHeaderSize(headerSize);
         delete[] pSPropRecord;
     }
     else if(strcmp(subsession_.codecName(), "H265") == 0) {
@@ -61,26 +95,25 @@ ObRTPSink::ObRTPSink(UsageEnvironment &env, MediaSubsession &subsession, FrameCa
 
         for(uint8_t i = 0; i < 3; i++) {
             for(uint32_t j = 0; j < numSPropRecords[i]; j++) {
-                memcpy(frame->frameDataBuffer + frame->frameHeaderSize, &nalUnitStartCode[0], 4);
-                frame->frameHeaderSize += 4;
-                memcpy(frame->frameDataBuffer + frame->frameHeaderSize, sPropRecords[i][j].sPropBytes, sPropRecords[i][j].sPropLength);
-                frame->frameHeaderSize += sPropRecords[i][j].sPropLength;
+                memcpy(frameBuffer + headerSize, &nalUnitStartCode[0], 4);
+                headerSize += 4;
+                memcpy(frameBuffer + headerSize, sPropRecords[i][j].sPropBytes, sPropRecords[i][j].sPropLength);
+                headerSize += sPropRecords[i][j].sPropLength;
             }
             delete[] sPropRecords[i];
         }
-        memcpy(frame->frameDataBuffer + frame->frameHeaderSize, &nalUnitStartCode[0], 4);
-        frame->frameHeaderSize += 4;
+        memcpy(frameBuffer + headerSize, &nalUnitStartCode[0], 4);
+        headerSize += 4;
+        frame->setHeaderSize(headerSize);
     }
-    else {
-        frame->frameHeaderSize = 0;
-    }
+    // else: header size is 0
 
-    std::unique_lock<std::mutex> lk(reclaimedRTPFrameMutex_);
-    for(uint32_t i = 0; i < MAX_FRAME_NUM - 1; i++) {
-        auto newFrame = frame->cloneHeader();
-        reclaimedRTPFrameQueue_.push(newFrame);
+    std::unique_lock<std::mutex> lk(reclaimedRTPBufferMutex_);
+    for(uint8_t i = 0; i < MAX_FRAME_NUM - 1; i++) {
+        auto newFrame = frame->cloneAndCopyHeader();
+        reclaimedRTPBufferQueue_.push(newFrame);
     }
-    reclaimedRTPFrameQueue_.push(frame);
+    reclaimedRTPBufferQueue_.push(frame);
 
     outputFrameThread_ = std::thread(&ObRTPSink::outputFrameFunc, this);
 }
@@ -103,8 +136,26 @@ void ObRTPSink::afterGettingFrame(void *clientData, unsigned frameSize, unsigned
 }
 
 void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime, unsigned /*duration in microseconds*/) {
+    utils::unusedVar(numTruncatedBytes);
+    currentBuffer_->setRecvdDataSize(frameSize);
+    currentBuffer_->setSequenceNumber(frameCount_);
+    currentBuffer_->setCodecName(subsession_.codecName());
+    auto tsp = subsession_.getNormalPlayTime(presentationTime);
+    currentBuffer_->setTimestamp(static_cast<uint64_t>(tsp));
+
+    {
+        std::unique_lock<std::mutex> lk(outputRTPBufferQueueMutex_);
+        outputRTPBufferQueue_.push(currentBuffer_);
+        currentBuffer_.reset();
+    }
+    frameAvailableCv_.notify_all();
+    frameCount_++;
+
+    // Then continue, to request the next frame of data:
+    continuePlaying();
+
     // uint64_t start  = utils::getNowTimesUs();
-    uint64_t curTsp = utils::getNowTimesUs();
+    // uint64_t curTsp = utils::getNowTimesUs();
 
     // static uint64_t dataLenCnt_ = 0;
     // static uint64_t frameCnt_   = 0;
@@ -128,167 +179,169 @@ void ObRTPSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes
     // char uSecsStr[7] = { 0 };
     // sprintf(uSecsStr, "%06u", (unsigned)presentationTime.tv_usec);
 
-    // std::string logStr = utils::string::to_string() << "New frame received: type=" << subsession_.codecName() << ", tsp=" << (int)presentationTime.tv_sec <<
+    // std::string logStr = utils::string::to_string() << "New frame received: type=" << subsession_.codecName() << ", tsp=" << (int)presentationTime.tv_sec
+    // <<
     //"."
     //                                           << uSecsStr << ", framesize=" << frameSize << ", index=" << *(uint32_t *)frame->frameObj->frameData;
     // if(fps != 0) {
     //     logStr = logStr + ", avrFps=" + std::to_string(fps) + ", avrBitRate=" + std::to_string(dataRate_) + "Mbps";
     // }
     // envir() << logStr.c_str();
-    do {
-        auto &frameObj = currentFrame_->frameObj;
-        if(strcmp(subsession_.codecName(), "OB_FMT_Y16") == 0) {
-            auto header          = (OBNetworkFrameHeader *)currentFrame_->frameDataBuffer;
-            frameObj->index      = header->frameCounter;
-            frameObj->systemTime = curTsp;
-            frameObj->deviceTime = header->timestamp;
-            // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
-            frameObj->format       = OB_FORMAT_Y16;
-            frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y16 format needs to remove the network header
-            frameObj->metadataSize = 0;
-            frameObj->metadata     = nullptr;
-        }
-        // todo-lingyi adds Y8, yuyv format, RVL format and Y10 format
-        else if(strcmp(subsession_.codecName(), "OB_FMT_Y8") == 0) {
-            auto header            = (OBNetworkFrameHeader *)currentFrame_->frameDataBuffer;
-            frameObj->index        = header->frameCounter;
-            frameObj->systemTime   = curTsp;
-            frameObj->deviceTime   = header->timestamp;
-            frameObj->format       = OB_FORMAT_Y8;
-            frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y8 format needs to remove the network header
-            frameObj->metadataSize = 0;
-            frameObj->metadata     = nullptr;
-        }
-        else if(strcmp(subsession_.codecName(), "OB_FMT_Y10") == 0) {
-            auto header            = (OBNetworkFrameHeader *)currentFrame_->frameDataBuffer;
-            frameObj->index        = header->frameCounter;
-            frameObj->systemTime   = curTsp;
-            frameObj->deviceTime   = header->timestamp;
-            frameObj->format       = OB_FORMAT_Y10;
-            frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y10 format needs to remove the network header
-            frameObj->metadataSize = 0;
-            frameObj->metadata     = nullptr;
-        }
-        else if(strcmp(subsession_.codecName(), "OB_FMT_RVL") == 0) {
-            auto header            = (OBNetworkFrameHeader *)currentFrame_->frameDataBuffer;
-            frameObj->index        = header->frameCounter;
-            frameObj->systemTime   = curTsp;
-            frameObj->deviceTime   = header->timestamp;
-            frameObj->format       = OB_FORMAT_RVL;
-            frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // The RVL format needs to remove the network header
-            frameObj->metadataSize = 0;
-            frameObj->metadata     = nullptr;
-        }
-        else if(strcmp(subsession_.codecName(), "YUYV") == 0) {
-            auto header          = (OBNetworkFrameHeader *)currentFrame_->frameDataBuffer;
-            frameObj->index      = header->frameCounter;
-            frameObj->systemTime = curTsp;
-            frameObj->deviceTime = header->timestamp;
-            // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
-            frameObj->format    = OB_FORMAT_YUYV;
-            frameObj->frameSize = frameSize - sizeof(OBNetworkFrameHeader) - header->extentionLen;
-            frameObj->frameData =
-                currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader) + header->extentionLen;  // YUYV format needs to remove the network header
-            frameObj->metadataSize = header->extentionLen;
-            frameObj->metadata     = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);
-        }
-        else if(strcmp(subsession_.codecName(), "H264") == 0) {
-            // frame->frameHeaderSize is actually the starting address of frame->frameObj->frameData valid data
-            if((currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x1f) == H264_NAL_SPS
-               || (currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x1f) == H264_NAL_PPS) {  // SPS(7) or PPS(8)
-                break;
-            }
-            else {
-                frameObj->index      = frameCount_;
-                frameObj->systemTime = curTsp;
-                // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
-                // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
-                frameObj->deviceTime   = subsession_.getNormalPlayTime(presentationTime);
-                frameObj->format       = OB_FORMAT_H264;
-                frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize;
-                frameObj->frameData    = currentFrame_->frameDataBuffer;
-                frameObj->metadataSize = 0;
-                frameObj->metadata     = nullptr;
-            }
-        }
-        else if(strcmp(subsession_.codecName(), "H265") == 0) {
-            // frame->frameHeaderSize is actually the starting address of frame->frameObj->frameData valid data
-            if(((currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_VPS
-               || ((currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_SPS
-               || ((currentFrame_->frameDataBuffer[currentFrame_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_PPS) {
-                break;
-            }
-            else {
-                frameObj->index      = frameCount_;
-                frameObj->systemTime = curTsp;
-                // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
-                // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
-                frameObj->deviceTime   = subsession_.getNormalPlayTime(presentationTime);
-                frameObj->format       = OB_FORMAT_H265;
-                frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize;
-                frameObj->frameData    = currentFrame_->frameDataBuffer;
-                frameObj->metadataSize = 0;
-                frameObj->metadata     = nullptr;
-            }
-        }
-        else if(strcmp(subsession_.codecName(), "JPEG") == 0) {
-            frameObj->index      = frameCount_;
-            frameObj->systemTime = curTsp;
-            // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
-            // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
-            frameObj->deviceTime = subsession_.getNormalPlayTime(presentationTime);
-            // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
-            frameObj->format    = OB_FORMAT_MJPG;
-            frameObj->frameSize = frameSize + currentFrame_->frameHeaderSize;
-            // Single machine can trigger color arbitrarily. There are non-frame packets with a length of 556. Call the frame callback @LingYi
-            // if(frameObj->frameSize == 556) skip secondary packets
-            frameObj->frameData    = currentFrame_->frameDataBuffer;
-            frameObj->metadataSize = 0;
-            frameObj->metadata     = nullptr;
-        }
-        else if(strcmp(subsession_.codecName(), "OB_FMT_MJPEG") == 0) {
-            auto header            = (OBNetworkFrameHeader *)currentFrame_->frameDataBuffer;
-            frameObj->index        = frameCount_;
-            frameObj->systemTime   = curTsp;
-            frameObj->deviceTime   = header->timestamp;
-            frameObj->format       = OB_FORMAT_MJPG;
-            frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);
-            frameObj->metadataSize = 0;
-            frameObj->metadata     = nullptr;
-        }
-        else if(strcmp(subsession_.codecName(), "OB_FMT_Y8") == 0) {
-            auto header            = (OBNetworkFrameHeader *)currentFrame_->frameDataBuffer;
-            frameObj->index        = header->frameCounter;
-            frameObj->systemTime   = curTsp;
-            frameObj->deviceTime   = header->timestamp;
-            frameObj->format       = OB_FORMAT_Y8;
-            frameObj->frameSize    = frameSize + currentFrame_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
-            frameObj->frameData    = currentFrame_->frameDataBuffer + sizeof(OBNetworkFrameHeader);
-            frameObj->metadataSize = 0;
-            frameObj->metadata     = nullptr;
-        }
-        else {
-            // VideoFrameObject fo = { frameSize, 0,      frame->frameObj->frameData,
-            //                    nullptr,   curTsp, (uint64_t)presentationTime.tv_sec *1000 + (int)presentationTime.tv_usec /1000 };
-            break;
-        }
 
-        {
-            std::unique_lock<std::mutex> lk(outputRTPFrameQueueMutex_);
-            outputRTPFrameQueue_.push(currentFrame_);
-            currentFrame_.reset();
-        }
-        frameAvailableCv_.notify_all();
-        frameCount_++;
-    } while(0);
+    // do {
+    //     if(strcmp(subsession_.codecName(), "OB_FMT_Y16") == 0) {
+    //         currentBuffer_->setHeaderSize(sizeof(OBNetworkFrameHeader));
+    //         auto header          = currentBuffer_->getDynamicHeader<OBNetworkFrameHeader>();
+    //         frameObj->index      = header->frameCounter;
+    //         frameObj->systemTime = curTsp;
+    //         frameObj->deviceTime = header->timestamp;
+    //         // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
+    //         frameObj->format       = OB_FORMAT_Y16;
+    //         frameObj->frameSize    = frameSize + currentBuffer_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
+    //         frameObj->frameData    = currentBuffer_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y16 format needs to remove the network header
+    //         frameObj->metadataSize = 0;
+    //         frameObj->metadata     = nullptr;
+    //     }
+    //     // todo-lingyi adds Y8, yuyv format, RVL format and Y10 format
+    //     else if(strcmp(subsession_.codecName(), "OB_FMT_Y8") == 0) {
+    //         auto header            = (OBNetworkFrameHeader *)currentBuffer_->frameDataBuffer;
+    //         frameObj->index        = header->frameCounter;
+    //         frameObj->systemTime   = curTsp;
+    //         frameObj->deviceTime   = header->timestamp;
+    //         frameObj->format       = OB_FORMAT_Y8;
+    //         frameObj->frameSize    = frameSize + currentBuffer_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
+    //         frameObj->frameData    = currentBuffer_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y8 format needs to remove the network header
+    //         frameObj->metadataSize = 0;
+    //         frameObj->metadata     = nullptr;
+    //     }
+    //     else if(strcmp(subsession_.codecName(), "OB_FMT_Y10") == 0) {
+    //         auto header            = (OBNetworkFrameHeader *)currentBuffer_->frameDataBuffer;
+    //         frameObj->index        = header->frameCounter;
+    //         frameObj->systemTime   = curTsp;
+    //         frameObj->deviceTime   = header->timestamp;
+    //         frameObj->format       = OB_FORMAT_Y10;
+    //         frameObj->frameSize    = frameSize + currentBuffer_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
+    //         frameObj->frameData    = currentBuffer_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // Y10 format needs to remove the network header
+    //         frameObj->metadataSize = 0;
+    //         frameObj->metadata     = nullptr;
+    //     }
+    //     else if(strcmp(subsession_.codecName(), "OB_FMT_RVL") == 0) {
+    //         auto header            = (OBNetworkFrameHeader *)currentBuffer_->frameDataBuffer;
+    //         frameObj->index        = header->frameCounter;
+    //         frameObj->systemTime   = curTsp;
+    //         frameObj->deviceTime   = header->timestamp;
+    //         frameObj->format       = OB_FORMAT_RVL;
+    //         frameObj->frameSize    = frameSize + currentBuffer_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
+    //         frameObj->frameData    = currentBuffer_->frameDataBuffer + sizeof(OBNetworkFrameHeader);  // The RVL format needs to remove the network header
+    //         frameObj->metadataSize = 0;
+    //         frameObj->metadata     = nullptr;
+    //     }
+    //     else if(strcmp(subsession_.codecName(), "YUYV") == 0) {
+    //         auto header          = (OBNetworkFrameHeader *)currentBuffer_->frameDataBuffer;
+    //         frameObj->index      = header->frameCounter;
+    //         frameObj->systemTime = curTsp;
+    //         frameObj->deviceTime = header->timestamp;
+    //         // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
+    //         frameObj->format    = OB_FORMAT_YUYV;
+    //         frameObj->frameSize = frameSize - sizeof(OBNetworkFrameHeader) - header->extentionLen;
+    //         frameObj->frameData =
+    //             currentBuffer_->frameDataBuffer + sizeof(OBNetworkFrameHeader) + header->extentionLen;  // YUYV format needs to remove the network header
+    //         frameObj->metadataSize = header->extentionLen;
+    //         frameObj->metadata     = currentBuffer_->frameDataBuffer + sizeof(OBNetworkFrameHeader);
+    //     }
+    //     else if(strcmp(subsession_.codecName(), "H264") == 0) {
+    //         // frame->frameHeaderSize is actually the starting address of frame->frameObj->frameData valid data
+    //         if((currentBuffer_->frameDataBuffer[currentBuffer_->frameHeaderSize] & 0x1f) == H264_NAL_SPS
+    //            || (currentBuffer_->frameDataBuffer[currentBuffer_->frameHeaderSize] & 0x1f) == H264_NAL_PPS) {  // SPS(7) or PPS(8)
+    //             break;
+    //         }
+    //         else {
+    //             frameObj->index      = frameCount_;
+    //             frameObj->systemTime = curTsp;
+    //             // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
+    //             // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
+    //             frameObj->deviceTime   = subsession_.getNormalPlayTime(presentationTime);
+    //             frameObj->format       = OB_FORMAT_H264;
+    //             frameObj->frameSize    = frameSize + currentBuffer_->frameHeaderSize;
+    //             frameObj->frameData    = currentBuffer_->frameDataBuffer;
+    //             frameObj->metadataSize = 0;
+    //             frameObj->metadata     = nullptr;
+    //         }
+    //     }
+    //     else if(strcmp(subsession_.codecName(), "H265") == 0) {
+    //         // frame->frameHeaderSize is actually the starting address of frame->frameObj->frameData valid data
+    //         if(((currentBuffer_->frameDataBuffer[currentBuffer_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_VPS
+    //            || ((currentBuffer_->frameDataBuffer[currentBuffer_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_SPS
+    //            || ((currentBuffer_->frameDataBuffer[currentBuffer_->frameHeaderSize] & 0x7f) >> 1) == H265_NAL_PPS) {
+    //             break;
+    //         }
+    //         else {
+    //             frameObj->index      = frameCount_;
+    //             frameObj->systemTime = curTsp;
+    //             // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
+    //             // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
+    //             frameObj->deviceTime   = subsession_.getNormalPlayTime(presentationTime);
+    //             frameObj->format       = OB_FORMAT_H265;
+    //             frameObj->frameSize    = frameSize + currentBuffer_->frameHeaderSize;
+    //             frameObj->frameData    = currentBuffer_->frameDataBuffer;
+    //             frameObj->metadataSize = 0;
+    //             frameObj->metadata     = nullptr;
+    //         }
+    //     }
+    //     else if(strcmp(subsession_.codecName(), "JPEG") == 0) {
+    //         frameObj->index      = frameCount_;
+    //         frameObj->systemTime = curTsp;
+    //         // frameObj->deviceTime   = (uint64_t)presentationTime.tv_sec *1000000 + (int)presentationTime.tv_usec;
+    //         // frameObj->deviceTime   = ((RTPSource *)fSource)->curPacketRTPTimestamp();
+    //         frameObj->deviceTime = subsession_.getNormalPlayTime(presentationTime);
+    //         // LOG_INFO("TimeStamp: {0}(0x{0:8x}), SysTimeStamp: {1}", frameObj->deviceTime, frameObj->systemTime);
+    //         frameObj->format    = OB_FORMAT_MJPG;
+    //         frameObj->frameSize = frameSize + currentBuffer_->frameHeaderSize;
+    //         // Single machine can trigger color arbitrarily. There are non-frame packets with a length of 556. Call the frame callback @LingYi
+    //         // if(frameObj->frameSize == 556) skip secondary packets
+    //         frameObj->frameData    = currentBuffer_->frameDataBuffer;
+    //         frameObj->metadataSize = 0;
+    //         frameObj->metadata     = nullptr;
+    //     }
+    //     else if(strcmp(subsession_.codecName(), "OB_FMT_MJPEG") == 0) {
+    //         auto header            = (OBNetworkFrameHeader *)currentBuffer_->frameDataBuffer;
+    //         frameObj->index        = frameCount_;
+    //         frameObj->systemTime   = curTsp;
+    //         frameObj->deviceTime   = header->timestamp;
+    //         frameObj->format       = OB_FORMAT_MJPG;
+    //         frameObj->frameSize    = frameSize + currentBuffer_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
+    //         frameObj->frameData    = currentBuffer_->frameDataBuffer + sizeof(OBNetworkFrameHeader);
+    //         frameObj->metadataSize = 0;
+    //         frameObj->metadata     = nullptr;
+    //     }
+    //     else if(strcmp(subsession_.codecName(), "OB_FMT_Y8") == 0) {
+    //         auto header            = (OBNetworkFrameHeader *)currentBuffer_->frameDataBuffer;
+    //         frameObj->index        = header->frameCounter;
+    //         frameObj->systemTime   = curTsp;
+    //         frameObj->deviceTime   = header->timestamp;
+    //         frameObj->format       = OB_FORMAT_Y8;
+    //         frameObj->frameSize    = frameSize + currentBuffer_->frameHeaderSize - sizeof(OBNetworkFrameHeader);
+    //         frameObj->frameData    = currentBuffer_->frameDataBuffer + sizeof(OBNetworkFrameHeader);
+    //         frameObj->metadataSize = 0;
+    //         frameObj->metadata     = nullptr;
+    //     }
+    //     else {
+    //         // VideoFrameObject fo = { frameSize, 0,      frame->frameObj->frameData,
+    //         //                    nullptr,   curTsp, (uint64_t)presentationTime.tv_sec *1000 + (int)presentationTime.tv_usec /1000 };
+    //         break;
+    //     }
 
-    // Then continue, to request the next frame of data:
-    continuePlaying();
+    //     {
+    //         std::unique_lock<std::mutex> lk(outputRTPBufferQueueMutex_);
+    //         outputRTPBufferQueue_.push(currentBuffer_);
+    //         currentBuffer_.reset();
+    //     }
+    //     frameAvailableCv_.notify_all();
+    //     frameCount_++;
+    // } while(0);
+
+    // // Then continue, to request the next frame of data:
+    // continuePlaying();
 
     // auto dur = utils::getNowTimesUs() -start;
     // if(dur > 1000) {
@@ -304,50 +357,74 @@ Boolean ObRTPSink::continuePlaying() {
         return False;
     }
 
-    if(!currentFrame_) {
-        std::unique_lock<std::mutex> lk(reclaimedRTPFrameMutex_);
-        if(!reclaimedRTPFrameQueue_.empty()) {
-            currentFrame_ = reclaimedRTPFrameQueue_.front();
-            reclaimedRTPFrameQueue_.pop();
+    if(!currentBuffer_) {
+        std::unique_lock<std::mutex> lk(reclaimedRTPBufferMutex_);
+        if(!reclaimedRTPBufferQueue_.empty()) {
+            currentBuffer_ = reclaimedRTPBufferQueue_.front();
+            reclaimedRTPBufferQueue_.pop();
         }
     }
 
-    if(!currentFrame_) {
+    if(!currentBuffer_) {
         // Actively drop frames
-        std::unique_lock<std::mutex> lk(outputRTPFrameQueueMutex_);
-        if(!outputRTPFrameQueue_.empty()) {
-            currentFrame_ = outputRTPFrameQueue_.front();
-            outputRTPFrameQueue_.pop();
-            LOG_WARN("Drop output-frame to receive new frame due to reclaimed-frame queue is empty: frameIndex={0}, devTsp={1}", currentFrame_->frameObj->index,
-                     currentFrame_->frameObj->deviceTime);
+        std::unique_lock<std::mutex> lk(outputRTPBufferQueueMutex_);
+        if(!outputRTPBufferQueue_.empty()) {
+            currentBuffer_ = outputRTPBufferQueue_.front();
+            outputRTPBufferQueue_.pop();
+            LOG_WARN("Drop output-frame to receive new frame due to reclaimed-frame queue is empty: frameIndex={0}, devTsp={1}",
+                     currentBuffer_->getSequenceNumber(), currentBuffer_->getTimestamp());
         }
     }
 
     // Request the next frame of data from our input source.  "afterGettingFrame()" will get called later, when it arrives:
-    fSource->getNextFrame(currentFrame_->frameDataBuffer + currentFrame_->frameHeaderSize, MAX_FRAME_DATA_SIZE - currentFrame_->frameHeaderSize,
-                          afterGettingFrame, this, onSourceClosure, this);
+    fSource->getNextFrame(currentBuffer_->getRecvdDataBuffer(), MAX_FRAME_DATA_SIZE - currentBuffer_->getStaticHeaderSize(), afterGettingFrame, this,
+                          onSourceClosure, this);
     return true;
 }
 
 void ObRTPSink::outputFrameFunc() {
     while(!destroy_) {
-        std::shared_ptr<ObRTPFrame> outputFrame;
+        std::shared_ptr<ObRTPBuffer> output;
         {
-            std::unique_lock<std::mutex> lk(outputRTPFrameQueueMutex_);
-            frameAvailableCv_.wait(lk, [&]() { return !outputRTPFrameQueue_.empty() || destroy_; });
+            std::unique_lock<std::mutex> lk(outputRTPBufferQueueMutex_);
+            frameAvailableCv_.wait(lk, [&]() { return !outputRTPBufferQueue_.empty() || destroy_; });
             if(destroy_) {
                 break;
             }
-            outputFrame = outputRTPFrameQueue_.front();
-            outputRTPFrameQueue_.pop();
+            output = outputRTPBufferQueue_.front();
+            outputRTPBufferQueue_.pop();
         }
 
-        if(outputFrame) {
-            frameCallback_(*outputFrame->frameObj);
-            {
-                std::unique_lock<std::mutex> lk(reclaimedRTPFrameMutex_);
-                reclaimedRTPFrameQueue_.push(outputFrame);
-            }
+        if(!output) {
+            continue;
+        }
+
+        auto codecName = output->getCodecName();
+        auto format    = codecToOBFormat(codecName);
+        if(format != streamProfile_->getFormat()) {
+            // LOG_ERROR_INTVA
+        }
+        
+        auto frame = FrameFactory::createFrameFromStreamProfile(streamProfile_);
+
+        uint32_t frameOffset = 0;
+        if(isOBVendorCodec(codecName)) {
+            frameOffset = sizeof(OBNetworkFrameHeader);
+            output->setDynamicHeaderSize(sizeof(OBNetworkFrameHeader));
+            auto header = output->getDynamicHeader<OBNetworkFrameHeader>();
+            frame->setTimeStampUsec(header->timestamp);
+            frame->setNumber(header->frameCounter);
+        }
+        else {
+            frame->setTimeStampUsec(output->getTimestamp());
+            frame->setNumber(output->getSequenceNumber());
+        }
+        frame->updateData(output->getRecvdDataBuffer() + frameOffset, output->getRecvdDataSize() - frameOffset);
+
+        frameCallback_(frame);
+        {
+            std::unique_lock<std::mutex> lk(reclaimedRTPBufferMutex_);
+            reclaimedRTPBufferQueue_.push(output);
         }
     }
 }

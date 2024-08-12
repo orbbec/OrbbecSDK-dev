@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "ObPal.hpp"
+#include "IPal.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 #include <iostream>
@@ -11,23 +11,23 @@
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include "usb/enumerator/Enumerator.hpp"
 #include <libusb.h>
 #endif
 namespace libobsensor {
 
-class MacPal : public ObPal {
+class MacUsbPal : public IPal {
 public:
-    MacPal();
-    ~MacPal() noexcept;
+    MacUsbPal();
+    ~MacUsbPal() noexcept;
 
     virtual std::shared_ptr<ISourcePort> getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 public:
-    virtual std::shared_ptr<DeviceWatcher> createUsbDeviceWatcher() const override;
-    virtual SourcePortInfoList              queryUsbSourcePortInfos() override;
+    virtual std::shared_ptr<IDeviceWatcher> createDeviceWatcher() const override;
+    virtual SourcePortInfoList              querySourcePortInfos() override;
     virtual std::shared_ptr<ISourcePort>    createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo>) override;
     virtual std::shared_ptr<ISourcePort>    createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) override;
     virtual std::shared_ptr<ISourcePort>    createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo>) override;
@@ -37,17 +37,17 @@ private:
 #endif
 
 private:
-    std::mutex                                                                 sourcePortMapMutex_;
+    std::mutex                                                                  sourcePortMapMutex_;
     std::map<std::shared_ptr<const SourcePortInfo>, std::weak_ptr<ISourcePort>> sourcePortMap_;
 };
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 int deviceArrivalCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
-class LibusbDeviceWatcher : public DeviceWatcher {
+class LibusbDeviceWatcher : public IDeviceWatcher {
 public:
     LibusbDeviceWatcher() {
-        // libusb_init(); // 创建MacPal会初始化
+        // libusb_init(); // 创建MacUsbPal会初始化
     }
     ~LibusbDeviceWatcher() noexcept {
         TRY_EXECUTE(stop());
@@ -83,6 +83,5 @@ private:
     friend int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data);
 };
 #endif
-
 
 }  // namespace libobsensor

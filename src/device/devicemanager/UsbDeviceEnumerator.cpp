@@ -8,7 +8,7 @@
 #include "femtomega/FemtoMegaDeviceInfo.hpp"
 
 namespace libobsensor {
-UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal_(ObPal::getInstance()) {
+UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : platform_(Platform::getInstance()) {
     devChangedCallback_ = [callback, this](const DeviceEnumInfoList &removedList, const DeviceEnumInfoList &addedList) {
         (void)this;
 #ifdef __ANDROID__
@@ -34,8 +34,8 @@ UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : obPal
 
     deviceArrivalHandleThread_ = std::thread(&UsbDeviceEnumerator::deviceArrivalHandleThreadFunc, this);
 
-    deviceWatcher_ = obPal_->createUsbDeviceWatcher();
-    deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPalDeviceChanged(changedType, url); });
+    deviceWatcher_ = platform_->createUsbDeviceWatcher();
+    deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPlatformDeviceChanged(changedType, url); });
 
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
     if(!deviceInfoList_.empty()) {
@@ -61,11 +61,11 @@ UsbDeviceEnumerator::~UsbDeviceEnumerator() noexcept {
     if(devChangedCallbackThread_.joinable()) {
         devChangedCallbackThread_.join();
     }
-    deviceWatcher_.reset();  // deviceWatcher should be released before obPal_
-    obPal_.reset();
+    deviceWatcher_.reset();  // deviceWatcher should be released before platform_
+    platform_.reset();
 }
 
-void UsbDeviceEnumerator::onPalDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {
+void UsbDeviceEnumerator::onPlatformDeviceChanged(OBDeviceChangedType changeType, std::string devUid) {
     if(changeType == OB_DEVICE_REMOVED) {
         std::vector<std::shared_ptr<const IDeviceEnumInfo>> removedDevList;
         {
@@ -137,7 +137,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryRemovedDevice(std::string rmDevUid)
 
 DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    auto                                   portInfoList = obPal_->queryUsbSourcePortInfos();
+    auto                                   portInfoList = platform_->queryUsbSourcePortInfos();
     if(portInfoList != currentUsbPortInfoList_) {
         currentUsbPortInfoList_ = portInfoList;
         LOG_DEBUG("Current usb device port list:");
@@ -153,19 +153,19 @@ DeviceEnumInfoList UsbDeviceEnumerator::queryArrivalDevice() {
 
 DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoList portInfoList) {
     DeviceEnumInfoList deviceInfoList;
-    auto               g330Devs = G330DeviceInfo::createDeviceInfos(portInfoList);
+    auto               g330Devs = G330DeviceInfo::pickDevices(portInfoList);
     std::copy(g330Devs.begin(), g330Devs.end(), std::back_inserter(deviceInfoList));
 
-    auto g2Devs = G2DeviceInfo::createDeviceInfos(portInfoList);
+    auto g2Devs = G2DeviceInfo::pickDevices(portInfoList);
     std::copy(g2Devs.begin(), g2Devs.end(), std::back_inserter(deviceInfoList));
 
     auto a2Devs = Astra2DeviceInfo::createDeviceInfos(portInfoList);
     std::copy(a2Devs.begin(), a2Devs.end(), std::back_inserter(deviceInfoList));
 
-    auto femtoBoltDevs = FemtoBoltDeviceInfo::createDeviceInfos(portInfoList);
+    auto femtoBoltDevs = FemtoBoltDeviceInfo::pickDevices(portInfoList);
     std::copy(femtoBoltDevs.begin(), femtoBoltDevs.end(), std::back_inserter(deviceInfoList));
 
-    auto femtoMegaDevs = FemtoMegaDeviceInfo::createDeviceInfos(portInfoList);
+    auto femtoMegaDevs = FemtoMegaDeviceInfo::pickDevices(portInfoList);
     std::copy(femtoMegaDevs.begin(), femtoMegaDevs.end(), std::back_inserter(deviceInfoList));
 
     return deviceInfoList;

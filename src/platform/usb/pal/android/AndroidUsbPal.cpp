@@ -1,9 +1,9 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 
-#include "AndroidPal.hpp"
+#include "AndroidUsbPal.hpp"
 
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
 #include <pal/android/AndroidUsbDeviceManager.hpp>
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
@@ -13,30 +13,29 @@
 #include "exception/ObException.hpp"
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
 #include "ethernet/Ethernet.hpp"
 #endif
 
 namespace libobsensor {
 
-
-AndroidPal::AndroidPal() {
-#if defined(BUILD_USB_PORT)
+AndroidUsbPal::AndroidUsbPal() {
+#if defined(BUILD_USB_PAL)
     androidUsbManager_ = std::make_shared<AndroidUsbDeviceManager>();
 #endif
 }
-AndroidPal::~AndroidPal() noexcept {
-#if defined(BUILD_USB_PORT)
+AndroidUsbPal::~AndroidUsbPal() noexcept {
+#if defined(BUILD_USB_PAL)
     androidUsbManager_ = nullptr;
 #endif
 };
 
-std::shared_ptr<ISourcePort> AndroidPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> AndroidUsbPal::getSourcePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
-    std::shared_ptr<ISourcePort>  port;
+    std::shared_ptr<ISourcePort> port;
 
     // clear expired weak_ptr
-    for(auto it = sourcePortMap_.begin(); it!= sourcePortMap_.end();) {
+    for(auto it = sourcePortMap_.begin(); it != sourcePortMap_.end();) {
         if(it->second.expired()) {
             it = sourcePortMap_.erase(it);
         }
@@ -56,7 +55,7 @@ std::shared_ptr<ISourcePort> AndroidPal::getSourcePort(std::shared_ptr<const Sou
     }
 
     switch(portInfo->portType) {
-#if defined(BUILD_USB_PORT)
+#if defined(BUILD_USB_PAL)
     case SOURCE_PORT_USB_VENDOR: {
         auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
@@ -83,7 +82,7 @@ std::shared_ptr<ISourcePort> AndroidPal::getSourcePort(std::shared_ptr<const Sou
     }
 #endif
 
-#if defined(BUILD_NET_PORT)
+#if defined(BUILD_NET_PAL)
     case SOURCE_PORT_NET_VENDOR:
         port = std::make_shared<VendorNetDataPort>(std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo));
         break;
@@ -104,13 +103,13 @@ std::shared_ptr<ISourcePort> AndroidPal::getSourcePort(std::shared_ptr<const Sou
     return port;
 }
 
-#if defined(BUILD_USB_PORT)
-std::shared_ptr<DeviceWatcher> AndroidPal::createUsbDeviceWatcher() const {
+#if defined(BUILD_USB_PAL)
+std::shared_ptr<IDeviceWatcher> AndroidUsbPal::createDeviceWatcher() const {
     LOG_INFO("Create AndroidUsbDeviceManager!");
     return androidUsbManager_;
 }
 
-SourcePortInfoList AndroidPal::queryUsbSourcePortInfos() {
+SourcePortInfoList AndroidUsbPal::querySourcePortInfos() {
     SourcePortInfoList portInfoList;
 
     const auto &usbInfoList = androidUsbManager_->getDeviceInfoList();
@@ -132,7 +131,7 @@ SourcePortInfoList AndroidPal::queryUsbSourcePortInfos() {
     return portInfoList;
 }
 
-std::shared_ptr<ISourcePort> AndroidPal::createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> AndroidUsbPal::createOpenNIDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     if(portInfo->portType == SOURCE_PORT_USB_VENDOR) {
         auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
         if(usbDev == nullptr) {
@@ -144,11 +143,11 @@ std::shared_ptr<ISourcePort> AndroidPal::createOpenNIDevicePort(std::shared_ptr<
     return nullptr;
 }
 
-std::shared_ptr<ISourcePort> AndroidPal::createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> AndroidUsbPal::createRawPhaseConverterDevicePort(RawPhaseConverterPortType type, std::shared_ptr<const SourcePortInfo> portInfo) {
     switch(type) {
     case RAW_PHASE_CONVERTER_MSDE: {
         std::unique_lock<std::mutex> lock(sourcePortMapMutex_);
-        std::shared_ptr<ISourcePort>  port;
+        std::shared_ptr<ISourcePort> port;
         auto                         it = sourcePortMap_.find(portInfo);
         if(it != sourcePortMap_.end()) {
             port = it->second.lock();
@@ -170,7 +169,7 @@ std::shared_ptr<ISourcePort> AndroidPal::createRawPhaseConverterDevicePort(RawPh
     return nullptr;
 }
 
-std::shared_ptr<ISourcePort> AndroidPal::createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
+std::shared_ptr<ISourcePort> AndroidUsbPal::createMultiUvcDevicePort(std::shared_ptr<const SourcePortInfo> portInfo) {
     auto usbDev = androidUsbManager_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);
     if(usbDev == nullptr) {
         throw libobsensor::camera_disconnected_exception("usbEnumerator openUsbDevice failed!");
@@ -179,6 +178,5 @@ std::shared_ptr<ISourcePort> AndroidPal::createMultiUvcDevicePort(std::shared_pt
 }
 
 #endif
-
 
 }  // namespace libobsensor

@@ -31,19 +31,14 @@ public:
 };
 #pragma pack(pop)
 
-template <typename T>
-void unusedVar(T& var){
+template <typename T> void unusedVar(T &var) {
     (void)var;
-}
-
-template <class T> bool contains(const T &first, const T &second) {
-    return *first == *second;
 }
 
 template <class T> std::vector<std::shared_ptr<T>> subtract_sets(const std::vector<std::shared_ptr<T>> &first, const std::vector<std::shared_ptr<T>> &second) {
     std::vector<std::shared_ptr<T>> results;
     std::for_each(first.begin(), first.end(), [&](std::shared_ptr<T> data) {
-        if(std::find_if(second.begin(), second.end(), [&](std::shared_ptr<T> new_dev) { return contains(data, new_dev); }) == second.end()) {
+        if(std::find_if(second.begin(), second.end(), [&](std::shared_ptr<T> new_dev) { return *data == *new_dev; }) == second.end()) {
             results.push_back(data);
         }
     });
@@ -53,14 +48,34 @@ template <class T> std::vector<std::shared_ptr<T>> subtract_sets(const std::vect
 template <class T> std::vector<T> subtract_sets(const std::vector<T> &first, const std::vector<T> &second) {
     std::vector<T> results;
     std::for_each(first.begin(), first.end(), [&](T data) {
-        if(std::find_if(second.begin(), second.end(), [&](T new_dev) { return contains(data, new_dev); }) == second.end()) {
+        if(std::find_if(second.begin(), second.end(), [&](T new_dev) { return data == new_dev; }) == second.end()) {
             results.push_back(data);
         }
     });
     return results;
 }
 
+template <typename T> std::vector<std::vector<T>> groupVector(const std::vector<T> &vec, std::function<bool(const T &elm0, const T &elm1)> compareFunc) {
+    std::vector<std::vector<T>> group;
+    for(const auto &elm0: vec) {
+        auto itVec = group.begin();
+        while(itVec != group.end()) {
+            if(compareFunc(elm0, itVec->front())) {
+                itVec->push_back(elm0);
+                break;
+            }
+            itVec++;
+        }
+        if(itVec == group.end()) {
+            group.push_back(std::vector<T>({ elm0 }));
+        }
+    }
+    return group;
+}
+
 bool checkJpgImageData(const uint8_t *data, size_t dataLen);
+
+bool getFirmwareVersionInt(std::string fwVersionStr,int &fwVersion);
 
 }  // namespace utils
 }  // namespace libobsensor

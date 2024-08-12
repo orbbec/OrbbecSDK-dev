@@ -33,7 +33,7 @@ static const std::vector<std::vector<std::pair<GUID, GUID>>> attributes_params =
 
 namespace libobsensor {
 
-class WinPal;
+class WinUsbPal;
 
 struct StreamObject {
     bool                                      streaming = false;
@@ -41,7 +41,7 @@ struct StreamObject {
     manual_reset_event                        hasStarted;
     std::shared_ptr<const VideoStreamProfile> profile = nullptr;
     uint32_t                                  frameCounter;
-    FrameCallbackUnsafe                       callback = nullptr;
+    MutableFrameCallback                      callback = nullptr;
 };
 
 typedef std::function<void(const UsbInterfaceInfo &, IMFActivate *)> USBDeviceInfoEnumCallback;
@@ -73,7 +73,7 @@ public:
     ~WmfUvcDevicePort() noexcept override;
     std::shared_ptr<const SourcePortInfo> getSourcePortInfo(void) const override;
     StreamProfileList                     getStreamProfileList() override;
-    void                                  startStream(std::shared_ptr<const StreamProfile> profile, FrameCallbackUnsafe callback) override;
+    void                                  startStream(std::shared_ptr<const StreamProfile> profile, MutableFrameCallback callback) override;
     void                                  stopStream(std::shared_ptr<const StreamProfile> profile) override;
     void                                  stopAllStream() override;
 
@@ -97,7 +97,7 @@ private:
 private:
     friend class SourceReaderCallback;
 
-    void                   playProfile(std::shared_ptr<const VideoStreamProfile> profile, FrameCallbackUnsafe callback);
+    void                   playProfile(std::shared_ptr<const VideoStreamProfile> profile, MutableFrameCallback callback);
     void                   flush(int index);
     void                   checkConnection() const;
     CComPtr<IMFAttributes> createDeviceAttrs();

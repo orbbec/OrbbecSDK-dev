@@ -672,6 +672,16 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
             depthFilterList.push_back(decimationFilter);
         }
 
+        if(filterFactory->isFilterCreatorExists("HDRMerge")) {
+            auto hdrMergeFilter = filterFactory->createFilter("HDRMerge");
+            depthFilterList.push_back(hdrMergeFilter);
+        }
+
+        if(filterFactory->isFilterCreatorExists("SequenceIdFilter")) {
+            auto sequenceIdFilter = filterFactory->createFilter("SequenceIdFilter");
+            depthFilterList.push_back(sequenceIdFilter);
+        }
+
         if(filterFactory->isFilterCreatorExists("NoiseRemovalFilter")) {
             auto noiseFilter = filterFactory->createFilter("NoiseRemovalFilter");
             // max_size, min_diff, width, height

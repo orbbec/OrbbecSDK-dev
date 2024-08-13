@@ -396,11 +396,25 @@ public:
         return std::make_shared<StreamProfileList>(list);
     }
 
+    OBCameraParam getCameraParam(){
+        ob_error *error = nullptr;
+        OBCameraParam cameraParam = ob_pipeline_get_camera_param(impl_,&error);
+        Error::handle(&error);
+        return cameraParam;
+    }
+
     OBCameraParam getCameraParamWithProfile(uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth, uint32_t depthHeight){
         ob_error *error = nullptr;
         OBCameraParam cameraParam = ob_pipeline_get_camera_param_with_profile(impl_, colorWidth, colorHeight, depthWidth, depthHeight, &error);
         Error::handle(&error);
         return cameraParam;
+    }
+
+    OBCalibrationParam getCalibrationParam(std::shared_ptr<Config> config){
+        ob_error *error = nullptr;
+        OBCalibrationParam calibrationParam = ob_pipeline_get_calibration_param(impl_, config->getImpl(), &error);
+        Error::handle(&error);
+        return calibrationParam;
     }
 
     /**

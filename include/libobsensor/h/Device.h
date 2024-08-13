@@ -192,6 +192,15 @@ OB_EXPORT bool ob_device_is_property_supported(const ob_device *device, ob_prope
 OB_EXPORT bool ob_device_is_global_timestamp_supported(const ob_device *device, ob_error **error);
 
 /**
+ * @brief Enable or disable global timestamp.
+ *
+ * @param device The device object.
+ * @param enable Whether to enable global timestamp.
+ * @param error Pointer to an error object that will be set if an error occurs.
+ */
+OB_EXPORT void ob_device_enable_global_timestamp(ob_device *device, bool enable, ob_error **error);
+
+/**
  * @brief Update the device firmware.
  *
  * @param[in] device The device object.

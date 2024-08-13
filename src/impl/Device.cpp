@@ -7,7 +7,7 @@
 #include "IProperty.hpp"
 #include "IDevice.hpp"
 #include "IDeviceMonitor.hpp"
-#include "component/timestamp/GlobalTimestampFitter.hpp"
+#include "IAlgParamManager.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -460,6 +460,36 @@ const char *ob_device_get_extension_info(const ob_device *device, const char *in
     // throw libobsensor::not_implemented_exception("ob_device_info_get_extension_info not implemented");
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device, info_key)
+
+ob_camera_param_list *ob_device_get_calibration_camera_param_list(ob_device *device, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    auto algParamManager = device->device->getComponentT<libobsensor::IAlgParamManager>(libobsensor::OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+    auto calibrationCameraParams = algParamManager->getCalibrationCameraParamList();
+    auto impl  = new ob_camera_param_list();
+    impl->paramList = calibrationCameraParams;
+    return impl;
+}
+HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)
+
+uint32_t ob_camera_param_list_get_count(ob_camera_param_list *list, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(list);
+    return static_cast<uint32_t>(list->paramList.size());
+}
+HANDLE_EXCEPTIONS_AND_RETURN(0, list)
+
+ob_camera_param ob_camera_param_list_get_param(ob_camera_param_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(list);
+    VALIDATE_UNSIGNED_INDEX(index, list->paramList.size());
+
+    return list->paramList.at(index);
+}
+HANDLE_EXCEPTIONS_AND_RETURN(ob_camera_param(), list, index)
+
+void ob_delete_camera_param_list(ob_camera_param_list *list,ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(list);
+    delete list;
+}
+HANDLE_EXCEPTIONS_NO_RETURN(list)
 
 #ifdef __cplusplus
 }

@@ -273,6 +273,20 @@ OB_EXPORT void ob_config_set_depth_scale_after_align_require(ob_config *config, 
 OB_EXPORT void ob_config_set_frame_aggregate_output_mode(ob_config *config, ob_frame_aggregate_output_mode mode, ob_error **error);
 
 /**
+ * @brief Get the current camera parameters
+ *
+ * @param[in] pipeline pipeline object
+ * @param[in] colorWidth color width
+ * @param[in] colorHeight color height
+ * @param[in] depthWidth depth width
+ * @param[in] depthHeight depth height
+ * @param[out] error Log error messages
+ * @return ob_camera_param returns camera internal parameters
+ */
+OB_EXPORT ob_camera_param ob_pipeline_get_camera_param_with_profile(ob_pipeline *pipeline, uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth,
+                                                          uint32_t depthHeight, ob_error **error);
+                                                          
+/**
  * In order to be compatible with the closed source version of orbbecsdk's interface.
  * We recommend using the latest interface names for a better experience.
  */

@@ -146,6 +146,12 @@ ob_stream_profile_list *ob_get_d2c_depth_profile_list(const ob_pipeline *pipelin
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, pipeline)
 
+ob_camera_param ob_pipeline_get_camera_param_with_profile(ob_pipeline *pipeline, uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth,uint32_t depthHeight, ob_error **error) BEGIN_API_CALL{
+    VALIDATE_NOT_NULL(pipeline);
+    return pipeline->pipeline->getCameraParam(colorWidth, colorHeight, depthWidth, depthHeight);
+}
+HANDLE_EXCEPTIONS_AND_RETURN(ob_camera_param(), pipeline, colorWidth, colorHeight, depthWidth, depthHeight)
+
 ob_config *ob_create_config(ob_error **error) BEGIN_API_CALL {
     auto config    = new ob_config();
     config->config = std::make_shared<libobsensor::Config>();

@@ -355,6 +355,43 @@ StreamProfileList Pipeline::getD2CDepthProfileList(std::shared_ptr<const StreamP
     return d2cDepthProfileList;
 }
 
+OBCameraParam Pipeline::getCameraParam(uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth, uint32_t depthHeight) {
+    OBCameraParam curCameraParam = { 0 };
+    if(!device_){
+        return curCameraParam;
+    }
+    auto colorSensor     = device_->getSensor(OB_SENSOR_COLOR);
+    if(!colorSensor) {
+        throw invalid_value_exception(utils::string::to_string() << "No matched color sensor found");
+    }
+    auto depthSensor = device_->getSensor(OB_SENSOR_DEPTH);
+    if(!depthSensor) {
+        throw invalid_value_exception(utils::string::to_string() << "No matched depth sensor found");
+    }
+
+    auto colorSensorSpList = colorSensor->getStreamProfileList();
+    auto matchedColorProfileList = matchVideoStreamProfile(colorSensorSpList, colorWidth, colorHeight, OB_FPS_ANY, OB_FORMAT_ANY);
+    if(matchedColorProfileList.empty()) {
+        throw invalid_value_exception(utils::string::to_string() << "No matched color profile found" );
+    }
+    auto colorStreamProfile = matchedColorProfileList.front();
+
+    auto depthSensorSpList = depthSensor->getStreamProfileList();
+    auto matchedDepthProfileList = matchVideoStreamProfile(depthSensorSpList, depthWidth, depthHeight, OB_FPS_ANY, OB_FORMAT_ANY);
+    if(matchedDepthProfileList.empty()) {
+        throw invalid_value_exception(utils::string::to_string() << "No matched depth profile found" );
+    }
+    auto depthStreamProfile = matchedDepthProfileList.front();
+
+    curCameraParam.rgbIntrinsic = colorStreamProfile->getIntrinsic();
+    curCameraParam.rgbDistortion = colorStreamProfile->getDistortion();
+    curCameraParam.depthIntrinsic = depthStreamProfile->getIntrinsic();
+    curCameraParam.depthDistortion = depthStreamProfile->getDistortion();
+    curCameraParam.transform = depthStreamProfile->getExtrinsicTo(colorStreamProfile);
+
+    return curCameraParam;
+}
+
 void Pipeline::enableFrameSync() {
     if(device_->getExtensionInfo("AllSensorsUsingSameClock") == "true") {
         frameAggregator_->enableFrameSync(FrameSyncModeSyncAccordingFrameTimestamp);

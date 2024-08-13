@@ -565,7 +565,7 @@ OB_EXPORT ob_device *ob_device_list_get_device_by_uid(const ob_device_list *list
  *
  * @return ob_camera_param_list The camera parameter list.
  */
-ob_camera_param_list *ob_device_get_calibration_camera_param_list(ob_device *device, ob_error **error);
+OB_EXPORT ob_camera_param_list *ob_device_get_calibration_camera_param_list(ob_device *device, ob_error **error);
 
 /**
  * @brief Get the number of camera parameter lists
@@ -574,7 +574,7 @@ ob_camera_param_list *ob_device_get_calibration_camera_param_list(ob_device *dev
  * @param[out] error Log error messages
  * @return uint32_t The number of lists
  */
-uint32_t ob_camera_param_list_get_count(ob_camera_param_list *param_list, ob_error **error);
+OB_EXPORT uint32_t ob_camera_param_list_get_count(ob_camera_param_list *param_list, ob_error **error);
 
 /**
  * @brief Get camera parameters from the camera parameter list
@@ -584,7 +584,7 @@ uint32_t ob_camera_param_list_get_count(ob_camera_param_list *param_list, ob_err
  * @param[out] error Log error messages
  * @return ob_camera_param The camera parameters. Since it returns the structure object directly, there is no need to provide a delete interface.
  */
-ob_camera_param ob_camera_param_list_get_param(ob_camera_param_list *param_list, uint32_t index, ob_error **error);
+OB_EXPORT ob_camera_param ob_camera_param_list_get_param(ob_camera_param_list *param_list, uint32_t index, ob_error **error);
 
 /**
  * @brief Delete the camera parameter list
@@ -592,7 +592,7 @@ ob_camera_param ob_camera_param_list_get_param(ob_camera_param_list *param_list,
  * @param[in] param_list Camera parameter list
  * @param[out] error Log error messages
  */
-void ob_delete_camera_param_list(ob_camera_param_list *param_list, ob_error **error);
+OB_EXPORT void ob_delete_camera_param_list(ob_camera_param_list *param_list, ob_error **error);
 
 
 /**

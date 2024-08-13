@@ -396,6 +396,13 @@ public:
         return std::make_shared<StreamProfileList>(list);
     }
 
+    OBCameraParam getCameraParamWithProfile(uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth, uint32_t depthHeight){
+        ob_error *error = nullptr;
+        OBCameraParam cameraParam = ob_pipeline_get_camera_param_with_profile(impl_, colorWidth, colorHeight, depthWidth, depthHeight, &error);
+        Error::handle(&error);
+        return cameraParam;
+    }
+
     /**
      * In order to be compatible with the closed source version of orbbecsdk's interface.
      * We recommend using the latest interface names for a better experience.

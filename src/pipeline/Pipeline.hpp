@@ -25,6 +25,8 @@ public:
 
     StreamProfileList getD2CDepthProfileList(std::shared_ptr<const StreamProfile> colorProfile, OBAlignMode alignMode);
 
+    OBCameraParam getCameraParam(uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth, uint32_t depthHeight);
+
     void enableFrameSync();
     void disableFrameSync();
 

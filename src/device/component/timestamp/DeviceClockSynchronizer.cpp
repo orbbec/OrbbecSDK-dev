@@ -80,7 +80,6 @@ void DeviceClockSynchronizer::timerSyncWithHost() {
             OBDeviceTime devTsp;
             devTsp.time = static_cast<uint64_t>(static_cast<double>(now) / 1000000 * deviceClockFreqOut_);
             devTsp.rtt  = static_cast<uint64_t>(static_cast<double>(rtt) / 1000000 * deviceClockFreqOut_);
-            LOG_ERROR("set time : {} , rtt: {}", devTsp.time, devTsp.rtt);
             propertyServer->setStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME, devTsp);
             uint64_t after = utils::getNowTimesUs();
             rtt            = after - now;
@@ -95,7 +94,6 @@ void DeviceClockSynchronizer::timerSyncWithHost() {
             auto     propertyServer = owner->getPropertyServer();
             uint64_t now            = utils::getNowTimesUs();
             auto     devTsp         = propertyServer->getStructureDataT<OBDeviceTime>(OB_STRUCT_DEVICE_TIME);
-            LOG_ERROR("get time : {} , rtt: {}", devTsp.time, devTsp.rtt);
             uint64_t after          = utils::getNowTimesUs();
             uint64_t nowDev         = static_cast<uint64_t>(static_cast<double>(devTsp.time) / deviceClockFreqIn_ * 1000000);
             double   diff           = std::fabs(static_cast<double>(now) - (after + now) / 2);

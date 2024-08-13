@@ -32,7 +32,7 @@ OB_EXPORT bool ob_transformation_3d_to_3d(const OBPoint3f source_point3f, OBExtr
  *
  * @return bool Transform result
  */
-OB_EXPORT bool ob_transformation_2d_to_3d(const OBCameraIntrinsic source_intrinsic, const OBPoint2f source_point2f, const float source_depth_pixel_value,
+OB_EXPORT bool ob_transformation_2d_to_3d(const OBPoint2f source_point2f, const float source_depth_pixel_value, const OBCameraIntrinsic source_intrinsic, 
                                          OBExtrinsic extrinsic, OBPoint3f *target_point3f, ob_error **error); 
 
 
@@ -49,8 +49,8 @@ OB_EXPORT bool ob_transformation_2d_to_3d(const OBCameraIntrinsic source_intrins
  *
  * @return bool Transform result
  */
-OB_EXPORT bool ob_transformation_2d_to_3d_undistortion(const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, const OBPoint2f source_point2f,
-                                          const float source_depth_pixel_value, OBExtrinsic extrinsic, OBPoint3f *target_point3f, ob_error **error);
+OB_EXPORT bool ob_transformation_2d_to_3d_undistortion(const OBPoint2f source_point2f, const float source_depth_pixel_value,const OBCameraIntrinsic source_intrinsic, 
+                                                  const OBCameraDistortion source_distortion,  OBExtrinsic extrinsic, OBPoint3f *target_point3f, ob_error **error);
 
 /**
  * @brief Transform a 3d point of a source coordinate system into a 2d pixel coordinate of the target camera.
@@ -82,10 +82,9 @@ OB_EXPORT bool ob_transformation_3d_to_2d(const OBPoint3f source_point3f, const 
  *
  * @return bool Transform result
  */
-OB_EXPORT bool ob_transformation_2d_to_2d(const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, const OBPoint2f source_point2f,
-                                          const float source_depth_pixel_value, const OBCameraIntrinsic target_intrinsic,
-                                          const OBCameraDistortion target_distortion,OBExtrinsic extrinsic, OBPoint2f *target_point2f,
-                                               ob_error **error);
+OB_EXPORT bool ob_transformation_2d_to_2d(const OBPoint2f source_point2f, const float source_depth_pixel_value, const OBCameraIntrinsic source_intrinsic, 
+                                        const OBCameraDistortion source_distortion, const OBCameraIntrinsic target_intrinsic, const OBCameraDistortion target_distortion,
+                                        OBExtrinsic extrinsic, OBPoint2f *target_point2f, ob_error **error);
 
 // \deprecated This function is deprecated and will be removed in a future version.  
 OB_EXPORT ob_frame *transformation_depth_frame_to_color_camera(ob_device *device, ob_frame *depth_frame, uint32_t target_color_camera_width,

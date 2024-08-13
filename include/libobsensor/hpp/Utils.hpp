@@ -43,10 +43,10 @@ public:
      *
      * @return bool Transform result
      */
-    static bool transformation2dto3d(const OBCameraIntrinsic source_intrinsic, const OBPoint2f source_point2f, const float source_depth_pixel_value,
+    static bool transformation2dto3d(const OBPoint2f source_point2f, const float source_depth_pixel_value, const OBCameraIntrinsic source_intrinsic, 
                                             OBExtrinsic extrinsic, OBPoint3f *target_point3f) {
         ob_error *error = NULL;
-        bool result = ob_transformation_2d_to_3d(source_intrinsic, source_point2f, source_depth_pixel_value, extrinsic, target_point3f, &error);
+        bool result = ob_transformation_2d_to_3d(source_point2f, source_depth_pixel_value, source_intrinsic, extrinsic, target_point3f, &error);
         Error::handle(&error);
         return result;
     } 
@@ -63,10 +63,11 @@ public:
      *
      * @return bool Transform result
      */
-    static bool transformation2dto3dUndistortion(const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, const OBPoint2f source_point2f,
-                                            const float source_depth_pixel_value, OBExtrinsic extrinsic, OBPoint3f *target_point3f) {
+    static bool transformation2dto3dUndistortion(const OBPoint2f source_point2f, const float source_depth_pixel_value, 
+                                            const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, 
+                                            OBExtrinsic extrinsic, OBPoint3f *target_point3f) {
         ob_error *error = NULL;
-        bool result = ob_transformation_2d_to_3d_undistortion(source_intrinsic, source_distortion, source_point2f, source_depth_pixel_value, extrinsic, target_point3f, &error);
+        bool result = ob_transformation_2d_to_3d_undistortion(source_point2f, source_depth_pixel_value, source_intrinsic, source_distortion, extrinsic, target_point3f, &error);
         Error::handle(&error);
         return result;
     }
@@ -104,11 +105,12 @@ public:
      *
      * @return bool Transform result
      */
-    static bool transformation2dto2d(const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, const OBPoint2f source_point2f,
-                                            const float source_depth_pixel_value, const OBCameraIntrinsic target_intrinsic,
-                                            const OBCameraDistortion target_distortion,OBExtrinsic extrinsic, OBPoint2f *target_point2f)  {
+    static bool transformation2dto2d(const OBPoint2f source_point2f, const float source_depth_pixel_value,const OBCameraIntrinsic source_intrinsic, 
+                                const OBCameraDistortion source_distortion,  const OBCameraIntrinsic target_intrinsic,
+                                const OBCameraDistortion target_distortion,OBExtrinsic extrinsic, OBPoint2f *target_point2f)  {
         ob_error *error = NULL;
-        bool result = ob_transformation_2d_to_2d(source_intrinsic, source_distortion, source_point2f, source_depth_pixel_value, target_intrinsic, target_distortion, extrinsic, target_point2f, &error);
+        bool result = ob_transformation_2d_to_2d(source_point2f, source_depth_pixel_value, source_intrinsic, source_distortion, target_intrinsic, 
+                                            target_distortion, extrinsic, target_point2f, &error);
         Error::handle(&error);
         return result;
     }

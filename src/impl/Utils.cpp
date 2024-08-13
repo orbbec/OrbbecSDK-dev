@@ -54,12 +54,12 @@ bool ob_calibration_2d_to_3d(const ob_calibration_param calibration_param, const
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, calibration_param, source_point2f, source_depth_pixel_value, source_sensor_type, target_sensor_type, target_point3f)
 
-bool ob_transformation_2d_to_3d(const OBCameraIntrinsic source_intrinsic, const OBPoint2f source_point2f, const float source_depth_pixel_value,
+bool ob_transformation_2d_to_3d(const OBPoint2f source_point2f, const float source_depth_pixel_value, const OBCameraIntrinsic source_intrinsic, 
                                          OBExtrinsic extrinsic, OBPoint3f *target_point3f, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(target_point3f);
     return libobsensor::CoordinateUtil::transformation2dTo3d(source_intrinsic, source_point2f, source_depth_pixel_value, extrinsic, target_point3f);
 }
-HANDLE_EXCEPTIONS_AND_RETURN(false, source_intrinsic, source_point2f, source_depth_pixel_value, extrinsic, target_point3f)
+HANDLE_EXCEPTIONS_AND_RETURN(false, source_point2f, source_depth_pixel_value, source_intrinsic, extrinsic, target_point3f)
 
 bool ob_calibration_2d_to_3d_undistortion(const ob_calibration_param calibration_param, const ob_point2f source_point2f, const float source_depth_pixel_value,
                                           const ob_sensor_type source_sensor_type, const ob_sensor_type target_sensor_type, ob_point3f *target_point3f,
@@ -84,13 +84,13 @@ bool ob_calibration_2d_to_3d_undistortion(const ob_calibration_param calibration
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, calibration_param, source_point2f, source_depth_pixel_value, source_sensor_type, target_sensor_type, target_point3f)
 
-bool ob_transformation_2d_to_3d_undistortion(const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, const OBPoint2f source_point2f,
-                                                      const float source_depth_pixel_value, OBExtrinsic extrinsic,
-                                                      OBPoint3f *target_point3f, ob_error **error) BEGIN_API_CALL {
+bool ob_transformation_2d_to_3d_undistortion(const OBPoint2f source_point2f, const float source_depth_pixel_value, const OBCameraIntrinsic source_intrinsic, 
+                                            const OBCameraDistortion source_distortion, OBExtrinsic extrinsic, OBPoint3f *target_point3f, 
+                                            ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(target_point3f);
     return libobsensor::CoordinateUtil::transformation2dTo3d(source_intrinsic, source_distortion, source_point2f, source_depth_pixel_value, extrinsic, target_point3f);
 }
-HANDLE_EXCEPTIONS_AND_RETURN(false, source_intrinsic, source_distortion, source_point2f, source_depth_pixel_value, extrinsic, target_point3f)
+HANDLE_EXCEPTIONS_AND_RETURN(false, source_point2f, source_depth_pixel_value, source_intrinsic, source_distortion, extrinsic, target_point3f)
 
 
 bool ob_calibration_3d_to_2d(const ob_calibration_param calibration_param, const ob_point3f source_point3f,
@@ -164,15 +164,14 @@ bool ob_calibration_2d_to_2d(const ob_calibration_param calibration_param, const
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, calibration_param, source_point2f, source_depth_pixel_value, source_sensor_type, target_sensor_type, target_point2f)
 
-bool ob_transformation_2d_to_2d(const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, const OBPoint2f source_point2f,
-                                          const float source_depth_pixel_value, const OBCameraIntrinsic target_intrinsic,
-                                          const OBCameraDistortion target_distortion,OBExtrinsic extrinsic, OBPoint2f *target_point2f,
-                                               ob_error **error) BEGIN_API_CALL {
+bool ob_transformation_2d_to_2d(const OBPoint2f source_point2f, const float source_depth_pixel_value, const OBCameraIntrinsic source_intrinsic,
+                            const OBCameraDistortion source_distortion, const OBCameraIntrinsic target_intrinsic, const OBCameraDistortion target_distortion,
+                            OBExtrinsic extrinsic, OBPoint2f *target_point2f, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(target_point2f);
     return libobsensor::CoordinateUtil::transformation2dTo2d(source_intrinsic, source_distortion, source_point2f, 
                         source_depth_pixel_value, target_intrinsic, target_distortion, extrinsic, target_point2f );
 }
-HANDLE_EXCEPTIONS_AND_RETURN(false, source_intrinsic, source_distortion, source_point2f, source_depth_pixel_value, target_intrinsic, target_distortion, extrinsic, target_point2f)
+HANDLE_EXCEPTIONS_AND_RETURN(false, source_point2f, source_depth_pixel_value, source_intrinsic, source_distortion, target_intrinsic, target_distortion, extrinsic, target_point2f)
 
 ob_frame *transformation_depth_frame_to_color_camera(ob_device *device, ob_frame *depth_frame, uint32_t target_color_camera_width,
                                                                       uint32_t target_color_camera_height, ob_error **error) BEGIN_API_CALL {

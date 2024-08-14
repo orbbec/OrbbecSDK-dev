@@ -27,11 +27,14 @@ void PrivFilterCppWrapper::updateConfig(std::vector<std::string> &params) {
     for(auto &p: params) {
         c_params.push_back(p.c_str());
     }
+
     privFilterCtx_->update_config(privFilterCtx_->filter, params.size(), c_params.data(), &error);
     if(error) {
         LOG_WARN("Private filter {} update config failed: {}", name_, error->message);
         delete error;
     }
+
+    updateConfigCache(params);
 }
 
 const std::string &PrivFilterCppWrapper::getConfigSchema() const {
@@ -63,7 +66,7 @@ std::shared_ptr<Frame> PrivFilterCppWrapper::processFunc(std::shared_ptr<const F
 
     if(error) {
         // LOG_WARN("Private filter {} process failed: {}", name_, error->message);
-        throw unrecoverable_exception(std::string(error->message),error->exception_type);
+        throw unrecoverable_exception(std::string(error->message), error->exception_type);
     }
     return resultFrame;
 }

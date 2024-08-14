@@ -25,6 +25,7 @@ public:
     void                                         setConfigValue(const std::string &name, double value) override;
     void                                         setConfigValueSync(const std::string &name, double value) override;
     double                                       getConfigValue(const std::string &name) override;
+    void                                         updateConfigCache(std::vector<std::string> &params);
 
     // Synchronize
     virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) override;

@@ -192,8 +192,8 @@ void FilterBase::setConfigValue(const std::string &configName, double value) {
     LOG_DEBUG("Filter {}: config item {} value set to {}", name_, configName, value);
 }
 
-void FilterBase::setConfigValueSync(const std::string &name, double value){
-    setConfigValue(name,value);
+void FilterBase::setConfigValueSync(const std::string &name, double value) {
+    setConfigValue(name, value);
     checkAndUpdateConfig();
 }
 
@@ -246,6 +246,22 @@ void FilterBase::checkAndUpdateConfig() {
         updateConfig(configVec);
 
         configChanged_ = false;
+    }
+}
+
+void FilterBase::updateConfigCache(std::vector<std::string> &params) {
+    auto schemaVec = getConfigSchemaVec();
+    if(schemaVec.empty()) {
+        throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config schema is empty, doesn't have any config value");
+    }
+
+    if(schemaVec.size() == params.size()) {
+        for(int i = 0; i < schemaVec.size(); i++) {
+            auto name        = schemaVec[i].name;
+            auto type        = schemaVec[i].type;
+            auto value       = parseFilterConfigValue(params[i], type);
+            configMap_[name] = value;
+        }
     }
 }
 

@@ -1,12 +1,41 @@
 # C++ Sample Post Processing
 
-Supported devices: Gemini 330 series cameras, such as Gemini G335
+## Overview
 
-Function description: Demonstrate post-processing operations, display post-processed images, and exit the program using the ESC_KEY key
+Use the SDK interface to obtain camera-related information, including model, various sensors, and sensor-related configurations.
 
-This example is based on the C++High Level API for demonstration
+### Knowledge
+
+Context is the environment context, the first object created during initialization, which can be used to perform some settings, including but not limited to device status change callbacks, log level settings, etc. Context can access multiple Devices.
+
+Device is the device object, which can be used to obtain the device information, such as the model, serial number, and various sensors.One actual hardware device corresponds to one Device object.
+
+
+
+## Code overview
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 1. Get the pipeline and configure the stream
+
 ```cpp
     // Create a pipeline with default device
     ob::Pipeline pipe;

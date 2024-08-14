@@ -78,9 +78,8 @@ void printUsage() {
     std::cout << "Support commands:" << std::endl;
     std::cout << "    1 - transformation 2d to 2d" << std::endl;
     std::cout << "    2 - transformation 2d to 3d" << std::endl;
-    std::cout << "    3 - transformation 2d to 3d undistortion" << std::endl;
-    std::cout << "    4 - transformation 3d to 3d" << std::endl;
-    std::cout << "    5 - transformation 3d to 2d" << std::endl;
+    std::cout << "    3 - transformation 3d to 3d" << std::endl;
+    std::cout << "    4 - transformation 3d to 2d" << std::endl;
 
     std::cout << "--------------------------------" << std::endl;
     std::cout << "    quit / q- quit application" << std::endl;

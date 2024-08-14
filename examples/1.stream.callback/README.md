@@ -2,37 +2,91 @@
 
 ## Overview
 
+In this sample,user can get the depth、RGB、IR image.This sample also support users can perform user-defined operations such as data acquisition, data processing, and data modification within the callback function.
+
 ### Knowledge
 
-### Attentions
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions
 
-***Supported devices: Gemini 330 series cameras, such as Gemini G335***
+Device
+
+Sensor
 
 ## code overview
 
-### 1. 
+### 1、Create the instance
 
-```cpp
+Create the pipeline instance using the default configuration and create a config instance to enable or disable the streams.Get the device instance from pipeline,and then get the sensor instance from device.
+
+```c++
+// Create a pipeline.
+ob::Pipeline pipe;
+
+// Configure which streams to enable or disable for the Pipeline by creating a Config.
+std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
+
+// Get device from pipeline.
+auto device = pipe.getDevice();
+
+// Get sensorList from device.
+auto sensorList = device->getSensorList();
 
 ```
 
-### 2. 
+### 2、Enable the stream from video sensor
 
-```cpp
+Get only the sensor for the VideoStream,enable the stream from these sensor.
+
+```c++
+for(uint32_t index = 0; index < sensorList->getCount(); index++) {
+        // Query all supported infrared sensor type and enable the infrared stream.
+        // For dual infrared device, enable the left and right infrared streams.
+        // For single infrared device, enable the infrared stream.
+        OBSensorType sensorType = sensorList->getSensorType(index);
+
+        // exclude non-video sensor type
+        if(!ob::TypeHelper::isVideoSensorType(sensorType)) {
+            continue;
+        }
+
+        // Enable the stream for the sensor type.
+        config->enableStream(sensorType);
+    }
+```
+
+### 3、Custom operation
+
+In this callback function, you can add what you want to do with the data.
+
+```c++
+// Start the pipeline with callback.
+pipe.start(config, [&](std::shared_ptr<ob::FrameSet> output) {
+    std::lock_guard<std::mutex> lock(framesetMutex);
+    frameset = output;
+});
+```
+
+### 4、Render window
+
+```c++
+while(win.run()) {
+        std::lock_guard<std::mutex> lock(framesetMutex);
+
+        if(frameset == nullptr) {
+            continue;
+        }
+
+        // Rendering display
+        win.pushFramesToView(frameset);
+    }
 
 ```
 
-### 3. 
+### 5、stop pipeline
 
-```cpp
-
-
-```
-
-### 4、Use pipeline to close the video stream
-
-```cpp
-
+```c++
+// Stop the Pipeline, no frame data will be generated
+pipe.stop();
 ```
 
 ## Run Sample
@@ -41,3 +95,5 @@ Press the Esc key in the window to exit the program.
 在窗口中按Esc键退出程序。
 
 ### Result
+
+![result](/docs/resource/callback.png)

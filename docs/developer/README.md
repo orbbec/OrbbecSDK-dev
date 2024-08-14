@@ -1,4 +1,4 @@
-# Contribute to the OpenOrbbecSDK
+# Contribute to the Open Orbbec SDK
 
 If you would like to contribute to this open source project, please follow these steps:
 **Step1:Fork the repository**

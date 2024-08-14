@@ -324,6 +324,17 @@ public:
     }
 
     /**
+     * @brief Enable or disable the global timestamp
+     *
+     * @param enable Whether to enable the global timestamp
+     */
+    void enableGlobalTimestamp(bool enable) {
+        ob_error *error = nullptr;
+        ob_device_enable_global_timestamp(impl_, enable, &error);
+        Error::handle(&error);
+    }
+
+    /**
      * @brief Update the device firmware
      *
      * @param filePath Firmware path

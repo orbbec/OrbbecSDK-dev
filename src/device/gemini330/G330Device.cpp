@@ -20,6 +20,7 @@
 #include "metadata/FrameMetadataParserContainer.hpp"
 #include "timestamp/GlobalTimestampFitter.hpp"
 #include "timestamp/FrameTimestampCalculator.hpp"
+#include "timestamp/DeviceClockSynchronizer.hpp"
 #include "property/VendorPropertyAccessor.hpp"
 #include "property/UvcPropertyAccessor.hpp"
 #include "property/PropertyServer.hpp"
@@ -55,6 +56,7 @@ void G330Device::init() {
     initFrameMetadataParserContainer();
 
     fetchDeviceInfo();
+    fetchExtensionInfo();
 
     videoFrameTimestampCalculatorCreator_ = [this]() {
         auto metadataType = OB_FRAME_METADATA_TYPE_TIMESTAMP;
@@ -86,49 +88,9 @@ void G330Device::init() {
     };
     auto deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
-}
 
-void G330Device::fetchDeviceInfo() {
-    auto propServer                   = getPropertyServer();
-    auto version                      = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
-    deviceInfo_                       = std::make_shared<DeviceInfo>();
-    deviceInfo_->name_                = version.deviceName;
-    deviceInfo_->fwVersion_           = version.firmwareVersion;
-    deviceInfo_->deviceSn_            = version.serialNumber;
-    deviceInfo_->asicName_            = version.depthChip;
-    deviceInfo_->hwVersion_           = version.hardwareVersion;
-    deviceInfo_->type_                = static_cast<uint16_t>(version.deviceType);
-    deviceInfo_->supportedSdkVersion_ = version.sdkVersion;
-    deviceInfo_->pid_                 = enumInfo_->getPid();
-    deviceInfo_->vid_                 = enumInfo_->getVid();
-    deviceInfo_->uid_                 = enumInfo_->getUid();
-    deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
-    // todo: fetch and parse extension info
-    uint8_t *data     = nullptr;
-    uint32_t dataSize = 0;
-    propServer->getRawData(
-        OB_RAW_DATA_DEVICE_EXTENSION_INFORMATION,
-        [&](OBDataTranState state, OBDataChunk *dataChunk) {
-            if(state == DATA_TRAN_STAT_TRANSFERRING) {
-                if(data == nullptr) {
-                    dataSize = dataChunk->fullDataSize;
-                    data     = new uint8_t[dataSize];
-                }
-                memcpy(data + dataChunk->offset, dataChunk->data, dataChunk->size);
-            }
-        },
-        PROP_ACCESS_INTERNAL);
-
-    if(data) {
-        std::string extensionInfo((char *)data);
-        extensionInfo_ = DeviceBase::parseExtensionInfo(extensionInfo);
-
-        delete[] data;
-        data = nullptr;
-    }
-    else {
-        LOG_ERROR("Get ExtensionInfo Data is Null!");
-    }
+    auto deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this);
+    registerComponent(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, deviceClockSynchronizer);
 }
 
 void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
@@ -518,7 +480,7 @@ void G330Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_LASER_POWER_LEVEL_CONTROL_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_LDP_MEASURE_DISTANCE_INT, "r", "r", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "w", "w", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_TRIGGER_OUT_ENABLE_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_DELAY_US_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_SYNC_SIGNAL_TRIGGER_OUT_BOOL, "rw", "rw", vendorPropertyAccessor);

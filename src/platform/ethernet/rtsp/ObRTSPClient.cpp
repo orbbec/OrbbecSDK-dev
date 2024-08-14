@@ -30,9 +30,9 @@ ObRTSPClient *ObRTSPClient::createNew(std::shared_ptr<const StreamProfile> profi
     return new ObRTSPClient(profile, env, rtspURL, callback, verbosityLevel, tunnelOverHTTPPortNum, socketNumToServer);
 }
 
-ObRTSPClient::ObRTSPClient(std::shared_ptr<const StreamProfile> profile, UsageEnvironment &env, char const *rtspURL, MutableFrameCallback callback, int verbosityLevel, portNumBits tunnelOverHTTPPortNum,
-                           int socketNumToServer)
-    : RTSPClient(env, rtspURL, verbosityLevel, "Open-Orbbec-SDK", tunnelOverHTTPPortNum, socketNumToServer), frameCallback_(callback), profile_(profile) {
+ObRTSPClient::ObRTSPClient(std::shared_ptr<const StreamProfile> profile, UsageEnvironment &env, char const *rtspURL, MutableFrameCallback callback,
+                           int verbosityLevel, portNumBits tunnelOverHTTPPortNum, int socketNumToServer)
+    : RTSPClient(env, rtspURL, verbosityLevel, "Open-Orbbec-SDK", tunnelOverHTTPPortNum, socketNumToServer), profile_(profile), frameCallback_(callback) {
     envir() << "ObRTSPClient created! rtspURL = " << url();
 }
 

@@ -56,8 +56,15 @@ ObRTPSink *ObRTPSink::createNew(std::shared_ptr<const StreamProfile> streamProfi
     return new ObRTPSink(streamProfile, env, subsession, callback, streamId);
 }
 
-ObRTPSink::ObRTPSink(std::shared_ptr<const StreamProfile> streamProfile, UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback, char const *streamId)
-    : streamProfile_(streamProfile), MediaSink(env), subsession_(subsession), frameCallback_(callback), frameCount_(0), destroy_(false), currentBuffer_(nullptr) {
+ObRTPSink::ObRTPSink(std::shared_ptr<const StreamProfile> streamProfile, UsageEnvironment &env, MediaSubsession &subsession, MutableFrameCallback callback,
+                     char const *streamId)
+    : MediaSink(env),
+      subsession_(subsession),
+      frameCallback_(callback),
+      streamProfile_(streamProfile),
+      frameCount_(0),
+      destroy_(false),
+      currentBuffer_(nullptr) {
     streamId_ = strDup(streamId);
     envir() << "ObRTPSink created! streamId = " << streamId_ << "\n";
 
@@ -404,7 +411,7 @@ void ObRTPSink::outputFrameFunc() {
         if(format != streamProfile_->getFormat()) {
             // LOG_ERROR_INTVA
         }
-        
+
         auto frame = FrameFactory::createFrameFromStreamProfile(streamProfile_);
 
         uint32_t frameOffset = 0;

@@ -14,7 +14,7 @@ NetDeviceWatcher::~NetDeviceWatcher() noexcept {
     if(!stopWatch_) {
         stop();
     }
-};
+}
 
 void NetDeviceWatcher::start(deviceChangedCallback callback) {
     callback_          = callback;
@@ -150,7 +150,6 @@ SourcePortInfoList EthernetPal::querySourcePortInfos() {
             sourcePortInfoList_.push_back(std::make_shared<RTSPStreamPortInfo>(info.ip, static_cast<uint16_t>(8554), DEFAULT_CMD_PORT, OB_STREAM_IR, info.mac, info.sn, info.pid));
             sourcePortInfoList_.push_back(std::make_shared<NetDataStreamPortInfo>(info.ip, static_cast<uint16_t>(8900), DEFAULT_CMD_PORT, info.mac, info.sn, info.pid));
         }
-        
     }
 
     // Delete devices that have been offline from the list
@@ -193,6 +192,8 @@ std::shared_ptr<NetSourcePortInfo> EthernetPal::queryNetVendorPort(std::string a
 }
 
 bool EthernetPal::changeNetDeviceIpConfig(std::string ipAddress, const OBNetIpConfig &config) {
+    utils::unusedVar(ipAddress);
+    utils::unusedVar(config);
 #ifdef _WIN32
     return GVCPClient::instance().changeNetDeviceIpConfig(ipAddress, config);
 #else

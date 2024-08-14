@@ -87,6 +87,8 @@ while(win.run()) {
 pipe.stop();
 ```
 
+![QuickStart Example](docs/resource/QuickStart.png)
+
 ### 4.2 Using Orbbec Viewer to experience the features
 ![Orbbec Viewer](docs/resource/OrbbecViewer.png)
 

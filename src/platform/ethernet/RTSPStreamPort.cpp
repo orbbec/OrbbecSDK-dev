@@ -1,5 +1,6 @@
 #include "RTSPStreamPort.hpp"
 #include "logger/Logger.hpp"
+#include "utils/Utils.hpp"
 #include "exception/ObException.hpp"
 #include "stream/StreamProfileFactory.hpp"
 
@@ -25,7 +26,7 @@ std::string mapStreamTypeToString(OBStreamType streamType) {
 }
 
 RTSPStreamPort::RTSPStreamPort(std::shared_ptr<const RTSPStreamPortInfo> portInfo)
-    : portInfo_(portInfo), destroy_(0), currentRtspClient_(nullptr), streamStarted_(false) {
+    : portInfo_(portInfo), destroy_(0), streamStarted_(false), currentRtspClient_(nullptr) {
     taskScheduler_ = BasicTaskScheduler::createNew();
     live555Env_    = ObUsageEnvironment::createNew(*taskScheduler_);
 }
@@ -288,6 +289,7 @@ void RTSPStreamPort::startStream(std::shared_ptr<const StreamProfile> profile, M
     }
 }
 void RTSPStreamPort::stopStream(std::shared_ptr<const StreamProfile> profile) {
+    utils::unusedVar(profile);
     stopStream();
 }
 

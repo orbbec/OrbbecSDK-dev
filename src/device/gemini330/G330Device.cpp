@@ -669,7 +669,9 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
         }
 
         if(filterFactory->isFilterCreatorExists("HoleFillingFilter")) {
-            auto hfFilter = filterFactory->createFilter("HoleFillingFilter");
+            auto                     hfFilter = filterFactory->createFilter("HoleFillingFilter");
+            std::vector<std::string> params   = { "2" };
+            hfFilter->updateConfig(params);
             depthFilterList.push_back(hfFilter);
         }
 

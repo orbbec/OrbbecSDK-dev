@@ -61,38 +61,6 @@ bool ob_transformation_2d_to_3d(const OBPoint2f source_point2f, const float sour
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, source_point2f, source_depth_pixel_value, source_intrinsic, extrinsic, target_point3f)
 
-bool ob_calibration_2d_to_3d_undistortion(const ob_calibration_param calibration_param, const ob_point2f source_point2f, const float source_depth_pixel_value,
-                                          const ob_sensor_type source_sensor_type, const ob_sensor_type target_sensor_type, ob_point3f *target_point3f,
-                                          ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(target_point3f);
-    OBExtrinsic     extrinsic;
-    OBCameraIntrinsic  sourceIntrinsic; 
-    OBCameraDistortion depthDistortion;
-
-    memcpy(&extrinsic, &calibration_param.extrinsics[source_sensor_type][target_sensor_type], sizeof(OBExtrinsic));
-    // Depending on the source sensor type, copy the corresponding intrinsic data
-    if(OB_SENSOR_DEPTH == source_sensor_type) {
-        memcpy(&sourceIntrinsic, &calibration_param.intrinsics[OB_SENSOR_DEPTH], sizeof(OBCameraIntrinsic));
-        memcpy(&depthDistortion, &calibration_param.distortion[OB_SENSOR_DEPTH], sizeof(OBCameraDistortion));
-    } else if(OB_SENSOR_COLOR == source_sensor_type) {
-        memcpy(&sourceIntrinsic, &calibration_param.intrinsics[OB_SENSOR_COLOR], sizeof(OBCameraIntrinsic)); 
-        memcpy(&depthDistortion, &calibration_param.distortion[OB_SENSOR_COLOR], sizeof(OBCameraDistortion));
-    } else {
-        return false;
-    }
-    return libobsensor::CoordinateUtil::transformation2dTo3d(sourceIntrinsic, depthDistortion, source_point2f, source_depth_pixel_value, extrinsic, target_point3f);
-}
-HANDLE_EXCEPTIONS_AND_RETURN(false, calibration_param, source_point2f, source_depth_pixel_value, source_sensor_type, target_sensor_type, target_point3f)
-
-bool ob_transformation_2d_to_3d_undistortion(const OBPoint2f source_point2f, const float source_depth_pixel_value, const OBCameraIntrinsic source_intrinsic, 
-                                            const OBCameraDistortion source_distortion, OBExtrinsic extrinsic, OBPoint3f *target_point3f, 
-                                            ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(target_point3f);
-    return libobsensor::CoordinateUtil::transformation2dTo3d(source_intrinsic, source_distortion, source_point2f, source_depth_pixel_value, extrinsic, target_point3f);
-}
-HANDLE_EXCEPTIONS_AND_RETURN(false, source_point2f, source_depth_pixel_value, source_intrinsic, source_distortion, extrinsic, target_point3f)
-
-
 bool ob_calibration_3d_to_2d(const ob_calibration_param calibration_param, const ob_point3f source_point3f,
                                               const ob_sensor_type source_sensor_type, const ob_sensor_type target_sensor_type, ob_point2f *target_point2f,
                                               ob_error **error) BEGIN_API_CALL {

@@ -52,27 +52,6 @@ public:
     } 
 
     /**
-     * @brief Transform a 2d pixel coordinate with an associated depth value of the source camera into a 3d point of the target coordinate system.
-     *
-     * @param[in] source_intrinsic Source intrinsic parameters
-     * @param[in] source_distortion Source distortion parameters
-     * @param[in] source_point2f Source 2d point value
-     * @param[in] source_depth_pixel_value The depth of sourcePoint2f in millimeters
-     * @param[in] extrinsic Transformation matrix from source to target
-     * @param[out] target_point3f Target 3d point value
-     *
-     * @return bool Transform result
-     */
-    static bool transformation2dto3dUndistortion(const OBPoint2f source_point2f, const float source_depth_pixel_value, 
-                                            const OBCameraIntrinsic source_intrinsic, const OBCameraDistortion source_distortion, 
-                                            OBExtrinsic extrinsic, OBPoint3f *target_point3f) {
-        ob_error *error = NULL;
-        bool result = ob_transformation_2d_to_3d_undistortion(source_point2f, source_depth_pixel_value, source_intrinsic, source_distortion, extrinsic, target_point3f, &error);
-        Error::handle(&error);
-        return result;
-    }
-
-    /**
      * @brief Transform a 3d point of a source coordinate system into a 2d pixel coordinate of the target camera.
      *
      * @param[in] source_point3f Source 3d point value
@@ -205,15 +184,7 @@ public:
         Error::handle(&error);
         return result;
     }
-    // \deprecated This function is deprecated and will be removed in a future version.  
-    //             Use the transformation2dto3dUndistortion instead. 
-    OB_DEPRECATED static bool calibration2dTo3dUndistortion(const OBCalibrationParam calibrationParam, const OBPoint2f sourcePoint2f, const float sourceDepthPixelValue,
-                                              const OBSensorType sourceSensorType, const OBSensorType targetSensorType, OBPoint3f *targetPoint3f) {
-        ob_error *error = NULL;
-        bool result = ob_calibration_2d_to_3d_undistortion(calibrationParam, sourcePoint2f, sourceDepthPixelValue, sourceSensorType, targetSensorType, targetPoint3f, &error);
-        Error::handle(&error);
-        return result;
-    }
+
     // \deprecated This function is deprecated and will be removed in a future version.  
     //             Use the transformation3dto2d instead.
     OB_DEPRECATED static bool calibration3dTo2d(const OBCalibrationParam calibrationParam, const OBPoint3f sourcePoint3f, const OBSensorType sourceSensorType,

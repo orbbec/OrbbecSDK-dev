@@ -83,10 +83,8 @@ This example is based on the C++ high level API for demonstration
         } else if (testType == "2") {
             transformation2dto3d(colorFrame, depthFrame);
         } else if (testType == "3") {
-            transformation2dto3dUndistortion(colorFrame, depthFrame);
-        } else if (testType == "4") {
             transformation3dto3d(colorFrame, depthFrame);
-        } else if (testType == "5") {
+        } else if (testType == "4") {
             transformation3dto2d(colorFrame, depthFrame);
         } else {
             std::cout << "Invalid command" << std::endl;

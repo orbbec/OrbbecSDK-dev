@@ -37,22 +37,6 @@ OB_EXPORT bool ob_transformation_2d_to_3d(const OBPoint2f source_point2f, const 
 
 
 /**
- * @brief Transform a 2d pixel coordinate with an associated depth value of the source camera into a 3d point of the target coordinate system.
- *
- * @param[in] source_intrinsic Source intrinsic parameters
- * @param[in] source_distortion Source distortion parameters
- * @param[in] source_point2f Source 2d point value
- * @param[in] source_depth_pixel_value The depth of sourcePoint2f in millimeters
- * @param[in] extrinsic Transformation matrix from source to target
- * @param[out] target_point3f Target 3d point value
- * @param[out] error Pointer to an error object that will be set if an error occurs.
- *
- * @return bool Transform result
- */
-OB_EXPORT bool ob_transformation_2d_to_3d_undistortion(const OBPoint2f source_point2f, const float source_depth_pixel_value,const OBCameraIntrinsic source_intrinsic, 
-                                                  const OBCameraDistortion source_distortion,  OBExtrinsic extrinsic, OBPoint3f *target_point3f, ob_error **error);
-
-/**
  * @brief Transform a 3d point of a source coordinate system into a 2d pixel coordinate of the target camera.
  *
  * @param[in] source_point3f Source 3d point value
@@ -110,12 +94,6 @@ OB_EXPORT bool ob_calibration_3d_to_3d(const ob_calibration_param calibration_pa
 //             Use the ob_transformation_2d_to_3d instead.
 OB_EXPORT bool ob_calibration_2d_to_3d(const ob_calibration_param calibration_param, const ob_point2f source_point2f, const float source_depth_pixel_value,
                              const ob_sensor_type source_sensor_type, const ob_sensor_type target_sensor_type, ob_point3f *target_point3f, ob_error **error);
-
-// \deprecated This function is deprecated and will be removed in a future version.  
-//             Use the ob_transformation_2d_to_3d_undistortion instead.
-OB_EXPORT bool ob_calibration_2d_to_3d_undistortion(const ob_calibration_param calibration_param, const ob_point2f source_point2f, const float source_depth_pixel_value,
-                                          const ob_sensor_type source_sensor_type, const ob_sensor_type target_sensor_type, ob_point3f *target_point3f,
-                                          ob_error **error);
 
 // \deprecated This function is deprecated and will be removed in a future version.  
 //             Use the ob_transformation_3d_to_2d instead.

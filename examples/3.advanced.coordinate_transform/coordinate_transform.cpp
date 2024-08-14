@@ -6,7 +6,6 @@ void printUsage();
 std::string inputWatcher() ;
 void transformation2dto2d(std::shared_ptr<ob::Frame> &colorFrame, std::shared_ptr<ob::Frame> &depthFrame);
 void transformation2dto3d(std::shared_ptr<ob::Frame> &colorFrame, std::shared_ptr<ob::Frame> &depthFrame);
-void transformation2dto3dUndistortion(std::shared_ptr<ob::Frame> &colorFrame, std::shared_ptr<ob::Frame> &depthFrame);
 void transformation3dto2d(std::shared_ptr<ob::Frame> &colorFrame, std::shared_ptr<ob::Frame> &depthFrame);
 void transformation3dto3d(std::shared_ptr<ob::Frame> &colorFrame, std::shared_ptr<ob::Frame> &depthFrame);
 int main(void) try {
@@ -47,10 +46,8 @@ int main(void) try {
         } else if (testType == "2") {
             transformation2dto3d(colorFrame, depthFrame);
         } else if (testType == "3") {
-            transformation2dto3dUndistortion(colorFrame, depthFrame);
-        } else if (testType == "4") {
             transformation3dto3d(colorFrame, depthFrame);
-        } else if (testType == "5") {
+        } else if (testType == "4") {
             transformation3dto2d(colorFrame, depthFrame);
         } else {
             std::cout << "Invalid command" << std::endl;
@@ -206,53 +203,6 @@ void transformation2dto3d(std::shared_ptr<ob::Frame> &colorFrame, std::shared_pt
                 continue;
             }
             
-            printRuslt("2d to 3D: pixel coordinates and depth transform to point in 3D space", sourcePixel, targetPixel, depthValue);
-        }
-    }
-}
-
-/**
- * @brief Function to test the transformation from 2D to 3D coordinates with undistortion
- *
- * @param colorFrame Shared pointer to the color frame
- * @param depthFrame Shared pointer to the depth frame
- */
-void transformation2dto3dUndistortion(std::shared_ptr<ob::Frame> &colorFrame, std::shared_ptr<ob::Frame> &depthFrame) {
-     // Get the width and height of the color and depth frames
-    auto depthFrameWidth = depthFrame->as<ob::VideoFrame>()->getWidth();   
-    auto depthFrameHeight = depthFrame->as<ob::VideoFrame>()->getHeight();
-
-    // Get the stream profiles for the color and depth frames
-    auto colorProfile =  colorFrame->getStreamProfile();
-    auto depthProfile = depthFrame->getStreamProfile();
-    auto extrinsicD2C = depthProfile->getExtrinsicTo(colorProfile);
-
-    // Get the intrinsic and distortion parameters for the color and depth streams
-    auto depthIntrinsic = depthProfile->as<ob::VideoStreamProfile>()->getIntrinsic();
-    auto depthDistortion = depthProfile->as<ob::VideoStreamProfile>()->getDistortion();
-    // Access the depth data from the frame
-    uint16_t *pDepthData = (uint16_t *)depthFrame->getData();
-    uint16_t convertAreaWidth = 3;
-    uint16_t convertAreaHeight = 3;
-    
-    // Transform depth values to the color frame's coordinate system
-    for(uint32_t i = depthFrameHeight / 2; i < (depthFrameHeight / 2 + convertAreaHeight); i++) {
-        for(uint32_t j = depthFrameWidth / 2; j < (depthFrameWidth / 2 + convertAreaWidth); j++) {
-            // Get the coordinates of the current pixel
-            OBPoint2f sourcePixel = { static_cast<float>(j), static_cast<float>(i) };
-            OBPoint3f targetPixel = {};
-            float     depthValue  = (float)pDepthData[i * depthFrameWidth + j];
-            if(depthValue == 0) {
-                std::cout << "The depth value is 0, so it's recommended to point the camera at a flat surface" << std::endl;
-                continue;
-            }
-
-            // Perform the 2D to 3D transformation with undistortion
-            bool result = ob::CoordinateTransformHelper::transformation2dto3dUndistortion(sourcePixel, depthValue, depthIntrinsic, depthDistortion, 
-                                            extrinsicD2C, &targetPixel);
-            if(!result ) {
-                continue;
-            }
             printRuslt("2d to 3D: pixel coordinates and depth transform to point in 3D space", sourcePixel, targetPixel, depthValue);
         }
     }

@@ -73,6 +73,7 @@ win is used to display the frame data.
         // push the frameset to the Align Filter to align the frames.
         // The frameset will be processed in an internal thread, and the resulting frames will be asynchronously output via the callback function.
         alignFilter->pushFrame(frameSet);
+    ```
 
 7. Stop pipeline
 

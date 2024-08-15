@@ -72,15 +72,14 @@ int main(void) try {
     printUsage();
 
     inputWatchThread = std::thread(inputWatcher);
+    // TODO: this method needs to be adjusted
+    inputWatchThread.detach();
 
     while(win->run()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     // inputWatchThread.join();
-
-    // TODO: this method needs to be adjusted
-    inputWatchThread.detach();
 
     if(pipeline) {
         pipeline->stop();

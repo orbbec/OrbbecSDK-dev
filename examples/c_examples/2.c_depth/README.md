@@ -64,7 +64,7 @@ const ob_frame *depth_frame = ob_frameset_get_depth_frame(frameset, &error);
 check_ob_error(&error);
 ```
 
-### 4. Print the
+### 4. Print the distance of the center pixel
 
 Print the distance of the center pixel every 30 frames to reduce output.
 

@@ -33,7 +33,7 @@ int main(void) try {
     // configure and enable Hdr stream
     OBHdrConfig obHdrConfig;
     obHdrConfig.enable     = true;  // enable HDR merge
-    obHdrConfig.exposure_1 = 7500;
+    obHdrConfig.exposure_1 = 7500; 
     obHdrConfig.gain_1     = 24;
     obHdrConfig.exposure_2 = 100;
     obHdrConfig.gain_2     = 16;

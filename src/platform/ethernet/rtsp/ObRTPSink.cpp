@@ -125,7 +125,7 @@ ObRTPSink::ObRTPSink(std::shared_ptr<const StreamProfile> streamProfile, UsageEn
     outputFrameThread_ = std::thread(&ObRTPSink::outputFrameFunc, this);
 }
 
-ObRTPSink::~ObRTPSink() {
+ObRTPSink::~ObRTPSink() noexcept{
     envir() << "ObRTPSink destructor! streamId = " << streamId_ << "\n";
     frameCallback_ = nullptr;
     destroy_       = true;

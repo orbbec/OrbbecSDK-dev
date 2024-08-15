@@ -31,7 +31,7 @@ RTSPStreamPort::RTSPStreamPort(std::shared_ptr<const RTSPStreamPortInfo> portInf
     live555Env_    = ObUsageEnvironment::createNew(*taskScheduler_);
 }
 
-RTSPStreamPort::~RTSPStreamPort() {
+RTSPStreamPort::~RTSPStreamPort() noexcept{
 
     // 1. 关流, 关闭rtsp客户端
     TRY_EXECUTE(stopAllStream());  // try stop all stream

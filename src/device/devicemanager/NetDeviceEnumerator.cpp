@@ -32,7 +32,7 @@ NetDeviceEnumerator::NetDeviceEnumerator(DeviceChangedCallback callback) : platf
     deviceWatcher_->start([this](OBDeviceChangedType changedType, std::string url) { onPlatformDeviceChanged(changedType, url); });
 }
 
-NetDeviceEnumerator::~NetDeviceEnumerator() {
+NetDeviceEnumerator::~NetDeviceEnumerator() noexcept {
     deviceWatcher_->stop();
 }
 

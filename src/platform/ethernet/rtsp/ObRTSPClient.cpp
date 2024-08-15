@@ -36,7 +36,7 @@ ObRTSPClient::ObRTSPClient(std::shared_ptr<const StreamProfile> profile, UsageEn
     envir() << "ObRTSPClient created! rtspURL = " << url();
 }
 
-ObRTSPClient::~ObRTSPClient() {
+ObRTSPClient::~ObRTSPClient() noexcept {
     TRY_EXECUTE(stopStream());
 
     // 以下操作请确保taskScheduler eventLoop线程已关闭

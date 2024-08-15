@@ -8,14 +8,13 @@
 namespace libobsensor {
 
 // avoids returning too old merged frame - frame counter jumps forward
-const int                                 SEQUENTIAL_FRAMES_THRESHOLD = 4;
 std::pair<OBFormat, std::vector<uint8_t>> EXP_LUT_;
 
 template <typename T> void generateConfidenceMap(const T *ir, uint8_t *map, int width, int height) {
     const T *p_ir  = ir;
     uint8_t *p_map = map;
-    for(size_t i = 0; i < height; i++) {
-        for(size_t j = 0; j < width; j++) {
+    for(int i = 0; i < height; i++) {
+        for(int j = 0; j < width; j++) {
             *p_map++ = EXP_LUT_[*p_ir++];
         }
     }

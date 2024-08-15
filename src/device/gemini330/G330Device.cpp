@@ -426,7 +426,7 @@ void G330Device::initProperties() {
         auto  platform       = Platform::getInstance();
         auto &sourcePortInfo = getSensorPortInfo(sensor);
         if(sensor == OB_SENSOR_COLOR) {
-            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([ &sourcePortInfo]() {
                 auto platform = Platform::getInstance();
                 auto port     = platform->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
@@ -449,7 +449,7 @@ void G330Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_DEPTH) {
-            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([&sourcePortInfo]() {
                 auto platform = Platform::getInstance();
                 auto port     = platform->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);

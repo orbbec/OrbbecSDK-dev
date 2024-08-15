@@ -364,7 +364,7 @@ void Astra2Device::initProperties() {
         auto  pal            = Platform::getInstance();
         auto &sourcePortInfo = getSensorPortInfo(sensor);
         if(sensor == OB_SENSOR_COLOR) {
-            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([&sourcePortInfo]() {
                 auto pal      = Platform::getInstance();
                 auto port     = pal->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
@@ -383,7 +383,7 @@ void Astra2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_IR) {
-            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, sourcePortInfo]() {
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([sourcePortInfo]() {
                 auto pal      = Platform::getInstance();
                 auto port     = pal->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
@@ -393,7 +393,7 @@ void Astra2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_IR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_DEPTH) {
-            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([&sourcePortInfo]() {
                 auto pal      = Platform::getInstance();
                 auto port     = pal->getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);

@@ -25,6 +25,10 @@ public:
 
     StreamProfileList getD2CDepthProfileList(std::shared_ptr<const StreamProfile> colorProfile, OBAlignMode alignMode);
 
+    OBCameraParam getCameraParam();
+    OBCameraParam getCameraParam(uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth, uint32_t depthHeight);
+    OBCalibrationParam getCalibrationParam(std::shared_ptr<Config> cfg);
+
     void enableFrameSync();
     void disableFrameSync();
 
@@ -43,7 +47,7 @@ private:
     void configAlignMode();
     void resetAlignMode();
 
-    std::shared_ptr<const VideoStreamProfile> getCurrentVideoStreamProfile(OBStreamType type);
+    std::shared_ptr<const VideoStreamProfile> getCurrentVideoStreamProfile(std::shared_ptr<const Config> config,OBStreamType type);
 
     void                    applyConfig(std::shared_ptr<const Config> cfg);
     std::shared_ptr<Config> checkAndSetConfig(std::shared_ptr<const Config> cfg);

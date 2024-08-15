@@ -1248,4 +1248,54 @@ public:
     }
 };
 
+/**
+ * @brief Class representing a list of camera parameters
+ */
+class CameraParamList {
+private:
+    ob_camera_param_list_t *impl_ = nullptr;
+
+public:
+    explicit CameraParamList(ob_camera_param_list_t *impl) : impl_(impl) {}
+    ~CameraParamList() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_camera_param_list(impl_, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
+     * @brief Get the number of device presets in the list
+     *
+     * @return uint32_t the number of device presets in the list
+     */
+    uint32_t getCount() {
+        ob_error *error = nullptr;
+        auto      count = ob_camera_param_list_get_count(impl_, &error);
+        Error::handle(&error);
+        return count;
+    }
+
+    /**
+     * @brief Get the camera parameters for the specified index
+     *
+     * @param index the index of the parameter group
+     * @return OBCameraParam the corresponding group parameters
+     */
+    OBCameraParam getCameraParam(uint32_t index){
+        ob_error *error = nullptr;
+        auto      param = ob_camera_param_list_get_param(impl_,index, &error);
+        Error::handle(&error);
+        return param;
+    }
+
+
+    /**
+     * In order to be compatible with the closed source version of orbbecsdk's interface.
+     * We recommend using the latest interface names for a better experience.
+    */
+    uint32_t count() {
+        return getCount();
+    }
+};
+
 }  // namespace ob

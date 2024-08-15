@@ -9,6 +9,8 @@ Use the SDK interface to obtain the camera's internal imu data and output it
 AccelFrame measures the acceleration of x, y, and z in m/s^2
 GyroFrame measures the angular velocity of x, y, and z in rad/s
 
+Frameset is a combination of different types of Frames.imu data stream can be obtained through frameset
+
 ## code overview
 
 1. Instantiate pipeline, configure output imu related information and open stream

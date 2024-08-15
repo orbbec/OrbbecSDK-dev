@@ -6,7 +6,11 @@ Use SDK to handle the settings of device unplug callback and process the acquire
 
 ### Knowledge
 
-Use the setDeviceChangedCallback callback function provided by the SDK to design the program you want when the device is plugged in
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions.
+
+Device is a class that can be used to get device information, parameters, and a list of contained sensors.
+
+Sensor can be used to obtain different components of the camera and the stream of the component, for example, RGB, IR, Depth stream can be obtained through the RGB, IR, Depth sensor.
 
 ## code overview
 

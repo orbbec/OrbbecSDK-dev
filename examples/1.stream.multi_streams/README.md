@@ -6,8 +6,13 @@ Use SDK to obtain multiple camera data streams and output them
 
 ### Knowledge
 
-An IR sensor is a sensor that uses infrared light for detection and measurement
-Infrared light is a type of electromagnetic wave with a wavelength longer than visible light and is usually invisible to the human eye (wavelengths between approximately 700nm and 1mm)
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions.
+
+Device is a class that can be used to get device information, parameters, and a list of contained sensors.
+
+Sensor can be used to obtain different components of the camera and the stream of the component, for example, RGB, IR, Depth stream can be obtained through the RGB, IR, Depth sensor.
+
+Frameset is a combination of different types of Frames.
 
 ## code overview
 

@@ -6,7 +6,11 @@ The SDK can be used to modify camera-related parameters, including laser switch,
 
 ### Knowledge
 
-In order to protect the user, we can set the laser level. We have also made protection in the firmware. When people approach, our laser level intensity will automatically decrease.
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions.
+
+Device is a class that can be used to get device information, parameters, and a list of contained sensors.
+
+Sensor can be used to obtain different components of the camera and the stream of the component, for example, RGB, IR, Depth stream can be obtained through the RGB, IR, Depth sensor.
 
 ## code overview
 

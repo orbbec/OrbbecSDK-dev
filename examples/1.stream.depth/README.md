@@ -10,7 +10,26 @@ DepthFrame can obtain relevant information about the depth
 
 ## code overview
 
-### 1. Calculate the distance from the center pixel to the opposite side from the acquired Y16 depth stream format and display it in the window. The distance is refreshed every 30 frames
+1. After instantiating a pipeline, configure the output color stream and open the video stream
+
+    ```cpp
+           // Create a pipeline with default device.
+        ob::Pipeline pipe;
+        
+        // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled.
+        std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
+
+        // Enable depth stream.
+        config->enableVideoStream(OB_STREAM_DEPTH);
+
+        // Start the pipeline with config.
+        pipe.start(config);
+
+        // Create a window for rendering, and set the resolution of the window.
+        ob_smpl::CVWindow win("Depth");
+    ```
+
+2. Calculate the distance from the center pixel to the opposite side from the acquired Y16 depth stream format and display it in the window. The distance is refreshed every 30 frames
 
     ```cpp
     // Get the depth Frame form depthFrameRaw.

@@ -14,80 +14,72 @@ Sensor can be used to obtain different components of the camera and the stream o
 
 ## code overview
 
-### 1、Create the instance
+1. Create the pipeline instance using the default configuration and create a config instance to enable or disable the streams.Get the device instance from pipeline,and then get the sensor instance from device.
 
-Create the pipeline instance using the default configuration and create a config instance to enable or disable the streams.Get the device instance from pipeline,and then get the sensor instance from device.
+    ```c++
+        // Create a pipeline.
+        ob::Pipeline pipe;
 
-```c++
-// Create a pipeline.
-ob::Pipeline pipe;
+        // Configure which streams to enable or disable for the Pipeline by creating a Config.
+        std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
-// Configure which streams to enable or disable for the Pipeline by creating a Config.
-std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
+        // Get device from pipeline.
+        auto device = pipe.getDevice();
 
-// Get device from pipeline.
-auto device = pipe.getDevice();
+        // Get sensorList from device.
+        auto sensorList = device->getSensorList();
+    ```
 
-// Get sensorList from device.
-auto sensorList = device->getSensorList();
+2. Get only the sensor for the VideoStream,enable the stream from these sensor.
 
-```
+    ```c++
+        for(uint32_t index = 0; index < sensorList->getCount(); index++) {
+                // Query all supported infrared sensor type and enable the infrared stream.
+                // For dual infrared device, enable the left and right infrared streams.
+                // For single infrared device, enable the infrared stream.
+                OBSensorType sensorType = sensorList->getSensorType(index);
 
-### 2、Enable the stream from video sensor
+                // exclude non-video sensor type
+                if(!ob::TypeHelper::isVideoSensorType(sensorType)) {
+                    continue;
+                }
 
-Get only the sensor for the VideoStream,enable the stream from these sensor.
+                // Enable the stream for the sensor type.
+                config->enableStream(sensorType);
+            }
+    ```
 
-```c++
-for(uint32_t index = 0; index < sensorList->getCount(); index++) {
-        // Query all supported infrared sensor type and enable the infrared stream.
-        // For dual infrared device, enable the left and right infrared streams.
-        // For single infrared device, enable the infrared stream.
-        OBSensorType sensorType = sensorList->getSensorType(index);
+3. In this callback function, you can add what you want to do with the data.
 
-        // exclude non-video sensor type
-        if(!ob::TypeHelper::isVideoSensorType(sensorType)) {
-            continue;
+    ```c++
+        // Start the pipeline with callback.
+        pipe.start(config, [&](std::shared_ptr<ob::FrameSet> output) {
+            std::lock_guard<std::mutex> lock(framesetMutex);
+            frameset = output;
+        });
+    ```
+
+4. Render window
+
+    ```c++
+        while(win.run()) {
+            std::lock_guard<std::mutex> lock(framesetMutex);
+
+            if(frameset == nullptr) {
+                continue;
+            }
+
+            // Rendering display
+            win.pushFramesToView(frameset);
         }
+    ```
 
-        // Enable the stream for the sensor type.
-        config->enableStream(sensorType);
-    }
-```
+5. stop pipeline
 
-### 3、Custom operation
-
-In this callback function, you can add what you want to do with the data.
-
-```c++
-// Start the pipeline with callback.
-pipe.start(config, [&](std::shared_ptr<ob::FrameSet> output) {
-    std::lock_guard<std::mutex> lock(framesetMutex);
-    frameset = output;
-});
-```
-
-### 4、Render window
-
-```c++
-while(win.run()) {
-        std::lock_guard<std::mutex> lock(framesetMutex);
-
-        if(frameset == nullptr) {
-            continue;
-        }
-
-        // Rendering display
-        win.pushFramesToView(frameset);
-    }
-
-```
-
-### 5、stop pipeline
-
-```c++
-// Stop the Pipeline, no frame data will be generated
-pipe.stop();
-```
+    ```c++
+        // Stop the Pipeline, no frame data will be generated
+        pipe.stop();
+    ```
 
 ## Run Sample
 

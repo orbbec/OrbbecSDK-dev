@@ -16,7 +16,7 @@ Device is the device object, which can be used to obtain the device information,
 
     ```cpp
         // Create a context.
-        ob::Context context;
+        ob::Context context;    
     ```
 
 2. Check if there is a camera connected
@@ -61,31 +61,31 @@ Device is the device object, which can be used to obtain the device information,
 
      ```cpp
     // Enumerate sensors.
-    void enumerateSensors(std::shared_ptr<ob::Device> device) {
-        while(true) {
-            std::cout << "Sensor list: " << std::endl;
-            // Get the list of sensors.
-            auto sensorList = device->getSensorList();
-            for(uint32_t index = 0; index < sensorList->getCount(); index++) {
-                // Get the sensor type.
-                auto sensorType = sensorList->getSensorType(index);
-                std::cout << " - " << index << "."
-                        << "sensor type: " << ob::TypeHelper::convertOBSensorTypeToString(sensorType) << std::endl;
+        void enumerateSensors(std::shared_ptr<ob::Device> device) {
+            while(true) {
+                std::cout << "Sensor list: " << std::endl;
+                // Get the list of sensors.
+                auto sensorList = device->getSensorList();
+                for(uint32_t index = 0; index < sensorList->getCount(); index++) {
+                    // Get the sensor type.
+                    auto sensorType = sensorList->getSensorType(index);
+                    std::cout << " - " << index << "."
+                            << "sensor type: " << ob::TypeHelper::convertOBSensorTypeToString(sensorType) << std::endl;
+                }
+
+                std::cout << "Select a sensor to enumerate its streams(input sensor index or \'ESC\' to enumerate device): " << std::endl;
+
+                // Select a sensor.
+                int sensorSelected = ob_smpl::getInputOption();
+                if(sensorSelected == -1) {
+                    break;
+                }
+
+                // Get sensor from sensorList.
+                auto sensor = sensorList->getSensor(sensorSelected);
+                enumerateStreamProfiles(sensor);
             }
-
-            std::cout << "Select a sensor to enumerate its streams(input sensor index or \'ESC\' to enumerate device): " << std::endl;
-
-            // Select a sensor.
-            int sensorSelected = ob_smpl::getInputOption();
-            if(sensorSelected == -1) {
-                break;
-            }
-
-            // Get sensor from sensorList.
-            auto sensor = sensorList->getSensor(sensorSelected);
-            enumerateStreamProfiles(sensor);
         }
-    }
     ```
 
 6. Output information about the selected sensor

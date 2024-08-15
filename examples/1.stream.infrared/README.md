@@ -6,8 +6,7 @@ Use the SDK interface to obtain the camera IR stream and display it in the windo
 
 ### Knowledge
 
-An IR sensor is a sensor that uses infrared light for detection and measurement
-Infrared light is a type of electromagnetic wave with a wavelength longer than visible light and is usually invisible to the human eye (wavelengths between approximately 700nm and 1mm)
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions.
 
 ## code overview
 

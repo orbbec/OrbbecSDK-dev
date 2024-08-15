@@ -2,88 +2,39 @@
 
 ## Overview
 
+Use the SDK interface to obtain the depth stream of the camera and display it in the window
+
 ### Knowledge
 
-### Attentions
-
-***Supported devices: Gemini 330 series cameras, such as Gemini G335***
+DepthFrame can obtain relevant information about the depth
 
 ## code overview
 
-### 1. 
+### 1. Calculate the distance from the center pixel to the opposite side from the acquired Y16 depth stream format and display it in the window. The distance is refreshed every 30 frames
 
-```cpp
+    ```cpp
+    // Get the depth Frame form depthFrameRaw.
+        auto depthFrame = depthFrameRaw->as<ob::DepthFrame>();
+        // for Y16 format depth frame, print the distance of the center pixel every 30 frames.
+        if(depthFrame->getIndex() % 30 == 0 && depthFrame->getFormat() == OB_FORMAT_Y16) {
+            uint32_t        width  = depthFrame->getWidth();
+            uint32_t        height = depthFrame->getHeight();
+            float           scale  = depthFrame->getValueScale();
+            const uint16_t *data   = reinterpret_cast<const uint16_t *>(depthFrame->getData());
 
-```
+            // pixel value multiplied by scale is the actual distance value in millimeters.
+            float centerDistance = data[width * height / 2 + width / 2] * scale;
 
-### 2. 
-
-```cpp
-
-```
-
-### 3. 
-
-```cpp
-
-
-```
-
-### 4、Use pipeline to close the video stream
-
-```cpp
-
-```
+            // // attention: if the distance is 0, it means that the depth camera cannot detect the object (may be out of detection range).
+            win.addLog("Facing an object at a distance of " + ob_smpl::toString(centerDistance, 3) + " mm. ");
+        }
+    ```
 
 ## Run Sample
 
+Moving the camera can obtain the change in the distance across the center pixel
 Press the Esc key in the window to exit the program.
-在窗口中按Esc键退出程序。
 
 ### Result
-
-
-
-
-
-
-
-
-
-
-# C++ Sample Depth Stream Viewer
-
-Function description: This example mainly demonstrates the use of SDK to get depth data and draw display, and exit the program through the ESC_KEY key
-
-This example is based on the C++ High Level API for demonstration
-
-## 1. Firstly, create a pipeline, through which multiple types of streams can be easily opened and closed, and a set of frame data can be obtained
-```cpp
-    ob::Pipeline pipe;
-```
-
-## 2. By creating config to configure which streams to enable
-```cpp
-    // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled
-    std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-    config->enableVideoStream(OB_STREAM_DEPTH);
-```
-
-## 3. Start Pipeline
-```cpp
-    pipe.start(config);
-```
-
-## 4. Obtain Depth frame data
-Wait for a frame of data in a blocking manner which is a composite frame containing frame data for all streams enabled in the configuration, and set the waiting timeout time for the frame
-```cpp
-    auto frameSet = pipe.waitForFrameset(100);	//Set the waiting time to 100ms
-```
-
-## 5. Stop Pipeline, no more frame data will be generated
-```cpp
-    pipe.stop();
-```
-## 6. expected Output
 
 ![image](Image/DepthViewer.png)

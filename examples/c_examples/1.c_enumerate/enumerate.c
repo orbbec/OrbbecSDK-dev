@@ -90,6 +90,20 @@ void enumerate_stream_info(ob_sensor *sensor) {
             // check_ob_error(&error);
 
             // printf("  %d - type: %s, fps: %s\n", index, stream_types[stream_format], rate_types[acc_fps]);
+
+            ob_stream_type stream_type = ob_stream_profile_get_type(stream_profile, &error);
+            check_ob_error(&error);
+            const char *stream_type_str = ob_stream_type_to_string(stream_type);
+
+            ob_accel_full_scale_range accel_range = ob_accel_stream_profile_get_full_scale_range(stream_profile, &error);
+            check_ob_error(&error);
+            const char*  accel_range_str =  ob_accel_range_type_to_string(accel_range);
+
+            OBIMUSampleRate accel_fps = ob_accel_stream_profile_get_sample_rate(stream_profile, &error);
+            check_ob_error(&error);
+            const char*  accel_fps_str =  ob_imu_rate_type_to_string(accel_fps);
+
+            printf("  %d - type: %4s, range: %s, fps: %s\n", index, stream_type_str,accel_range_str, accel_fps_str);
         }
         else if(sensor_type == OB_SENSOR_GYRO) {
             // Print gyro stream profile information.
@@ -100,6 +114,20 @@ void enumerate_stream_info(ob_sensor *sensor) {
             // check_ob_error(&error);
 
             // printf("  %d - type: %s, fps: %s\n", index, stream_types[stream_format], rate_types[gyro_fps]);
+            
+            ob_stream_type stream_type = ob_stream_profile_get_type(stream_profile, &error);
+            check_ob_error(&error);
+            const char *stream_type_str = ob_stream_type_to_string(stream_type);
+
+            ob_gyro_full_scale_range gyro_range = ob_gyro_stream_profile_get_full_scale_range(stream_profile, &error);
+            check_ob_error(&error);
+            const char*  gyro_range_str =  ob_gyro_range_type_to_string(gyro_range);
+            
+            ob_gyro_sample_rate gyro_fps = ob_gyro_stream_profile_get_sample_rate(stream_profile, &error);
+            check_ob_error(&error);
+            const char*  gyro_fps_str =  ob_imu_rate_type_to_string(gyro_fps);
+
+            printf("  %d - type: %4s, range: %s, fps: %s\n", index, stream_type_str, gyro_range_str, gyro_fps_str);
         }
 
         // destroy stream profile

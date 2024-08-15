@@ -56,3 +56,5 @@ win is used to display the frame data.
 Press the Esc key in the window to exit the program.
 
 ### Result
+
+![image](/docs/resource/quick_start.jpg)

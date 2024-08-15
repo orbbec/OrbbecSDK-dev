@@ -1,7 +1,9 @@
+#include <libobsensor/ObSensor.h>
+
+#include "utils_c.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <libobsensor/ObSensor.h>
 
 // helper function to check for errors and exit if there is one
 void check_ob_error(ob_error **err) {
@@ -251,6 +253,9 @@ int main(void) {
         ob_delete_context(ctx, &error);
         check_ob_error(&error);
 
+        printf("\nPress any key to exit.");
+        ob_smpl_wait_for_key_press(0);
+
         return -1;
     }
 
@@ -292,7 +297,7 @@ int main(void) {
     check_ob_error(&error);
 
     printf("\nProgram ended successfully. Press any key to exit.");
-    getchar();
+    ob_smpl_wait_for_key_press(0);
 
     return 0;
 }

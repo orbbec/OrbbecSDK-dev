@@ -256,7 +256,7 @@ void FilterBase::updateConfigCache(std::vector<std::string> &params) {
     }
 
     if(schemaVec.size() == params.size()) {
-        for(int i = 0; i < schemaVec.size(); i++) {
+        for(size_t i = 0; i < schemaVec.size(); i++) {
             auto name        = schemaVec[i].name;
             auto type        = schemaVec[i].type;
             auto value       = parseFilterConfigValue(params[i], type);

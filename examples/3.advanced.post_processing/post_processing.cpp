@@ -39,7 +39,7 @@ void filterControl(const std::vector<std::shared_ptr<ob::Filter>> &filterList) {
 
         std::string input;
         std::getline(std::cin, input);
-        if(input == "q") {
+        if(input == "q" || input == "Q") {
             quit_program = true;
             break;
         }

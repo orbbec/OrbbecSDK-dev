@@ -515,13 +515,6 @@ void DecimationFilter::decimateOthers(OBFormat format, void *frame_data_in, void
             }
         }
 
-        for(int j = real_height_; j < padded_height_; ++j) {
-            for(int i = 0; i < padded_width_; ++i) {
-                *q++ = 0;
-                *q++ = 0;
-            }
-        }
-
         memset(q, 0, (padded_height_ - real_height_) * padded_width_ * sizeof(uint8_t) * 2);
     } break;
 

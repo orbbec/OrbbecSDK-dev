@@ -8,6 +8,7 @@
 #include "IDevice.hpp"
 #include "IDeviceMonitor.hpp"
 #include "IAlgParamManager.hpp"
+#include "component/timestamp/GlobalTimestampFitter.hpp"
 
 #ifdef __cplusplus
 extern "C" {

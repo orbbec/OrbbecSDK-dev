@@ -1,5 +1,6 @@
 #include <libobsensor/ObSensor.hpp>
 
+#include "utils.hpp"
 #include "utils_opencv.hpp"
 
 int main(void) try {
@@ -13,7 +14,7 @@ int main(void) try {
     if(!device->isPropertySupported(OB_STRUCT_DEPTH_HDR_CONFIG, OB_PERMISSION_READ_WRITE)) {
         std::cerr << "Current default device does not support HDR merge" << std::endl;
         std::cout << "Press any key to exit...";
-        getchar();
+        ob_smpl::waitForKeyPressed();
         return -1;
     }
 
@@ -103,5 +104,7 @@ int main(void) try {
 }
 catch(ob::Error &e) {
     std::cerr << "function:" << e.getFunction() << "\nargs:" << e.getArgs() << "\nmessage:" << e.what() << "\ntype:" << e.getExceptionType() << std::endl;
+    std::cout << "\nPress any key to exit...";
+    ob_smpl::waitForKeyPressed();
     exit(EXIT_FAILURE);
 }

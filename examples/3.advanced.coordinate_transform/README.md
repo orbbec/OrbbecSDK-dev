@@ -1,18 +1,24 @@
-# C++ Sample Coordinate Transform
+# C++ Sample: 3.advanced.coordinate_transform
 
-Supported devices: Gemini 330 series cameras, such as Gemini G335
+## Overview
 
-Function description: The example uses tools to transform different coordinate systems
+Use the SDK interface to  transform different coordinate systems.
 
-This example is based on the C++ high level API for demonstration
+### Knowledge
 
-## 1. Create pipeline
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions
+
+Frameset is a combination of different types of Frames
+
+## Code overview
+
+1. Create pipeline
 
 ```cpp
     ob::Pipeline pipe;
 ```
 
-## 2. Enable color stream
+2. Enable color stream
 
 ```cpp
     auto colorProfiles = pipe.getStreamProfileList(OB_SENSOR_COLOR);
@@ -22,7 +28,7 @@ This example is based on the C++ high level API for demonstration
     config->enableStream(colorProfile);
 ```
 
-## 3. Enable depth stream
+3. Enable depth stream
 
 ```cpp
     auto                                    depthProfiles = pipe.getStreamProfileList(OB_SENSOR_DEPTH);
@@ -34,48 +40,48 @@ This example is based on the C++ high level API for demonstration
     config->enableStream(depthProfile);
 ```
 
-## 4. Start Pipeline through Configuration
+4. Start Pipeline through Configuration
 
 ```cpp
     pipe.start(config);
 ```
 
-## 5. Get frame data
+5. Get frame data
 
 ```cpp
     auto colorFrame = frameSet->colorFrame();
     auto depthFrame = frameSet->depthFrame();
 ```
 
-## 6.Get get stream profile
+6. Get get stream profile
 
 ```cpp
     auto colorProfile =  colorFrame->getStreamProfile();
     auto depthProfile = depthFrame->getStreamProfile();
 ```
 
-## 7.Get the extrinsic parameters
+7. Get the extrinsic parameters
 
 ```cpp
     auto extrinsicD2C = depthProfile->getExtrinsicTo(colorProfile);
     auto extrinsicC2D = colorProfile->getExtrinsicTo(depthProfile);
 ```
 
-## 8.Get the intrinsic parameters
+8. Get the intrinsic parameters
 
 ```cpp
     auto colorIntrinsic = colorProfile->as<ob::VideoStreamProfile>()->getIntrinsic();
     auto colorDistortion = colorProfile->as<ob::VideoStreamProfile>()->getDistortion();
 ```
 
-## 9.Get the distortion parameters
+9. Get the distortion parameters
 
 ```cpp
     auto depthIntrinsic = depthProfile->as<ob::VideoStreamProfile>()->getIntrinsic();
     auto depthDistortion = depthProfile->as<ob::VideoStreamProfile>()->getDistortion();
 ```
 
-## 10. Processing
+10. Processing
 
 ```cpp
      if(testType == "1") {
@@ -91,8 +97,20 @@ This example is based on the C++ high level API for demonstration
         }  
 ```
 
-## 8. Stop pipeline
+11. Stop pipeline
 
 ```cpp
     pipe.stop();
 ```
+
+## Run Sample
+
+Press the Esc key to exit the program.  
+Press the 1 key - transformation 2d to 2d  
+Press the 2 key - transformation 2d to 3d  
+Press the 3 key - transformation 3d to 3d  
+Press the 4 key - transformation 3d to 2d
+
+### Result
+
+![image](/docs/resource/coordinate_transform.png)

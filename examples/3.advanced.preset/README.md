@@ -1,53 +1,54 @@
-# C++ Sample Post Processing
+# C++ Sample: 3.advanced.preset
 
-Supported devices: Gemini 330 series cameras, such as Gemini G335
+## Overview
 
-Function description: Demonstrate post-processing operations, display post-processed images, and exit the program using the ESC_KEY key
+Use the SDK interface to set and get the preset value.
 
-This example is based on the C++High Level API for demonstration
+### Knowledge
 
-## 1. Get the pipeline and configure the stream
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions
+
+## Code overview
+
+1. Get the pipeline and device.
+
 ```cpp
-    // Create a pipeline with default device
+    // Create a pipeline with default device.
     ob::Pipeline pipe;
-    
-    // Get all stream profiles of the depth camera, including stream resolution, frame rate, and frame format
-    auto profiles = pipe.getStreamProfileList(OB_SENSOR_DEPTH);
-    
-    std::shared_ptr<ob::VideoStreamProfile> depthProfile = nullptr;
-    try {
-        // Find the corresponding profile according to the specified format, first look for the y16 format
-        depthProfile = profiles->getVideoStreamProfile(640, OB_HEIGHT_ANY, OB_FORMAT_Y16, 30);
-    }
-    catch(ob::Error &e) {
-        // If the specified format is not found, search for the default profile to open the stream
-        depthProfile = std::const_pointer_cast<ob::StreamProfile>(profiles->getProfile(OB_PROFILE_DEFAULT))->as<ob::VideoStreamProfile>();
-    }
-    
-    // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled
-    std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
-    config->enableStream(depthProfile);
+    // Get the device from the pipeline.
+    std::shared_ptr<ob::Device> device = pipe.getDevice();
 ```
 
-## 2. Get a list of depth post-processing filters
-```cpp 
-    auto obFilterList = pipe.getDevice()->getSensor(OB_SENSOR_DEPTH)->getRecommendedFilters();
-    
-    std::shared_ptr<ob::DecimationFilter> decFilter;
-    for(int i = 0; i < obFilterList->count(); i++) {
-        auto postProcessorfilter =obFilterList->getFilter(i);
-        std::cout << "Depth recommended post processor filter type: " << postProcessorfilter->type() << std::endl;
-        if(postProcessorfilter->is<ob::DecimationFilter>()) {
-            decFilter = postProcessorfilter->as<ob::DecimationFilter>();
-        }
-    }
-```
+2. Get preset list from device.
 
-## 3. Start pipeline
 ```cpp
-    pipe.start(config);
+std::shared_ptr<ob::DevicePresetList> presetLists = device->getAvailablePresetList();
 ```
 
-## 4. expected Output 
+3. Get preset value from device.
 
-![image](Image/post_processing.png)
+```cpp
+    // Print current preset name.
+    std::cout << "Current PresetName: " << device->getCurrentPresetName() << std::endl;
+```
+
+4. Set preset value to device.
+
+```cpp
+    // Load preset.
+    device->loadPreset(presetName);
+```
+
+5. Stop pipeline
+
+```cpp
+    pipe.stop();
+```
+
+## Run Sample
+
+Press the button according to the interface prompts
+
+### Result
+
+![image](/docs/resource/preset.png)

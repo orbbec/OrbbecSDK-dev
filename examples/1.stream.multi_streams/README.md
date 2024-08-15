@@ -1,4 +1,4 @@
-# C++ Sample: 1.stream.infrared
+# C++ Sample: 1.stream.multi_streams
 
 ## Overview
 
@@ -75,4 +75,4 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![image](Image/DepthViewer.png)
+![image](/docs/resource/multistream.png)

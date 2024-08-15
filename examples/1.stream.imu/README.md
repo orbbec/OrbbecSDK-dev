@@ -1,4 +1,4 @@
-# C++ Sample: 1.stream.depth
+# C++ Sample: 1.stream.imu
 
 ## Overview
 
@@ -65,4 +65,4 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![image](Image/DepthViewer.png)
+![image](/docs/resource/imu.png)

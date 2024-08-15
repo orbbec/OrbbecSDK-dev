@@ -1,4 +1,4 @@
-# C++ Sample 1.stream.color
+# C++ Sample: 1.stream.color
 
 ## Overview
 
@@ -53,4 +53,4 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![image](/docs/resource/enumerate.jpg)
+![result](/docs/resource/color.jpg)

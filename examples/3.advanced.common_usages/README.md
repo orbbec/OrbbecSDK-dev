@@ -1,4 +1,4 @@
-# C++ Sample：2.device.hot_plugin
+# C++ Sample：3.advanced.common_usages
 
 ## Overview
 

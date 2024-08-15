@@ -62,4 +62,4 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![image](Image/DepthViewer.png)
+![image](/docs/resource/infrared.png)

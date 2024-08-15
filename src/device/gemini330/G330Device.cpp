@@ -27,10 +27,10 @@
 #include "property/CommonPropertyAccessors.hpp"
 #include "property/FilterPropertyAccessors.hpp"
 #include "monitor/DeviceMonitor.hpp"
+#include "syncconfig/DeviceSyncConfigurator.hpp"
 
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
-#include "G330DeviceSyncConfigurator.hpp"
 #include "G330AlgParamManager.hpp"
 #include "G330PresetManager.hpp"
 #include "G330DepthWorkModeManager.hpp"
@@ -86,7 +86,7 @@ void G330Device::init() {
         OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN,         OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,          OB_MULTI_DEVICE_SYNC_MODE_PRIMARY,
         OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED, OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING, OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING
     };
-    auto deviceSyncConfigurator = std::make_shared<G330DeviceSyncConfigurator>(this, supportedSyncModes);
+    auto deviceSyncConfigurator = std::make_shared<DeviceSyncConfigurator>(this, supportedSyncModes);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 
     auto deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this);
@@ -459,7 +459,7 @@ void G330Device::initProperties() {
             });
             propertyServer->registerProperty(OB_PROP_DEPTH_GAIN_INT, "rw", "rw", uvcPropertyAccessor);
 
-            auto vendorPropertyAccessor = std::make_shared<LazyExtensionPropertyAccessor>([this, &sourcePortInfo]() {
+            auto vendorPropertyAccessor = std::make_shared<LazySuperPropertyAccessor>([this, &sourcePortInfo]() {
                 auto platform      = Platform::getInstance();
                 auto port          = platform->getSourcePort(sourcePortInfo);
                 auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);

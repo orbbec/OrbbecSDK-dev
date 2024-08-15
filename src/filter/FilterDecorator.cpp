@@ -1,48 +1,32 @@
-#include "FilterBase.hpp"
+#include "FilterDecorator.hpp"
 #include "frame/FrameFactory.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "utils/StringUtils.hpp"
 namespace libobsensor {
 
-FilterBase::FilterBase(const std::string &name) : name_(name), enabled_(true), configChanged_(false) {
-    srcFrameQueue_ = std::make_shared<FrameQueue<const Frame>>(10);  // todo： read from config file to set the size of frame queue
+const size_t DEFAULT_FRAME_QUEUE_CAPACITY = 10;
+
+FilterExtension::FilterExtension(const std::string &name) : name_(name), enabled_(true), configChanged_(false) {
+    srcFrameQueue_ = std::make_shared<FrameQueue<const Frame>>(DEFAULT_FRAME_QUEUE_CAPACITY);  // todo： read from config file to set the size of frame queue
     LOG_DEBUG("Filter {} created with frame queue capacity {}", name_, srcFrameQueue_->capacity());
 }
 
-FilterBase::~FilterBase() noexcept {
-    srcFrameQueue_->stop();
-    LOG_DEBUG("Filter {} destroyed", name_);
+FilterExtension::~FilterExtension() noexcept {
+    reset();
 }
 
-const std::string &FilterBase::getName() const {
+const std::string &FilterExtension::getName() const {
     return name_;
 }
 
-std::shared_ptr<Frame> FilterBase::process(std::shared_ptr<const Frame> frame) {
-    if(!frame) {
-        LOG_WARN("Filter {}: empty frame received, return nullptr", name_);
-        return nullptr;
-    }
-
-    if(!enabled_) {
-        return FrameFactory::createFrameFromOtherFrame(frame, true);
-    }
-
-    checkAndUpdateConfig();
-    std::unique_lock<std::mutex> lock(processMutex_);
-
-    return processFunc(frame);
-}
-
-void FilterBase::pushFrame(std::shared_ptr<const Frame> frame) {
+void FilterExtension::pushFrame(std::shared_ptr<const Frame> frame) {
     if(!srcFrameQueue_->isStarted()) {
         srcFrameQueue_->start([&](std::shared_ptr<const Frame> frameToProcess) {
             std::shared_ptr<Frame> rstFrame;
             if(enabled_) {
                 checkAndUpdateConfig();
-                std::unique_lock<std::mutex> lock(processMutex_);
-                BEGIN_TRY_EXECUTE({ rstFrame = processFunc(frameToProcess); })
+                BEGIN_TRY_EXECUTE({ rstFrame = process(frameToProcess); })
                 CATCH_EXCEPTION_AND_EXECUTE({  // catch all exceptions to avoid crashing on the inner thread
                     LOG_WARN("Filter {}: exception caught while processing frame {}#{}, this frame will be dropped", name_, frameToProcess->getType(),
                              frameToProcess->getNumber());
@@ -62,22 +46,25 @@ void FilterBase::pushFrame(std::shared_ptr<const Frame> frame) {
     srcFrameQueue_->enqueue(frame);
 }
 
-void FilterBase::setCallback(FilterCallback cb) {
+void FilterExtension::setCallback(FilterCallback cb) {
     std::unique_lock<std::mutex> lock(callbackMutex_);
     callback_ = cb;
 }
 
-void FilterBase::reset() {
-    srcFrameQueue_->flush();
-    srcFrameQueue_->reset();
-    LOG_DEBUG("Filter {}: reset frame queue", name_);
+void FilterExtension::resizeFrameQueue(size_t size) {
+    srcFrameQueue_->resize(size);
 }
 
-void FilterBase::enable(bool en) {
+void FilterExtension::reset() {
+    srcFrameQueue_->flush();
+    srcFrameQueue_->reset();
+}
+
+void FilterExtension::enable(bool en) {
     enabled_ = en;
 }
 
-bool FilterBase::isEnabled() const {
+bool FilterExtension::isEnabled() const {
     return enabled_;
 }
 
@@ -127,7 +114,7 @@ double parseFilterConfigValue(const std::string &valueStr, OBFilterConfigValueTy
     return 0.0;
 }
 
-const std::vector<OBFilterConfigSchemaItem> &FilterBase::getConfigSchemaVec() {
+const std::vector<OBFilterConfigSchemaItem> &FilterExtension::getConfigSchemaVec() {
     if(!configSchemaVec_.empty()) {
         return configSchemaVec_;
     }
@@ -164,7 +151,7 @@ const std::vector<OBFilterConfigSchemaItem> &FilterBase::getConfigSchemaVec() {
     return configSchemaVec_;
 }
 
-void FilterBase::setConfigValue(const std::string &configName, double value) {
+void FilterExtension::setConfigValue(const std::string &configName, double value) {
     auto schemaVec = getConfigSchemaVec();
     if(schemaVec.empty()) {
         throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config schema is empty, doesn't have any config value");
@@ -192,12 +179,12 @@ void FilterBase::setConfigValue(const std::string &configName, double value) {
     LOG_DEBUG("Filter {}: config item {} value set to {}", name_, configName, value);
 }
 
-void FilterBase::setConfigValueSync(const std::string &name, double value) {
+void FilterExtension::setConfigValueSync(const std::string &name, double value) {
     setConfigValue(name, value);
     checkAndUpdateConfig();
 }
 
-double FilterBase::getConfigValue(const std::string &configName) {
+double FilterExtension::getConfigValue(const std::string &configName) {
     auto schemaVec = getConfigSchemaVec();
     if(schemaVec.empty()) {
         throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config schema is empty, doesn't have any config value");
@@ -230,7 +217,7 @@ std::string filterConfigValueToString(double value, OBFilterConfigValueType valu
     return "";
 }
 
-void FilterBase::checkAndUpdateConfig() {
+void FilterExtension::checkAndUpdateConfig() {
     if(configChanged_) {
         std::unique_lock<std::mutex> lock(configMutex_);
 
@@ -249,7 +236,7 @@ void FilterBase::checkAndUpdateConfig() {
     }
 }
 
-void FilterBase::updateConfigCache(std::vector<std::string> &params) {
+void FilterExtension::updateConfigCache(std::vector<std::string> &params) {
     auto schemaVec = getConfigSchemaVec();
     if(schemaVec.empty()) {
         throw invalid_value_exception(utils::string::to_string() << "Filter@" << name_ << ": config schema is empty, doesn't have any config value");
@@ -263,6 +250,44 @@ void FilterBase::updateConfigCache(std::vector<std::string> &params) {
             configMap_[name] = value;
         }
     }
+}
+
+FilterDecorator::FilterDecorator(const std::string &name, std::shared_ptr<IFilterBase> baseFilter) : FilterExtension(name), baseFilter_(baseFilter) {}
+
+FilterDecorator::~FilterDecorator() noexcept {
+    reset();
+    LOG_DEBUG("Filter {} destroyed", getName());
+}
+
+void FilterDecorator::updateConfig(std::vector<std::string> &params) {
+    baseFilter_->updateConfig(params);
+    updateConfigCache(params);
+}
+
+const std::string &FilterDecorator::getConfigSchema() const {
+    return baseFilter_->getConfigSchema();
+}
+
+void FilterDecorator::reset() {
+    FilterExtension::reset();
+    baseFilter_->reset();
+    LOG_DEBUG("Filter@{} have been reset", getName());
+}
+
+std::shared_ptr<Frame> FilterDecorator::process(std::shared_ptr<const Frame> frame) {
+    if(!frame) {
+        LOG_WARN("Filter {}: empty frame received, return nullptr", getName());
+        return nullptr;
+    }
+
+    checkAndUpdateConfig();
+
+    std::unique_lock<std::mutex> lock(processMutex_);
+    return baseFilter_->process(frame);
+}
+
+std::shared_ptr<IFilterBase> FilterDecorator::getBaseFilter() const {
+    return baseFilter_;
 }
 
 }  // namespace libobsensor

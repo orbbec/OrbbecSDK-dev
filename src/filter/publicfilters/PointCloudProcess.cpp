@@ -2,15 +2,15 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "frame/FrameFactory.hpp"
+#include "stream/StreamProfile.hpp"
 #include "libobsensor/h/ObTypes.h"
 #include "utils/CoordinateUtil.hpp"
 #include "utils/Utils.hpp"
 
 namespace libobsensor {
 
-PointCloudFilter::PointCloudFilter(const std::string &name)
-    : FilterBase(name),
-      pointFormat_(OB_FORMAT_POINT),
+PointCloudFilter::PointCloudFilter()
+    : pointFormat_(OB_FORMAT_POINT),
       positionDataScale_(1.0f),
       coordinateSystemType_(OB_LEFT_HAND_COORDINATE_SYSTEM),
       isColorDataNormalization_(false),
@@ -20,7 +20,6 @@ PointCloudFilter::PointCloudFilter(const std::string &name)
 PointCloudFilter::~PointCloudFilter() noexcept {}
 
 void PointCloudFilter::reset() {
-    FilterBase::reset();
     if(formatConverter_) {
         formatConverter_.reset();
     }
@@ -161,7 +160,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
 
     // decode rgb frame
     if(formatConverter_ == nullptr) {
-        formatConverter_ = std::make_shared<FormatConverter>("FormatConverter");
+        formatConverter_ = std::make_shared<FormatConverter>();
     }
 
     std::shared_ptr<const Frame> tarFrame;
@@ -262,7 +261,7 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     return pointFrame;
 }
 
-std::shared_ptr<Frame> PointCloudFilter::processFunc(std::shared_ptr<const Frame> frame) {
+std::shared_ptr<Frame> PointCloudFilter::process(std::shared_ptr<const Frame> frame) {
     if(!frame) {
         return nullptr;
     }

@@ -250,14 +250,13 @@ void FemtoMegaUsbDevice::initSensorList() {
         auto imuPortInfo = *imuPortInfoIter;
         registerComponent(OB_DEV_COMPONENT_IMU_STREAMER, [this, imuPortInfo]() {
             // the gyro and accel are both on the same port and share the same filter
-            auto platform           = Platform::getInstance();
-            auto port               = platform->getSourcePort(imuPortInfo);
-            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
-            if(!imuCorrectorFilter) {
-                throw not_implemented_exception("Cannot find IMU correcter filter!");
-            }
-            auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
-            auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrectorFilter);
+            auto                                  platform           = Platform::getInstance();
+            auto                                  port               = platform->getSourcePort(imuPortInfo);
+            auto                                  imuReversionFilter = getSensorFrameFilter("IMUFrameReversion", OB_SENSOR_ACCEL, true);
+            auto                                  imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL, true);
+            std::vector<std::shared_ptr<IFilter>> imuFilters         = { imuReversionFilter, imuCorrectorFilter };
+            auto                                  dataStreamPort     = std::dynamic_pointer_cast<IDataStreamPort>(port);
+            auto                                  imuStreamer        = std::make_shared<ImuStreamer>(this, dataStreamPort, imuFilters);
             return imuStreamer;
         });
 
@@ -606,14 +605,13 @@ void FemtoMegaNetDevice::initSensorList() {
         auto imuPortInfo = *imuPortInfoIter;
         registerComponent(OB_DEV_COMPONENT_IMU_STREAMER, [this, imuPortInfo]() {
             // the gyro and accel are both on the same port and share the same filter
-            auto platform           = Platform::getInstance();
-            auto port               = platform->getSourcePort(imuPortInfo);
-            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
-            if(!imuCorrectorFilter) {
-                throw not_implemented_exception("Cannot find IMU correcter filter!");
-            }
-            auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
-            auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrectorFilter);
+            auto                                  platform           = Platform::getInstance();
+            auto                                  port               = platform->getSourcePort(imuPortInfo);
+            auto                                  imuReversionFilter = getSensorFrameFilter("IMUFrameReversion", OB_SENSOR_ACCEL, true);
+            auto                                  imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL, true);
+            std::vector<std::shared_ptr<IFilter>> imuFilters         = { imuReversionFilter, imuCorrectorFilter };
+            auto                                  dataStreamPort     = std::dynamic_pointer_cast<IDataStreamPort>(port);
+            auto                                  imuStreamer        = std::make_shared<ImuStreamer>(this, dataStreamPort, imuFilters);
             return imuStreamer;
         });
 

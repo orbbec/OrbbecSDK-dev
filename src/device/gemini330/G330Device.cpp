@@ -366,10 +366,8 @@ void G330Device::initSensorList() {
             // the gyro and accel are both on the same port and share the same filter
             auto platform           = Platform::getInstance();
             auto port               = platform->getSourcePort(imuPortInfo);
-            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
-            if(!imuCorrectorFilter) {
-                throw not_implemented_exception("Cannot find IMU correcter filter!");
-            }
+            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL, true);
+
             auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
             auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrectorFilter);
             return imuStreamer;

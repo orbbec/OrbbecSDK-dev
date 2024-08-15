@@ -8,7 +8,7 @@
 namespace libobsensor {
 
 // avoids returning too old merged frame - frame counter jumps forward
-const int SEQUENTIAL_FRAMES_THRESHOLD = 4;
+const int                                 SEQUENTIAL_FRAMES_THRESHOLD = 4;
 std::pair<OBFormat, std::vector<uint8_t>> EXP_LUT_;
 
 template <typename T> void generateConfidenceMap(const T *ir, uint8_t *map, int width, int height) {
@@ -126,7 +126,7 @@ bool checkIRAvailability(std::shared_ptr<const DepthFrame> first_depth, std::sha
     return use_ir;
 }
 
-HDRMerge::HDRMerge(const std::string &name) : FilterBase(name) {}
+HDRMerge::HDRMerge() {}
 HDRMerge::~HDRMerge() noexcept {}
 
 void HDRMerge::updateConfig(std::vector<std::string> &params) {
@@ -140,7 +140,12 @@ const std::string &HDRMerge::getConfigSchema() const {
     return schema;
 }
 
-std::shared_ptr<Frame> HDRMerge::processFunc(std::shared_ptr<const Frame> frame) {
+void HDRMerge::reset() {
+    frames_.clear();
+    depth_merged_frame_.reset();
+}
+
+std::shared_ptr<Frame> HDRMerge::process(std::shared_ptr<const Frame> frame) {
     if(!frame) {
         return nullptr;
     }
@@ -166,8 +171,8 @@ std::shared_ptr<Frame> HDRMerge::processFunc(std::shared_ptr<const Frame> frame)
         return outFrame;
     }
 
-    auto depth_seq_id = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-    int64_t frameSize = static_cast<int64_t>(frames_.size());
+    auto    depth_seq_id = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+    int64_t frameSize    = static_cast<int64_t>(frames_.size());
     if(frameSize == depth_seq_id) {
         frames_[depth_seq_id] = depthFrame;
     }

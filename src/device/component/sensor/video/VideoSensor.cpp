@@ -5,6 +5,7 @@
 #include "utils/Utils.hpp"
 #include "stream/StreamProfile.hpp"
 #include "frame/Frame.hpp"
+#include "FilterDecorator.hpp"
 #include "publicfilters/FormatConverterProcess.hpp"
 #include "ISensorStreamStrategy.hpp"
 #include "IDevice.hpp"
@@ -95,7 +96,9 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     currentFormatFilterConfig_   = backendIter->second.second;
 
     if(currentFormatFilterConfig_ && currentFormatFilterConfig_->converter) {
-        auto formatConverter = std::dynamic_pointer_cast<FormatConverter>(currentFormatFilterConfig_->converter);
+        auto filter          = std::dynamic_pointer_cast<FilterDecorator>(currentFormatFilterConfig_->converter);
+        auto baseFilter      = filter->getBaseFilter();
+        auto formatConverter = std::dynamic_pointer_cast<FormatConverter>(baseFilter);
         if(formatConverter) {
             formatConverter->setConversion(currentFormatFilterConfig_->srcFormat, currentFormatFilterConfig_->dstFormat);
         }
@@ -271,8 +274,8 @@ void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig>
 }
 
 void VideoSensor::updateStreamProfileList(const StreamProfileList &profileList) {
-    auto lazySelf   = std::make_shared<LazySensor>(owner_, sensorType_);
-    auto streamType = utils::mapSensorTypeToStreamType(sensorType_);
+    auto              lazySelf      = std::make_shared<LazySensor>(owner_, sensorType_);
+    auto              streamType    = utils::mapSensorTypeToStreamType(sensorType_);
     StreamProfileList backendSpList = profileList;
     for(auto &backendSp: backendSpList) {
         auto sp = backendSp->clone();

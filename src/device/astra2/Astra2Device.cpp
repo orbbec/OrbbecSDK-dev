@@ -303,10 +303,8 @@ void Astra2Device::initSensorList() {
             // the gyro and accel are both on the same port and share the same filter
             auto pal                = Platform::getInstance();
             auto port               = pal->getSourcePort(imuPortInfo);
-            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL);
-            if(!imuCorrectorFilter) {
-                throw not_implemented_exception("Cannot find IMU correcter filter!");
-            }
+            auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL, true);
+
             imuCorrectorFilter->enable(false);
             auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
             auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrectorFilter);

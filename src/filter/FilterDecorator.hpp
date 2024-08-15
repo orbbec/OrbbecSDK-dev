@@ -11,40 +11,34 @@
 
 namespace libobsensor {
 
-class FilterBase : public IFilter {
+class FilterExtension : public IFilter {
 public:
-    FilterBase(const std::string &name);
-    virtual ~FilterBase() noexcept;
-    virtual const std::string &getName() const override;
+    FilterExtension(const std::string &name);
+    virtual ~FilterExtension() noexcept;
 
-    virtual void reset() override;
-    virtual void enable(bool en) override;
-    virtual bool isEnabled() const override;
+    const std::string &getName() const override;
+
+    void enable(bool en) override;
+    bool isEnabled() const override;
+    void reset() override;
 
     const std::vector<OBFilterConfigSchemaItem> &getConfigSchemaVec() override;
     void                                         setConfigValue(const std::string &name, double value) override;
     void                                         setConfigValueSync(const std::string &name, double value) override;
     double                                       getConfigValue(const std::string &name) override;
-    void                                         updateConfigCache(std::vector<std::string> &params);
-
-    // Synchronize
-    virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) override;
 
     // Asynchronous, output result to callback function
-    virtual void pushFrame(std::shared_ptr<const Frame> frame) override;
-    virtual void setCallback(FilterCallback cb) override;
+    void         pushFrame(std::shared_ptr<const Frame> frame) override;
+    void         setCallback(FilterCallback cb) override;
+    virtual void resizeFrameQueue(size_t size) override;
 
 protected:
-    virtual std::shared_ptr<Frame> processFunc(std::shared_ptr<const Frame> frame) = 0;  // Filter function function, implemented on child class
-
-private:
+    void updateConfigCache(std::vector<std::string> &params);
     void checkAndUpdateConfig();
 
-protected:
+private:
     const std::string name_;
     std::atomic<bool> enabled_;
-
-    std::mutex processMutex_;
 
     std::mutex     callbackMutex_;
     FilterCallback callback_;
@@ -56,6 +50,23 @@ protected:
     std::map<std::string, double>         configMap_;
     std::vector<OBFilterConfigSchemaItem> configSchemaVec_;
     std::vector<std::vector<std::string>> configSchemaStrSplittedVec_;
+};
+
+class FilterDecorator : public FilterExtension {
+public:
+    FilterDecorator(const std::string &name, std::shared_ptr<IFilterBase> baseFilter);
+    virtual ~FilterDecorator() noexcept;
+
+    virtual void                   reset() override;
+    virtual void                   updateConfig(std::vector<std::string> &params) override;
+    virtual const std::string     &getConfigSchema() const override;
+    virtual std::shared_ptr<Frame> process(std::shared_ptr<const Frame> frame) override;
+
+    std::shared_ptr<IFilterBase> getBaseFilter() const;
+
+private:
+    std::mutex                   processMutex_;
+    std::shared_ptr<IFilterBase> baseFilter_;
 };
 
 }  // namespace libobsensor

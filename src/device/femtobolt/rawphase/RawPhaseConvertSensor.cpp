@@ -1,5 +1,6 @@
 #include "RawPhaseConvertSensor.hpp"
-#include "IDevice.hpp"
+
+#include "frame/Frame.hpp"
 #include "stream/StreamProfileFactory.hpp"
 
 namespace libobsensor {

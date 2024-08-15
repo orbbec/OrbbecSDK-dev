@@ -12,6 +12,8 @@ int main(void) try {
     // Check if the device supports HDR merge
     if(!device->isPropertySupported(OB_STRUCT_DEPTH_HDR_CONFIG, OB_PERMISSION_READ_WRITE)) {
         std::cerr << "Current default device does not support HDR merge" << std::endl;
+        std::cout << "Press any key to exit...";
+        getchar();
         return -1;
     }
 

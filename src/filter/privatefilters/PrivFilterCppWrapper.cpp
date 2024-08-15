@@ -18,6 +18,7 @@ PrivFilterCppWrapper::PrivFilterCppWrapper(const std::string &filterName, std::s
 }
 
 PrivFilterCppWrapper::~PrivFilterCppWrapper() noexcept {
+    reset();
     LOG_DEBUG("Private filter {} destroyed", name_);
 }
 

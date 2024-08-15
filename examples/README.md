@@ -13,13 +13,13 @@ There are several examples codes for users learn how to use Orbbec cameras. Here
 | stream | [infrared](1.stream.infrared/README.md)    | Use the SDK interface to obtain the camera IR stream and display it in the window. |
 | stream | [imu](1.stream.imu/README.md)    | Use the SDK interface to obtain the camera's internal imu data and output it|
 | stream | [multi_streams](1.stream.multi_streams/README.md)    | Use SDK to obtain multiple camera data streams and output them. |
-| stream | [callback](1.stream.callback/README.md)    | In this sample,user can get the depth、RGB、IR image.This sample also support users can perform user-defined operations such as data acquisition, data processing, and data modification within the callback function. |
+| stream | [callback](1.stream.callback/README.md)    | In this sample, users can obtain depth, RGB, and IR images. This sample also supports performing user-defined operations such as data acquisition, data processing, and data modification within the callback function.|
 | device | [control](2.device.control/README.md)    | The SDK can be used to modify camera-related parameters, including laser switch, laser level intensity, white balance switch, etc. |
 | device | [hot_plugin](2.device.hot_plugin/README.md)    | Use SDK to handle the settings of device unplug callback and process the acquired code stream after unplugging. |
 | device | [net_device](2.device.net_device/README.md)    | To be done. |
-| advanced | [sync_align](3.advanced.sync_align/README.md)    | Use the SDK interface to demonstrate the synchronization and alignment of sensor data streams, display the aligned image, and exit the program using the ESC_KEY key. |
+| advanced | [sync_align](3.advanced.sync_align/README.md)    | Use the SDK interface to demonstrate the synchronization and alignment of sensor data streams, display the aligned image. |
 | advanced | [post_processing](3.advanced.post_processing/README.md)    | Use the SDK interface to  demonstrate post-processing operations, display post-processed images. |
-| advanced | [point_cloud](3.advanced.point_cloud/README.md)    | Connect the device to open the stream, generate a depth point cloud or RGBD point cloud and save it as a ply format file, and exit the program through the ESC_KEY key. |
+| advanced | [point_cloud](3.advanced.point_cloud/README.md)    | Connect the device to open the stream, generate a depth point cloud or RGBD point cloud and save it as a ply format file. |
 | advanced | [preset](3.advanced.preset/README.md)    | Use the SDK interface to set and get the preset value. |
 | advanced | [coordinate_transform](3.advanced.coordinate_transform/README.md)    | Use the SDK interface to  transform different coordinate systems. |
 | advanced | [hdr](1.advanced.hdr/README.md)    | In this sample, user can get the HDR merge image. Also supports user to toggle HDR merge and toggle alternate show origin frame. |

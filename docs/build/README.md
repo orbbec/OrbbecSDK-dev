@@ -39,7 +39,7 @@ cd OpenOrbbecSDK/scripts/build
 
 > More information about how to use Docker, please refer to [README.md](/scripts/docker/README.md).
 
-## Run th Sample
+## Run the Sample
 
 ### Where to find the executable file
 

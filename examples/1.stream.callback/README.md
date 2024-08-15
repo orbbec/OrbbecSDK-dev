@@ -6,11 +6,11 @@ In this sample,user can get the depth、RGB、IR image.This sample also support 
 
 ### Knowledge
 
-Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions.
 
-Device
+Device is a class that can be used to get device information, parameters, and a list of contained sensors.
 
-Sensor
+Sensor can be used to obtain different components of the camera and the stream of the component, for example, RGB, IR, Depth stream can be obtained through the RGB, IR, Depth sensor.
 
 ## code overview
 
@@ -91,8 +91,13 @@ pipe.stop();
 
 ## Run Sample
 
+If you are on Windows, you can switch to the directory `/OpenOrbbecSDK/build/win_XX/bin` to find the `ob_callback.exe`.
+
+If you are on linux, you can switch to the directory `/OpenOrbbecSDK/build/linux_XX/bin` to find the `ob_callback.exe`.
+
+### Key introduction
+
 Press the Esc key in the window to exit the program.
-在窗口中按Esc键退出程序。
 
 ### Result
 

@@ -8,6 +8,7 @@
 #include "publicfilters/FormatConverterProcess.hpp"
 #include "ISensorStreamStrategy.hpp"
 #include "IDevice.hpp"
+#include "component/property/InternalProperty.hpp"
 
 namespace libobsensor {
 
@@ -184,9 +185,37 @@ void VideoSensor::stop() {
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
     vsPort->stopStream(currentBackendStreamProfile_);
 
+    trySendStopStreamVendorCmd();
+
     updateStreamState(STREAM_STATE_STOPPED);
     activatedStreamProfile_.reset();
     frameCallback_ = nullptr;
+}
+
+void VideoSensor::trySendStopStreamVendorCmd() {
+    auto owner      = getOwner();
+    auto propServer = owner->getPropertyServer();
+    auto propertyId = -1;
+    if(propertyId == -1) {
+        switch(sensorType_) {
+        case OB_SENSOR_IR:
+        case OB_SENSOR_IR_LEFT:
+            propertyId = OB_PROP_STOP_IR_STREAM_BOOL;
+            break;
+        case OB_SENSOR_COLOR:
+            propertyId = OB_PROP_STOP_COLOR_STREAM_BOOL;
+            break;
+        case OB_SENSOR_IR_RIGHT:  // follow lumiaozi -- Gemini2 has IR_RIGHT and Depth use same data channel
+        case OB_SENSOR_DEPTH:
+            propertyId = OB_PROP_STOP_DEPTH_STREAM_BOOL;
+            break;
+        default:
+            return;
+        }
+    }
+
+    BEGIN_TRY_EXECUTE(propServer->setPropertyValueT<bool>(propertyId, true);)
+    CATCH_EXCEPTION_AND_LOG(ERROR, "Set property value to stop stream error! @{}", sensorType_);
 }
 
 void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) {

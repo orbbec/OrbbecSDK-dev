@@ -220,6 +220,16 @@ void FemtoBoltDevice::initSensorList() {
             auto accessor = std::make_shared<VendorPropertyAccessor>(this, port);
             return accessor;
         });
+
+        // The device monitor is using the depth port(uvc xu)
+        registerComponent(OB_DEV_COMPONENT_DEVICE_MONITOR, [this, depthPortInfo]() {
+            auto platform      = Platform::getInstance();
+            auto port          = platform->getSourcePort(depthPortInfo);
+            auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
+            auto devMonitor = std::make_shared<DeviceMonitor>(this, port);
+            return devMonitor;
+        });
+
     }
 
     auto colorPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {

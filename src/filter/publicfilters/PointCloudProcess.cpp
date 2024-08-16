@@ -17,7 +17,9 @@ PointCloudFilter::PointCloudFilter()
       tablesDataSize_(0),
       tablesData_(nullptr) {}
 
-PointCloudFilter::~PointCloudFilter() noexcept {}
+PointCloudFilter::~PointCloudFilter() noexcept {
+    reset();
+}
 
 void PointCloudFilter::reset() {
     if(formatConverter_) {

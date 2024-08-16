@@ -80,49 +80,50 @@ std::shared_ptr<const IRFrame> getIRFrameFromFrameSet(std::shared_ptr<const Fram
 bool checkIRAvailability(std::shared_ptr<const DepthFrame> first_depth, std::shared_ptr<const IRFrame> first_ir, std::shared_ptr<const DepthFrame> second_depth,
                          std::shared_ptr<const IRFrame> second_ir) {
 
-    bool use_ir = (first_ir && second_ir);
-
-    if(use_ir) {
-        if((first_depth->getWidth() != first_ir->getWidth()) || (first_depth->getHeight() != first_ir->getHeight())
-           || (second_ir->getWidth() != first_ir->getWidth()) || (second_ir->getHeight() != first_ir->getHeight()))
-            use_ir = false;
-
-        if(use_ir) {
-            auto depth_info = first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-            auto ir_info    = first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-            use_ir          = (depth_info == ir_info);
-
-            if(use_ir) {
-                depth_info = second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-                ir_info    = second_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-                use_ir     = (depth_info == ir_info);
-
-                if(use_ir) {
-                    depth_info = first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-                    ir_info    = first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-                    use_ir     = (depth_info == ir_info);
-
-                    if(use_ir) {
-                        depth_info = second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-                        ir_info    = second_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-                        use_ir     = (depth_info == ir_info);
-
-                        if(use_ir) {
-                            OBFormat format = first_ir->getFormat();
-                            use_ir          = (second_ir->getFormat() == format);
-
-                            if(use_ir) {
-                                // other format not supported yet
-                                use_ir = ((OB_FORMAT_Y8 == format) || (OB_FORMAT_Y16 == format));
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    if(!first_ir && second_ir) {
+        return false;
     }
 
-    return use_ir;
+    if((first_depth->getWidth() != first_ir->getWidth()) || (first_depth->getHeight() != first_ir->getHeight())
+       || (second_ir->getWidth() != first_ir->getWidth()) || (second_ir->getHeight() != first_ir->getHeight())) {
+        return false;
+    }
+
+    try {
+        auto depth_info = first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+        auto ir_info    = first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+        if(depth_info != ir_info) {
+            return false;
+        }
+
+        depth_info = second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+        ir_info    = second_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+        if(depth_info != ir_info) {
+            return false;
+        }
+
+        depth_info = first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+        ir_info    = first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+        if(depth_info != ir_info) {
+            return false;
+        }
+
+        depth_info = second_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+        ir_info    = second_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+        if(depth_info != ir_info) {
+            return false;
+        }
+    }
+    catch(...) {
+        return false;
+    }
+
+    OBFormat first_ir_format  = first_ir->getFormat();
+    OBFormat second_ir_format = second_ir->getFormat();
+    if(first_ir_format != second_ir_format || (second_ir_format != OB_FORMAT_Y8 && second_ir_format != OB_FORMAT_Y16)) {
+        return false;
+    }
+    return true;
 }
 
 HDRMerge::HDRMerge() {}
@@ -162,48 +163,51 @@ std::shared_ptr<Frame> HDRMerge::process(std::shared_ptr<const Frame> frame) {
         std::shared_ptr<Frame> outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
         return outFrame;
     }
+    try {
+        auto depthSeqSize = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE);
+        if(depthSeqSize != 2) {
+            LOG_WARN_INTVL("HDRMerge unsupported to process this frame with sequence size: {}", depthSeqSize);
+            std::shared_ptr<Frame> outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
+            return outFrame;
+        }
 
-    auto depthSeqSize = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE);
-    if(depthSeqSize != 2) {
-        LOG_WARN_INTVL("HDRMerge unsupported to process this frame with sequence size: {}", depthSeqSize);
-        std::shared_ptr<Frame> outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
-        return outFrame;
-    }
+        auto    depth_seq_id = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
+        int64_t frameSize    = static_cast<int64_t>(frames_.size());
+        if(frameSize == depth_seq_id) {
+            frames_[depth_seq_id] = depthFrame;
+        }
 
-    auto    depth_seq_id = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
-    int64_t frameSize    = static_cast<int64_t>(frames_.size());
-    if(frameSize == depth_seq_id) {
-        frames_[depth_seq_id] = depthFrame;
-    }
+        discardDepthMergedFrameIfNeeded(depthFrame);
 
-    discardDepthMergedFrameIfNeeded(depthFrame);
+        if(frames_.size() >= 2) {
+            auto frame_0             = frames_[0];
+            auto frame_0_framenumber = frame_0->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+            auto frame_1             = frames_[1];
+            auto frame_1_framenumber = frame_1->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+            frames_.clear();
 
-    if(frames_.size() >= 2) {
-        auto frame_0             = frames_[0];
-        auto frame_0_framenumber = frame_0->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-        auto frame_1             = frames_[1];
-        auto frame_1_framenumber = frame_1->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-        frames_.clear();
+            // two adjancent frames
+            if(1 == frame_1_framenumber - frame_0_framenumber) {
+                std::shared_ptr<Frame> new_frame = merge(frame_0, frame_1);
+                if(new_frame) {
+                    depth_merged_frame_ = new_frame;
+                }
+            }
+        }
 
-        // two adjancent frames
-        if(1 == frame_1_framenumber - frame_0_framenumber) {
-            std::shared_ptr<Frame> new_frame = merge(frame_0, frame_1);
-            if(new_frame) {
-                depth_merged_frame_ = new_frame;
+        if(depth_merged_frame_) {
+            if(frame->is<FrameSet>()) {
+                auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
+                auto frameSet = outFrame->as<FrameSet>();
+                frameSet->pushFrame(std::move(depth_merged_frame_));
+                return outFrame;
+            }
+            else {
+                return depth_merged_frame_;
             }
         }
     }
-
-    if(depth_merged_frame_) {
-        if(frame->is<FrameSet>()) {
-            auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
-            auto frameSet = outFrame->as<FrameSet>();
-            frameSet->pushFrame(std::move(depth_merged_frame_));
-            return outFrame;
-        }
-        else {
-            return depth_merged_frame_;
-        }
+    catch(...) {
     }
 
     std::shared_ptr<Frame> outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);

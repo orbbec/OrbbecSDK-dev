@@ -89,6 +89,8 @@ uint32_t calcVideoFrameMaxDataSize(OBFormat format, uint32_t width, uint32_t hei
     uint32_t maxFrameDataSize = height * width * 3;
     switch(format) {
     case OB_FORMAT_MJPG:
+        maxFrameDataSize = height * width * 2;
+        break;
     case OB_FORMAT_H264:
     case OB_FORMAT_H265:
     case OB_FORMAT_HEVC:

@@ -8,25 +8,8 @@
 namespace libobsensor {
 FemtoBoltPropertyAccessor::FemtoBoltPropertyAccessor(IDevice *owner) : owner_(owner) {}
 
-uint32_t FemtoBoltPropertyAccessor::getTofProperty(uint32_t propertyId) {
-    switch(propertyId) {
-    case OB_PROP_DEPTH_GAIN_INT:
-    case OB_PROP_IR_GAIN_INT:
-        propertyId = OB_PROP_TOF_GAIN_INT;
-        break;
-    case OB_PROP_IR_EXPOSURE_INT:
-    case OB_PROP_DEPTH_EXPOSURE_INT:
-        propertyId = OB_PROP_TOF_EXPOSURE_TIME_INT;
-        break;
-    default:
-        break;
-    }
-    return propertyId;
-}
 
 void FemtoBoltPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
-    propertyId = getTofProperty(propertyId);
-
     auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     commandPort->setPropertyValue(propertyId, value);
 
@@ -37,7 +20,6 @@ void FemtoBoltPropertyAccessor::setPropertyValue(uint32_t propertyId, OBProperty
 }
 
 void FemtoBoltPropertyAccessor::getPropertyValue(uint32_t propertyId, OBPropertyValue *value) {
-    propertyId = getTofProperty(propertyId);
     auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     commandPort->getPropertyValue(propertyId, value);
 }

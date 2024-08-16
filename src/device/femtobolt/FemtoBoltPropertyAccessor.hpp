@@ -11,9 +11,6 @@ public:
     virtual void setPropertyValue(uint32_t propertyId, OBPropertyValue value) override;
     virtual void getPropertyValue(uint32_t propertyId, OBPropertyValue *value) override;
     virtual void getPropertyRange(uint32_t propertyId, OBPropertyRange *range) override;
-
-    uint32_t getTofProperty(uint32_t propertyId);
-
 private:
     IDevice *owner_;
 };

@@ -57,7 +57,7 @@ void FemtoBoltDevice::init() {
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
     static const std::vector<OBMultiDeviceSyncMode>          supportedSyncModes  = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
-                                                                                     OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_MULTI_DEVICE_SYNC_MODE_SECONDARY };
+                                                                           OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_MULTI_DEVICE_SYNC_MODE_SECONDARY };
     static const std::map<OBMultiDeviceSyncMode, OBSyncMode> syncModeNewToOldMap = { { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_SYNC_MODE_CLOSE },
                                                                                      { OB_MULTI_DEVICE_SYNC_MODE_STANDALONE, OB_SYNC_MODE_STANDALONE },
                                                                                      { OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_SYNC_MODE_PRIMARY_MCU_TRIGGER },
@@ -337,7 +337,7 @@ void FemtoBoltDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
     auto femotboltPropertyAccessor = std::make_shared<FemtoBoltPropertyAccessor>(this);
-    propertyServer->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "r", "r", femotboltPropertyAccessor);
+    // propertyServer->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "r", "r", femotboltPropertyAccessor);
     propertyServer->registerProperty(OB_PROP_SWITCH_IR_MODE_INT, "rw", "rw", femotboltPropertyAccessor);
 
     auto sensors = getSensorTypeList();
@@ -402,6 +402,7 @@ void FemtoBoltDevice::initProperties() {
             propertyServer->registerProperty(OB_STRUCT_GET_GYRO_PRESETS_FULL_SCALE_LIST, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_ACCEL_SWITCH_BOOL, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_GYRO_SWITCH_BOOL, "", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_TOF_EXPOSURE_TIME_INT, "r", "r", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);
@@ -419,7 +420,8 @@ void FemtoBoltDevice::initProperties() {
         }
     }
 
-    propertyServer->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_DEPTH_EXPOSURE_INT);
+    propertyServer->aliasProperty(OB_PROP_IR_EXPOSURE_INT, OB_PROP_TOF_EXPOSURE_TIME_INT);
+    propertyServer->aliasProperty(OB_PROP_DEPTH_EXPOSURE_INT, OB_PROP_TOF_EXPOSURE_TIME_INT);
 
     auto heartbeatPropertyAccessor = std::make_shared<HeartbeatPropertyAccessor>(this);
     propertyServer->registerProperty(OB_PROP_HEARTBEAT_BOOL, "rw", "rw", heartbeatPropertyAccessor);

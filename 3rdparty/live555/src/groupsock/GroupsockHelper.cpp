@@ -395,7 +395,7 @@ int setupStreamSocket(UsageEnvironment &env, Port port, int domain, Boolean make
 
 int readSocket(UsageEnvironment &env, int socket, unsigned char *buffer, unsigned bufferSize, struct sockaddr_storage &fromAddress) {
     SOCKLEN_T addressSize = sizeof fromAddress;
-    int       bytesRead   = recvfrom(socket, (void *)buffer, bufferSize, 0, (struct sockaddr *)&fromAddress,
+    int       bytesRead   = recvfrom(socket, (char *)buffer, bufferSize, 0, (struct sockaddr *)&fromAddress,
                                      reinterpret_cast<socklen_t *>(&addressSize));
     if(bytesRead < 0) {
         //##### HACK to work around bugs in Linux and Windows:

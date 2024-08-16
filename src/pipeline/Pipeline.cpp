@@ -307,6 +307,7 @@ void Pipeline::stop() {
     if(frameAggregator_) {
         frameAggregator_->clearAllFrameQueue();
     }
+    enableHardwareD2C(false);
 
     // flush output frame queue
     outputFrameQueue_->flush();
@@ -563,9 +564,9 @@ void Pipeline::checkHardwareD2CConfig() {
     if(!depthFrameProcessor) {
         return;
     }
+
     if(config_->getAlignMode() != ALIGN_D2C_HW_MODE) {
-        depthFrameProcessor->enableHardwareD2CProcess(false);
-        LOG_DEBUG("current align mode is not hardware d2c mode.");
+        enableHardwareD2C(false);
         return;
     }
     auto algParamManager = device_->getComponentT<IAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
@@ -576,8 +577,17 @@ void Pipeline::checkHardwareD2CConfig() {
         auto d2cProfileList          = algParamManager->getD2CProfileList();
         depthFrameProcessor->setHardwareD2CProcessParams(colorProfile->getWidth(), colorProfile->getHeight(), depthProfile->getWidth(),
                                                          depthProfile->getHeight(), calibrationCameraParams, d2cProfileList);
-        depthFrameProcessor->enableHardwareD2CProcess(true);
+        enableHardwareD2C(true);
     }
+}
+
+void Pipeline::enableHardwareD2C(bool enable){
+    auto frameProcessor      = device_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+    auto depthFrameProcessor = std::dynamic_pointer_cast<DepthFrameProcessor>(frameProcessor.get());
+    if(!depthFrameProcessor) {
+        return;
+    }
+    depthFrameProcessor->enableHardwareD2CProcess(enable);
 }
 
 }  // namespace libobsensor

@@ -80,7 +80,7 @@ std::shared_ptr<const IRFrame> getIRFrameFromFrameSet(std::shared_ptr<const Fram
 bool checkIRAvailability(std::shared_ptr<const DepthFrame> first_depth, std::shared_ptr<const IRFrame> first_ir, std::shared_ptr<const DepthFrame> second_depth,
                          std::shared_ptr<const IRFrame> second_ir) {
 
-    if(!first_ir && second_ir) {
+    if(!first_ir || !second_ir) {
         return false;
     }
 

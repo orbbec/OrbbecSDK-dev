@@ -54,6 +54,8 @@ private:
 
     void checkHardwareD2CConfig();
 
+    void enableHardwareD2C(bool enable);
+
 private:
     std::shared_ptr<IDevice>      device_;
     std::shared_ptr<const Config> config_;

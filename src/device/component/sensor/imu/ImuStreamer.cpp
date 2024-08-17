@@ -15,7 +15,7 @@ ImuStreamer::ImuStreamer(IDevice *owner, const std::shared_ptr<IDataStreamPort> 
     : ImuStreamer(owner, backend, std::vector<std::shared_ptr<IFilter>>({ filter })) {}
 
 ImuStreamer::ImuStreamer(IDevice *owner, const std::shared_ptr<IDataStreamPort> &backend, std::vector<std::shared_ptr<IFilter>> filters)
-    : owner_(owner), backend_(backend), filters_(std::move(filters)) {
+    : owner_(owner), backend_(backend), filters_(std::move(filters)), running_(false) {
     auto iter = filters_.begin();
     while(iter != filters_.end()) {
         (*iter)->resizeFrameQueue(IMU_FILTER_FRAME_QUEUE_SIZE);

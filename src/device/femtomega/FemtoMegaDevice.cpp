@@ -804,8 +804,10 @@ void FemtoMegaNetDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor
         }
     }
 
-    sensor->updateStreamProfileList(ProfileList);
-
+    if(ProfileList.size() != 0){
+        sensor->updateStreamProfileList(ProfileList);
+    }
+    
     auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensorType);
     if(streamProfile) {
         sensor->updateDefaultStreamProfile(streamProfile);

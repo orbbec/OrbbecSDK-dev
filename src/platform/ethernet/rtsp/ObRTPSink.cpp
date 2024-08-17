@@ -420,10 +420,12 @@ void ObRTPSink::outputFrameFunc() {
             output->setDynamicHeaderSize(sizeof(OBNetworkFrameHeader));
             auto header = output->getDynamicHeader<OBNetworkFrameHeader>();
             frame->setTimeStampUsec(header->timestamp);
+            frame->setSystemTimeStampUsec(utils::getNowTimesUs());
             frame->setNumber(header->frameCounter);
         }
         else {
             frame->setTimeStampUsec(output->getTimestamp());
+            frame->setSystemTimeStampUsec(utils::getNowTimesUs());
             frame->setNumber(output->getSequenceNumber());
         }
         frame->updateData(output->getRecvdDataBuffer() + frameOffset, output->getRecvdDataSize() - frameOffset);

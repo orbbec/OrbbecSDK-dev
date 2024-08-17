@@ -55,7 +55,7 @@ FrameTimestampCalculatorDirectly::FrameTimestampCalculatorDirectly(IDevice *devi
 
 void FrameTimestampCalculatorDirectly::calculate(std::shared_ptr<Frame> frame) {
     auto srcTimestamp    = frame->getTimeStampUsec();
-    auto outputTimestamp = static_cast<double>(srcTimestamp) * clockFreq_ / 1000000;
+    auto outputTimestamp = static_cast<double>(srcTimestamp) * 1000000 / clockFreq_;
     frame->setTimeStampUsec(static_cast<uint64_t>(outputTimestamp));
 }
 

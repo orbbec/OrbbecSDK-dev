@@ -138,6 +138,11 @@ void FemtoMegaUsbDevice::initSensorList() {
                 auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
                 sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
 
+                auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+                if(frameProcessor) {
+                    sensor->setFrameProcessor(frameProcessor.get());
+                }
+
                 initSensorStreamProfile(sensor);
                 return sensor;
             },
@@ -346,7 +351,7 @@ void FemtoMegaUsbDevice::initProperties() {
                 return accessor;
             });
 
-            propertyServer->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_FEMTO_MEGA_HARDWARE_D2C_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_MODE_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMESTAMP_OFFSET_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_FAN_WORK_MODE_INT, "rw", "rw", vendorPropertyAccessor);
@@ -502,6 +507,11 @@ void FemtoMegaNetDevice::initSensorList() {
 
                 auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, depthFrameTimeFreq_);
                 sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
+
+                auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+                if(frameProcessor) {
+                    sensor->setFrameProcessor(frameProcessor.get());
+                }
 
                 initSensorStreamProfile(sensor);
                 return sensor;

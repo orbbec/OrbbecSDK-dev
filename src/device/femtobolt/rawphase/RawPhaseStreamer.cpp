@@ -7,7 +7,7 @@
 
 namespace libobsensor {
 RawPhaseStreamer::RawPhaseStreamer(IDevice *owner, const std::shared_ptr<IVideoStreamPort> &backend, std::shared_ptr<DepthEngineLoadFactory> &depthEngineLoader)
-    : owner_(owner), backend_(backend), depthEngineLoader_(depthEngineLoader) {
+    : owner_(owner), backend_(backend), running_(false), depthEngineLoader_(depthEngineLoader) {
     if(depthEngineLoader_ == nullptr) {
         throw invalid_value_exception("depthEngineLoader_ is nullptr");
     }

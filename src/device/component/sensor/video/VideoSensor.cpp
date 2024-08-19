@@ -216,9 +216,9 @@ void VideoSensor::trySendStopStreamVendorCmd() {
             return;
         }
     }
-
-    BEGIN_TRY_EXECUTE(propServer->setPropertyValueT<bool>(propertyId, true);)
-    CATCH_EXCEPTION_AND_LOG(ERROR, "Set property value to stop stream error! @{}", sensorType_);
+    if(propServer->isPropertySupported(propertyId, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)){
+        propServer->setPropertyValueT<bool>(propertyId, true);
+    }
 }
 
 void VideoSensor::updateFormatFilterConfig(const std::vector<FormatFilterConfig> &configs) {

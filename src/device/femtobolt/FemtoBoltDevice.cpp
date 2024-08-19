@@ -345,9 +345,8 @@ void FemtoBoltDevice::initSensorList() {
 void FemtoBoltDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
-    auto femotboltPropertyAccessor = std::make_shared<FemtoBoltPropertyAccessor>(this);
-    // propertyServer->registerProperty(OB_PROP_DEPTH_EXPOSURE_INT, "r", "r", femotboltPropertyAccessor);
-    propertyServer->registerProperty(OB_PROP_SWITCH_IR_MODE_INT, "rw", "rw", femotboltPropertyAccessor);
+    auto femtoBoltPropertyAccessor = std::make_shared<FemtoBoltPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_PROP_SWITCH_IR_MODE_INT, "rw", "rw", femtoBoltPropertyAccessor);
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
@@ -385,6 +384,7 @@ void FemtoBoltDevice::initProperties() {
             propertyServer->registerProperty(OB_PROP_USB_POWER_STATE_INT, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DC_POWER_STATE_INT, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_BOOT_INTO_RECOVERY_MODE_BOOL, "w", "w", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_REBOOT_DEVICE_BOOL, "w", "w", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_ENABLE_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TIMER_RESET_SIGNAL_BOOL, "w", "w", vendorPropertyAccessor);
             //  propertyServer->registerProperty(OB_PROP_DEVICE_IQ_DEBUG_BOOL, "", "rw", vendorPropertyPort);
@@ -415,6 +415,7 @@ void FemtoBoltDevice::initProperties() {
             propertyServer->registerProperty(OB_PROP_STOP_IR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_COLOR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_DEPTH_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);

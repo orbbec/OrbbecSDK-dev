@@ -208,7 +208,7 @@ void VideoSensor::trySendStopStreamVendorCmd() {
         case OB_SENSOR_COLOR:
             propertyId = OB_PROP_STOP_COLOR_STREAM_BOOL;
             break;
-        case OB_SENSOR_IR_RIGHT:  // follow lumiaozi -- Gemini2 has IR_RIGHT and Depth use same data channel
+        case OB_SENSOR_IR_RIGHT:
         case OB_SENSOR_DEPTH:
             propertyId = OB_PROP_STOP_DEPTH_STREAM_BOOL;
             break;
@@ -216,7 +216,7 @@ void VideoSensor::trySendStopStreamVendorCmd() {
             return;
         }
     }
-    if(propServer->isPropertySupported(propertyId, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)){
+    if(propServer->isPropertySupported(propertyId, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
         propServer->setPropertyValueT<bool>(propertyId, true);
     }
 }

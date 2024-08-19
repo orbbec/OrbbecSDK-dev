@@ -437,11 +437,9 @@ const char *ob_device_info_get_connection_type(const ob_device_info *info, ob_er
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 
-const char *ob_device_info_get_ip_address(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
+const char *ob_device_info_get_ip_address(const ob_net_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
-    // return info->info->ipAddress_.c_str();
-    // todo: implement this
-    throw libobsensor::not_implemented_exception("ob_device_info_get_ip_address not implemented");
+    return info->info->ipAddress_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 

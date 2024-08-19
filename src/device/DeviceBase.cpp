@@ -47,6 +47,34 @@ void DeviceBase::fetchDeviceInfo() {
     extensionInfo_["AllSensorsUsingSameClock"] = "true";
 }
 
+void DeviceBase::fetchNetDeviceInfo() {
+    auto propServer                      = getPropertyServer();
+    auto version                         = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
+    netDeviceInfo_                       = std::make_shared<DeviceInfo>();
+    netDeviceInfo_->name_                = version.deviceName;
+    netDeviceInfo_->fwVersion_           = version.firmwareVersion;
+    netDeviceInfo_->deviceSn_            = version.serialNumber;
+    netDeviceInfo_->asicName_            = version.depthChip;
+    netDeviceInfo_->hwVersion_           = version.hardwareVersion;
+    netDeviceInfo_->type_                = static_cast<uint16_t>(version.deviceType);
+    netDeviceInfo_->supportedSdkVersion_ = version.sdkVersion;
+    netDeviceInfo_->pid_                 = enumInfo_->getPid();
+    netDeviceInfo_->vid_                 = enumInfo_->getVid();
+    netDeviceInfo_->uid_                 = enumInfo_->getUid();
+    netDeviceInfo_->connectionType_      = enumInfo_->getConnectionType();
+    auto netSourcePort                   = std::dynamic_pointer_cast<libobsensor::NetSourcePortInfo>(enumInfo_->getSourcePortInfoList()[0]);
+    netDeviceInfo_->ipAddress_           = netSourcePort->address.c_str();
+
+    // remove the prefix "Orbbec " from the device name if contained
+    if(netDeviceInfo_->name_.find("Orbbec ") == 0) {
+        netDeviceInfo_->name_ = netDeviceInfo_->name_.substr(7);
+    }
+    netDeviceInfo_->fullName_ = "Orbbec " + netDeviceInfo_->name_;
+
+    // mark the device as a multi-sensor device with same clock at default
+    extensionInfo_["AllSensorsUsingSameClock"] = "true";
+}
+
 std::shared_ptr<const DeviceInfo> DeviceBase::getInfo() const {
     return deviceInfo_;
 }
@@ -335,10 +363,10 @@ std::shared_ptr<IFilter> DeviceBase::getSensorFrameFilter(const std::string &nam
 }
 
 int DeviceBase::getFirmwareVersionInt() {
-    int  dotCount     = 0;
-    char buf[16]      = { 0 };
+    int    dotCount     = 0;
+    char   buf[16]      = { 0 };
     size_t bufIndex     = 0;
-    int  calFwVersion = 0;
+    int    calFwVersion = 0;
     for(size_t i = 0; i < deviceInfo_->fwVersion_.size(); i++) {
         const char c = deviceInfo_->fwVersion_[i];
         if(isdigit(c) && bufIndex < sizeof(buf)) {

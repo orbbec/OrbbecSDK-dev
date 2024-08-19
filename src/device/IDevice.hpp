@@ -25,6 +25,10 @@ struct DeviceInfo {
     std::string deviceSn_;
 };
 
+struct NetDeviceInfo: public DeviceInfo{
+    std::string ipAddress_;
+}
+
 typedef std::function<void(OBFwUpdateState state, const char *message, uint8_t percent)> DeviceFwUpdateCallback;
 
 class IDevice : public std::enable_shared_from_this<IDevice> {
@@ -86,6 +90,10 @@ struct ob_device_t {
 
 struct ob_device_info_t {
     std::shared_ptr<const libobsensor::DeviceInfo> info;
+};
+
+struct ob_net_device_info_t {
+    std::shared_ptr<const libobsensor::NetDeviceInfo> info;
 };
 
 struct ob_camera_param_list_t{

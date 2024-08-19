@@ -22,6 +22,7 @@ extern "C" {
 typedef struct ob_context_t                   ob_context;
 typedef struct ob_device_t                    ob_device;
 typedef struct ob_device_info_t               ob_device_info;
+typedef struct ob_net_device_info_t           ob_net_device_info;
 typedef struct ob_device_list_t               ob_device_list;
 typedef struct ob_camera_param_list_t         ob_camera_param_list;
 typedef struct ob_sensor_t                    ob_sensor;

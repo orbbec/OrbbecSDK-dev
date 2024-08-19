@@ -58,6 +58,7 @@ public:
 protected:
     // implement on subclass, and must be called to initialize the device info on construction
     virtual void        fetchDeviceInfo();
+    virtual void        fetchNetDeviceInfo();
     virtual void        fetchExtensionInfo();
     DeviceComponentLock tryLockResource();
     int                 getFirmwareVersionInt();
@@ -65,6 +66,7 @@ protected:
 protected:
     const std::shared_ptr<const IDeviceEnumInfo> enumInfo_;
     std::shared_ptr<DeviceInfo>                  deviceInfo_;
+    std::shared_ptr<NetDeviceInfo>               netDeviceInfo_;
     std::map<std::string, std::string>           extensionInfo_;
 
 private:

@@ -37,6 +37,12 @@ void DeviceBase::fetchDeviceInfo() {
     deviceInfo_->uid_                 = enumInfo_->getUid();
     deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
 
+    // remove the prefix "Orbbec " from the device name if contained
+    if(deviceInfo_->name_.find("Orbbec ") == 0) {
+        deviceInfo_->name_ = deviceInfo_->name_.substr(7);
+    }
+    deviceInfo_->fullName_ = "Orbbec " + deviceInfo_->name_;
+
     // mark the device as a multi-sensor device with same clock at default
     extensionInfo_["AllSensorsUsingSameClock"] = "true";
 }

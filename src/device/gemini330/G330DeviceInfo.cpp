@@ -27,6 +27,8 @@ G330DeviceInfo::G330DeviceInfo(const SourcePortInfoList groupedInfoList) {
         name_ = "Gemini 300 series device";
     }
 
+    fullName_ = "Orbbec " + name_;
+
     pid_                = portInfo->pid;
     vid_                = portInfo->vid;
     uid_                = portInfo->uid;
@@ -46,9 +48,9 @@ std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfo::pickDevices(const 
     std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfos;
 
     // pick usb device
-    auto                                          remainder = FilterUSBPortInfoByPid(infoList, G330DevPids);
-    auto                                          groups    = utils::groupVector<std::shared_ptr<const SourcePortInfo>>(remainder, GroupUSBSourcePortByUrl);
-    auto                                          iter      = groups.begin();
+    auto remainder = FilterUSBPortInfoByPid(infoList, G330DevPids);
+    auto groups    = utils::groupVector<std::shared_ptr<const SourcePortInfo>>(remainder, GroupUSBSourcePortByUrl);
+    auto iter      = groups.begin();
     while(iter != groups.end()) {
         if(iter->size() >= 3) {
             auto info = std::make_shared<G330DeviceInfo>(*iter);

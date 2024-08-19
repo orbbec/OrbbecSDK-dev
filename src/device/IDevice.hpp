@@ -14,6 +14,7 @@ struct DeviceInfo {
     int         vid_ = 0;
     std::string uid_;  // Unique identifier of the port the device is connected to (platform specific)
     std::string name_;
+    std::string fullName_;
 
     std::string connectionType_;  // Device connection type
     uint16_t    type_ = 0;        // 0: Monocular disparity based; 1: Binocular disparity based; 2: tof

@@ -19,7 +19,9 @@ public:
           name_(name),
           deviceSn_(deviceSn),
           sourcePortInfoList_(sourcePortInfoList),
-          context_(Context::getInstance()) {}
+          context_(Context::getInstance()) {
+        fullName_ = "Orbbec " + name_;
+    }
 
     DeviceEnumInfoBase() : pid_(0), vid_(0), context_(Context::getInstance()) {}
 
@@ -43,6 +45,10 @@ public:
 
     const std::string &getName() const override {
         return name_;
+    }
+
+    const std::string &getFullName() const override {
+        return fullName_;
     }
 
     const std::string &getDeviceSn() const override {
@@ -79,6 +85,7 @@ protected:
 
     // device info
     std::string name_;
+    std::string fullName_;
     std::string deviceSn_;
 
     // source port info list

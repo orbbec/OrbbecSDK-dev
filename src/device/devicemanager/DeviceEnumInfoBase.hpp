@@ -1,5 +1,5 @@
 #pragma once
-#include "IDeviceEnumerator.hpp"
+#include "IDeviceManager.hpp"
 #include "context/Context.hpp"
 
 #include <string>
@@ -51,6 +51,10 @@ public:
 
     const SourcePortInfoList &getSourcePortInfoList() const override {
         return sourcePortInfoList_;
+    }
+
+    std::shared_ptr<IDeviceManager> getDeviceManager() const override {
+        return context_->getDeviceManager();
     }
 
     bool operator==(const IDeviceEnumInfo &other) const override {

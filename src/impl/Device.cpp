@@ -3,7 +3,7 @@
 #include "ImplTypes.hpp"
 #include "exception/ObException.hpp"
 
-#include "IDeviceEnumerator.hpp"
+#include "IDeviceManager.hpp"
 #include "IProperty.hpp"
 #include "IDevice.hpp"
 #include "IDeviceMonitor.hpp"
@@ -82,7 +82,7 @@ const char *ob_device_list_get_device_ip_address(const ob_device_list *list, uin
         LOG_WARN("get ipAddress() failed! Only valid for Ethernet devices.");
         return "0.0.0.0";
     }
-    
+
     auto sourcePort    = info->getSourcePortInfoList().front();
     auto netSourcePort = std::dynamic_pointer_cast<const libobsensor::NetSourcePortInfo>(sourcePort);
     return netSourcePort->address.c_str();
@@ -92,11 +92,12 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 ob_device *ob_device_list_get_device(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
-    auto &info   = list->list[index];
-    auto  device = info->createDevice();
+    auto &info = list->list[index];
+    auto deviceMgr = info->getDeviceManager();
+    auto device    = deviceMgr->createDevice(info);
 
-    auto impl    = new ob_device();
-    impl->device = device;
+    auto impl      = new ob_device();
+    impl->device   = device;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
@@ -106,9 +107,10 @@ ob_device *ob_device_list_get_device_by_serial_number(const ob_device_list *list
     VALIDATE_NOT_NULL(serial_number);
     for(auto &info: list->list) {
         if(info->getDeviceSn() == serial_number) {
-            auto device  = info->createDevice();
-            auto impl    = new ob_device();
-            impl->device = device;
+            auto deviceMgr = info->getDeviceManager();
+            auto device    = deviceMgr->createDevice(info);
+            auto impl      = new ob_device();
+            impl->device   = device;
             return impl;
         }
     }
@@ -121,9 +123,10 @@ ob_device *ob_device_list_get_device_by_uid(const ob_device_list *list, const ch
     VALIDATE_NOT_NULL(uid);
     for(auto &info: list->list) {
         if(info->getUid() == uid) {
-            auto device  = info->createDevice();
-            auto impl    = new ob_device();
-            impl->device = device;
+            auto deviceMgr = info->getDeviceManager();
+            auto device    = deviceMgr->createDevice(info);
+            auto impl      = new ob_device();
+            impl->device   = device;
             return impl;
         }
     }
@@ -471,10 +474,10 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device, info_key)
 
 ob_camera_param_list *ob_device_get_calibration_camera_param_list(ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
-    auto algParamManager = device->device->getComponentT<libobsensor::IAlgParamManager>(libobsensor::OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
+    auto algParamManager         = device->device->getComponentT<libobsensor::IAlgParamManager>(libobsensor::OB_DEV_COMPONENT_ALG_PARAM_MANAGER, false);
     auto calibrationCameraParams = algParamManager->getCalibrationCameraParamList();
-    auto impl  = new ob_camera_param_list();
-    impl->paramList = calibrationCameraParams;
+    auto impl                    = new ob_camera_param_list();
+    impl->paramList              = calibrationCameraParams;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)
@@ -493,7 +496,7 @@ ob_camera_param ob_camera_param_list_get_param(ob_camera_param_list *list, uint3
 }
 HANDLE_EXCEPTIONS_AND_RETURN(ob_camera_param(), list, index)
 
-void ob_delete_camera_param_list(ob_camera_param_list *list,ob_error **error) BEGIN_API_CALL {
+void ob_delete_camera_param_list(ob_camera_param_list *list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     delete list;
 }

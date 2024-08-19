@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IDevice.hpp"
-#include "IDeviceEnumerator.hpp"
+#include "IDeviceManager.hpp"
 
 #include <memory>
 #include <map>

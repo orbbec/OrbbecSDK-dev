@@ -23,7 +23,7 @@ OBExtrinsic multiplyExtrinsics(const OBExtrinsic &a, const OBExtrinsic &b) {
 }
 
 OBExtrinsic calculateExtrinsics(const std::vector<std::pair<uint64_t, OBExtrinsic>> &path) {
-    OBExtrinsic extrinsics = IdentityExtrinsic;
+    OBExtrinsic extrinsics = IdentityExtrinsics;
     for(auto &pair: path) {
         const OBExtrinsic &transform = pair.second;
         extrinsics                   = multiplyExtrinsics(transform, extrinsics);
@@ -67,93 +67,104 @@ std::shared_ptr<StreamExtrinsicsManager> StreamExtrinsicsManager::getInstance() 
     return instance;
 }
 
-StreamExtrinsicsManager::StreamExtrinsicsManager() : nextId_(0) {}
+StreamExtrinsicsManager::StreamExtrinsicsManager() {}
 
 StreamExtrinsicsManager::~StreamExtrinsicsManager() noexcept = default;
 
-void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const StreamProfile>& from, const std::shared_ptr<const StreamProfile>& to,
+void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const StreamProfile> &from, const std::shared_ptr<const StreamProfile> &to,
                                                  const OBExtrinsic &extrinsics) {
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        cleanExpiredStreamProfiles();  // clean expired stream profiles first
+    }
+
     if(from == nullptr || to == nullptr) {
         throw invalid_value_exception("Invalid stream profile, from or to is null");
     }
 
+    // judge if already registered and if the extrinsics is the same
+    bool alreadyRegistered   = false;
+    bool differentExtrinsics = false;
+    try {
+        auto tryResult    = getExtrinsics(from, to);  // try to get the extrinsics
+        alreadyRegistered = true;
+        if(memcmp(&tryResult, &extrinsics, sizeof(OBExtrinsic)) != 0) {
+            differentExtrinsics = true;
+        }
+    }
+    catch(...) {
+        alreadyRegistered = false;
+    }
+
+    // if already registered, and the extrinsics is the same, then return
+    if(alreadyRegistered && !differentExtrinsics) {
+        LOG_DEBUG("Extrinsics already registered, {} to {}", (uint64_t)from.get(), (uint64_t)to.get());
+        return;
+    }
+
+    // judge if the extrinsics is identity
+    bool isIdentityExtrinsics = (memcmp(&extrinsics, &IdentityExtrinsics, sizeof(OBExtrinsic)) == 0);
+
+    // register the extrinsics
     std::unique_lock<std::mutex> lock(mutex_);
-    cleanExpiredStreamProfiles();
-
-    if(!from || !to) {
-        throw invalid_value_exception("Invalid stream profile");
-    }
-
-    auto fromId = getOrRegisterStreamProfileId(from);
-    auto toId   = getOrRegisterStreamProfileId(to);
-    if(fromId == toId) {  // same id, remove the `from` from the list
+    if(alreadyRegistered) {
+        // if already registered, remove the old one, and then register the new one
         eraseStreamProfile(from);
-        // re-register the `from`
-        fromId = getOrRegisterStreamProfileId(from);
-    }
-
-    bool  found   = false;
-    auto &extList = extrinsicsGraph_[fromId];
-    for(auto &extPair: extList) {
-        if(extPair.first == toId) {
-            extPair.second = extrinsics;
-            LOG_DEBUG("Extrinsics already registered, update the extrinsics, {} to {}", (uint64_t)from.get(), (uint64_t)to.get());
-            found = true;
-            break;
+        auto toId = getOrRegisterStreamProfileId(to);
+        if(isIdentityExtrinsics) {
+            // if the extrinsics is identity, we can just push the `from` stream profile to the list of `toId`
+            streamProfileMap_[toId].push_back(std::weak_ptr<const StreamProfile>(from));
+        }
+        else {
+            auto fromId = getOrRegisterStreamProfileId(from);                             // get or create the id of `from`
+            extrinsicsGraph_[fromId].push_back({ toId, extrinsics });                     // add the extrinsics to the graph: from -> to
+            extrinsicsGraph_[toId].push_back({ fromId, inverseExtrinsics(extrinsics) });  // add the inverse extrinsics to the graph: to -> from
         }
     }
-    if(!found) {
-        extList.push_back(std::make_pair(toId, extrinsics));
-    }
+    else {
+        // if not registered, just register the new one
+        auto fromId = getStreamProfileId(from);
+        auto toId   = getOrRegisterStreamProfileId(to);
+        if(isIdentityExtrinsics) {
+            if(fromId == 0) {
+                // if is identity extrinsics, and the `from` stream profile is not registered, we can just push the `from` stream profile to the list of `toId`
+                streamProfileMap_[toId].push_back(std::weak_ptr<const StreamProfile>(from));
+            }
+            else {
+                // if is identity extrinsics, and the `from` stream profile is registered, we need to move oll the stream profiles from `fromId` to `toId`
+                auto spList = streamProfileMap_[fromId];
+                for(auto it = spList.begin(); it != spList.end(); ++it) {
+                    streamProfileMap_[toId].push_back(*it);
+                }
+                streamProfileMap_.erase(fromId);
 
-    found          = false;
-    auto &extList2 = extrinsicsGraph_[toId];
-    for(auto &extPair: extList2) {
-        if(extPair.first == fromId) {
-            extPair.second = inverseExtrinsics(extrinsics);
-            LOG_DEBUG("Extrinsics already registered, update the extrinsics, {} to {}", (uint64_t)to.get(), (uint64_t)from.get());
-            found = true;
-            break;
+                // after moving the stream profiles, we need to update the extrinsics graph with the new id： `toId`
+                auto &extrPairVec = extrinsicsGraph_[fromId];
+                for(auto &extrPair: extrPairVec) {
+                    auto &toExtrPairVec = extrinsicsGraph_[extrPair.first];
+                    for(auto it = toExtrPairVec.begin(); it != toExtrPairVec.end(); ++it) {
+                        if(it->first == fromId) {
+                            it->first = toId;
+                        }
+                    }
+                }
+                extrinsicsGraph_.erase(fromId);
+            }
         }
-    }
-    if(!found) {
-        extList2.push_back(std::make_pair(fromId, inverseExtrinsics(extrinsics)));
+        else {
+            // if not identity extrinsics, we need to register the extrinsics to the graph
+            if(fromId == 0) {
+                // if the `from` stream profile is not registered, we need to register it first
+                fromId = getOrRegisterStreamProfileId(from);
+            }
+            extrinsicsGraph_[fromId].push_back({ toId, extrinsics });                     // add the extrinsics to the graph: from -> to
+            extrinsicsGraph_[toId].push_back({ fromId, inverseExtrinsics(extrinsics) });  // add the inverse extrinsics to the graph: to -> from
+        }
     }
 }
 
-void StreamExtrinsicsManager::registerSameExtrinsics(const std::shared_ptr<const StreamProfile>& from, const std::shared_ptr<const StreamProfile>& to) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    cleanExpiredStreamProfiles();
-
-    if(!from || !to) {
-        throw invalid_value_exception("Invalid stream profile");
-    }
-
-    auto fromId = getStreamProfileId(from);
-    auto toId   = getStreamProfileId(to);
-
-    if(toId == 0 && fromId != 0) {
-        // exchange: register the `to` stream profile to the fromId
-        streamProfileMap_[fromId].push_back(std::weak_ptr<const StreamProfile>(to));
-    }
-    else if(toId != 0 && fromId == toId) {
-        // fromId and toId are already register as same, do nothing
-    }
-    else if(toId != 0 && fromId != 0) {
-        // erase `from` stream profile and node and then re-register the `from` to the toId
-        eraseStreamProfile(from);
-        streamProfileMap_[toId].push_back(std::weak_ptr<const StreamProfile>(from));
-    }
-    else {
-        // (toId == 0 && fromId == 0）  || （toId != 0 && fromId == 0）
-        if(toId == 0) {
-            // toId is 0, create a new id for `to` and before register the `from` to the same id
-            toId = getOrRegisterStreamProfileId(to);
-        }
-
-        // register the `from` stream profile to the toId
-        streamProfileMap_[toId].push_back(std::weak_ptr<const StreamProfile>(from));
-    }
+void StreamExtrinsicsManager::registerSameExtrinsics(const std::shared_ptr<const StreamProfile> &from, const std::shared_ptr<const StreamProfile> &to) {
+    registerExtrinsics(from, to, IdentityExtrinsics);  // register the identity extrinsics
 }
 
 OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) {
@@ -171,10 +182,10 @@ OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamP
         throw invalid_value_exception("To Stream profile not registered!");
     }
     if(fromId == toId) {
-        return IdentityExtrinsic;
+        return IdentityExtrinsics;
     }
 
-    std::vector<std::pair<uint64_t, OBExtrinsic>> path = { { fromId, IdentityExtrinsic } };
+    std::vector<std::pair<uint64_t, OBExtrinsic>> path = { { fromId, IdentityExtrinsics } };
     if(!searchPath(path, fromId, toId)) {
         throw invalid_value_exception(utils::string::to_string() << "Can not find path to calculate the extrinsics from" << fromId << "to" << toId);
     }
@@ -194,7 +205,7 @@ OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamP
     // Calculate the extrinsics according to the path
     auto extrinsics = calculateExtrinsics(path);
 
-    // register the extrinsics if it is not the identity extrinsics to avoid redundant calculation
+    // register the extrinsics `from`->`to` directly to avoid redundant calculation
     registerExtrinsics(from, to, extrinsics);
 
     return extrinsics;
@@ -244,6 +255,9 @@ bool StreamExtrinsicsManager::searchPath(std::vector<std::pair<uint64_t, OBExtri
 }
 
 void StreamExtrinsicsManager::eraseStreamProfile(std::shared_ptr<const StreamProfile> sp) {
+    if(!sp) {
+        return;
+    }
     auto uid = getStreamProfileId(sp);
     if(uid == 0) {
         return;
@@ -305,10 +319,19 @@ void StreamExtrinsicsManager::cleanExpiredStreamProfiles() {
         if(profileSharedPtrList.empty()) {
             eraseNodeFromExtrinsicsGraph(profileId);
             profileEntry = streamProfileMap_.erase(profileEntry);
+            continue;
         }
-        else {
-            ++profileEntry;
+
+        if(profileSharedPtrList.size() == 1) {
+            auto iter = extrinsicsGraph_.find(profileId);
+            if(iter == extrinsicsGraph_.end() || iter->second.empty()) {
+                eraseNodeFromExtrinsicsGraph(profileId);
+                profileEntry = streamProfileMap_.erase(profileEntry);
+                continue;
+            }
         }
+
+        ++profileEntry;
     }
 }
 
@@ -334,7 +357,13 @@ uint64_t StreamExtrinsicsManager::getOrRegisterStreamProfileId(std::shared_ptr<c
         }
         ++spIter;
     }
-    auto uid = ++nextId_;
+    uint64_t uid = 1;
+    for(uint64_t i = 1; i < 0xFFFFFFFFFFFFFFFF; ++i) {
+        if(streamProfileMap_.find(i) == streamProfileMap_.end()) {
+            uid = i;  // find a unique id
+            break;
+        }
+    }
     streamProfileMap_[uid].push_back(std::weak_ptr<const StreamProfile>(profile));
     return uid;
 }

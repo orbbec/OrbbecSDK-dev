@@ -306,7 +306,7 @@ void DeviceManager::enableNetDeviceEnumeration(bool enable) {
 #endif
 }
 
-bool DeviceManager::isNetDeviceEnumerationEnable() {
+bool DeviceManager::isNetDeviceEnumerationEnable() const {
 #if defined(BUILD_NET_PAL)
 
     auto iter = std::find_if(deviceEnumerators_.begin(), deviceEnumerators_.end(), [](const std::shared_ptr<IDeviceEnumerator> &enumerator) {  //

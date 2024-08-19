@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDeviceEnumerator.hpp"
+#include "IDeviceManager.hpp"
 #include "IDeviceWatcher.hpp"
 #include "Platform.hpp"
 

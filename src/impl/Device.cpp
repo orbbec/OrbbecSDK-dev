@@ -30,7 +30,7 @@ const char *ob_device_list_get_device_name(const ob_device_list *list, uint32_t 
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
     auto &info = list->list[index];
-    return info->getName().c_str();
+    return info->getFullName().c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 
@@ -391,7 +391,7 @@ HANDLE_EXCEPTIONS_NO_RETURN(info)
 
 const char *ob_device_info_get_name(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
-    return info->info->name_.c_str();
+    return info->info->fullName_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 

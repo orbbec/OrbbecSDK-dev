@@ -35,6 +35,8 @@ private:
     void initSensorStreamProfile(std::shared_ptr<ISensor> sensor);
     void fetchAllProfileList();
 
+    void fetchDeviceInfo() override;
+
 private:
     uint64_t deviceTimeFreq_     = 1000;
     uint64_t depthFrameTimeFreq_ = 1000;

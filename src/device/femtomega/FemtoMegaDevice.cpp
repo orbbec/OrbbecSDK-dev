@@ -29,7 +29,7 @@
 #include "utils/BufferParser.hpp"
 #include "utils/PublicTypeHelper.hpp"
 
-#include "FemtoMegaTempPropertyAccessor.hpp"
+#include "FemtoMegaPropertyAccessor.hpp"
 
 // todo: move net mode code to a independent file and class.
 #if defined(BUILD_NET_PAL)
@@ -469,6 +469,36 @@ void FemtoMegaNetDevice::init() {
 
     auto deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, deviceTimeFreq_);
     registerComponent(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, deviceClockSynchronizer);
+}
+
+void FemtoMegaNetDevice::fetchDeviceInfo() {
+    auto propServer                   = getPropertyServer();
+    auto version                      = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
+    auto deviceInfo                   = std::make_shared<NetDeviceInfo>();
+    auto portInfo                     = enumInfo_->getSourcePortInfoList().front();
+    auto netPortInfo                  = std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo);
+    deviceInfo->ipAddress_            = netPortInfo->address;
+    deviceInfo_                       = deviceInfo;
+    deviceInfo_->name_                = version.deviceName;
+    deviceInfo_->fwVersion_           = version.firmwareVersion;
+    deviceInfo_->deviceSn_            = version.serialNumber;
+    deviceInfo_->asicName_            = version.depthChip;
+    deviceInfo_->hwVersion_           = version.hardwareVersion;
+    deviceInfo_->type_                = static_cast<uint16_t>(version.deviceType);
+    deviceInfo_->supportedSdkVersion_ = version.sdkVersion;
+    deviceInfo_->pid_                 = enumInfo_->getPid();
+    deviceInfo_->vid_                 = enumInfo_->getVid();
+    deviceInfo_->uid_                 = enumInfo_->getUid();
+    deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
+
+    // remove the prefix "Orbbec " from the device name if contained
+    if(deviceInfo_->name_.find("Orbbec ") == 0) {
+        deviceInfo_->name_ = deviceInfo_->name_.substr(7);
+    }
+    deviceInfo_->fullName_ = "Orbbec " + deviceInfo_->name_;
+
+    // mark the device as a multi-sensor device with same clock at default
+    extensionInfo_["AllSensorsUsingSameClock"] = "true";
 }
 
 void FemtoMegaNetDevice::initSensorList() {

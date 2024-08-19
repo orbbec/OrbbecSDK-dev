@@ -12,7 +12,7 @@ public:
     virtual const std::vector<uint8_t> &getStructureData(uint32_t propertyId) override;
 
 private:
-    IDevice *owner_;
+    IDevice             *owner_;
     std::vector<uint8_t> tempData_;
 };
 }  // namespace libobsensor

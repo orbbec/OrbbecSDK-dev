@@ -345,8 +345,11 @@ void FemtoBoltDevice::initSensorList() {
 void FemtoBoltDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
-    auto femtoBoltPropertyAccessor = std::make_shared<FemtoBoltPropertyAccessor>(this);
-    propertyServer->registerProperty(OB_PROP_SWITCH_IR_MODE_INT, "rw", "rw", femtoBoltPropertyAccessor);
+    auto irModePropertyAccessor = std::make_shared<FemtoBoltIrModePropertyAccessor>(this);
+    propertyServer->registerProperty(OB_PROP_SWITCH_IR_MODE_INT, "rw", "rw", irModePropertyAccessor);
+
+    auto tempPropertyAccessor = std::make_shared<FemtoBoltTempPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", tempPropertyAccessor);
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
@@ -415,7 +418,7 @@ void FemtoBoltDevice::initProperties() {
             propertyServer->registerProperty(OB_PROP_STOP_IR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_COLOR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_DEPTH_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, "rw", "rw", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);

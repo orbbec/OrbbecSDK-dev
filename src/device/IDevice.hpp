@@ -25,9 +25,9 @@ struct DeviceInfo {
     std::string deviceSn_;
 };
 
-struct NetDeviceInfo: public DeviceInfo{
+struct NetDeviceInfo : public DeviceInfo {
     std::string ipAddress_;
-}
+};
 
 typedef std::function<void(OBFwUpdateState state, const char *message, uint8_t percent)> DeviceFwUpdateCallback;
 

@@ -1,4 +1,4 @@
-#include "FemtoMegaTempPropertyAccessor.hpp"
+#include "FemtoMegaPropertyAccessor.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
 #include "sensor/video/DisparityBasedSensor.hpp"
 #include "IDeviceComponent.hpp"
@@ -6,7 +6,6 @@
 
 namespace libobsensor {
 FemtoMegaTempPropertyAccessor::FemtoMegaTempPropertyAccessor(IDevice *owner) : owner_(owner) {}
-
 
 void FemtoMegaTempPropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
     utils::unusedVar(propertyId);
@@ -20,7 +19,7 @@ const std::vector<uint8_t> &FemtoMegaTempPropertyAccessor::getStructureData(uint
 
     auto                       commandPort = owner_->getComponentT<IStructureDataAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     const std::vector<uint8_t> tempData    = commandPort->getStructureData(OB_STRUCT_DEVICE_TEMPERATURE);
-    OBDeviceTemperature tempParam;
+    OBDeviceTemperature        tempParam;
     memset(&tempParam, 0, sizeof(OBDeviceTemperature));
     memcpy(&tempParam, tempData.data(), sizeof(OBDeviceTemperature));
 
@@ -33,7 +32,7 @@ const std::vector<uint8_t> &FemtoMegaTempPropertyAccessor::getStructureData(uint
     tempParam.tecTemp        = 0;
 
     memcpy(tempData_.data(), &tempParam, sizeof(OBDeviceTemperature));
- 
+
     return tempData_;
 }
 

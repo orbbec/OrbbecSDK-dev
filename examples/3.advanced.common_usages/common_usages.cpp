@@ -329,6 +329,10 @@ std::shared_ptr<ob::FrameSet> fileterAlign(std::shared_ptr<ob::FrameSet> framese
 }
 void handleFrameset(std::shared_ptr<ob::FrameSet> frameset) {
     auto alignFrameSet = fileterAlign(frameset);
+    //If no depthframe is present, it is discarded
+    if(frameset->getCount() < 3) {
+        return;
+    }
     win->pushFramesToView(alignFrameSet);
 }
 

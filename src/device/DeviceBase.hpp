@@ -58,7 +58,6 @@ public:
 protected:
     // implement on subclass, and must be called to initialize the device info on construction
     virtual void        fetchDeviceInfo();
-    virtual void        fetchNetDeviceInfo();
     virtual void        fetchExtensionInfo();
     DeviceComponentLock tryLockResource();
     int                 getFirmwareVersionInt();

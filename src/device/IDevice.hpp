@@ -91,11 +91,6 @@ struct ob_device_t {
 struct ob_device_info_t {
     std::shared_ptr<const libobsensor::DeviceInfo> info;
 };
-
-struct ob_net_device_info_t {
-    std::shared_ptr<const libobsensor::NetDeviceInfo> info;
-};
-
 struct ob_camera_param_list_t{
     std::vector<OBCameraParam>  paramList;
 };

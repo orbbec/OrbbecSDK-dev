@@ -437,7 +437,7 @@ void FemtoMegaNetDevice::init() {
     initSensorList();
     initProperties();
 
-    fetchNetDeviceInfo();
+    fetchDeviceInfo();
     fetchExtensionInfo();
     fetchAllProfileList();
 

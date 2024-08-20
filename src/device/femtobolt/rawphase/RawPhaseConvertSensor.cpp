@@ -23,9 +23,8 @@ RawPhaseConvertSensor::~RawPhaseConvertSensor() noexcept {
     LOG_DEBUG("RawPhaseConvertSensor is destroyed!");
 }
 
-void   RawPhaseConvertSensor::updateStreamProfileList(const StreamProfileList &profileList){
+void RawPhaseConvertSensor::updateStreamProfileList(const StreamProfileList &profileList) {
     (void)profileList;
-
 }
 void RawPhaseConvertSensor::updateStreamProfileList() {
     auto oldSp = streamProfileList_;
@@ -33,16 +32,23 @@ void RawPhaseConvertSensor::updateStreamProfileList() {
     for(auto &sp: oldSp) {
         auto profile    = std::dynamic_pointer_cast<const VideoStreamProfile>(sp);
         auto resolution = std::make_pair(profile->getWidth(), profile->getHeight());
-        auto iter       = std::find_if(
-            profileVector_.begin(), profileVector_.end(),
-            [resolution](const std::pair<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>> &pair) { return pair.first == resolution; });
-        auto valueIter = std::find_if(
-            profileVector_.begin(), profileVector_.end(),
-            [resolution](const std::pair<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>> &pair) { return pair.second == resolution; });
-        if(iter == profileVector_.end() && valueIter != profileVector_.end()) {
 
+        auto iter = std::find_if(profileVector_.begin(), profileVector_.end(),
+                                 [resolution](const std::pair<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>> &pair) {  //
+                                     return pair.first == resolution;
+                                 });
+
+        auto valueIter = std::find_if(profileVector_.begin(), profileVector_.end(),
+                                      [resolution](const std::pair<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>> &pair) {  //
+                                          return pair.second == resolution;
+                                      });
+
+        if(iter == profileVector_.end() && valueIter != profileVector_.end()) {
             auto newSp = StreamProfileFactory::createVideoStreamProfile(profile->getType(), profile->getFormat(), (*valueIter).first.first,
                                                                         (*valueIter).first.second, profile->getFps());
+            if(newSp->getWidth() == 1024 && (newSp->getFps() == 30 || newSp->getFps() == 25)) {
+                continue;
+            }
             streamProfileList_.push_back(newSp);
 
             if((*valueIter).first.first == 320 && (*valueIter).first.second == 288) {
@@ -61,13 +67,13 @@ void RawPhaseConvertSensor::start(std::shared_ptr<const StreamProfile> sp, Frame
     auto propServer = owner->getPropertyServer();
 
     if(sensorType_ == OB_SENSOR_DEPTH || sensorType_ == OB_SENSOR_IR) {
-        if(!streamer_){
+        if(!streamer_) {
             throw libobsensor::unsupported_operation_exception("The streamer is nullptr.");
         }
         auto streamSp = sp->as<VideoStreamProfile>();
         streamer_->start(streamSp, [this](std::shared_ptr<const Frame> frame) {
             auto dsp = frame->getStreamProfile();
-            if(dsp!=activatedStreamProfile_){
+            if(dsp != activatedStreamProfile_) {
                 throw invalid_value_exception("The stream profile is not activated.");
             }
             updateStreamState(STREAM_STATE_STREAMING);

@@ -25,7 +25,7 @@ bool findBestMatchedD2CProfile(const std::vector<OBD2CProfile> &d2cProfileList, 
 
         auto streamType = profile->getType();
         if((streamType == OB_STREAM_DEPTH || streamType == OB_STREAM_IR || streamType == OB_STREAM_IR_LEFT || streamType == OB_STREAM_IR_RIGHT)
-           && static_cast<uint32_t>(d2cProfile.depthWidth) == profile->getWidth() && static_cast<uint32_t>(d2cProfile.depthWidth) == profile->getHeight()) {
+           && static_cast<uint32_t>(d2cProfile.depthWidth) == profile->getWidth() && static_cast<uint32_t>(d2cProfile.depthHeight) == profile->getHeight()) {
             found  = true;
             result = d2cProfile;
             break;
@@ -131,8 +131,26 @@ void AlgParamManagerBase::bindIntrinsic(std::vector<std::shared_ptr<const Stream
             }
 
             const auto &calibrationCameraParamList = getCalibrationCameraParamList();
-            const auto &param                      = calibrationCameraParamList.at(d2cProfile.paramIndex);
+            auto        param                      = calibrationCameraParamList.at(d2cProfile.paramIndex);
             auto        postProcessParam           = d2cProfile.postProcessParam;
+
+            // Fix intrinsic from calibration to d2c profile according to the ratio of resolution
+            auto ratio = static_cast<float>(d2cProfile.depthWidth) / param.depthIntrinsic.width;
+            {
+                param.rgbIntrinsic.fx *= ratio;
+                param.rgbIntrinsic.fy *= ratio;
+                param.rgbIntrinsic.cx *= ratio;
+                param.rgbIntrinsic.cy *= ratio;
+                param.rgbIntrinsic.width  = static_cast<int16_t>(static_cast<float>(param.rgbIntrinsic.width) * ratio);
+                param.rgbIntrinsic.height = static_cast<int16_t>(static_cast<float>(param.rgbIntrinsic.height) * ratio);
+
+                param.depthIntrinsic.fx *= ratio;
+                param.depthIntrinsic.fy *= ratio;
+                param.depthIntrinsic.cx *= ratio;
+                param.depthIntrinsic.cy *= ratio;
+                param.depthIntrinsic.width  = static_cast<int16_t>(static_cast<float>(param.depthIntrinsic.width) * ratio);
+                param.depthIntrinsic.height = static_cast<int16_t>(static_cast<float>(param.depthIntrinsic.height) * ratio);
+            }
 
             auto streamType = sp->getType();
             if(streamType == OB_STREAM_COLOR) {
@@ -161,7 +179,8 @@ void AlgParamManagerBase::bindIntrinsic(std::vector<std::shared_ptr<const Stream
                     static_cast<int16_t>(postProcessParam.depthScale * intrinsic.height + postProcessParam.alignTop + postProcessParam.alignBottom);
             }
 
-            auto ratio = (float)vsp->getWidth() / (float)intrinsic.width;
+            // Fix intrinsic from calculation to actual according to the ratio of resolution
+            ratio = (float)vsp->getWidth() / (float)intrinsic.width;
             intrinsic.fx *= ratio;
             intrinsic.fy *= ratio;
             intrinsic.cx *= ratio;

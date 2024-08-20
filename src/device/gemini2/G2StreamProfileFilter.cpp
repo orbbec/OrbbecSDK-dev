@@ -79,12 +79,7 @@ void G2StreamProfileFilter::fetchEffectiveStreamProfiles() {
     auto profiles            = effectiveStreamProfilesParse(data);
     effectiveStreamProfiles_ = profiles;
     for(auto &profile: profiles) {
-        if(profile.sensorType == OB_SENSOR_DEPTH && profile.format == OB_FORMAT_RLE) {
-            auto nerProfile   = profile;
-            nerProfile.format = OB_FORMAT_Y16;
-            effectiveStreamProfiles_.push_back(nerProfile);
-        }
-        else if(profile.sensorType == OB_SENSOR_COLOR && profile.format == OB_FORMAT_MJPG) {
+        if(profile.sensorType == OB_SENSOR_COLOR && profile.format == OB_FORMAT_MJPG) {
             auto nerProfile   = profile;
             nerProfile.format = OB_FORMAT_RGB;
             effectiveStreamProfiles_.push_back(nerProfile);

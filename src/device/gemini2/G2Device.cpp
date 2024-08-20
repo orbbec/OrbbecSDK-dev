@@ -95,7 +95,8 @@ void G2Device::init() {
             deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, deviceTimeFreq_);
         }
         else {
-            deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, frameTimeFreq_);
+            deviceTimeFreq_         = 1000000;
+            deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, 1000);
         }
         return deviceClockSynchronizer;
     });
@@ -171,10 +172,10 @@ void G2Device::initSensorList() {
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REPLACE, OB_FORMAT_MJPG, OB_FORMAT_RLE, nullptr },
                 };
-                auto formatConverter = getSensorFrameFilter("FrameUnpacker", OB_SENSOR_DEPTH, false);
-                if(formatConverter) {
-                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_Y16, formatConverter });
-                }
+                // auto formatConverter = getSensorFrameFilter("FrameUnpacker", OB_SENSOR_DEPTH, false);
+                // if(formatConverter) {
+                //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_Y16, formatConverter });
+                // }
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
 
                 auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();

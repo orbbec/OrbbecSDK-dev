@@ -172,25 +172,6 @@ std::shared_ptr<IPal> createNetPal() {
     return std::make_shared<EthernetPal>();
 }
 
-std::shared_ptr<NetSourcePortInfo> EthernetPal::queryNetVendorPort(std::string address, uint16_t port) {
-    // todo：move this code to device business layer
-    //  SourcePortInfoList list;
-    // auto               netVendorPortInfo = std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, address, DEFAULT_CMD_PORT);
-    // auto               netVendorPort     = std::make_shared<VendorNetDataPort>(netVendorPortInfo);
-    auto pid = PID_FEMTO_MEGA;
-    // todo: fixme
-    // auto               Protocol          = std::make_shared<Protocol>(netVendorPort);
-    // auto               command           = std::make_shared<VendorCommand>(Protocol);
-    // TRY_EXECUTE({
-    //     OBPropertyValue pidValue{};
-    //     command->getPropertyValue(OB_PROP_PID_INT, &pidValue);
-    //     pid = pidValue.intValue;
-    // });
-
-    // The port numbers of all currently adapted devices are 8090 (DEFAULT_CMD_PORT) and cannot be changed.
-    return std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, address, DEFAULT_CMD_PORT, address + ":" + std::to_string(port), "Unknown", pid);
-}
-
 bool EthernetPal::changeNetDeviceIpConfig(std::string ipAddress, const OBNetIpConfig &config) {
     utils::unusedVar(ipAddress);
     utils::unusedVar(config);
@@ -202,6 +183,7 @@ bool EthernetPal::changeNetDeviceIpConfig(std::string ipAddress, const OBNetIpCo
 }
 
 SourcePortInfoList EthernetPal::queryAssociatedNetSourcePort(const std::shared_ptr<NetSourcePortInfo> info) {
+    // todo: refactor this code, move it to device business layer
     SourcePortInfoList list;
 
     // todo: move this call to device business layer

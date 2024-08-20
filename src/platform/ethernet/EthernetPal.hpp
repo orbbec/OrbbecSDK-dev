@@ -34,7 +34,6 @@ public:
     EthernetPal() {}
     ~EthernetPal() = default;
 
-    std::shared_ptr<NetSourcePortInfo> queryNetVendorPort(std::string address, uint16_t port);
     SourcePortInfoList                 queryAssociatedNetSourcePort(const std::shared_ptr<NetSourcePortInfo> info);
 
     bool changeNetDeviceIpConfig(std::string ip, const OBNetIpConfig &config);

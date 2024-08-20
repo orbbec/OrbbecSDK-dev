@@ -86,8 +86,6 @@ void RawPhaseConvertSensor::start(std::shared_ptr<const StreamProfile> sp, Frame
 
 void RawPhaseConvertSensor::stop() {
     updateStreamState(STREAM_STATE_STOPPING);
-    auto owner      = getOwner();
-    auto propServer = owner->getPropertyServer();
     streamer_->stop(activatedStreamProfile_);
     updateStreamState(STREAM_STATE_STOPPED);
 }

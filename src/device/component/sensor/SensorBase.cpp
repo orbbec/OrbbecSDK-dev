@@ -78,12 +78,11 @@ void SensorBase::updateStreamProfileList(const StreamProfileList &profileList) {
 void SensorBase::updateDefaultStreamProfile(const std::shared_ptr<const StreamProfile> &profile) {
     std::shared_ptr<const StreamProfile> defaultProfile;
     auto                                 aa = profile->as<VideoStreamProfile>();
-    LOG_DEBUG("defProfile:w:{},h:{},fps:{},format:{}", aa->getWidth(), aa->getHeight(), aa->getFps(), aa->getFormat());
+    LOG_DEBUG("Set default stream profile to: {}", profile);
     for(auto iter = streamProfileList_.begin(); iter != streamProfileList_.end(); ++iter) {
         if((*iter)->is<VideoStreamProfile>() && profile->is<VideoStreamProfile>()) {
             auto vsp    = (*iter)->as<VideoStreamProfile>();
             auto vspCmp = profile->as<VideoStreamProfile>();
-            LOG_DEBUG("List:w:{},h:{},fps:{},format:{}", vsp->getWidth(), vsp->getHeight(), vsp->getFps(), vsp->getFormat());
             if(vsp->getFormat() == vspCmp->getFormat() && vsp->getWidth() == vspCmp->getWidth() && vsp->getHeight() == vspCmp->getHeight()
                && vsp->getFps() == vspCmp->getFps()) {
                 defaultProfile = *iter;

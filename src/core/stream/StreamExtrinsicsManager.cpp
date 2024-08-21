@@ -86,10 +86,12 @@ void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const Str
     bool alreadyRegistered   = false;
     bool differentExtrinsics = false;
     try {
-        auto tryResult    = getExtrinsics(from, to);  // try to get the extrinsics
-        alreadyRegistered = true;
-        if(memcmp(&tryResult, &extrinsics, sizeof(OBExtrinsic)) != 0) {
-            differentExtrinsics = true;
+        if(hasExtrinsics(from, to)) {
+            auto tryResult    = getExtrinsics(from, to);  // try to get the extrinsics
+            alreadyRegistered = true;
+            if(memcmp(&tryResult, &extrinsics, sizeof(OBExtrinsic)) != 0) {
+                differentExtrinsics = true;
+            }
         }
     }
     catch(...) {
@@ -98,7 +100,7 @@ void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const Str
 
     // if already registered, and the extrinsics is the same, then return
     if(alreadyRegistered && !differentExtrinsics) {
-        LOG_DEBUG("Extrinsics already registered, {} to {}", (uint64_t)from.get(), (uint64_t)to.get());
+        // LOG_TRACE("Extrinsics already registered, {} to {}", (uint64_t)from.get(), (uint64_t)to.get());
         return;
     }
 
@@ -165,6 +167,32 @@ void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const Str
 
 void StreamExtrinsicsManager::registerSameExtrinsics(const std::shared_ptr<const StreamProfile> &from, const std::shared_ptr<const StreamProfile> &to) {
     registerExtrinsics(from, to, IdentityExtrinsics);  // register the identity extrinsics
+}
+
+bool StreamExtrinsicsManager::hasExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) {
+    if(!from || !to) {
+        return false;
+    }
+
+    auto fromId = getStreamProfileId(from);
+    if(fromId == 0) {
+        return false;
+    }
+    auto toId = getStreamProfileId(to);
+    if(toId == 0) {
+        return false;
+    }
+
+    if(fromId == toId) {
+        return true;
+    }
+
+    std::vector<std::pair<uint64_t, OBExtrinsic>> path = { { fromId, IdentityExtrinsics } };
+    if(!searchPath(path, fromId, toId)) {
+        return false;
+    }
+
+    return true;
 }
 
 OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) {

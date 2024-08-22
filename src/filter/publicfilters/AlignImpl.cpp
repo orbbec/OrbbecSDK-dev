@@ -135,28 +135,61 @@ void AlignImpl::reset() {
     initialized_ = false;
 }
 
-float estimateInflectionPoint(ob_camera_distortion disto) {
+float polynomial(float x, float a, float b, float c, float d) {
+    return (a * x * x * x + b * x * x + c * x + d);
+}
+
+float binarySearch(float left, float right, float a, float b, float c, float d, float tolerance = 1e-4) {
+    while((right - left) > tolerance) {
+        float mid   = (left + right) / 2.f;
+        float f_mid = polynomial(mid, a, b, c, d);
+        if(fabs(f_mid) < tolerance)
+            return mid;
+        else if(f_mid * polynomial(left, a, b, c, d) < 0)
+            right = mid;
+        else
+            left = mid;
+    }
+    return (left + right) / 2.f;
+}
+
+float estimateInflectionPoint(ob_camera_intrinsic depth_intr, ob_camera_intrinsic rgb_intr, ob_camera_distortion disto) {
     float result = 0.f;
     if(OB_DISTORTION_BROWN_CONRADY_K6 == disto.model) {
         // with k6 distortion model, the denominator (involving k4~k6) should should not be zero
-        // the following solves the polynominal function with trigonometric solution
+        // the following solves the polynominal function with binary search
         // then a inflection point should be labeled there
-        std::complex<double> c = disto.k4, b = disto.k5, a = 3.0 * disto.k6;
-        std::complex<double> q = b * b - a * c;
-        std::complex<double> sq = sqrt(q);
-        std::complex<double> t  = (2.0 * q * b - a * (b * c - 3.0 * a)) / (2.0 * q * sq);
-        std::complex<double> theta = acos(t) / 3.0;
-        std::complex<double> stheta = sin(theta);
-        std::complex<double> ctheta = cos(theta);
-        std::complex<double> x  = (-b - 2.0 * sq * ctheta) / a;
-        if(x.imag() == 0.0)
-            result = static_cast<float>(x.real());
-        x = (-b + sq * (ctheta + sqrt(3.0) * stheta)) / a;
-        if(x.imag() == 0.0 && x.real() < result)
-            result = static_cast<float>(x.real());
-        x = (-b + sq * (ctheta - sqrt(3.0) * stheta)) / a;
-        if(x.imag() == 0.0 && x.real() < result)
-            result = static_cast<float>(x.real());
+        float r2_min = 0.f, r2_max = 0.f;
+        {
+			float r2[2];
+			ob_camera_intrinsic intrs[] = { depth_intr, rgb_intr };
+			for(int i = 0; i < 2; i++) {
+				ob_camera_intrinsic intr = intrs[i];
+				float u = (intr.cx > (intr.width - intr.cx)) ? intr.cx : (intr.width - intr.cx),
+					  v = (intr.cy > (intr.height - intr.cy)) ? intr.cy : (intr.height - intr.cy);
+				float x = u / intr.fx, y = v / intr.fy;
+				r2[i] = x * x + y * y;
+			}
+			if(r2[0] > r2[1]) {
+				r2_max = r2[0], r2_min = r2[1];
+			}
+			else {
+				r2_max = r2[1], r2_min = r2[0];
+			}
+        }
+
+		float c = disto.k4, b = disto.k5, a = disto.k6, d = 1.f;
+        float prevX = r2_min;
+        float prevF = polynomial(prevX, a, b, c, d);
+        for(float r2 = prevX + 0.1f; r2 <= r2_max; r2 += 0.1f) {
+            float f = polynomial(r2, a, b, c, d);
+            if(prevF * f <= 0) {
+                result = binarySearch(prevX, r2, a, b, c, d);
+                break;
+            }
+            prevX = r2;
+            prevF = f;
+        }
     }
     return result;
 }
@@ -166,7 +199,7 @@ void AlignImpl::prepareDepthResolution() {
 
     // There may be outliers due to possible inflection points of the calibrated K6 distortion curve;
     if(add_target_distortion_) {
-        r2_max_loc_     = estimateInflectionPoint(rgb_disto_);
+        r2_max_loc_     = estimateInflectionPoint(depth_intric_, rgb_intric_, rgb_disto_);
         r2_max_loc_sse_ = _mm_set_ps1(r2_max_loc_);
     }
 

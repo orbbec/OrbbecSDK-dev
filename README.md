@@ -31,7 +31,7 @@ More devices support will be added in the near future. If you can not find your 
 
 ## 2. Download
 
-The latest release of the SDK can be downloaded from the [releases page](https://github.com/orbbec/OpenOrbbecSDK/releases).
+The latest release of the SDK can be downloaded from the [releases page](https://github.com/orbbec/OrbbecSDK-dev/releases).
 
 The Orbbec Viewer to connect Orbbec RGB-D cameras and experience the features can be downloaded from here: [Orbbec Viewer](TODO: add link)
 
@@ -59,7 +59,7 @@ For the developers who want to contribute to the SDK, please refer to the [devel
 ### 3.5 FAQ
 Most frequently asked questions can be found in the [FAQ](docs/FAQ.md) file.
 
-More asked and answered questions can be found in the [issues](https://github.com/orbbec/OpenOrbbecSDK/issues) channel. Use key words for searching may help you find the answer you are looking for.
+More asked and answered questions can be found in the [issues](https://github.com/orbbec/OrbbecSDK-dev/issues) channel. Use key words for searching may help you find the answer you are looking for.
 
 ## 4. Gallery
 
@@ -94,13 +94,13 @@ pipe.stop();
 
 ## 5. Contributing
 Currently, we are not accepting external contributions to expand the functionality of the SDK. But we will be happy to review any pull requests or suggestions you may have.
-Please contact us at [issues](https://github.com/orbbec/OpenOrbbecSDK/issues) channel if you have any questions or concerns.
+Please contact us at [issues](https://github.com/orbbec/OrbbecSDK-dev/issues) channel if you have any questions or concerns.
 
 ## 6. License
 This project is licensed under the MIT License with some other licenses for third-party libraries and extensions - see the [LICENSE](LICENSE.txt) file for details.
 
 ## 7. Links
-* [Orbbec SDK Open Source Version Repo](https://github.com/orbbec/OpenOrbbecSDK)
+* [Orbbec SDK Open Source Version Repo](https://github.com/orbbec/OrbbecSDK-dev)
 * [Orbbec SDK Close Source Version Repo](https://github.com/orbbec/OrbbecSDK)
 * [Orbbec Main Page](https://www.orbbec.com/)
 * [Orbbec 3D Club](https://3dclub.orbbec3d.com)

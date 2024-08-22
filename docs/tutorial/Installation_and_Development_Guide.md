@@ -6,7 +6,7 @@ This is a comprehensive guide on installing the SDK, setting up the development 
 
 ### 1.Download and Install
 
-- Download the zip package "openorbbecsdk_v2.x.x_xxx.zip" from [https://github.com/orbbec/OpenOrbbecSDK/releases](https://github.com/orbbec/OpenOrbbecSDK/releases).
+- Download the zip package "openorbbecsdk_v2.x.x_xxx.zip" from [https://github.com/orbbec/OrbbecSDK-dev/releases](https://github.com/orbbec/OrbbecSDK-dev/releases).
 - Unzip the openorbbecsdk to the directory you want
 
 ### 2.Environment Setup

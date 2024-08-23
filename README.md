@@ -43,7 +43,7 @@ For a comprehensive guide on installing the SDK, setting up your development env
 
 For practical examples on utilizing the SDK, refer to the [Examples](examples/README.md) section for more insights.
 
-To learn how to effectively use the Orbbec Viewer, please refer to the Orbbec Viewer User Guide. (TODO: Replace the placeholder with the actual link when available.)
+To learn how to effectively use the Orbbec Viewer, please refer to the [Orbbec Viewer User Guide](./docs/tutorial/OrbbecViewer.md).
 
 ### 2.2 API Reference
 
@@ -52,6 +52,7 @@ API Reference: [Orbbec_SDK_API_Reference.html](https://orbbec.github.io/OrbbecSD
 OrbbecSDK C++ API user guide：[Orbbec_SDK_C++_API_user_guide-v1.0.pdf](https://orbbec.github.io/OrbbecSDK-dev/doc/tutorial/English/OrbbecSDK_C++_API_user_guide-v1.0.pdf)
 
 ### 3.3 Building from Source
+
 For building the SDK from source, please refer to the [build guide](docs/build/Building_Orbbec_SDK.md) for more information.
 
 ### 2.4 Developer Guide
@@ -108,7 +109,8 @@ Please contact us at [issues](https://github.com/orbbec/OrbbecSDK-dev/issues) ch
 This project is licensed under the MIT License with some other licenses for third-party libraries and extensions - see the [LICENSE](LICENSE.txt) file for details.
 
 ## 7. Links
-* [Orbbec SDK Open Source Version Repo](https://github.com/orbbec/OrbbecSDK-dev)
-* [Orbbec SDK Close Source Version Repo](https://github.com/orbbec/OrbbecSDK)
-* [Orbbec Main Page](https://www.orbbec.com/)
-* [Orbbec 3D Club](https://3dclub.orbbec3d.com)
+
+- [Orbbec SDK Open Source Version Repo](https://github.com/orbbec/OrbbecSDK-dev)
+- [Orbbec SDK Close Source Version Repo](https://github.com/orbbec/OrbbecSDK)
+- [Orbbec Main Page](https://www.orbbec.com/)
+- [Orbbec 3D Club](https://3dclub.orbbec3d.com)

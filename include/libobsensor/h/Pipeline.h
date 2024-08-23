@@ -289,7 +289,6 @@ OB_EXPORT void ob_config_set_depth_scale_after_align_require(ob_config *config, 
  */
 OB_EXPORT void ob_config_set_frame_aggregate_output_mode(ob_config *config, ob_frame_aggregate_output_mode mode, ob_error **error);
 
-
 /**
  * @brief Get current camera parameters
  * @attention If D2C is enabled, it will return the camera parameters after D2C, if not, it will return to the default parameters
@@ -311,7 +310,8 @@ ob_camera_param ob_pipeline_get_camera_param(ob_pipeline *pipeline, ob_error **e
  * @param[out] error Log error messages
  * @return ob_camera_param returns camera internal parameters
  */
-OB_EXPORT ob_camera_param ob_pipeline_get_camera_param_with_profile(ob_pipeline *pipeline, uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth, uint32_t depthHeight, ob_error **error);
+OB_EXPORT ob_camera_param ob_pipeline_get_camera_param_with_profile(ob_pipeline *pipeline, uint32_t colorWidth, uint32_t colorHeight, uint32_t depthWidth,
+                                                                    uint32_t depthHeight, ob_error **error);
 
 /**
  * @brief Get device calibration parameters with the specified configuration
@@ -323,10 +323,7 @@ OB_EXPORT ob_camera_param ob_pipeline_get_camera_param_with_profile(ob_pipeline 
  */
 ob_calibration_param ob_pipeline_get_calibration_param(ob_pipeline *pipeline, ob_config *config, ob_error **error);
 
-/**
- * In order to be compatible with the closed source version of orbbecsdk's interface.
- * We recommend using the latest interface names for a better experience.
- */
+// The following interfaces are deprecated and are retained here for compatibility purposes.
 #define ob_config_set_depth_scale_require ob_config_set_depth_scale_after_align_require
 
 #ifdef __cplusplus

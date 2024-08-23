@@ -108,7 +108,7 @@ Please contact us at [issues](https://github.com/orbbec/OrbbecSDK-dev/issues) ch
 
 This project is licensed under the MIT License with some other licenses for third-party libraries and extensions - see the [LICENSE](LICENSE.txt) file for details.
 
-## 7. Links
+## 6. Links
 
 - [Orbbec SDK Open Source Version Repo](https://github.com/orbbec/OrbbecSDK-dev)
 - [Orbbec SDK Close Source Version Repo](https://github.com/orbbec/OrbbecSDK)

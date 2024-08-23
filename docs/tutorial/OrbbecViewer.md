@@ -48,7 +48,6 @@ OrbbecViewer allows the user to select and configure depth, infrared and color d
 
 The OrbbecViewer tool allows the user to select a combination of depth, infrared and color data streams. User can enable/disable the stream by checking/unchecking from the list of available streams. The viewer supports both USB2.0 and USB3.0, so the available configuration parameters will vary depending on the USB2.0/USB3.0 capabilities.
 
-
 ###  Resolution and Frame Rate
 
 The cameras provide users with a choice of resolutions to suit their solution needs. Each data stream provides a variety of optional frame formats for users to freely choose the appropriate combination of image size, image format and frame rate.

@@ -55,7 +55,7 @@ When the script executes successfully, it will generate the sample executable in
 
 - If the camera needs an independent power supply, plug it in first, and then connect the camera to the host computer with a usb cable.
 
-- Enter the bin directory of the orbbecsdk unzipper directory, open the terminal (power shell for windows), and run the example
+- Enter the bin directory of the Orbbec SDK unzipped directory, open the terminal (power shell for windows), and run the example
 
 ```shell
 cd bin

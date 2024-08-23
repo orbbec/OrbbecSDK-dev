@@ -216,11 +216,8 @@ private:
         filter->callback_(std::make_shared<Frame>(frame));
     }
 
-    /**
-     * In order to be compatible with the closed source version of orbbecsdk's interface.
-     * We recommend using the latest interface names for a better experience.
-     */
 public:
+    // The following interfaces are deprecated and are retained here for compatibility purposes.
     virtual const char *type(){
         return getName().c_str();
     }
@@ -323,11 +320,9 @@ public:
         setConfigValue("coordinateSystemType", static_cast<double>(type));
     }
 
-    /**
-     * In order to be compatible with the closed source version of orbbecsdk's interface.
-     * We recommend using the latest interface names for a better experience.
-     */
-    OB_DEPRECATED void setPositionDataScaled(float scale){
+public:
+    // The following interfaces are deprecated and are retained here for compatibility purposes.
+    void setPositionDataScaled(float scale){
         setCoordinateDataScaled(scale);
     }
 };

@@ -594,11 +594,7 @@ OB_EXPORT ob_camera_param ob_camera_param_list_get_param(ob_camera_param_list *p
  */
 OB_EXPORT void ob_delete_camera_param_list(ob_camera_param_list *param_list, ob_error **error);
 
-
-/**
- * In order to be compatible with the closed source version of orbbecsdk's interface.
- * We recommend using the latest interface names for a better experience.
- */
+// The following interfaces are deprecated and are retained here for compatibility purposes.
 #define ob_device_list_device_count ob_device_list_get_count
 #define ob_device_list_get_extension_info ob_device_info_get_extension_info
 #define ob_device_upgrade ob_device_update_firmware

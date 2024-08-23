@@ -12,7 +12,7 @@ VendorPropertyAccessor::VendorPropertyAccessor(IDevice *owner, const std::shared
     }
 }
 
-void VendorPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void VendorPropertyAccessor::setPropertyValue(uint32_t propertyId, const OBPropertyValue &value) {
     std::lock_guard<std::mutex> lock(mutex_);
     clearBuffers();
     auto req = protocol::initSetPropertyReq(sendData_.data(), propertyId, value.intValue);

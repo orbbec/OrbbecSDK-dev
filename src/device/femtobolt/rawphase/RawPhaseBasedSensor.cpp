@@ -21,7 +21,7 @@ void RawPhaseBasedSensor::trySendStopStreamVendorCmd() {
 
 void RawPhaseBasedSensor::refreshStreamProfiles() {
     auto streamProfileList = getStreamProfileList();
-    auto defaultSp         = getDefaultStreamProfile();
+    auto defaultSp         = streamProfileList.front();
 
     auto owner         = getOwner();
     auto vsPort        = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);

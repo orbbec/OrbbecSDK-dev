@@ -104,8 +104,8 @@ Add the following lines to the CMakeLists.txt file:
 ```cmake
 add_executable(MyOrbbecApp src/main.cpp)
 
-set(openobsdk_DIR lib/openorbbecsdk/lib)
-find_package(openobsdk REQUIRED)
+set(OrbbecSDK_DIR lib/openorbbecsdk/lib)
+find_package(OrbbecSDK REQUIRED)
 
-target_link_libraries(MyOrbbecApp ob::openobsdk)
+target_link_libraries(MyOrbbecApp ob::OrbbecSDK)
 ```

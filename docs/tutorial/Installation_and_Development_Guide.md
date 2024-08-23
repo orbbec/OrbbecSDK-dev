@@ -1,4 +1,4 @@
-# Tutorial
+# Installation and Development Guide
 
 This is a comprehensive guide on installing the SDK, setting up the development environment, running the sample programs and developing the application.
 
@@ -6,8 +6,8 @@ This is a comprehensive guide on installing the SDK, setting up the development 
 
 ### 1.Download and Install
 
-- Download the zip package "openorbbecsdk_v2.x.x_xxx.zip" from [https://github.com/orbbec/OrbbecSDK-dev/releases](https://github.com/orbbec/OrbbecSDK-dev/releases).
-- Unzip the openorbbecsdk to the directory you want
+- Download the zip package "OrbbecSDK_v2.x.x_xxx.zip" from [https://github.com/orbbec/OrbbecSDK-dev/releases](https://github.com/orbbec/OrbbecSDK-dev/releases).
+- Unzip the OrbbecSDK to the directory you want
 
 ### 2.Environment Setup
 
@@ -55,7 +55,7 @@ When the script executes successfully, it will generate the sample executable in
 
 - If the camera needs an independent power supply, plug it in first, and then connect the camera to the host computer with a usb cable.
 
-- Enter the bin directory of the openorbbecsdk unzipper directory, open the terminal (power shell for windows), and run the example
+- Enter the bin directory of the orbbecsdk unzipper directory, open the terminal (power shell for windows), and run the example
 
 ```shell
 cd bin
@@ -79,7 +79,7 @@ MyOrbbecApp/
     └── (optional custom header files)
 ```
 
-### 2.Add the OpenOrbbecSDK to the Project
+### 2.Add the OrbbecSDK to the Project
 
 Create a lib directory in the project and unpack the Orbbec SDK library files into this lib directory.
 
@@ -93,18 +93,18 @@ MyOrbbecApp/
 ├── include/
 │   └── (optional custom header files)
 └── lib/
-    └── openorbbecsdk
+    └── orbbecsdk
         └── (Orbbec SDK library files)
 ```
 
-### 3.Config the CMakeLists.txt to Link the OpenOrbbecSDK
+### 3.Config the CMakeLists.txt to Link the OrbbecSDK
 
 Add the following lines to the CMakeLists.txt file:
 
 ```cmake
 add_executable(MyOrbbecApp src/main.cpp)
 
-set(openobsdk_DIR lib/openorbbecsdk/lib)
+set(openobsdk_DIR lib/OrbbecSDK-dev/lib)
 find_package(openobsdk REQUIRED)
 
 target_link_libraries(MyOrbbecApp ob::openobsdk)

@@ -1,4 +1,4 @@
-# Open Orbbec SDK
+# Orbbec SDK
 
 ## 1. Introduction
 
@@ -46,12 +46,12 @@ For practical examples on utilizing the SDK, refer to the [Examples](examples/RE
 To learn how to effectively use the Orbbec Viewer, please refer to the Orbbec Viewer User Guide. (TODO: Replace the placeholder with the actual link when available.)
 
 ### 3.2 API Reference
-API Reference: [Orbbec_SDK_API_Reference.html](https://orbbec.github.io/OrbbecSDK/doc/api/English/index.html)
+API Reference: [Orbbec_SDK_API_Reference.html](https://orbbec.github.io/OrbbecSDK-dev/doc/api/English/index.html)
 
-OrbbecSDK C++ API user guide：[Orbbec_SDK_C++_API_user_guide-v1.0.pdf](https://orbbec.github.io/OrbbecSDK/doc/tutorial/English/OrbbecSDK_C++_API_user_guide-v1.0.pdf)
+OrbbecSDK C++ API user guide：[Orbbec_SDK_C++_API_user_guide-v1.0.pdf](https://orbbec.github.io/OrbbecSDK-dev/doc/tutorial/English/OrbbecSDK_C++_API_user_guide-v1.0.pdf)
 
 ### 3.3 Building from Source
-For building the SDK from source, please refer to the [build guide](docs/build/Building_Open_Orbbec_SDK.md) for more information.
+For building the SDK from source, please refer to the [build guide](docs/build/Building_Orbbec_SDK.md) for more information.
 
 ### 3.4 Developer Guide
 For the developers who want to contribute to the SDK, please refer to the [developer guide](docs/developer/Contributing_to_Open_Orbbec_SDK.md) for more information.

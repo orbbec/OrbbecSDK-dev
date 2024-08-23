@@ -83,9 +83,9 @@ Sensor can be used to obtain different components of the camera and the stream o
 
 ## Run Sample
 
-If you are on Windows, you can switch to the directory `/OpenOrbbecSDK/build/win_XX/bin` to find the `ob_callback.exe`.
+If you are on Windows, you can switch to the directory `OrbbecSDK-dev/build/win_XX/bin` to find the `ob_callback.exe`.
 
-If you are on linux, you can switch to the directory `/OpenOrbbecSDK/build/linux_XX/bin` to find the `ob_callback.exe`.
+If you are on linux, you can switch to the directory `OrbbecSDK-dev/build/linux_XX/bin` to find the `ob_callback`.
 
 ### Key introduction
 

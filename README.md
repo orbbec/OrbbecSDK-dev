@@ -49,11 +49,10 @@ To learn how to effectively use the Orbbec Viewer, please refer to the Orbbec Vi
 
 API Reference: [Orbbec_SDK_API_Reference.html](https://orbbec.github.io/OrbbecSDK/doc/api/English/index.html)
 
-OrbbecSDK C++ API user guide：[Orbbec_SDK_C++_API_user_guide-v1.0.pdf](https://orbbec.github.io/OrbbecSDK/doc/tutorial/English/OrbbecSDK_C++_API_user_guide-v1.0.pdf)
+OrbbecSDK C++ API user guide：[Orbbec_SDK_C++_API_user_guide-v1.0.pdf](https://orbbec.github.io/OrbbecSDK-dev/doc/tutorial/English/OrbbecSDK_C++_API_user_guide-v1.0.pdf)
 
-### 2.3 Building from Source
-
-For building the SDK from source, please refer to the [build guide](docs/build/Building_Open_Orbbec_SDK.md) for more information.
+### 3.3 Building from Source
+For building the SDK from source, please refer to the [build guide](docs/build/Building_Orbbec_SDK.md) for more information.
 
 ### 2.4 Developer Guide
 
@@ -63,7 +62,7 @@ For the developers who want to contribute to the SDK, please refer to the [devel
 
 Most frequently asked questions can be found in the [FAQ](docs/FAQ.md) file.
 
-More asked and answered questions can be found in the [issues](https://github.com/orbbec/OpenOrbbecSDK/issues) channel. Use key words for searching may help you find the answer you are looking for.
+More asked and answered questions can be found in the [issues](https://github.com/orbbec/OrbbecSDK-dev/issues) channel. Use key words for searching may help you find the answer you are looking for.
 
 ## 3. Gallery
 
@@ -102,15 +101,14 @@ pipe.stop();
 ## 4. Contributing
 
 Currently, we are not accepting external contributions to expand the functionality of the SDK. But we will be happy to review any pull requests or suggestions you may have.
-Please contact us at [issues](https://github.com/orbbec/OpenOrbbecSDK/issues) channel if you have any questions or concerns.
+Please contact us at [issues](https://github.com/orbbec/OrbbecSDK-dev/issues) channel if you have any questions or concerns.
 
 ## 5. License
 
 This project is licensed under the MIT License with some other licenses for third-party libraries and extensions - see the [LICENSE](LICENSE.txt) file for details.
 
-## 6. Links
-
-- [Orbbec SDK Open Source Version Repo](https://github.com/orbbec/OpenOrbbecSDK)
-- [Orbbec SDK Close Source Version Repo](https://github.com/orbbec/OrbbecSDK)
-- [Orbbec Main Page](https://www.orbbec.com/)
-- [Orbbec 3D Club](https://3dclub.orbbec3d.com)
+## 7. Links
+* [Orbbec SDK Open Source Version Repo](https://github.com/orbbec/OrbbecSDK-dev)
+* [Orbbec SDK Close Source Version Repo](https://github.com/orbbec/OrbbecSDK)
+* [Orbbec Main Page](https://www.orbbec.com/)
+* [Orbbec 3D Club](https://3dclub.orbbec3d.com)

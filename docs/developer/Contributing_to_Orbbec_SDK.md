@@ -1,4 +1,4 @@
-# Contribute to the Open Orbbec SDK
+# Contributing to Orbbec SDK
 
 If you would like to contribute to this open source project, please follow these steps:
 
@@ -6,7 +6,7 @@ If you would like to contribute to this open source project, please follow these
 
 - This step is to ensure that make a copy of this project and place it in your own GitHub account.
 - Repository is Github's way of raising usage items, and fork is its copy
-- Make sure you are on the Open Orbbec SDK repository's [main page](https://github.com/orbbec/OrbbecSDK).
+- Make sure you are on the Orbbec SDK repository's [main page](https://github.com/orbbec/OrbbecSDK-dev).
 ![Click](/docs/resource/developer_fork.png)
 ![Fork](/docs/resource/developer_fork2.png)
 
@@ -22,7 +22,7 @@ Please switch to the fork in your own account.
 - Go back to your local folder and open git bash.
 
 ```bash
-git clone https://github.com/orbbec/OrbbecSDK.git
+git clone https://github.com/orbbec/OrbbecSDK-dev.git
 ```
 
 **Step3:Create a new branch**
@@ -30,7 +30,7 @@ git clone https://github.com/orbbec/OrbbecSDK.git
 - After clone the repository, switch to the repository folder.
 
 ```bash
-cd OrbbecSDK
+cd OrbbecSDK-dev
 ```
 
 - Create a new branch to work on. `your_branch_name` is a custom name

@@ -4,17 +4,28 @@
 #include "IDeviceComponent.hpp"
 #include "property/InternalProperty.hpp"
 #include "rawphase/RawPhaseStreamer.hpp"
+#include "rawphase/RawPhaseBasedSensor.hpp"
 
 namespace libobsensor {
-FemtoBoltIrModePropertyAccessor::FemtoBoltIrModePropertyAccessor(IDevice *owner) : owner_(owner) {}
+FemtoBoltIrModePropertyAccessor::FemtoBoltIrModePropertyAccessor(IDevice *owner) : owner_(owner) {
+    // OBPropertyValue value;
+    // value.intValue = 0;
+    // setPropertyValue(OB_PROP_SWITCH_IR_MODE_INT, value);
+}
 
-void FemtoBoltIrModePropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void FemtoBoltIrModePropertyAccessor::setPropertyValue(uint32_t propertyId, const OBPropertyValue &value) {
     auto commandPort = owner_->getComponentT<IBasicPropertyAccessor>(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR);
     commandPort->setPropertyValue(propertyId, value);
 
     if(propertyId == OB_PROP_SWITCH_IR_MODE_INT) {
-        auto rawphaseStreamer = owner_->getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
-        rawphaseStreamer->setIsPassiveIR((bool)value.intValue);
+        auto rawPhaseStreamer = owner_->getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
+        rawPhaseStreamer->enablePassiveIRMode((bool)value.intValue);
+
+        auto depthSensor = owner_->getComponentT<RawPhaseBasedSensor>(OB_DEV_COMPONENT_DEPTH_SENSOR);
+        depthSensor->refreshStreamProfiles();
+
+        auto irSensor = owner_->getComponentT<RawPhaseBasedSensor>(OB_DEV_COMPONENT_IR_SENSOR);
+        irSensor->refreshStreamProfiles();
     }
 }
 

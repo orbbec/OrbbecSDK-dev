@@ -25,8 +25,7 @@
 #include "syncconfig/DeviceSyncConfigurator.hpp"
 
 #include "rawphase/RawPhaseStreamer.hpp"
-#include "rawphase/RawPhaseConvertSensor.hpp"
-#include "rawphase/depthengine/DepthEngineLoader.hpp"
+#include "rawphase/RawPhaseBasedSensor.hpp"
 
 #include "publicfilters/FormatConverterProcess.hpp"
 #include "publicfilters/IMUCorrector.hpp"
@@ -119,26 +118,13 @@ void FemtoBoltDevice::initSensorList() {
 
     if(depthPortInfoIter != sourcePortInfoList.end()) {
         auto depthPortInfo = *depthPortInfoIter;
-        registerComponent(OB_DEV_COMPONENT_DEPTH_ENGINE_LOADER_FACTORY, [this]() {
-            std::shared_ptr<DepthEngineLoadFactory> factory;
-            TRY_EXECUTE({ factory = std::make_shared<DepthEngineLoadFactory>(this); })
-            return factory;
-        });
         registerComponent(OB_DEV_COMPONENT_RAW_PHASE_STREAMER, [this, depthPortInfo]() {
             auto platform = Platform::getInstance();
             auto port     = platform->getSourcePort(depthPortInfo);
 
-            auto depthEngineLoader    = getComponentT<DepthEngineLoadFactory>(OB_DEV_COMPONENT_DEPTH_ENGINE_LOADER_FACTORY);
-            auto depthEngineLoaderPtr = depthEngineLoader.get();
-
             auto                              dataStreamPort = std::dynamic_pointer_cast<IVideoStreamPort>(port);
             std::shared_ptr<RawPhaseStreamer> rawPhaseStreamer;
-            BEGIN_TRY_EXECUTE({
-                rawPhaseStreamer = std::make_shared<RawPhaseStreamer>(this, dataStreamPort, depthEngineLoaderPtr);
-                if(rawPhaseStreamer) {
-                    rawPhaseStreamer->setNvramDataStreamStopFunc([&]() { LOG_INFO("setNvramDataStreamStopFunc succeed"); });
-                }
-            })
+            BEGIN_TRY_EXECUTE({ rawPhaseStreamer = std::make_shared<RawPhaseStreamer>(this, dataStreamPort); })
             CATCH_EXCEPTION_AND_LOG(WARN, "create RawPhaseStreamer failed.")
 
             return rawPhaseStreamer;
@@ -146,11 +132,8 @@ void FemtoBoltDevice::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_DEPTH_SENSOR,
             [this, depthPortInfo]() {
-                auto platform                  = Platform::getInstance();
-                auto port                      = platform->getSourcePort(depthPortInfo);
                 auto rawPhaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
-                auto rawphaseStreamerSharedPtr = rawPhaseStreamer.get();
-                auto sensor                    = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_DEPTH, rawphaseStreamerSharedPtr);
+                auto sensor                    = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_DEPTH, rawPhaseStreamer.get());
 
                 auto videoFrameTimestampCalculator = std::make_shared<FrameTimestampCalculatorOverUvcSCR>(this, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator);
@@ -165,7 +148,7 @@ void FemtoBoltDevice::initSensorList() {
 
                 auto propServer     = getPropertyServer();
                 auto passiveIrValue = propServer->getPropertyValueT<int>(OB_PROP_SWITCH_IR_MODE_INT);
-                rawPhaseStreamer->setIsPassiveIR(static_cast<bool>(passiveIrValue));
+                rawPhaseStreamer->enablePassiveIRMode(static_cast<bool>(passiveIrValue));
 
                 initSensorStreamProfile(sensor);
                 return sensor;
@@ -187,7 +170,7 @@ void FemtoBoltDevice::initSensorList() {
                 auto platform         = Platform::getInstance();
                 auto port             = platform->getSourcePort(depthPortInfo);
                 auto rawPhaseStreamer = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
-                auto sensor           = std::make_shared<RawPhaseConvertSensor>(this, port, OB_SENSOR_IR, rawPhaseStreamer.get());
+                auto sensor           = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_IR, rawPhaseStreamer.get());
 
                 auto videoFrameTimestampCalculator = std::make_shared<FrameTimestampCalculatorOverUvcSCR>(this, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator);
@@ -226,10 +209,9 @@ void FemtoBoltDevice::initSensorList() {
             auto platform      = Platform::getInstance();
             auto port          = platform->getSourcePort(depthPortInfo);
             auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
-            auto devMonitor = std::make_shared<DeviceMonitor>(this, port);
+            auto devMonitor    = std::make_shared<DeviceMonitor>(this, port);
             return devMonitor;
         });
-
     }
 
     auto colorPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {
@@ -364,7 +346,6 @@ void FemtoBoltDevice::initProperties() {
             });
 
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyAccessor);
@@ -414,11 +395,12 @@ void FemtoBoltDevice::initProperties() {
             propertyServer->registerProperty(OB_PROP_ACCEL_SWITCH_BOOL, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_GYRO_SWITCH_BOOL, "", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_TOF_EXPOSURE_TIME_INT, "r", "r", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_COLOR_HDR_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_IR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_COLOR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_DEPTH_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_COLOR_HDR_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);

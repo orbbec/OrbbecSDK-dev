@@ -8,7 +8,7 @@ namespace libobsensor {
 Astra2Disp2DepthPropertyAccessor::Astra2Disp2DepthPropertyAccessor(IDevice *owner)
     : owner_(owner), hwDisparityToDepthEnabled_(true), swDisparityToDepthEnabled_(false) {}
 
-void Astra2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, OBPropertyValue value) {
+void Astra2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, const OBPropertyValue &value) {
     switch(propertyId) {
     case OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL: {
         auto processor = owner_->getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR);

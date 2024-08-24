@@ -317,8 +317,8 @@ void FemtoMegaUsbDevice::initSensorList() {
 void FemtoMegaUsbDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
-    auto femotMegaTempPropertyAccessor = std::make_shared<FemtoMegaTempPropertyAccessor>(this);
-    propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", femotMegaTempPropertyAccessor);
+    auto femtoMegaTempPropertyAccessor = std::make_shared<FemtoMegaTempPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", femtoMegaTempPropertyAccessor);
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
@@ -333,7 +333,7 @@ void FemtoMegaUsbDevice::initProperties() {
             });
 
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyAccessor);
+            // propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyAccessor);
@@ -404,6 +404,7 @@ void FemtoMegaUsbDevice::initProperties() {
             propertyServer->registerProperty(OB_PROP_STOP_COLOR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_DEPTH_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_REBOOT_DEVICE_BOOL, "w", "w", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", vendorPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);
@@ -710,8 +711,8 @@ void FemtoMegaNetDevice::initSensorList() {
 void FemtoMegaNetDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
-    auto femotMegaTempPropertyAccessor = std::make_shared<FemtoMegaTempPropertyAccessor>(this);
-    propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", femotMegaTempPropertyAccessor);
+    auto femtoMegaTempPropertyAccessor = std::make_shared<FemtoMegaTempPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", femtoMegaTempPropertyAccessor);
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {

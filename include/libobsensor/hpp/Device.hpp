@@ -25,6 +25,7 @@ class DeviceInfo;
 class SensorList;
 class DevicePresetList;
 class OBDepthWorkModeList;
+class CameraParamList;
 
 class Device {
 public:

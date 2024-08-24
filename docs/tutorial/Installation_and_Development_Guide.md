@@ -4,7 +4,7 @@ This is a comprehensive guide on installing the SDK, setting up the development 
 
 ## Step-by-Step Guide
 
-### 1.Download and Install
+****### 1.Download the precompiled SDK package
 
 - Download the zip package "OrbbecSDK_v2.x.x_xxx.zip" from [https://github.com/orbbec/OrbbecSDK-dev/releases](https://github.com/orbbec/OrbbecSDK-dev/releases).
 - Unzip the OrbbecSDK to the directory you want
@@ -13,24 +13,18 @@ This is a comprehensive guide on installing the SDK, setting up the development 
 
 #### windows
 
-##### 1. Configure OpenCV
-
-> Examples dependency, This is not required, but you will have to install OpenCV if you want to build the examples yourself.
-
-Data rendering relies on the third-party library OpenCV. Here we take OpenCV 4.3.0 as an example to demonstrate the installation configuration.
-
-- Execute the OpenCV installation file, select the directory where opencv is to be installed, and click extract to execute the installation.
-- Add the path of OpenCV in the environment variables of the system, enter OpenCV_DIR for the variable name, pay attention to the capitalization of the letters, and the variable value is the path to the build folder of the OpenCV installation directory.
-
-##### 2. Metadata registration
-
-For windows,you need to register the metadata associated with frames (this includes things like timestamps and other information about the video frame).
+For windows, you need to register the metadata associated with frames (this includes things like timestamps and other information about the video frame).
 
 - Metadata registration follow this:[/scripts/env_setup/obsensor_metadata_win10.md](/scripts/env_setup/obsensor_metadata_win10.md)
 
 #### Linux
 
-##### Execute the script setup.sh
+For Linux, we have provided a script to help you set up the environment. You can run the script as follows:
+
+```bash
+cd scripts/env_setup
+./setup.sh
+```
 
 **Purpose**:
 
@@ -51,16 +45,14 @@ When the script executes successfully, it will generate the sample executable in
 
 ### 4.Run example
 
-> link to sample readme [/examples/README.md](/examples/README.md)
-
-- If the camera needs an independent power supply, plug it in first, and then connect the camera to the host computer with a usb cable.
-
-- Enter the bin directory of the Orbbec SDK unzipped directory, open the terminal (power shell for windows), and run the example
+Connect the device to the computer and run the sample program at your unzip directory.
 
 ```shell
 cd bin
-.\ob_color  #  .\ob_color.exe for windows
+./ob_color  #  ./ob_color for linux
 ```
+
+> More information about the samples of Orbbec SDK, please refer to [samples](/examples/README.md).
 
 ## Develop a New Application with the SDK
 
@@ -104,7 +96,7 @@ Add the following lines to the CMakeLists.txt file:
 ```cmake
 add_executable(MyOrbbecApp src/main.cpp)
 
-set(OrbbecSDK_DIR lib/openorbbecsdk/lib)
+set(OrbbecSDK_DIR lib/orbbecsdk/lib)
 find_package(OrbbecSDK REQUIRED)
 
 target_link_libraries(MyOrbbecApp ob::OrbbecSDK)

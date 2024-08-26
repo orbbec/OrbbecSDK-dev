@@ -14,31 +14,7 @@ win is used to display the frame data.
 
 ## Code overview
 
-1. Creates an ob::Config object
-
-    ```cpp
-        // Configure which streams to enable or disable for the Pipeline by creating a Config
-    auto config = std::make_shared<ob::Config>();
-
-    // enable depth and color streams with specified format
-    config->enableVideoStream(OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_Y16);
-    config->enableVideoStream(OB_STREAM_COLOR, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_RGB);
-
-    // set the frame aggregate output mode to ensure all types of frames are included in the output frameset
-    config->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE);
-    ```
-
-2. Create a pipeline with the configuration
-
-    ```cpp
-    // Create a pipeline with default device to manage stream
-    auto pipe = std::make_shared<ob::Pipeline>();
-
-    // Start the pipeline with config
-    pipe->start(config);
-    ```
-
-3. Set alignment mode
+1. Set alignment mode
 
     ```cpp
     // Create a filter to align depth frame to color frame
@@ -48,20 +24,14 @@ win is used to display the frame data.
     auto color2depthAlign = std::make_shared<ob::Align>(OB_STREAM_DEPTH);
     ```
 
-4. Set the callback function for the Align Filter to display the aligned frames in the window
+2. Set the callback function for the Align Filter to display the aligned frames in the window
 
     ```cpp
     depth2colorAlign->setCallBack([&win](std::shared_ptr<ob::Frame> frame) { win.pushFramesToView(frame); });
     color2depthAlign->setCallBack([&win](std::shared_ptr<ob::Frame> frame) { win.pushFramesToView(frame); });
    ```
 
-5. Get frame data
-
-    ```cpp
-        auto frameSet = pipe->waitForFrameset(100);
-    ```
-
-6. Perform alignment processing
+3. Perform alignment processing
 
     ```cpp
      // Get filter according to the align mode
@@ -75,12 +45,6 @@ win is used to display the frame data.
         alignFilter->pushFrame(frameSet);
     ```
 
-7. Stop pipeline
-
-    ```cpp
-        pipe.stop();
-    ```
-
 ## Run Sample
 
 Press the Esc key in the window to exit the program.
@@ -90,4 +54,4 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![image](/docs/resource/SyncAlign.png)
+![image](/docs/resource/SyncAlign.jpg)

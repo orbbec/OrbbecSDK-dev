@@ -93,11 +93,11 @@ while(win.run()) {
 pipe.stop();
 ```
 
-![QuickStart Example](docs/resource/QuickStart.png)
+![QuickStart Example](docs/resource/QuickStart.jpg)
 
 ### 3.2 The Orbbec Viewer
 
-![Orbbec Viewer](docs/resource/OrbbecViewer.png)
+![Orbbec Viewer](docs/resource/OrbbecViewer.jpg)
 
 ## 4. Contributing
 

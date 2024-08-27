@@ -71,10 +71,6 @@ void DeviceSyncConfigurator::setSyncConfig(const OBMultiDeviceSyncConfig &device
     internalConfig.triggerOutDelayUs    = deviceSyncConfig.triggerOutDelayUs;
     internalConfig.framesPerTrigger     = deviceSyncConfig.framesPerTrigger;
 
-    // if(deviceSyncConfig.syncMode == OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING) {
-    //     internalConfig.triggerOutEnable = true;
-    // }
-
     auto owner          = getOwner();
     auto propertyServer = owner->getPropertyServer();
     propertyServer->setStructureDataProtoV1_1_T<OBMultiDeviceSyncConfigInternal, 1>(OB_STRUCT_MULTI_DEVICE_SYNC_CONFIG, internalConfig);

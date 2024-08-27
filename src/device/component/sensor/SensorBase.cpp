@@ -153,6 +153,7 @@ void SensorBase::updateStreamState(OBStreamState state) {
                 globalTimestampCalculator_->clear();
             }
         }
+        LOG_DEBUG("Stream state changed to {}@{}", STREAM_STATE_STR(state), sensorType_);
     }
     streamStateCv_.notify_all();
 }

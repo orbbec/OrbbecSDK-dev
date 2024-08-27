@@ -78,15 +78,30 @@ void G2Device::init() {
     auto depthWorkModeManager = std::make_shared<G2DepthWorkModeManager>(this);
     registerComponent(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER, depthWorkModeManager);
 
-    // auto sensorStreamStrategy = std::make_shared<G2SensorStreamStrategy>(this);
-    // registerComponent(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, sensorStreamStrategy);
-
     static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes = {
         OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN,         OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,          OB_MULTI_DEVICE_SYNC_MODE_PRIMARY,
         OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED, OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING, OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING
     };
     auto deviceSyncConfigurator = std::make_shared<DeviceSyncConfiguratorOldProtocol>(this, supportedSyncModes);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
+    static const std::map<OBMultiDeviceSyncMode, OBSyncMode> syncModeNewToOldMap = {
+        { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_SYNC_MODE_CLOSE },  //
+        { OB_MULTI_DEVICE_SYNC_MODE_STANDALONE, OB_SYNC_MODE_STANDALONE },
+        { OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_SYNC_MODE_PRIMARY_MCU_TRIGGER },
+        { OB_MULTI_DEVICE_SYNC_MODE_SECONDARY, OB_SYNC_MODE_PRIMARY_IR_TRIGGER },
+        { OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED, OB_SYNC_MODE_PRIMARY_IR_TRIGGER },
+        { OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING, OB_SYNC_MODE_PRIMARY },
+        { OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING, OB_SYNC_MODE_SECONDARY },
+    };
+    static const std::map<OBSyncMode, OBMultiDeviceSyncMode> syncModeOldToNewMap = {
+        { OB_SYNC_MODE_CLOSE, OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN },  //
+        { OB_SYNC_MODE_STANDALONE, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE },
+        { OB_SYNC_MODE_PRIMARY_MCU_TRIGGER, OB_MULTI_DEVICE_SYNC_MODE_PRIMARY },
+        { OB_SYNC_MODE_PRIMARY_IR_TRIGGER, OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED },
+        { OB_SYNC_MODE_PRIMARY, OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING },
+        { OB_SYNC_MODE_SECONDARY, OB_MULTI_DEVICE_SYNC_MODE_HARDWARE_TRIGGERING },
+    };
+    deviceSyncConfigurator->updateModeAliasMap(syncModeOldToNewMap, syncModeNewToOldMap);
 
     registerComponent(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, [this] {
         std::shared_ptr<DeviceClockSynchronizer> deviceClockSynchronizer;

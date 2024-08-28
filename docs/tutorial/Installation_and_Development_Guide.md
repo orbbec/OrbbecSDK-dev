@@ -17,7 +17,7 @@ This is a comprehensive guide on installing the SDK, setting up the development 
 
 > Examples dependency, This is not required, but you will have to install OpenCV if you want to build the examples yourself.
 
-Data rendering relies on the third-party library OpenCV. Here we take OpenCV 4.3.0 as an example to demonstrate the installation configuration.
+Data rendering relies on the third-party library OpenCV. Here we take an example to demonstrate the installation configuration.
 
 - Execute the OpenCV installation file, select the directory where opencv is to be installed, and click extract to execute the installation.
 - Add the path of OpenCV in the environment variables of the system, enter OpenCV_DIR for the variable name, pay attention to the capitalization of the letters, and the variable value is the path to the build folder of the OpenCV installation directory.

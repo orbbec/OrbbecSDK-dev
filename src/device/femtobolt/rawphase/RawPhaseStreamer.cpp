@@ -175,7 +175,7 @@ void RawPhaseStreamer::stopStream(std::shared_ptr<const StreamProfile> sp) {
         }
     }
 
-    backend_->stopStream(sp);
+    backend_->stopAllStream();
     running_ = false;
 }
 
@@ -391,7 +391,6 @@ void RawPhaseStreamer::startDepthEngineThread(std::shared_ptr<const StreamProfil
         }
         deinitDepthEngine();
     });
-    // todo: wait for initDepthEngine
 }
 
 void RawPhaseStreamer::initDepthEngine(std::shared_ptr<const StreamProfile> profile) {

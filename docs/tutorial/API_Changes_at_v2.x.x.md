@@ -93,7 +93,7 @@ This file lists the interface names that are incompatible between the latest SDK
 
 #### C++ Interfaces
 
-- **Pipeline(const char *filename);**
+- **Pipeline(const char \*filename);**
 - **getPlayback**
 - **startRecord**
 - **stopRecord**

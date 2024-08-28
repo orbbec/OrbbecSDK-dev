@@ -1,10 +1,11 @@
 #include "RawPhaseStreamer.hpp"
+#include "IDevice.hpp"
 #include "frame/Frame.hpp"
 #include "frame/FrameFactory.hpp"
 #include "stream/StreamProfile.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "stream/StreamProfileFactory.hpp"
-
+#include "property/InternalProperty.hpp"
 namespace libobsensor {
 
 // Chip defintions
@@ -56,6 +57,11 @@ RawPhaseStreamer::RawPhaseStreamer(IDevice *owner, const std::shared_ptr<IVideoS
     backendStreamProfileList_ = backend_->getStreamProfileList();
     updateStreamProfileList();
 
+    // try to stop stream to avoid that the device is in streaming state due to some reason such as a previous crash
+    auto propServer = owner->getPropertyServer();
+    if(propServer->isPropertySupported(OB_PROP_STOP_DEPTH_STREAM_BOOL, PROP_OP_WRITE, PROP_ACCESS_INTERNAL)) {
+        propServer->setPropertyValueT<bool>(OB_PROP_STOP_DEPTH_STREAM_BOOL, true);
+    }
     initNvramData();
     LOG_DEBUG("RawPhaseStreamer created");
 }
@@ -65,8 +71,8 @@ RawPhaseStreamer::~RawPhaseStreamer() noexcept {
         std::lock_guard<std::mutex> lock(cbMtx_);
         callbacks_.clear();
     }
-    stopDepthEngineThread();
-    stopAllStream();
+    TRY_EXECUTE(stopDepthEngineThread());
+    TRY_EXECUTE(stopAllStream());
 
     if(running_) {
         TRY_EXECUTE(backend_->stopAllStream());
@@ -391,13 +397,7 @@ void RawPhaseStreamer::startDepthEngineThread(std::shared_ptr<const StreamProfil
 void RawPhaseStreamer::initDepthEngine(std::shared_ptr<const StreamProfile> profile) {
     LOG_DEBUG("Depth engine create and initialize...");
 
-    {  // wait for NVRAM data
-        std::unique_lock<std::mutex> lk(nvramMutex_);
-        auto                         state = nvramCV_.wait_for(lk, std::chrono::seconds(10), [&] { return !nvramData_.empty(); });
-        if(!state) {
-            throw io_exception("Failed to get NVRAM data, timeout!");
-        }
-    }
+    waitNvramDataReady();
 
     k4a_depth_engine_input_type_t deInputType = k4a_depth_engine_input_type_t::K4A_DEPTH_ENGINE_INPUT_TYPE_UNKNOWN;
     k4a_depth_engine_mode_t       mode        = K4A_DEPTH_ENGINE_MODE_UNKNOWN;
@@ -461,17 +461,19 @@ void RawPhaseStreamer::initNvramData() {
 
     auto wait_thread = std::thread([this]() {
         std::unique_lock<std::mutex> streamLock(streamMutex_);
-        {
-            std::unique_lock<std::mutex> lk(nvramMutex_);
-            auto                         state = nvramCV_.wait_for(lk, std::chrono::seconds(10), [this] { return !nvramData_.empty(); });
-            if(!state) {
-                throw io_exception("Failed to get NVRAM data, timeout!");
-            }
-            LOG_DEBUG("NVRAM data is ready!");
-        }
+        waitNvramDataReady();
         backend_->stopAllStream();
     });
     wait_thread.detach();
+}
+
+void RawPhaseStreamer::waitNvramDataReady() {
+    std::unique_lock<std::mutex> lk(nvramMutex_);
+    auto                         state = nvramCV_.wait_for(lk, std::chrono::seconds(10), [this] { return !nvramData_.empty(); });
+    if(!state) {
+        throw io_exception("Failed to get NVRAM data, timeout!");
+    }
+    LOG_DEBUG("NVRAM data is ready!");
 }
 
 void RawPhaseStreamer::enablePassiveIRMode(bool enable) {

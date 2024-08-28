@@ -133,8 +133,9 @@ void FemtoBoltDevice::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_DEPTH_SENSOR,
             [this, depthPortInfo]() {
-                auto rawPhaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
-                auto sensor                    = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_DEPTH, rawPhaseStreamer.get());
+                auto rawPhaseStreamer = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
+                rawPhaseStreamer->waitNvramDataReady();
+                auto sensor = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_DEPTH, rawPhaseStreamer.get());
 
                 auto videoFrameTimestampCalculator = std::make_shared<FrameTimestampCalculatorOverUvcSCR>(this, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator);
@@ -168,10 +169,9 @@ void FemtoBoltDevice::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_IR_SENSOR,
             [this, depthPortInfo]() {
-                auto platform         = Platform::getInstance();
-                auto port             = platform->getSourcePort(depthPortInfo);
                 auto rawPhaseStreamer = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
-                auto sensor           = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_IR, rawPhaseStreamer.get());
+                rawPhaseStreamer->waitNvramDataReady();
+                auto sensor = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_IR, rawPhaseStreamer.get());
 
                 auto videoFrameTimestampCalculator = std::make_shared<FrameTimestampCalculatorOverUvcSCR>(this, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator);

@@ -153,6 +153,8 @@ void SensorBase::updateStreamState(OBStreamState state) {
                 globalTimestampCalculator_->clear();
             }
         }
+    }
+    if(oldState != state) {
         LOG_DEBUG("Stream state changed to {}@{}", STREAM_STATE_STR(state), sensorType_);
     }
     streamStateCv_.notify_all();
@@ -248,10 +250,10 @@ void SensorBase::outputFrame(std::shared_ptr<Frame> frame) {
     }
 
     if(frameTimestampCalculator_) {
-         TRY_EXECUTE(frameTimestampCalculator_->calculate(frame));
+        TRY_EXECUTE(frameTimestampCalculator_->calculate(frame));
     }
     if(globalTimestampCalculator_) {
-         TRY_EXECUTE(globalTimestampCalculator_->calculate(frame));
+        TRY_EXECUTE(globalTimestampCalculator_->calculate(frame));
     }
 
     frameCallback_(frame);

@@ -218,7 +218,7 @@ private:
 
 public:
     // The following interfaces are deprecated and are retained here for compatibility purposes.
-    virtual const char *type(){
+    virtual const char *type() {
         return getName().c_str();
     }
 };
@@ -320,9 +320,17 @@ public:
         setConfigValue("coordinateSystemType", static_cast<double>(type));
     }
 
+    void setCameraParam(OBCameraParam param) {
+        // In order to be compatible with the OrbbecSDK 1.x version interface, now the OrbbecSDK 2.x version does not rely on these parameters
+    }
+
+    void setFrameAlignState(bool state) {
+        // In order to be compatible with the OrbbecSDK 1.x version interface, now the OrbbecSDK 2.x version does not rely on these parameters
+    }
+
 public:
     // The following interfaces are deprecated and are retained here for compatibility purposes.
-    void setPositionDataScaled(float scale){
+    void setPositionDataScaled(float scale) {
         setCoordinateDataScaled(scale);
     }
 };
@@ -343,6 +351,56 @@ public:
     OBStreamType getAlignToStreamType() {
         return static_cast<OBStreamType>(static_cast<int>(getConfigValue("AlignType")));
     }
+};
+
+/**
+ * @brief The FormatConvertFilter class is a subclass of Filter that performs format conversion.
+ */
+class FormatConvertFilter : public Filter {
+public:
+    FormatConvertFilter() {
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_filter("FormatConverter", &error);
+        Error::handle(&error);
+        init(impl);
+    }
+
+    virtual ~FormatConvertFilter() noexcept = default;
+
+    /**
+     * @brief Set the format conversion type.
+     *
+     * @param type The format conversion type.
+     */
+    void setFormatConvertType(OBConvertFormat type) {
+        // todo
+    }
+};
+
+/**
+ * @brief The CompressionFilter class is a subclass of Filter that performs compression.
+ */
+class CompressionFilter : public Filter {
+public:
+    CompressionFilter() {}
+
+    /**
+     * @brief Set the compression parameters.
+     *
+     * @param mode The compression mode: OB_COMPRESSION_LOSSLESS or OB_COMPRESSION_LOSSY.
+     * @param params The compression parameters. When mode is OB_COMPRESSION_LOSSLESS, params is NULL.
+     */
+    void setCompressionParams(OBCompressionMode mode, void *params) {
+        //todo
+    }
+};
+
+/**
+ * @brief The DecompressionFilter class is a subclass of Filter that performs decompression.
+ */
+class DecompressionFilter : public Filter {
+public:
+    DecompressionFilter() {}
 };
 
 }  // namespace ob

@@ -34,8 +34,15 @@ git clone https://github.com/Orbbec/OrbbecSDK-dev.git
 
 You can build Orbbec SDK by using the following commands:
 
+- Windows: Use PowerShell to execute the build commands.
+
+- Linux: Use a terminal emulator to execute the build commands
+
 ```shell
-cd OrbbecSDK-dev && mkdir build && cd build && cmake .. && cmake --build . --config Release
+cd OrbbecSDK-dev 
+mkdir build 
+cd build
+cmake .. && cmake --build . --config Release
 ```
 
 If you are using Docker, you can using the script we provide to build Orbbec SDK.
@@ -56,7 +63,7 @@ Before you run the sample, you need setup the environment. Please follow the ins
 
 ### Environment Setup
 
-#### windows
+#### Windows
 
 ##### Metadata registration
 

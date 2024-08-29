@@ -11,31 +11,7 @@ cmake_minimum_required(VERSION 3.1.15)
 
 project(ObsensorApi)
 
-function(assign_version_property VER_COMPONENT)
-    FIND_FILE(OB_VERSION_PATH_TEST Version.hpp "../../src/shared/environment/" NO_DEFAULT_PATH)
-    IF(NOT OB_VERSION_PATH_TEST)
-        MESSAGE(SEND_ERROR "Obsensor: has no Version.hpp found !!")
-    ENDIF()
-
-    file(STRINGS  "../../src/shared/environment/Version.hpp" OB_VERSION_${VER_COMPONENT} REGEX "#define OB_API_${VER_COMPONENT}_VERSION")
-    separate_arguments(OB_VERSION_${VER_COMPONENT})
-    list(GET OB_VERSION_${VER_COMPONENT} -1 tmp)
-
-    if(tmp LESS 0)
-        message(FATAL_ERROR "Could not obtain valid LibOB version ${VER_COMPONENT} component - actual value is ${tmp}")
-    endif()
-
-    set(OB_VERSION_${VER_COMPONENT} ${tmp} PARENT_SCOPE)
-endfunction()
-
-set(OB_VERSION_MAJOR -1)
-set(OB_VERSION_MINOR -1)
-set(OB_VERSION_PATCH -1)
-assign_version_property(MAJOR)
-assign_version_property(MINOR)
-assign_version_property(PATCH)
-set(OB_VERSION_STRING ${OB_VERSION_MAJOR}.${OB_VERSION_MINOR}.${OB_VERSION_PATCH})
-
+set(OB_VERSION_STRING ${CMAKE_PROJECT_VERSION})
 option(BUILD_SPHINX_DOC "build Sphinx documentation" OFF)
 find_package(Doxygen)
 message("Doxygen_FOUND: ${Doxygen_FOUND}")

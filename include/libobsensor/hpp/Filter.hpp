@@ -373,34 +373,8 @@ public:
      * @param type The format conversion type.
      */
     void setFormatConvertType(OBConvertFormat type) {
-        // todo
+        setConfigValue("formatConvertType", static_cast<double>(type));
     }
-};
-
-/**
- * @brief The CompressionFilter class is a subclass of Filter that performs compression.
- */
-class CompressionFilter : public Filter {
-public:
-    CompressionFilter() {}
-
-    /**
-     * @brief Set the compression parameters.
-     *
-     * @param mode The compression mode: OB_COMPRESSION_LOSSLESS or OB_COMPRESSION_LOSSY.
-     * @param params The compression parameters. When mode is OB_COMPRESSION_LOSSLESS, params is NULL.
-     */
-    void setCompressionParams(OBCompressionMode mode, void *params) {
-        //todo
-    }
-};
-
-/**
- * @brief The DecompressionFilter class is a subclass of Filter that performs decompression.
- */
-class DecompressionFilter : public Filter {
-public:
-    DecompressionFilter() {}
 };
 
 }  // namespace ob

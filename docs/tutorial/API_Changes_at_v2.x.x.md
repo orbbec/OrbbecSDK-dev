@@ -1,6 +1,6 @@
 # API Changes at v2.x.x
 
-This file lists the interface names that are incompatible between the latest SDK and the closed source version. The changes were concentrated in the 'device' and 'Pipeline' modules, with some C and C++ interfaces being deprecated or modified due to internal usage changes, tweaked functionality, or devices no longer being supported.
+This file lists the interface names that are incompatible between the latest SDK and the previous version. The changes were concentrated in the 'device' and 'Pipeline' modules, with some C and C++ interfaces being deprecated or modified due to internal usage changes, tweaked functionality, or devices no longer being supported.
 
 ## device Module
 
@@ -42,7 +42,7 @@ This file lists the interface names that are incompatible between the latest SDK
 - **loadLicense**
 - **loadLicenseFromData**
 
-### Reason for Incompatibility: These interfaces have been marked as deprecated in the closed-source version and are no longer supported or replaced by other functions
+### Reason for Incompatibility: These interfaces have been marked as deprecated in the previous version and are no longer supported or replaced by other functions
 
 #### C Interfaces
 

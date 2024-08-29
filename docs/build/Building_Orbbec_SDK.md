@@ -42,7 +42,8 @@ You can build Orbbec SDK by using the following commands:
 cd OrbbecSDK-dev 
 mkdir build 
 cd build
-cmake .. && cmake --build . --config Release
+cmake .. 
+cmake --build . --config Release
 ```
 
 If you are using Docker, you can using the script we provide to build Orbbec SDK.

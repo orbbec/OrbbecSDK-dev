@@ -373,7 +373,7 @@ public:
      * @param type The format conversion type.
      */
     void setFormatConvertType(OBConvertFormat type) {
-        setConfigValue("formatConvertType", static_cast<double>(type));
+        setConfigValue("convertType", static_cast<double>(type));
     }
 };
 

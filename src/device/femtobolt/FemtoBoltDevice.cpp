@@ -21,7 +21,7 @@
 #include "property/CommonPropertyAccessors.hpp"
 #include "property/FilterPropertyAccessors.hpp"
 #include "monitor/DeviceMonitor.hpp"
-#include "param/AlgParamManager.hpp"
+#include "FemtoBoltAlgParamManager.hpp"
 #include "syncconfig/DeviceSyncConfigurator.hpp"
 
 #include "rawphase/RawPhaseStreamer.hpp"
@@ -31,6 +31,7 @@
 #include "publicfilters/IMUCorrector.hpp"
 
 namespace libobsensor {
+
 FemtoBoltDevice::FemtoBoltDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
     init();
 }
@@ -52,7 +53,7 @@ void FemtoBoltDevice::init() {
     auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
-    auto algParamManager = std::make_shared<TOFDeviceCommandAlgParamManager>(this);
+    auto algParamManager = std::make_shared<FemtoBoltAlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
     static const std::vector<OBMultiDeviceSyncMode>          supportedSyncModes  = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
@@ -84,7 +85,7 @@ void FemtoBoltDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<TOFDeviceCommandAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<FemtoBoltAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 
@@ -132,8 +133,9 @@ void FemtoBoltDevice::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_DEPTH_SENSOR,
             [this, depthPortInfo]() {
-                auto rawPhaseStreamer          = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
-                auto sensor                    = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_DEPTH, rawPhaseStreamer.get());
+                auto rawPhaseStreamer = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
+                rawPhaseStreamer->waitNvramDataReady();
+                auto sensor = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_DEPTH, rawPhaseStreamer.get());
 
                 auto videoFrameTimestampCalculator = std::make_shared<FrameTimestampCalculatorOverUvcSCR>(this, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator);
@@ -167,10 +169,9 @@ void FemtoBoltDevice::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_IR_SENSOR,
             [this, depthPortInfo]() {
-                auto platform         = Platform::getInstance();
-                auto port             = platform->getSourcePort(depthPortInfo);
                 auto rawPhaseStreamer = getComponentT<RawPhaseStreamer>(OB_DEV_COMPONENT_RAW_PHASE_STREAMER);
-                auto sensor           = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_IR, rawPhaseStreamer.get());
+                rawPhaseStreamer->waitNvramDataReady();
+                auto sensor = std::make_shared<RawPhaseBasedSensor>(this, OB_SENSOR_IR, rawPhaseStreamer.get());
 
                 auto videoFrameTimestampCalculator = std::make_shared<FrameTimestampCalculatorOverUvcSCR>(this, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator);

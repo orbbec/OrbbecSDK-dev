@@ -5,6 +5,7 @@
 #include <map>
 #include <mutex>
 #include <queue>
+
 #include "ISourcePort.hpp"
 #include "IDeviceComponent.hpp"
 #include "depthengine/DepthEngineLoader.hpp"
@@ -26,6 +27,7 @@ public:
 
     void enablePassiveIRMode(bool enable);
     bool isRunning() const;
+    void waitNvramDataReady();
 
 private:
     void parseAndOutputFrame(std::shared_ptr<Frame> frame);

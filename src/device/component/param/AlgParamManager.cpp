@@ -125,13 +125,11 @@ void AlgParamManagerBase::bindIntrinsic(std::vector<std::shared_ptr<const Stream
             OBD2CProfile       d2cProfile{};
             auto               vsp = sp->as<VideoStreamProfile>();
 
-            auto &d2cProfileList = getD2CProfileList();
-            if(!findBestMatchedD2CProfile(d2cProfileList, vsp, d2cProfile)) {
+            if(!findBestMatchedD2CProfile(d2cProfileList_, vsp, d2cProfile)) {
                 throw libobsensor::unsupported_operation_exception("Can not find matched camera param!");
             }
 
-            const auto &calibrationCameraParamList = getCalibrationCameraParamList();
-            auto        param                      = calibrationCameraParamList.at(d2cProfile.paramIndex);
+            auto        param                      = calibrationCameraParamList_.at(d2cProfile.paramIndex);
             auto        postProcessParam           = d2cProfile.postProcessParam;
 
             // Fix intrinsic from calibration to d2c profile according to the ratio of resolution

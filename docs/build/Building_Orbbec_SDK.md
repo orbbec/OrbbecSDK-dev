@@ -22,6 +22,14 @@ For linux, if you want to build Orbbec SDK by using native toolchain, you need:
 - Git
 - OpenCV v3.4 is recommended
 
+## Clone Orbbec SDK
+
+The Orbbec SDK souce code are available on GitHub. You can clone the Orbbec SDK by using the following commands:
+
+```shell
+git clone https://github.com/Orbbec/OrbbecSDK-dev.git
+```
+
 ## Build Orbbec SDK
 
 You can build Orbbec SDK by using the following commands:
@@ -35,19 +43,16 @@ If you are using Docker, you can using the script we provide to build Orbbec SDK
 ```shell
 cd OrbbecSDK-dev/scripts/build
 ./build_linux_docker.sh
+# `./build_linux_docker.sh  aarch64` for arm64
 ```
 
 > More information about how to use Docker, please refer to [README.md](/scripts/docker/README.md).
 
 ## Run the Sample
 
-> link to sample readme [/examples/README.md](/examples/README.md)
+After you build the Orbbec SDK, you can find the executable file in the directory `OrbbecSDK-dev/build/win_XX/bin` or `OrbbecSDK-dev/build/linux_XX/bin`.
 
-### Where to find the executable file
-
-If you are on Windows, you can switch to the directory `OrbbecSDK-dev/build/win_XX/bin` to find the `ob_XX.exe`.
-
-If you are on linux, you can switch to the directory `OrbbecSDK-dev/build/linux_XX/bin` to find the `ob_XX`.
+Before you run the sample, you need setup the environment. Please follow the instructions on the [environment-setup](/docs/tutorial/Installation_and_Development_Guide.md#2environment-setup) page.
 
 ### Environment Setup
 
@@ -65,7 +70,7 @@ For windows,you need to register the metadata associated with frames (this inclu
 
 ```shell
 cd OrbbecSDK-dev/scripts/env_setup
-sudo chmod +x ./install_udev_rules.sh 
+sudo chmod +x ./install_udev_rules.sh
 sudo ./install_udev_rules.sh
 sudo udevadm control --reload-rules && udevadm trigger
 ```
@@ -82,3 +87,5 @@ If the camera needs to be powered on, plug in the power cable and connect the ca
 cd bin
 .\ob_XXX  #  .\ob_XXX.exe for windows
 ```
+
+> More information about the samples of Orbbec SDK, please refer to [samples](/examples/README.md).

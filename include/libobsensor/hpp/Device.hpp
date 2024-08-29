@@ -25,6 +25,7 @@ class DeviceInfo;
 class SensorList;
 class DevicePresetList;
 class OBDepthWorkModeList;
+class CameraParamList;
 
 class Device {
 public:
@@ -1213,7 +1214,7 @@ public:
 
 /**
  * @brief Class representing a list of device presets
- * @breif A device preset is a set of parameters or configurations that can be applied to the device to achieve a specific effect or function.
+ * @brief A device preset is a set of parameters or configurations that can be applied to the device to achieve a specific effect or function.
  */
 class DevicePresetList {
 private:
@@ -1253,7 +1254,7 @@ public:
     }
 
     /**
-     * @breif check if the preset list contains the special name preset.
+     * @brief check if the preset list contains the special name preset.
      * @param name The name of the preset
      * @return bool Returns true if the special name is found in the preset list, otherwise returns false.
      */

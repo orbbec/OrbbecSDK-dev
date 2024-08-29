@@ -26,13 +26,13 @@
 #include "property/CommonPropertyAccessors.hpp"
 #include "property/FilterPropertyAccessors.hpp"
 #include "monitor/DeviceMonitor.hpp"
-#include "syncconfig/DeviceSyncConfigurator.hpp"
 
 #include "Astra2AlgParamManager.hpp"
 #include "Astra2StreamProfileFilter.hpp"
 #include "Astra2PropertyAccessors.hpp"
 #include "Astra2DepthWorkModeManager.hpp"
 #include "Astra2FrameTimestampCalculator.hpp"
+#include "Astra2DeviceSyncConfigurator.hpp"
 
 #include <algorithm>
 
@@ -71,7 +71,7 @@ void Astra2Device::init() {
 
     static const std::vector<OBMultiDeviceSyncMode> supportedSyncModes     = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
                                                                                OB_MULTI_DEVICE_SYNC_MODE_PRIMARY, OB_MULTI_DEVICE_SYNC_MODE_SECONDARY_SYNCED };
-    auto                                            deviceSyncConfigurator = std::make_shared<DeviceSyncConfiguratorOldProtocol>(this, supportedSyncModes);
+    auto                                            deviceSyncConfigurator = std::make_shared<Astra2DeviceSyncConfigurator>(this, supportedSyncModes);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 
     auto deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, 1000);
@@ -363,6 +363,9 @@ void Astra2Device::initProperties() {
     propertyServer->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", d2dPropertyAccessor);  // sw
     propertyServer->registerProperty(OB_PROP_DEPTH_PRECISION_LEVEL_INT, "rw", "rw", d2dPropertyAccessor);
 
+    auto tempPropertyAccessor = std::make_shared<Astra2TempPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", tempPropertyAccessor);
+
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
         auto  pal            = Platform::getInstance();
@@ -428,7 +431,6 @@ void Astra2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_DEPTH_MIRROR_MODULE_STATUS_BOOL, "", "r", vendorPropertyAccessor);
 
             propertyServer->registerProperty(OB_STRUCT_VERSION, "", "r", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_STRUCT_DEVICE_TEMPERATURE, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_RAW_DATA_EFFECTIVE_VIDEO_STREAM_PROFILE_LIST, "", "r", vendorPropertyAccessor);
             // OB_RAW_DATA_DISPARITY_TO_DEPTH_PROFILE_LIST // todo: implemented it
 

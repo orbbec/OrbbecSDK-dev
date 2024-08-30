@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-This is the open source repo of the Orbbec SDK. The Orbbec SDK is a cross-platform library for interfacing with the Orbbec RGB-D cameras. It provides C/C++ APIs and many other languages or frameworks [wrappers](wrappers/readme.md).
+This is the open source repo of the Orbbec SDK. The Orbbec SDK is a cross-platform library for interfacing with the Orbbec RGB-D cameras. It provides C/C++ APIs and many other languages or frameworks [wrappers](wrappers/README.md).
 
 <div align=center>
 <img src="docs/resource/Overview.jpg" width="400" align="center" />

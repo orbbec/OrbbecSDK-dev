@@ -19,6 +19,7 @@
 #include <typeinfo>
 #include <typeindex>
 #include <unordered_map>
+#include <cstring>
 
 namespace ob {
 

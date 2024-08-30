@@ -60,8 +60,6 @@ cd OrbbecSDK-dev/scripts/build
 
 After you build the Orbbec SDK, you can find the executable file in the directory `OrbbecSDK-dev/build/win_XX/bin` or `OrbbecSDK-dev/build/linux_XX/bin`.
 
-Before you run the sample, you need setup the environment. Please follow the instructions on the [environment-setup](/docs/tutorial/installation_and_development_guide.md#2environment-setup) page.
-
 ### Environment Setup
 
 #### Windows

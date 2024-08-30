@@ -93,4 +93,4 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![result](/docs/resource/callback.png)
+![result](/docs/resource/callback.jpg)

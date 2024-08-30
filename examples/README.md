@@ -6,7 +6,7 @@ There are several examples codes for users learn how to use Orbbec cameras. Here
 
 | Level | Sample                                     | doc | Description                                                                      |
 | ----- | ------------------------------------------ | --- | -------------------------------------------------------------------------------- |
-| basic | [quick_start](0.basic.quick_start) | [readme](0.basic.quick_start//README.md) | Quick show how to use the SDK to get frames from the Orbbec RGB-D camera device. |
+| basic | [quick_start](0.basic.quick_start) | [readme](0.basic.quick_start/README.md) | Quick show how to use the SDK to get frames from the Orbbec RGB-D camera device. |
 | basic | [enumerate](0.basic.enumerate) | [readme](0.basic.enumerate/README.md) | Use the SDK interface to obtain camera-related information, including model, various sensors, and sensor-related configurations.|
 | stream | [depth](1.stream.depth)  | [readme](1.stream.depth/README.md)    | Use the SDK interface to obtain the depth stream of the camera and display it in the window. |
 | stream | [color](1.stream.color) | [readme](1.stream.color/README.md)    | Use the SDK interface to obtain the camera's color stream and display it in the window. |
@@ -16,7 +16,6 @@ There are several examples codes for users learn how to use Orbbec cameras. Here
 | stream | [callback](1.stream.callback) | [readme](1.stream.callback/README.md)    | In this sample, users can obtain depth, RGB, and IR images. This sample also supports performing user-defined operations such as data acquisition, data processing, and data modification within the callback function.|
 | device | [control](2.device.control) | [readme](2.device.control/README.md)    | The SDK can be used to modify camera-related parameters, including laser switch, laser level intensity, white balance switch, etc. |
 | device | [hot_plugin](2.device.hot_plugin) | [readme](2.device.hot_plugin/README.md)    | Use SDK to handle the settings of device unplug callback and process the acquired code stream after unplugging. |
-| device | [net_device](2.device.net_device) | [readme](2.device.net_device/README.md)    | To be done. |
 | advanced | [sync_align](3.advanced.sync_align) | [readme](3.advanced.sync_align/README.md)    | Use the SDK interface to demonstrate the synchronization and alignment of sensor data streams, display the aligned image. |
 | advanced | [post_processing](3.advanced.post_processing) | [readme](3.advanced.post_processing/README.md)    | Use the SDK interface to  demonstrate post-processing operations, display post-processed images. |
 | advanced | [point_cloud](3.advanced.point_cloud) | [readme](3.advanced.point_cloud/README.md)    | Connect the device to open the stream, generate a depth point cloud or RGBD point cloud and save it as a ply format file. |
@@ -32,9 +31,9 @@ The listed examples at previous section are written in C++ language. Here is a b
 
 | Level | Sample                                     | doc | Description                                                                      |
 | ----- | ------------------------------------------ | --- | -------------------------------------------------------------------------------- |
-| basic | [c_quick_start](c_examples/0.c_quick_start) |  [readme](c_examples/0.c_quick_start/readme.md) | This is a quick start guide to start device streams using the Orbbec SDK C API. |
-| stream | [c_enumerate](c_examples/1.c_enumerate) |  [readme](c_examples/1.c_enumerate/readme.md) | This is a enumerate guide to get device streams profile information using the Orbbec SDK C API. |
-| stream | [c_depth](c_examples/2.c_depth) |  [readme](c_examples/2.c_depth/readme.md) | This is a depth guide to get depth stream and depth image by using the Orbbec SDK C API. |
+| basic | [c_quick_start](c_examples/0.c_quick_start) |  [readme](c_examples/0.c_quick_start/README.md) | This is a quick start guide to start device streams using the Orbbec SDK C API. |
+| stream | [c_enumerate](c_examples/1.c_enumerate) |  [readme](c_examples/1.c_enumerate/README.md) | This is a enumerate guide to get device streams profile information using the Orbbec SDK C API. |
+| stream | [c_depth](c_examples/2.c_depth) |  [readme](c_examples/2.c_depth/README.md) | This is a depth guide to get depth stream and depth image by using the Orbbec SDK C API. |
 
 ## Append
 

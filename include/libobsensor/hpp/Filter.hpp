@@ -16,6 +16,9 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <typeinfo>
+#include <typeindex>
+#include <unordered_map>
 
 namespace ob {
 
@@ -23,7 +26,7 @@ namespace ob {
  * @brief A callback function that takes a shared pointer to a Frame object as its argument.
  */
 typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
-
+                                                                   
 /**
  * @brief The Filter class is the base class for all filters in the SDK.
  */
@@ -228,9 +231,7 @@ public:
      * @tparam T The given type.
      * @return bool The result.
      */
-    template <typename T> bool is() {
-
-    }
+    template <typename T> bool is();
 
     template <typename T> std::shared_ptr<T> as() {
         if(!is<T>()) {
@@ -340,10 +341,12 @@ public:
 
     void setCameraParam(OBCameraParam param) {
         // In order to be compatible with the OrbbecSDK 1.x version interface, now the OrbbecSDK 2.x version does not rely on these parameters
+        (void)param;
     }
 
     void setFrameAlignState(bool state) {
         // In order to be compatible with the OrbbecSDK 1.x version interface, now the OrbbecSDK 2.x version does not rely on these parameters
+		(void)state;
     }
 
 public:
@@ -393,6 +396,7 @@ public:
 };
 
 class HdrMerge : public Filter {
+public:
     HdrMerge() {
         ob_error *error = nullptr;
         auto      impl  = ob_create_filter("HDRMerge", &error);
@@ -404,15 +408,37 @@ class HdrMerge : public Filter {
 };
 
 class SequenceIdFilter : public Filter {
+private:
+    std::map<float, std::string> sequenceIdList_{{ 0.f, "all" }, { 1.f, "1" }};
+    OBSequenceIdItem *outputSequenceIdList_ = nullptr;
+
+	void initSeqenceIdList() {
+        outputSequenceIdList_ = new OBSequenceIdItem[sequenceIdList_.size()];
+
+		int i = 0;
+		for(const auto &pair: sequenceIdList_) {
+            outputSequenceIdList_[i].sequenceSelectId = static_cast<int>(pair.first);
+            strncpy(outputSequenceIdList_[i].name, pair.second.c_str(), sizeof(outputSequenceIdList_[i].name) - 1);
+            outputSequenceIdList_[i].name[sizeof(outputSequenceIdList_[i].name) - 1] = '\0';
+            ++i;
+        }
+	}
+
 public:
     SequenceIdFilter() {
         ob_error *error = nullptr;
         auto      impl  = ob_create_filter("SequenceIdFilter", &error);
         Error::handle(&error);
         init(impl);
+        initSeqenceIdList();
     }
 
-    virtual ~SequenceIdFilter() noexcept = default;
+	virtual ~SequenceIdFilter() noexcept {
+        if(outputSequenceIdList_) {
+            delete[] outputSequenceIdList_;
+            outputSequenceIdList_ = nullptr;
+        }
+	}
 
     /**
      * @brief Set the sequenceId filter params.
@@ -420,7 +446,7 @@ public:
      * @param sequence id to pass the filter.
      */
     void selectSequenceId(int sequence_id) {
-
+        setConfigValue("sequenceid", static_cast<double>(sequence_id));
     }
 
     /**
@@ -429,11 +455,11 @@ public:
      * @return sequence id to pass the filter.
      */
     int getSelectSequenceId() {
-
+        return static_cast<int>(getConfigValue("sequenceid"));
     }
 
     OBSequenceIdItem *getSequenceIdList() {
-
+        return outputSequenceIdList_;
     }
 
     /**
@@ -442,14 +468,17 @@ public:
      * @return the size of sequenceId list.
      */
     int getSequenceIdListSize() {
-
+        return static_cast<int>(sequenceIdList_.size());
     }
 };
 
 class DecimationFilter : public Filter {
 public:
     DecimationFilter() {
-
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_filter("DecimationFilter", &error);
+        Error::handle(&error);
+        init(impl);
     }
 
     /**
@@ -457,22 +486,54 @@ public:
      *
      * @param type The decimation filter scale value.
      */
-    void setScaleValue(uint8_t value) {
-
+    void setScaleValue(uint8_t value) { 
+		setConfigValue("decimate", static_cast<double>(value));
     }
 
     /**
      * @brief Get the decimation filter scale value.
      */
     uint8_t getScaleValue() {
-
+        return static_cast<uint8_t>(getConfigValue("decimate"));
     }
 
     /**
      * @brief Get the property range of the decimation filter scale value.
      */
     OBUint8PropertyRange getScaleRange() {
-        
+        OBUint8PropertyRange scaleRange{};
+		if (configSchemaVec_.size() != 0) {
+            auto item       = configSchemaVec_[0];
+            scaleRange.cur  = getScaleValue();
+            scaleRange.def  = static_cast<uint8_t>(item.def);
+            scaleRange.max  = static_cast<uint8_t>(item.max);
+            scaleRange.min  = static_cast<uint8_t>(item.min);
+            scaleRange.step = static_cast<uint8_t>(item.step);
+		}
+        return scaleRange;
     }
 };
+
+
+/**
+ * @brief Define the type map
+ */
+const std::unordered_map<std::string, std::type_index> typeMap = {
+    { "PointCloudFilter", typeid(PointCloudFilter) },   { "Align", typeid(Align) },
+    { "FormatConverter", typeid(FormatConvertFilter) }, { "HDRMerge", typeid(HdrMerge) },
+    { "SequenceIdFilter", typeid(SequenceIdFilter) },   { "DecimationFilter", typeid(DecimationFilter) }
+};
+
+/**
+* @brief Define the is() template function for the Filter class
+*/
+template <typename T> bool Filter::is() {
+    std::string name = type();
+    auto        it   = typeMap.find(name);
+    if(it != typeMap.end()) {
+        return std::type_index(typeid(T)) == it->second;
+    }
+    return false;
+}
+
 }  // namespace ob

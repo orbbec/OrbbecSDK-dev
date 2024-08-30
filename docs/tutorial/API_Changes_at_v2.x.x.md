@@ -1,6 +1,6 @@
 # API Changes at v2.x.x
 
-This file lists the interface names that are incompatible between the latest SDK and the previous version. The changes were concentrated in the 'device' and 'Pipeline' modules, with some C and C++ interfaces being deprecated or modified due to internal usage changes, tweaked functionality, or devices no longer being supported.
+This file lists the interface names that are incompatible between the latest SDK and the version v1.x.y. The changes were concentrated in the 'device' and 'Pipeline' modules, with some C and C++ interfaces being deprecated or modified due to internal usage changes, tweaked functionality, or devices no longer being supported.
 
 ## device Module
 
@@ -42,7 +42,7 @@ This file lists the interface names that are incompatible between the latest SDK
 - **loadLicense**
 - **loadLicenseFromData**
 
-### Reason for Incompatibility: These interfaces have been marked as deprecated in the previous version and are no longer supported or replaced by other functions
+### Reason for Incompatibility: These interfaces have been marked as deprecated in the version v1.x.y and are no longer supported or replaced by other functions
 
 #### C Interfaces
 
@@ -109,12 +109,12 @@ This file lists the interface names that are incompatible between the latest SDK
 
 - **getD2CValidArea**
 
-## Features not available in the open source version
+# Features not available in the open source version
 
-### Record playback
+## Record playback
 
 The record playback feature will soon be redesigned in a future version
 
-### The record playback feature will soon be redesigned in a future version
+## The record playback feature will soon be redesigned in a future version
 
 Firmware upgrade protocol design flash read and write protocol, part of this protocol cannot be open source, need to develop a closed source module later. The release version needs to recommend users to use the old SDK/ tools to complete the firmware upgrade, and clearly inform them when the feature will be added back.

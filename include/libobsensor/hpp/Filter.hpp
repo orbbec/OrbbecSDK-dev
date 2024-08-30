@@ -221,6 +221,24 @@ public:
     virtual const char *type() {
         return getName().c_str();
     }
+
+    /**
+     * @brief Check if the runtime type of the filter object is compatible with a given type.
+     *
+     * @tparam T The given type.
+     * @return bool The result.
+     */
+    template <typename T> bool is() {
+
+    }
+
+    template <typename T> std::shared_ptr<T> as() {
+        if(!is<T>()) {
+            throw std::runtime_error("unsupported operation, object's type is not require type");
+        }
+
+        return std::static_pointer_cast<T>(shared_from_this());
+    }
 };
 
 /**
@@ -353,9 +371,6 @@ public:
     }
 };
 
-/**
- * @brief The FormatConvertFilter class is a subclass of Filter that performs format conversion.
- */
 class FormatConvertFilter : public Filter {
 public:
     FormatConvertFilter() {
@@ -373,8 +388,91 @@ public:
      * @param type The format conversion type.
      */
     void setFormatConvertType(OBConvertFormat type) {
-        setConfigValue("formatConvertType", static_cast<double>(type));
+        setConfigValue("convertType", static_cast<double>(type));
     }
 };
 
+class HdrMerge : public Filter {
+    HdrMerge() {
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_filter("HDRMerge", &error);
+        Error::handle(&error);
+        init(impl);
+    }
+
+    virtual ~HdrMerge() noexcept = default;
+};
+
+class SequenceIdFilter : public Filter {
+public:
+    SequenceIdFilter() {
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_filter("SequenceIdFilter", &error);
+        Error::handle(&error);
+        init(impl);
+    }
+
+    virtual ~SequenceIdFilter() noexcept = default;
+
+    /**
+     * @brief Set the sequenceId filter params.
+     *
+     * @param sequence id to pass the filter.
+     */
+    void selectSequenceId(int sequence_id) {
+
+    }
+
+    /**
+     * @brief Get the current sequence id.
+     *
+     * @return sequence id to pass the filter.
+     */
+    int getSelectSequenceId() {
+
+    }
+
+    OBSequenceIdItem *getSequenceIdList() {
+
+    }
+
+    /**
+     * @brief Get the sequenceId list size.
+     *
+     * @return the size of sequenceId list.
+     */
+    int getSequenceIdListSize() {
+
+    }
+};
+
+class DecimationFilter : public Filter {
+public:
+    DecimationFilter() {
+
+    }
+
+    /**
+     * @brief Set the decimation filter scale value.
+     *
+     * @param type The decimation filter scale value.
+     */
+    void setScaleValue(uint8_t value) {
+
+    }
+
+    /**
+     * @brief Get the decimation filter scale value.
+     */
+    uint8_t getScaleValue() {
+
+    }
+
+    /**
+     * @brief Get the property range of the decimation filter scale value.
+     */
+    OBUint8PropertyRange getScaleRange() {
+        
+    }
+};
 }  // namespace ob

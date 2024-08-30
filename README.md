@@ -49,7 +49,7 @@ To learn how to effectively use the Orbbec Viewer, please refer to the  [Orbbec 
 
 API Reference: [Orbbec_SDK_API_Reference.html](https://orbbec.github.io/OrbbecSDK/doc/api/English/index.html)
 
-OrbbecSDK C++ API user guide：[Orbbec_SDK_C++_API_user_guide-v1.0.pdf](docs/tutorial/orbbecsdk_c++_api_user_guide-v1.0.pdf)
+OrbbecSDK C++ API user guide：[orbbecsdk_c++_api_user_guide-v1.0.pdf](docs/tutorial/orbbecsdk_c++_api_user_guide-v1.0.pdf)
 
 ### 2.3 Building from Source
 

@@ -16,10 +16,6 @@
 
   This project provides Python bindings for the Orbbec SDK, allowing developers to interface with Orbbec devices in Python.[https://github.com/orbbec/pyorbbecsdk](https://github.com/orbbec/pyorbbecsdk).
 
-## 4. C#
-
-  This is a wrapper for the Orbbec SDK for C#. It provides a simple and easy-to-use interface for accessing the Orbbec camera and performing various operations such as capturing depth images, color images, and performing point cloud generation. [https://github.com/orbbec/OrbbecSDK_CSharp](https://github.com/orbbec/OrbbecSDK_CSharp).
-
-## 5. K4A
+## 4. K4A
 
   This is a wrapper  for the Orbbec SDK for  K4A, It allowing users to develop applications using the K4A API and access Orbbec cameras. Additionally, users can replace the native K4A library in their application with this library without any code changes.[https://github.com/orbbec/OrbbecSDK-K4A-Wrapper](https://github.com/orbbec/OrbbecSDK-K4A-Wrapper).

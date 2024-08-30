@@ -43,7 +43,7 @@ For a comprehensive guide on installing the SDK, setting up your development env
 
 For practical examples on utilizing the SDK, refer to the [Examples](examples/README.md) section for more insights.
 
-To learn how to effectively use the Orbbec Viewer, please refer to the [Orbbec Viewer User Guide](docs/tutorial/OrbbecViewer.md).
+To learn how to effectively use the Orbbec Viewer, please refer to the  [Orbbec Viewer User Guide](docs/tutorial/orbbecviewer.md).
 
 ### 2.2 API Reference
 

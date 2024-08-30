@@ -108,13 +108,3 @@ This file lists the interface names that are incompatible between the latest SDK
 #### C++ Interfaces
 
 - **getD2CValidArea**
-
-# Features not available in the open source version
-
-## Record playback
-
-The record playback feature will soon be redesigned in a future version
-
-## The record playback feature will soon be redesigned in a future version
-
-Firmware upgrade protocol design flash read and write protocol, part of this protocol cannot be open source, need to develop a closed source module later. The release version needs to recommend users to use the old SDK/ tools to complete the firmware upgrade, and clearly inform them when the feature will be added back.

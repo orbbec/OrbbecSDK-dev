@@ -10,7 +10,7 @@ This is the open source repo of the Orbbec SDK. The Orbbec SDK is a cross-platfo
 
 The Orbbec SDK is open source since the version 2.0.0, the pre-compiled binaries of current and previous versions still can be found in this repo: [https://github.com/orbbec/OrbbecSDK](https://github.com/orbbec/OrbbecSDK). It's recommended to use the pre-compiled binaries repo if you already have an project relying on the version v1.x.y of the Orbbec SDK.
 
-Compared to v1.x.x, the v2.x.x version has many optimizations and refactoring. And we also have removed or modified some interfaces that were either rarely used or had flawed designs, these changes will not affect the normal usage of the SDK. The different between v1.x.x and v2.x.x of interfaces can be found in the [API changes at v2.x.x](docs/api/api_changes_at_v2.x.x.md).
+Compared to v1.x.x, the v2.x.x version has many optimizations and refactoring. And we also have removed or modified some interfaces that were either rarely used or had flawed designs, these changes will not affect the normal usage of the SDK. The different between v1.x.x and v2.x.x of interfaces can be found in the [api_changes_at_v2.x.x](docs/api/api_changes_at_v2.x.x.md).Features not available in the current version can be found in the [features_not_available_at_v2.x.x](docs/api/features_not_available_at_v2.x.x.md).
 
 ### 1.1 Supported Platforms
 

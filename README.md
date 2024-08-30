@@ -10,7 +10,7 @@ This is the open source repo of the Orbbec SDK. The Orbbec SDK is a cross-platfo
 
 The Orbbec SDK is open source since the version 2.0.0, the pre-compiled binaries of current and previous versions still can be found in this repo: [https://github.com/orbbec/OrbbecSDK](https://github.com/orbbec/OrbbecSDK). It's recommended to use the pre-compiled binaries repo if you already have an project relying on the version v1.x.y of the Orbbec SDK.
 
-Compared to v1.x.x, the v2.x.x version has many optimizations and refactoring. And we also have removed or modified some interfaces that were either rarely used or had flawed designs, these changes will not affect the normal usage of the SDK. The different between v1.x.x and v2.x.x of interfaces can be found in the [API changes at v2.x.x](docs/tutorial/API_Changes_at_v2.x.x.md).
+Compared to v1.x.x, the v2.x.x version has many optimizations and refactoring. And we also have removed or modified some interfaces that were either rarely used or had flawed designs, these changes will not affect the normal usage of the SDK. The different between v1.x.x and v2.x.x of interfaces can be found in the [API changes at v2.x.x](docs/tutorial/api_changes_at_v2.x.x.md).
 
 ### 1.1 Supported Platforms
 
@@ -39,7 +39,7 @@ More devices support will be added in the near future. If you can not find your 
 
 ### 2.1 Quick Start
 
-For a comprehensive guide on installing the SDK, setting up your development environment, and developing applications, please consult the [Tutorial](docs/tutorial/Installation_and_Development_Guide.md) section for detailed information.
+For a comprehensive guide on installing the SDK, setting up your development environment, and developing applications, please consult the [Tutorial](docs/tutorial/installation_and_development_guide.md) section for detailed information.
 
 For practical examples on utilizing the SDK, refer to the [Examples](examples/README.md) section for more insights.
 
@@ -49,11 +49,11 @@ To learn how to effectively use the Orbbec Viewer, please refer to the [Orbbec V
 
 API Reference: [Orbbec_SDK_API_Reference.html](https://orbbec.github.io/OrbbecSDK/doc/api/English/index.html)
 
-OrbbecSDK C++ API user guide：[Orbbec_SDK_C++_API_user_guide-v1.0.pdf](docs/tutorial/OrbbecSDK_C++_API_user_guide-v1.0.pdf)
+OrbbecSDK C++ API user guide：[Orbbec_SDK_C++_API_user_guide-v1.0.pdf](docs/tutorial/orbbecsdk_c++_api_user_guide-v1.0.pdf)
 
 ### 2.3 Building from Source
 
-For building the SDK from source, please refer to the [build guide](docs/build/Building_Orbbec_SDK.md) for more information.
+For building the SDK from source, please refer to the [build guide](docs/build/building_orbbec_sdk.md) for more information.
 
 ### 2.4 FAQ
 
@@ -99,7 +99,7 @@ pipe.stop();
 
 Currently, we are not accepting external contributions to expand the functionality of the SDK. But we will be happy to review any pull requests or suggestions you may have.
 Please contact us at [issues](https://github.com/orbbec/OrbbecSDK-dev/issues) channel if you have any questions or concerns.
-For the developers who want to contribute to the SDK, please refer to the [developer guide](docs/developer/Contributing_to_Orbbec_SDK.md) for more information.
+For the developers who want to contribute to the SDK, please refer to the [developer guide](docs/developer/contributing_to_orbbec_sdk.md) for more information.
 
 ## 5. License
 

@@ -26,7 +26,7 @@ TIMESTAMP=$(date +"%Y%m%d%H%M")
 
 git config --global --add safe.directory /workspace/OpenOrbbecSDK
 COMMIT_HASH=$(git rev-parse --short HEAD)
-PACKAGE_NAME="openorbbecsdk_${VERSION}_${TIMESTAMP}_${COMMIT_HASH}_${platform}"
+PACKAGE_NAME="openorbbecsdk_v${VERSION}_${TIMESTAMP}_${COMMIT_HASH}_${platform}"
 
 # Create build directory
 rm -rf build_$platform

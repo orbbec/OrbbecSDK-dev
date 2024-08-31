@@ -380,6 +380,10 @@ public:
     uint32_t metadataSize() const {
         return getMetadataSize();
     }
+
+    static void setFrameSystemTimestamp(std::shared_ptr<Frame> frame, uint64_t systemTimestamp);
+
+    static void setFrameDeviceTimestamp(std::shared_ptr<Frame> frame, uint64_t deviceTimestamp);
 };
 
 /**

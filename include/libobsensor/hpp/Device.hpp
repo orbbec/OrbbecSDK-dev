@@ -737,6 +737,11 @@ public:
         Error::handle(&error);
         return std::make_shared<CameraParamList>(impl);
     }
+
+    // The following interfaces are deprecated and are retained here for compatibility purposes.
+    void loadDepthFilterConfig(const char *filePath) {
+        (void)filePath; // to compile
+    }
 };
 
 /**

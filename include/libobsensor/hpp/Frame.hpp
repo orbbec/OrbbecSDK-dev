@@ -380,10 +380,6 @@ public:
     uint32_t metadataSize() const {
         return getMetadataSize();
     }
-
-    static void setFrameSystemTimestamp(std::shared_ptr<Frame> frame, uint64_t systemTimestamp);
-
-    static void setFrameDeviceTimestamp(std::shared_ptr<Frame> frame, uint64_t deviceTimestamp);
 };
 
 /**
@@ -947,6 +943,42 @@ private:
         auto *ctx = static_cast<BufferDestroyContext *>(context);
         ctx->callback(buffer);
         delete ctx;
+    }
+};
+
+/**
+ * @brief FrameHepler class, which provides some static functions to set timestamp for frame objects
+ * FrameHepler inherited from the FrameFactory and the timestamp interface implement here both for compatibility purposes.
+ */
+class FrameHepler : public FrameFactory {
+public:
+    FrameHepler() = default;
+
+    /**
+     * @brief Set the device timestamp of the frame.
+     *
+     * @param frame The frame object.
+     * @param deviceTimestampUs The device timestamp to set in microseconds.
+     */
+    static void setFrameDeviceTimestampUs(std::shared_ptr<Frame> frame, uint64_t deviceTimestampUs) {
+        ob_error *error = nullptr;
+        auto impl = const_cast<ob_frame*>(frame->getImpl());
+        ob_frame_set_timestamp_us(impl, deviceTimestampUs, &error);
+        Error::handle(&error);
+    }
+
+public:
+    // The following interfaces are deprecated and are retained here for compatibility purposes.
+    static void setFrameSystemTimestamp(std::shared_ptr<Frame> frame, uint64_t systemTimestamp) {
+        // In order to compile, some high-version compilers will warn that the function parameters are not used.
+        (void)frame;
+        (void)systemTimestamp;
+    }
+
+    static void setFrameDeviceTimestamp(std::shared_ptr<Frame> frame, uint64_t deviceTimestamp) {
+        // In order to compile, some high-version compilers will warn that the function parameters are not used.
+        (void)frame;
+        (void)deviceTimestamp;
     }
 };
 

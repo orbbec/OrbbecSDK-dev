@@ -641,7 +641,7 @@ public:
  */
 class SpatialAdvancedFilter : public Filter {
 public:
-    SpatialAdvancedFilter(const std::string &activationKey) {
+    SpatialAdvancedFilter(const std::string &activationKey = "") {
         ob_error *error = nullptr;
         auto      impl  = ob_create_private_filter("SpatialAdvancedFilter", activationKey.c_str(), &error);
         Error::handle(&error);
@@ -750,7 +750,7 @@ public:
  */
 class HoleFillingFilter : public Filter {
 public:
-    HoleFillingFilter(const std::string &activationKey) {
+    HoleFillingFilter(const std::string &activationKey = "") {
         ob_error *error = nullptr;
         auto      impl  = ob_create_private_filter("HoleFillingFilter", activationKey.c_str(), &error);
         Error::handle(&error);
@@ -782,7 +782,7 @@ public:
  */
 class NoiseRemovalFilter : public Filter {
 public:
-    NoiseRemovalFilter(const std::string &activationKey) {
+    NoiseRemovalFilter(const std::string &activationKey = "") {
         ob_error *error = nullptr;
         auto      impl  = ob_create_private_filter("NoiseRemovalFilter", activationKey.c_str(), &error);
         Error::handle(&error);
@@ -846,6 +846,32 @@ public:
 	}
 };
 
+class TemporalFilter : public Filter {
+public:
+    TemporalFilter(const std::string &activationKey = "") {
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_private_filter("TemporalFilter", activationKey.c_str(), &error);
+        Error::handle(&error);
+        init(impl);
+    }
+
+    OBFloatPropertyRange getDiffScaleRange() {
+
+    }
+
+    void setDiffScale(float value) {
+
+    }
+
+    OBFloatPropertyRange getWeightRange() {
+
+    }
+
+    void setWeight(float value) {
+        
+    }
+};
+
 /**
  * @brief Define the Filter type map
  */
@@ -854,7 +880,8 @@ const std::unordered_map<std::string, std::type_index> typeMap = {
     { "FormatConverter", typeid(FormatConvertFilter) }, { "HDRMerge", typeid(HdrMerge) },
     { "SequenceIdFilter", typeid(SequenceIdFilter) },   { "DecimationFilter", typeid(DecimationFilter) },
     { "ThresholdFilter", typeid(ThresholdFilter) },     { "SpatialAdvancedFilter", typeid(SpatialAdvancedFilter) },
-    { "HoleFillingFilter", typeid(HoleFillingFilter) }, { "NoiseRemovalFilter", typeid(NoiseRemovalFilter) }
+    { "HoleFillingFilter", typeid(HoleFillingFilter) }, { "NoiseRemovalFilter", typeid(NoiseRemovalFilter) },
+    { "TemporalFilter", typeid(TemporalFilter) }
 };
 
 /**

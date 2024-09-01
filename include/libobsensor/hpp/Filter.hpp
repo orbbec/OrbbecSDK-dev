@@ -31,7 +31,9 @@ typedef std::function<void(std::shared_ptr<Frame>)> FilterCallback;
 /**
 * @brief Get the type of a PropertyRange member
 */
-template <typename T> struct RangeTraits;
+template <typename T> struct RangeTraits{
+    using valueType = void;
+};
 
 template <> struct RangeTraits<OBUint8PropertyRange> {
     using valueType = uint8_t;
@@ -50,16 +52,19 @@ template <> struct RangeTraits<OBFloatPropertyRange> {
 };
 
 /**
-* @brief Get all values ​​from item except cur
+* @brief Get T Property Range
 */
 template <typename T> 
 T getPropertyRange(const OBFilterConfigSchemaItem &item, const double cur) {
+	// If T type is illegal, T will be void
+    using valueType = typename RangeTraits<T>::valueType;
     T range{};
-    range.cur  = static_cast<typename RangeTraits<T>::valueType>(cur);
-    range.def  = static_cast<typename RangeTraits<T>::valueType>(item.def);
-    range.max  = static_cast<typename RangeTraits<T>::valueType>(item.max);
-    range.min  = static_cast<typename RangeTraits<T>::valueType>(item.min);
-    range.step = static_cast<typename RangeTraits<T>::valueType>(item.step);
+	// Compilate error will be reported here if T is void
+    range.cur  = static_cast<valueType>(cur);
+    range.def  = static_cast<valueType>(item.def);
+    range.max  = static_cast<valueType>(item.max);
+    range.min  = static_cast<valueType>(item.min);
+    range.step = static_cast<valueType>(item.step);
     return range;
 }
 
@@ -772,6 +777,9 @@ public:
 	}
 };
 
+/**
+ * @brief The noise removal filter,removing scattering depth pixels.
+ */
 class NoiseRemovalFilter : public Filter {
 public:
     NoiseRemovalFilter(const std::string &activationKey) {

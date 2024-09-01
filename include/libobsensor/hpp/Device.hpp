@@ -738,9 +738,9 @@ public:
         return std::make_shared<CameraParamList>(impl);
     }
 
-    // The following interfaces are deprecated and are retained here for compatibility purposes.
     void loadDepthFilterConfig(const char *filePath) {
-        (void)filePath; // to compile
+        // In order to compile, some high-version compilers will warn that the function parameters are not used.
+        (void)filePath;
     }
 };
 

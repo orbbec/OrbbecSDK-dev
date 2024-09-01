@@ -846,6 +846,9 @@ public:
 	}
 };
 
+/**
+ * @brief Temporal filter
+ */
 class TemporalFilter : public Filter {
 public:
     TemporalFilter(const std::string &activationKey = "") {
@@ -855,20 +858,56 @@ public:
         init(impl);
     }
 
+    /**
+     * @brief Get the TemporalFilter diffscale range.
+     *
+     * @return OBFloatPropertyRange the diffscale value of property range.
+     */
     OBFloatPropertyRange getDiffScaleRange() {
-
+        OBFloatPropertyRange range{};
+        const auto           &schemaVec = getConfigSchemaVec();
+        for(const auto &item: schemaVec) {
+            if(strcmp(item.name, "diff_scale") == 0) {
+                range = getPropertyRange<OBFloatPropertyRange>(item, getConfigValue("diff_scale"));
+                break;
+            }
+        }
+        return range;
     }
 
+    /**
+     * @brief Set the TemporalFilter diffscale value.
+     *
+     * @param value diffscale value.
+     */
     void setDiffScale(float value) {
-
+        setConfigValue("diff_scale", static_cast<double>(value));
     }
 
+    /**
+     * @brief Get the TemporalFilter weight range.
+     *
+     * @return OBFloatPropertyRange the weight value of property range.
+     */
     OBFloatPropertyRange getWeightRange() {
-
+        OBFloatPropertyRange range{};
+        const auto          &schemaVec = getConfigSchemaVec();
+        for(const auto &item: schemaVec) {
+            if(strcmp(item.name, "weight") == 0) {
+                range = getPropertyRange<OBFloatPropertyRange>(item, getConfigValue("weight"));
+                break;
+            }
+        }
+        return range;
     }
 
+    /**
+     * @brief Set the TemporalFilter weight value.
+     *
+     * @param value weight value.
+     */
     void setWeight(float value) {
-        
+        setConfigValue("weight", static_cast<double>(value));
     }
 };
 

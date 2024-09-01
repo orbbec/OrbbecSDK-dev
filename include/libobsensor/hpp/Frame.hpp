@@ -951,10 +951,8 @@ private:
  * @brief FrameHepler class, which provides some static functions to set timestamp for frame objects
  * FrameHepler inherited from the FrameFactory and the timestamp interface implement here both for compatibility purposes.
  */
-class FrameHepler : public FrameFactory {
+class FrameHelper : public FrameFactory {
 public:
-    FrameHepler() = default;
-
     /**
      * @brief Set the device timestamp of the frame.
      *

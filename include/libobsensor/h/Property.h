@@ -445,7 +445,7 @@ typedef enum {
      *
      * @brief Currently using for GMSL device, cut off power and power on again by GMSL host driver.
      */
-    OB_PROP_DEVICE_REPOWER_BOOL = 200,
+    OB_PROP_DEVICE_REPOWER_BOOL = 202,
 
     /**
      * @brief Baseline calibration parameters

@@ -186,7 +186,7 @@ OB_EXPORT void ob_config_enable_stream(ob_config *config, ob_stream_type stream_
  * @param[in] config The pipeline configuration
  * @param[out] error Log error messages
  */
-void ob_config_enable_all_stream(ob_config *config, ob_error **error);
+OB_EXPORT void ob_config_enable_all_stream(ob_config *config, ob_error **error);
 
 /**
  * @brief Enable a stream according to the stream profile
@@ -321,7 +321,7 @@ OB_EXPORT ob_camera_param ob_pipeline_get_camera_param_with_profile(ob_pipeline 
  * @param[out] error Log error messages
  * @return ob_calibration_param The calibration parameters
  */
-ob_calibration_param ob_pipeline_get_calibration_param(ob_pipeline *pipeline, ob_config *config, ob_error **error);
+OB_EXPORT ob_calibration_param ob_pipeline_get_calibration_param(ob_pipeline *pipeline, ob_config *config, ob_error **error);
 
 // The following interfaces are deprecated and are retained here for compatibility purposes.
 #define ob_config_set_depth_scale_require ob_config_set_depth_scale_after_align_require

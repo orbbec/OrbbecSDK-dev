@@ -297,7 +297,7 @@ OB_EXPORT void ob_config_set_frame_aggregate_output_mode(ob_config *config, ob_f
  * @param[out] error Log error messages
  * @return ob_camera_param The camera internal parameters
  */
-ob_camera_param ob_pipeline_get_camera_param(ob_pipeline *pipeline, ob_error **error);
+OB_EXPORT ob_camera_param ob_pipeline_get_camera_param(ob_pipeline *pipeline, ob_error **error);
 
 /**
  * @brief Get the current camera parameters

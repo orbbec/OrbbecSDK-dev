@@ -771,19 +771,28 @@ public:
     }
 
     std::shared_ptr<DepthFrame> depthFrame() const {
-        auto frame      = getFrame(OB_FRAME_DEPTH);
+        auto frame = getFrame(OB_FRAME_DEPTH);
+        if(frame == nullptr) {
+            return nullptr;
+        }
         auto depthFrame = frame->as<ob::DepthFrame>();
         return depthFrame;
     }
 
     std::shared_ptr<ColorFrame> colorFrame() const {
-        auto frame      = getFrame(OB_FRAME_COLOR);
+        auto frame = getFrame(OB_FRAME_COLOR);
+        if(frame == nullptr) {
+            return nullptr;
+        }
         auto colorFrame = frame->as<ob::ColorFrame>();
         return colorFrame;
     }
 
     std::shared_ptr<IRFrame> irFrame() const {
-        auto frame   = getFrame(OB_FRAME_IR);
+        auto frame = getFrame(OB_FRAME_IR);
+        if(frame == nullptr) {
+            return nullptr;
+        }
         auto irFrame = frame->as<ob::IRFrame>();
         return irFrame;
     }
@@ -791,7 +800,10 @@ public:
 public:
     // The following interfaces are deprecated and are retained here for compatibility purposes.
     std::shared_ptr<PointsFrame> pointsFrame() const {
-        auto frame       = getFrame(OB_FRAME_POINTS);
+        auto frame = getFrame(OB_FRAME_POINTS);
+        if(frame == nullptr) {
+            return nullptr;
+        }
         auto pointsFrame = frame->as<ob::PointsFrame>();
         return pointsFrame;
     }
@@ -961,7 +973,7 @@ public:
      */
     static void setFrameDeviceTimestampUs(std::shared_ptr<Frame> frame, uint64_t deviceTimestampUs) {
         ob_error *error = nullptr;
-        auto impl = const_cast<ob_frame*>(frame->getImpl());
+        auto      impl  = const_cast<ob_frame *>(frame->getImpl());
         ob_frame_set_timestamp_us(impl, deviceTimestampUs, &error);
         Error::handle(&error);
     }

@@ -38,7 +38,7 @@ private:
 
 private:
     std::mutex                                                          mutex_;
-    std::mutex                                                          registerMutex_;		// for debug - baiye, this
+    std::mutex                                                          registerMutex_;
     std::map<uint64_t, std::vector<std::weak_ptr<const StreamProfile>>> streamProfileMap_;  // vertices
     std::map<uint64_t, std::vector<std::pair<uint64_t, OBExtrinsic>>>   extrinsicsGraph_;   // graph adjacency list
 };

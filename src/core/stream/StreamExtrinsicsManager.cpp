@@ -74,7 +74,7 @@ StreamExtrinsicsManager::~StreamExtrinsicsManager() noexcept = default;
 void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const StreamProfile> &from, const std::shared_ptr<const StreamProfile> &to,
                                                  const OBExtrinsic &extrinsics) {
     {
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(registerMutex_); // add for debug - by baiye(This comment needs to be deleted)
         cleanExpiredStreamProfiles();  // clean expired stream profiles first
     }
 
@@ -108,7 +108,7 @@ void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const Str
     bool isIdentityExtrinsics = (memcmp(&extrinsics, &IdentityExtrinsics, sizeof(OBExtrinsic)) == 0);
 
     // register the extrinsics
-    std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(registerMutex_);	// for debug - baiye
     if(alreadyRegistered) {
         // if already registered, remove the old one, and then register the new one
         eraseStreamProfile(from);

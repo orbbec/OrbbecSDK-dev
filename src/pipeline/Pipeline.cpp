@@ -436,13 +436,13 @@ OBCameraParam Pipeline::getCameraParam(uint32_t colorWidth, uint32_t colorHeight
     return curCameraParam;
 }
 
-OBCalibrationParam Pipeline::getCalibrationParam(std::shared_ptr<Config> cfg){
+OBCalibrationParam Pipeline::getCalibrationParam(std::shared_ptr<Config> cfg) {
     OBCalibrationParam calibrationParam = {};
     if(!device_ || !cfg) {
         return calibrationParam;
     }
 
-    auto constConfig = std::const_pointer_cast<Config>(cfg);
+    auto config = checkAndSetConfig(cfg);
 
     memset(calibrationParam.intrinsics, 0, sizeof(OBCameraIntrinsic) * OB_SENSOR_TYPE_COUNT);
     memset(calibrationParam.distortion, 0, sizeof(OBCameraDistortion) * OB_SENSOR_TYPE_COUNT);
@@ -455,69 +455,73 @@ OBCalibrationParam Pipeline::getCalibrationParam(std::shared_ptr<Config> cfg){
     }
 
     auto accelSensor = device_->getSensor(OB_SENSOR_ACCEL);
-    auto gyroSensor = device_->getSensor(OB_SENSOR_GYRO);
-    if(!accelSensor || !gyroSensor){
+    auto gyroSensor  = device_->getSensor(OB_SENSOR_GYRO);
+    if(!accelSensor || !gyroSensor) {
         return calibrationParam;
     }
 
     auto accelSensorSpList = accelSensor->getStreamProfileList();
-    auto gyroSensorSpList = gyroSensor->getStreamProfileList();
-    if(accelSensorSpList.empty() || gyroSensorSpList.empty()){
+    auto gyroSensorSpList  = gyroSensor->getStreamProfileList();
+    if(accelSensorSpList.empty() || gyroSensorSpList.empty()) {
         return calibrationParam;
     }
     auto accelStreamProfile = accelSensorSpList.front();
-    auto gyroStreamProfile = gyroSensorSpList.front();
+    auto gyroStreamProfile  = gyroSensorSpList.front();
 
-    //Intrinsic
+    // Intrinsic
     for(int i = 0; i < OB_SENSOR_TYPE_COUNT; i++) {
         auto sensorType = static_cast<OBSensorType>(i);
         auto streamType = utils::mapSensorTypeToStreamType(sensorType);
-        if(streamType == OB_STREAM_ACCEL || streamType == OB_STREAM_GYRO){
+        if(streamType == OB_STREAM_ACCEL || streamType == OB_STREAM_GYRO) {
             continue;
         }
 
-        auto streamProfile = getCurrentVideoStreamProfile(constConfig, streamType);
-        if(!streamProfile){
+        auto streamProfile = getCurrentVideoStreamProfile(config, streamType);
+        if(!streamProfile) {
             continue;
         }
-        auto intrinsic = streamProfile->getIntrinsic();
+        auto intrinsic  = streamProfile->getIntrinsic();
         auto distortion = streamProfile->getDistortion();
         memcpy(&calibrationParam.intrinsics[sensorType], &intrinsic, sizeof(OBCameraIntrinsic));
         memcpy(&calibrationParam.distortion[sensorType], &distortion, sizeof(OBCameraDistortion));
     }
 
-    //Extrinsic
+    // Extrinsic
     for(int source = 0; source < OB_SENSOR_TYPE_COUNT; source++) {
         for(int target = 0; target < OB_SENSOR_TYPE_COUNT; target++) {
-            if(source == target){
+            if(source == target) {
                 continue;
             }
 
             auto sourceSensorType = static_cast<OBSensorType>(source);
             auto targetSensorType = static_cast<OBSensorType>(target);
 
-            auto sourceStreamType = utils::mapSensorTypeToStreamType(sourceSensorType);
-            auto targetStreamType = utils::mapSensorTypeToStreamType(targetSensorType);
+            auto                                 sourceStreamType = utils::mapSensorTypeToStreamType(sourceSensorType);
+            auto                                 targetStreamType = utils::mapSensorTypeToStreamType(targetSensorType);
             std::shared_ptr<const StreamProfile> sourceStreamProfile;
             std::shared_ptr<const StreamProfile> targetStreamProfile;
 
-            if(sourceStreamType == OB_STREAM_ACCEL){
+            if(sourceStreamType == OB_STREAM_ACCEL) {
                 sourceStreamProfile = accelStreamProfile;
-            } else if(sourceStreamType == OB_STREAM_GYRO){
+            }
+            else if(sourceStreamType == OB_STREAM_GYRO) {
                 sourceStreamProfile = gyroStreamProfile;
-            }else{
-                sourceStreamProfile = getCurrentVideoStreamProfile(constConfig, sourceStreamType);
+            }
+            else {
+                sourceStreamProfile = getCurrentVideoStreamProfile(config, sourceStreamType);
             }
 
-            if(targetStreamType == OB_STREAM_ACCEL){
+            if(targetStreamType == OB_STREAM_ACCEL) {
                 targetStreamProfile = accelStreamProfile;
-            } else if(targetStreamType == OB_STREAM_GYRO){
-                targetStreamProfile = gyroStreamProfile;
-            }else{
-                targetStreamProfile = getCurrentVideoStreamProfile(constConfig, targetStreamType);
             }
-            
-            if(!sourceStreamProfile || !targetStreamProfile){
+            else if(targetStreamType == OB_STREAM_GYRO) {
+                targetStreamProfile = gyroStreamProfile;
+            }
+            else {
+                targetStreamProfile = getCurrentVideoStreamProfile(config, targetStreamType);
+            }
+
+            if(!sourceStreamProfile || !targetStreamProfile) {
                 continue;
             }
 

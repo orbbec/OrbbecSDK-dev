@@ -914,7 +914,7 @@ public:
 /**
  * @brief Define the Filter type map
  */
-const std::unordered_map<std::string, std::type_index> typeMap = {
+static const std::unordered_map<std::string, std::type_index> typeMap = {
     { "PointCloudFilter", typeid(PointCloudFilter) },   { "Align", typeid(Align) },
     { "FormatConverter", typeid(FormatConvertFilter) }, { "HDRMerge", typeid(HdrMerge) },
     { "SequenceIdFilter", typeid(SequenceIdFilter) },   { "DecimationFilter", typeid(DecimationFilter) },

@@ -2696,7 +2696,7 @@
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
-            <IR_LEFT>
+            <LeftIR>
                 <!-- The resolution width is enabled by default, int type -->
                 <Width>848</Width>
                 <!-- High resolution is enabled by default, int type -->
@@ -2704,8 +2704,8 @@
                 <!-- The frame rate of the resolution enabled by default, int type -->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_LEFT>
-            <IR_RIGHT>
+            </LeftIR>
+            <RightIR>
                 <!-- The resolution width is enabled by default, int type -->
                 <Width>848</Width>
                 <!-- High resolution is enabled by default, int type -->
@@ -2713,7 +2713,7 @@
                 <!-- The frame rate of the resolution enabled by default, int type -->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
-            </IR_RIGHT>
+            </RightIR>
         </Gemini335Lg>
         <!-- Gemini 336 config -->
         <Gemini336>

@@ -13,8 +13,8 @@ G2StreamProfileFilter::G2StreamProfileFilter(IDevice *owner) : DeviceComponentBa
 static bool isMatch(OBSensorType sensorType, std::shared_ptr<const VideoStreamProfile> videoProfile, OBEffectiveStreamProfile effProfile) {
     bool isSensorTypeEqual = sensorType == effProfile.sensorType;
 
-    // Compatibility processing, normal mode has IR, but no IR_LEFT, IR_RIGHT; calibration mode has no IR, but has IR_LEFT, IR_RIGHT
-    // IR and IR_LEFT both use the IR channel, so they are the same. IR_RIGHT uses the Depth channel, so IR_RIGHT must match accurately
+    // Compatibility processing, normal mode has IR, but no LeftIR, RightIR; calibration mode has no IR, but has LeftIR, RightIR
+    // IR and LeftIR both use the IR channel, so they are the same. RightIR uses the Depth channel, so RightIR must match accurately
     if(!isSensorTypeEqual && sensorType != OB_SENSOR_IR_RIGHT && effProfile.sensorType != OB_SENSOR_IR_RIGHT) {
         isSensorTypeEqual = isIRSensor(sensorType) && isIRSensor(effProfile.sensorType);
     }

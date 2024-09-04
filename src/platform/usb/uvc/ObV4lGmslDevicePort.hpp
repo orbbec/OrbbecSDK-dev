@@ -166,7 +166,8 @@ private:
     // gmsl device enumer
     int foreach_uvc_device(std::vector<std::string> video_paths);
 
-    static void handleSpecialResolution(std::shared_ptr<V4lDeviceHandleGmsl> devHandle, std::shared_ptr<VideoFrame> videoFrame);
+    static void handleSpecialResolution(std::shared_ptr<V4lDeviceHandleGmsl> devHandle, const uint8_t *srcData, uint32_t srcSize,
+                                        std::shared_ptr<VideoFrame> videoFrame);
 
 private:
     std::shared_ptr<const USBSourcePortInfo>          portInfo_     = nullptr;

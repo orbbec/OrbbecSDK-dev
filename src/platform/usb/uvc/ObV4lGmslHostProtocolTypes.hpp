@@ -124,9 +124,9 @@ typedef struct _imu_origin_data_t {
 
 #pragma pack(push, 1)
 typedef struct {
-    uint16_t nMagic;
-    uint16_t nHalfWordSize;  // 去除头部后剩余data的 bytesize/2 -> halfwordSize
-    uint16_t nOpcode;
+    uint16_t magic;
+    uint16_t halfWordSize;  // 去除头部后剩余data的 bytesize/2 -> halfwordSize
+    uint16_t opcode;
     uint16_t nId;
 } ProtocolHeader;
 

@@ -16,6 +16,7 @@
 #include "ObV4lUvcDevicePort.hpp"
 #include "ObV4lGmslDevicePort.hpp"
 #include "ObV4lGmslHostProtocolTypes.hpp"
+#include "libobsensor/h/Property.h"
 #include "utils/Utils.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
@@ -49,8 +50,6 @@ int xioctlGmsl(int fh, unsigned long request, void *arg) {
     int ret   = 0;
     int retry = 5;
     do {
-        // std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        // std::this_thread::sleep_for( std::chrono::milliseconds(10) );
         ret = ioctl(fh, request, arg);
     } while(ret < 0 && (errno == EINTR || errno == EAGAIN) && retry--);
     return ret;
@@ -595,10 +594,8 @@ ObV4lGmslDevicePort::~ObV4lGmslDevicePort() noexcept {
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
-// 假设深度图数据是以uint16_t类型存储的，每个像素占用2个字节
-typedef uint8_t DepthPixel;
 // 裁剪深度图函数
-void cropDepthImage(DepthPixel *src, DepthPixel *dst, int srcWidth, int srcHeight, int cropRitght, int cropBottom) {
+void cropDepthImage(const uint8_t *src, uint8_t *dst, int srcWidth, int srcHeight, int cropRitght, int cropBottom) {
     assert(src != nullptr && dst != nullptr);
     int cropWidth  = srcWidth - cropRitght;
     int cropHeight = srcHeight - cropBottom;
@@ -607,27 +604,23 @@ void cropDepthImage(DepthPixel *src, DepthPixel *dst, int srcWidth, int srcHeigh
     // LOG_DEBUG("--->cropWidth:{}, cropHeight:{}, cropRitght:{}, cropBottom:{} \n", cropWidth, cropHeight, cropRitght, cropBottom);
 
     // 计算源图像和目标图像的每行像素数（以字节为单位）
-    // const size_t srcBytesPerRow = srcWidth * sizeof(DepthPixel);
-    const size_t dstBytesPerRow = cropWidth * sizeof(DepthPixel);
+    // const size_t srcBytesPerRow = srcWidth * sizeof(uint8_t);
+    const size_t dstBytesPerRow = cropWidth * sizeof(uint8_t);
 
     // 遍历图像的每一行，并复制像素到目标缓冲区
     for(int y = 0; y < cropHeight; y++) {
         // 计算当前行的源和目标指针
-        const DepthPixel *srcRow = src + y * srcWidth;
-        DepthPixel       *dstRow = dst + y * cropWidth;
+        const uint8_t *srcRow = src + y * srcWidth;
+        uint8_t       *dstRow = dst + y * cropWidth;
 
         // 复制当前行的像素（除了最右边的32列）
         // memcpy(dstRow, srcRow, dstBytesPerRow);
         std::memcpy(dstRow, srcRow, dstBytesPerRow);
     }
-
-    // copy new dst to src
-    std::memcpy(src, dst, cropWidth * cropHeight);
 }
 
-typedef uint16_t DepthPixel16;
 // 裁剪深度图函数
-void cropDepthImage16(DepthPixel16 *src, DepthPixel16 *dst, int srcWidth, int srcHeight, int cropRitght, int cropBottom) {
+void cropDepthImage16(const uint16_t *src, uint16_t *dst, int srcWidth, int srcHeight, int cropRitght, int cropBottom) {
     assert(src != nullptr && dst != nullptr);
     int cropWidth  = srcWidth - cropRitght;
     int cropHeight = srcHeight - cropBottom;
@@ -636,21 +629,19 @@ void cropDepthImage16(DepthPixel16 *src, DepthPixel16 *dst, int srcWidth, int sr
     // LOG_DEBUG("--->>>cropWidth:%d, cropHeight:%d, cropRitght:%d, cropBottom:%d\n", cropWidth, cropHeight, cropRitght, cropBottom);
 
     // 计算源图像和目标图像的每行像素数（以字节为单位）
-    // const size_t srcBytesPerRow = srcWidth * sizeof(DepthPixel16);
-    const size_t dstBytesPerRow = cropWidth * sizeof(DepthPixel16);
+    // const size_t srcBytesPerRow = srcWidth * sizeof(uint16_t);
+    const size_t dstBytesPerRow = cropWidth * sizeof(uint16_t);
 
     // 遍历图像的每一行，并复制像素到目标缓冲区
     for(int y = 0; y < cropHeight; y++) {
         // 计算当前行的源和目标指针
-        const DepthPixel16 *srcRow = src + y * srcWidth;
-        DepthPixel16       *dstRow = dst + y * cropWidth;
+        const uint16_t *srcRow = src + y * srcWidth;
+        uint16_t       *dstRow = dst + y * cropWidth;
 
         // 复制当前行的像素（除了最右边的32列）
         // memcpy(dstRow, srcRow, dstBytesPerRow);
         std::memcpy(dstRow, srcRow, dstBytesPerRow);
     }
-    // copy new dst to src
-    std::memcpy(src, dst, cropWidth * cropHeight * 2);
 }
 
 // 假设buf是一个指向数据的指针，size是数据的大小（以字节为单位）
@@ -748,7 +739,7 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                     LOG_DEBUG("VIDIOC_DQBUF failed, {}, {}", strerror(errno), devHandle->metadataInfo->name);
                 }
                 // LOG_DEBUG("---ObV4lGmslDevicePort::captureLoop-metadata--buf.bytesused:{}, buf.index:{}, buf.length:{} ", buf.bytesused, buf.index,
-                // buf.length );
+                // buf.length);
 
 #if 0
                 for(int i=0; i< buf.length; i++){
@@ -793,16 +784,23 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                 if((buf.bytesused) && (!(buf.flags & V4L2_BUF_FLAG_ERROR))) {
                     auto rawframe   = FrameFactory::createFrameFromStreamProfile(devHandle->profile);
                     auto videoFrame = rawframe->as<VideoFrame>();
-                    videoFrame->updateData(static_cast<const uint8_t *>(devHandle->buffers[buf.index].ptr), buf.bytesused);
+                    if((DetectPlatform() == Platform::Xavier) || (DetectPlatform() == Platform::Orin)) {
+                        handleSpecialResolution(devHandle, devHandle->buffers[buf.index].ptr, buf.bytesused, videoFrame);
+                    }
+                    else {
+                        videoFrame->updateData(devHandle->buffers[buf.index].ptr, buf.bytesused);
+                    }
+
                     if(metadataBufferIndex >= 0 && devHandle->metadataBuffers[metadataBufferIndex].sequence == buf.sequence) {
-                        auto uvc_payload_header     = devHandle->metadataBuffers[metadataBufferIndex].ptr + sizeof(V4L2UvcMetaHeader);
-                        auto uvc_payload_header_len = devHandle->metadataBuffers[metadataBufferIndex].actual_length - sizeof(V4L2UvcMetaHeader);
+                        auto &metaBuf = devHandle->metadataBuffers[metadataBufferIndex];
+                        // LOG_DEBUG("---ObV4lGmslDevicePort::captureLoop-metadata--buf.index:{}, buf.length:{} ", metaBuf.sequence, metaBuf.actual_length);
+                        auto uvc_payload_header     = metaBuf.ptr;
+                        auto uvc_payload_header_len = metaBuf.actual_length;
+                        videoFrame->updateMetadata(static_cast<const uint8_t *>(uvc_payload_header), 12);
+                        videoFrame->appendMetadata(static_cast<const uint8_t *>(uvc_payload_header), uvc_payload_header_len);
+
                         if(uvc_payload_header_len >= sizeof(StandardUvcFramePayloadHeader)) {
                             auto payloadHeader = (StandardUvcFramePayloadHeader *)uvc_payload_header;
-                            videoFrame->updateMetadata(static_cast<const uint8_t *>(payloadHeader->scrSourceClock),
-                                                       sizeof(StandardUvcFramePayloadHeader::scrSourceClock));
-                            videoFrame->appendMetadata(static_cast<const uint8_t *>(uvc_payload_header + sizeof(StandardUvcFramePayloadHeader)),
-                                                       uvc_payload_header_len - sizeof(StandardUvcFramePayloadHeader));
                             videoFrame->setTimeStampUsec(payloadHeader->dwPresentationTime);
                         }
                     }
@@ -811,12 +809,9 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                     videoFrame->setSystemTimeStampUsec(realtime);
                     videoFrame->setNumber(buf.sequence);
 
-                    if((DetectPlatform() == Platform::Xavier) || (DetectPlatform() == Platform::Orin)) {
-                        handleSpecialResolution(devHandle, videoFrame);
-                    }
-
                     if(devHandle->profile->getType() == OB_STREAM_COLOR) {
                         if(colorFrameNum >= 3) {
+                            // LOG_DEBUG("captureLoop-videoFrame.frameSize:{}", videoFrame->getDataSize());
                             devHandle->frameCallback(videoFrame);
                         }
                         else {
@@ -825,6 +820,7 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                         }
                     }
                     else {
+                        // LOG_DEBUG("captureLoop-videoFrame.frameSize:{}", videoFrame->getDataSize());
                         devHandle->frameCallback(videoFrame);
                     }
                 }
@@ -844,7 +840,8 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
     }
 }
 
-void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandleGmsl> devHandle, std::shared_ptr<VideoFrame> videoFrame) {
+void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandleGmsl> devHandle, const uint8_t *srcData, uint32_t srcSize,
+                                                  std::shared_ptr<VideoFrame> videoFrame) {
     // LOG_DEBUG("-Entry handleSpecialResolution");
     VALIDATE_NOT_NULL(devHandle);
     //---------------------------------------------------------------------------------------------------------------------------------
@@ -868,10 +865,12 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
     auto height     = devHandle->profile->getHeight();
     auto streamType = devHandle->profile->getType();
     if(((width % 424) == 0) || ((width == 480) && (height == 270))) {
-        int                  originalWidth  = width;
-        int                  originalHeight = height;
-        int                  paddedWidth, paddedHeight, trimRight, trimBottom;
-        std::vector<uint8_t> croppedImage;
+        int originalWidth  = width;
+        int originalHeight = height;
+        int paddedWidth    = 0;
+        int paddedHeight   = 0;
+        int trimRight      = 0;
+        int trimBottom     = 0;
 
         if((streamType == OB_STREAM_IR_LEFT) || (streamType == OB_STREAM_IR_RIGHT) || (streamType == OB_STREAM_IR))  // IR
         {
@@ -886,7 +885,6 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
             }
 
             paddedHeight = (originalHeight + 0);
-            croppedImage.resize(originalWidth * originalHeight);
 
             // 计算填充的像素数量
             trimRight  = paddedWidth - originalWidth;
@@ -896,7 +894,7 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
             // std::vector<uint8_t> croppedImage(originalWidth*originalHeight);
             try {
                 // cropDepthImage((uint8_t *)frameInfo.data, &croppedImage[0], paddedWidth, paddedHeight, trimRight, trimBottom);
-                cropDepthImage(videoFrame->getDataMutable(), &croppedImage[0], paddedWidth, paddedHeight, trimRight, trimBottom);
+                cropDepthImage(srcData, videoFrame->getDataMutable(), paddedWidth, paddedHeight, trimRight, trimBottom);
                 videoFrame->setDataSize(originalWidth * originalHeight);
             }
             catch(const std::exception &e) {
@@ -912,7 +910,6 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
                 paddedWidth = (originalWidth + 24);
             }
             paddedHeight = (originalHeight + 0);
-            croppedImage.resize(originalWidth * originalHeight * 2);
 
             // 计算填充的像素数量
             trimRight  = paddedWidth - originalWidth;
@@ -923,7 +920,7 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
             // std::vector<uint8_t> croppedImage(originalWidth*originalHeight);
             try {
                 // cropDepthImage((uint8_t *)frameInfo.data, &croppedImage[0], paddedWidth, paddedHeight, trimRight, trimBottom);
-                cropDepthImage16(reinterpret_cast<uint16_t *>(videoFrame->getDataMutable()), reinterpret_cast<uint16_t *>(&croppedImage[0]), paddedWidth,
+                cropDepthImage16(reinterpret_cast<const uint16_t *>(srcData), reinterpret_cast<uint16_t *>(videoFrame->getDataMutable()), paddedWidth,
                                  paddedHeight, trimRight, trimBottom);
                 videoFrame->setDataSize(originalWidth * originalHeight * 2);
             }
@@ -933,6 +930,11 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
             }
 #endif
         }
+    }
+    else {
+        // LOG_DEBUG("-SpecialResolution profile->width:{}, profile->height:{}, profile->streamType:{}", devHandle->profile->getWidth(),
+        //           devHandle->profile->getHeight(), devHandle->profile->getType());
+        videoFrame->updateData(srcData, srcSize);
     }
 
     // auto end = std::chrono::high_resolution_clock::now();
@@ -984,8 +986,8 @@ void ObV4lGmslDevicePort::startStream(std::shared_ptr<const StreamProfile> profi
     std::shared_ptr<V4lDeviceHandleGmsl> devHandle    = nullptr;
     auto                                 videoProfile = profile->as<VideoStreamProfile>();
     foreachProfileGmsl(deviceHandles_, [&](std::shared_ptr<V4lDeviceHandleGmsl> handle, std::shared_ptr<VideoStreamProfile> prof) {
-        if(prof->getWidth() == videoProfile->getWidth() && prof->getHeight() == videoProfile->getHeight() && prof->getFps() == videoProfile->getFps()
-           && prof->getFormat() == videoProfile->getFormat()) {
+        if(prof->getType() == videoProfile->getType() && prof->getWidth() == videoProfile->getWidth() && prof->getHeight() == videoProfile->getHeight()
+           && prof->getFps() == videoProfile->getFps() && prof->getFormat() == videoProfile->getFormat()) {
             devHandle = handle;
             return true;
         }
@@ -1268,7 +1270,10 @@ void ObV4lGmslDevicePort::stopStream(std::shared_ptr<const StreamProfile> profil
         // signal the capture loop to stop
         if(devHandle->stopPipeFd[1] >= 0) {
             char buff[1] = { 0 };
-            write(devHandle->stopPipeFd[1], buff, 1);
+            auto ret     = write(devHandle->stopPipeFd[1], buff, 1);
+            if(ret < 0) {
+                LOG_ERROR("Failed to write to stop pipe, errnoStr:{}, errno:{}, line:{} ", strerror(errno), errno, __LINE__);
+            }
         }
 
         // wait for the capture loop to stop
@@ -1334,8 +1339,8 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
 
     LOG_DEBUG("-Entry ObV4lGmslDevicePort::sendData-ctrl:{} ", dataLen);
 
-    uint16_t nOpcode, nId, nHalfWordSize, nMagic;
-    uint32_t mPropertyId = 0;
+    uint16_t opcode, nId, halfWordSize, magic;
+    uint32_t propertyId = 0;
     uint8_t  mData0 = 0, mData1 = 0, mData2 = 0, mData3 = 0;
     uint8_t  mHeaderLen   = dataLen - 4;
     uint32_t alignDataLen = 0, alignI2CDataLen = 0;
@@ -1359,29 +1364,29 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
 #endif
 
     if(data != NULL) {
-        nOpcode       = ((ProtocolHeader *)(data))->nOpcode;
+        opcode       = ((ProtocolHeader *)(data))->opcode;
         nId           = ((ProtocolHeader *)(data))->nId;
-        nHalfWordSize = ((ProtocolHeader *)(data))->nHalfWordSize;
-        nMagic        = ((ProtocolHeader *)(data))->nMagic;
-        LOG_DEBUG("--->>> nOpcode:{}, nId:{}, nHalfWordSize:{}, nMagic:0x{:0x} ", nOpcode, nId, nHalfWordSize, nMagic);
+        halfWordSize = ((ProtocolHeader *)(data))->halfWordSize;
+        magic        = ((ProtocolHeader *)(data))->magic;
+        LOG_DEBUG("--->>> opcode:{}, nId:{}, halfWordSize:{}, magic:0x{:0x} ", opcode, nId, halfWordSize, magic);
 
         uint8_t *pDataBuf = ((uint8_t *)(data)) + HP_HEADER_SIZE;
-        mPropertyId       = *(uint32_t *)pDataBuf;
-        LOG_DEBUG("--->>> mPropertyId: {} ", mPropertyId);
+        propertyId       = *(uint32_t *)pDataBuf;
+        LOG_DEBUG("--->>> propertyId: {} ", propertyId);
 
-        mData0 = mPropertyId & 0x000000FF;
-        mData1 = (mPropertyId >> 8) & 0x000000FF;
-        mData2 = (mPropertyId >> 16) & 0x000000FF;
-        mData3 = (mPropertyId >> 24) & 0x000000FF;
+        mData0 = propertyId & 0x000000FF;
+        mData1 = (propertyId >> 8) & 0x000000FF;
+        mData2 = (propertyId >> 16) & 0x000000FF;
+        mData3 = (propertyId >> 24) & 0x000000FF;
         LOG_DEBUG("--->>> mData0:0x{:0x}, mData1:0x{:0x}, mData2:{:0x}, mData3:{:0x} ", mData0, mData1, mData2, mData3);
 
-        // if(mPropertyId==1000)
+        // if(propertyId==1000)
         {
             LOG_DEBUG("-ObV4lGmslDevicePort-mHeaderLen:{}", mHeaderLen);
             i2c_msg_t get_version_cmd;
             memset( &get_version_cmd, 0, sizeof(i2c_msg_t) );
             get_version_cmd.header.len   = mHeaderLen;  // G2R_GET_VERSION_CMD_LEN;
-            get_version_cmd.header.code  = nOpcode;     // G2R_GET_VERSION_CMD_CODE;
+            get_version_cmd.header.code  = opcode;     // G2R_GET_VERSION_CMD_CODE;
             get_version_cmd.header.index = nId;         // inde++;
             get_version_cmd._data[0]     = mData0;      // 0xe8;
             get_version_cmd._data[1]     = mData1;      // 0x03;
@@ -1399,9 +1404,96 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
 #endif
 
 uint32_t ObV4lGmslDevicePort::sendAndReceive(const uint8_t *send, uint32_t sendLen, uint8_t *recv, uint32_t exceptedRecvLen) {
+    std::unique_lock<std::mutex> lk(mMultiThreadI2CMutex);
+    uint16_t                     opcode = ((ProtocolHeader *)(send))->opcode;
+    // uint16_t       reqId      = ((ProtocolHeader *)(send))->nId;
+    const uint8_t *dataBuf    = send + sizeof(ProtocolHeader);
+    uint32_t       propertyId = *reinterpret_cast<const uint32_t *>(dataBuf);
+
     if(!sendData(send, sendLen)) {
         return -1;
     }
+    utils::sleepUs(300);
+    // accroding to the opcode and propertyId to add more wait time
+    if((propertyId == OB_PROP_LDP_BOOL) || (propertyId == OB_PROP_DISPARITY_TO_DEPTH_BOOL) || (propertyId == OB_PROP_DISP_SEARCH_RANGE_MODE_INT)) {
+        auto delayTime = 10;  // 10ms
+        utils::sleepMs(delayTime);
+    }
+    if(propertyId == OB_PROP_LDP_MEASURE_DISTANCE_INT) {  // 100
+        auto delayTime = 10;                              // 10ms
+        utils::sleepMs(delayTime);
+    }
+    if((propertyId >= 1000) && (propertyId <= 1999)) {
+        auto delayTime = 10;  // 10ms
+        utils::sleepMs(delayTime);
+    }
+    if((propertyId >= 4000) && (propertyId <= 4999)) {
+        auto delayTime = 10;  // 10ms
+        utils::sleepMs(delayTime);
+    }
+    if((propertyId >= 4500) && (propertyId <= 4599)) {
+        auto delayTime = 10;  // 10ms
+        utils::sleepMs(delayTime);
+    }
+    if((propertyId == 1043) || (propertyId == 1038)) {
+        auto delayTime = 20;  // 10ms
+        utils::sleepMs(delayTime);
+    }
+
+    const int updateDelayMinTime  = 150;
+    int       updateDelayBaseTime = updateDelayMinTime * 4;
+
+    int delayTime = updateDelayMinTime;
+    if((opcode == 0x0D) || (opcode == 0x0E) || (opcode == 0x0F)) {
+        if((opcode == 0x0D) && (propertyId == 0x10000))  // cfg.bin & cfg2.bin & cfg_f.bin & cfg2_f.bin
+        {
+            delayTime = updateDelayBaseTime;
+        }
+        else if((opcode == 0x0D) && (propertyId == 0x20000))  // 131072 Gemini330_app_1.3.29.bin
+        {
+            delayTime = updateDelayBaseTime * 2;
+        }
+        else if((opcode == 0x0D) && (propertyId == 0x60000))  // 393216 //Gemini330_app_1.3.29.bin
+        {
+            delayTime = updateDelayBaseTime * 2 * 3;
+        }
+        else if((opcode == 0x0D) && (propertyId == 0x500000))  // ORBBEC_ISP_20240730.bin
+        {
+            delayTime = updateDelayBaseTime * 2 * 3;
+        }
+        else if((opcode == 0x0D) && (propertyId == 0xA4000))  // TMF8801_FW_3.0.22.bin
+        {
+            delayTime = updateDelayBaseTime * 2;
+        }
+        else if((opcode == 0x0D))  // flash erase delay
+        {
+#if 1                                 // for debug test use. remove it when release
+                                      // add delay  64K-200ms, 128K-400ms, 256K-800ms
+            int uintDelayTime = 200;  // 200ms
+            int delayNum      = (propertyId / 65536 /*64K*/) + ((propertyId % 65536) ? 1 : 0);
+            int delayTime     = delayNum * uintDelayTime;
+            LOG_DEBUG("eraseFlashFunc2 delayTime {}. after, I2C update write flash", delayTime);
+            std::this_thread::sleep_for(std::chrono::milliseconds(delayTime));
+#endif
+        }
+        else if((opcode == 0x0E))  // writeFlash
+        {
+            delayTime = updateDelayMinTime - 100;
+        }
+        else if((opcode == 0x0F)) {
+            delayTime = updateDelayMinTime * 2;
+        }
+        else {
+            delayTime = 10;
+        }
+        utils::sleepMs(delayTime);
+    }
+    // opcode 25 handle update read vertyfy
+    if(opcode == 25) {
+        auto delayTime = 10;
+        utils::sleepMs(delayTime);
+    }
+
     if(!recvData(recv, &exceptedRecvLen)) {
 
         return -1;
@@ -1415,8 +1507,8 @@ uint32_t ObV4lGmslDevicePort::sendAndReceive(const uint8_t *send, uint32_t sendL
  *
  */
 bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
-    uint16_t nOpcode, nId = 0, nHalfWordSize = 0, nMagic = 0;
-    uint32_t mPropertyId = 0, alignDataLen = 0, alignI2CDataLen = 0, ctrl = 0;
+    uint16_t opcode, nId = 0, halfWordSize = 0, magic = 0;
+    uint32_t propertyId = 0, alignDataLen = 0, alignI2CDataLen = 0, ctrl = 0;
     uint8_t  mI2cPackDataLen = 0, mI2cPackLen = 0;
     bool     ret = false;
 
@@ -1430,18 +1522,18 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
 
     VALIDATE_NOT_NULL(data);
     {
-        nOpcode       = ((ProtocolHeader *)(data))->nOpcode;
-        nId           = ((ProtocolHeader *)(data))->nId;
-        nHalfWordSize = ((ProtocolHeader *)(data))->nHalfWordSize;
-        nMagic        = ((ProtocolHeader *)(data))->nMagic;
+        opcode       = ((ProtocolHeader *)(data))->opcode;
+        nId          = ((ProtocolHeader *)(data))->nId;
+        halfWordSize = ((ProtocolHeader *)(data))->halfWordSize;
+        magic        = ((ProtocolHeader *)(data))->magic;
         LOG_DEBUG("------------------------------------------------------------------------");
 
         uint8_t *pDataBuf = ((uint8_t *)(data)) + sizeof(ProtocolHeader);
-        mPropertyId       = *(uint32_t *)pDataBuf;
-        LOG_DEBUG("sendData nOpcode:{}, nId:{}, nHalfWordSize:{}, nMagic:0x{:0x}, PropertyId:{}", nOpcode, nId, nHalfWordSize, nMagic, mPropertyId);
+        propertyId        = *(uint32_t *)pDataBuf;
+        LOG_DEBUG("sendData opcode:{}, nId:{}, halfWordSize:{}, magic:0x{:0x}, PropertyId:{}", opcode, nId, halfWordSize, magic, propertyId);
 
 #if 0
-        if(nOpcode==13 || nOpcode==14 ||nOpcode==18 ||nOpcode==25 ||nOpcode==30) //with offset
+        if(opcode==13 || opcode==14 ||opcode==18 ||opcode==25 ||opcode==30) //with offset
         {
             uint32_t mOffset = *(uint32_t *)(pDataBuf + 4);
             LOG_DEBUG("sendData mOffset:{} ", mOffset);
@@ -1456,10 +1548,10 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
         LOG_DEBUG("sendData mI2cPackDataLen:{}, alignDataLen:{}, mI2cPackLen:{} ", mI2cPackDataLen, alignDataLen, mI2cPackLen);
 
 #if 0
-        mData0 = mPropertyId & 0x000000FF;
-        mData1 = (mPropertyId >> 8) & 0x000000FF;
-        mData2 = (mPropertyId >> 16) & 0x000000FF;
-        mData3 = (mPropertyId >> 24) & 0x000000FF;
+        mData0 = propertyId & 0x000000FF;
+        mData1 = (propertyId >> 8) & 0x000000FF;
+        mData2 = (propertyId >> 16) & 0x000000FF;
+        mData3 = (propertyId >> 24) & 0x000000FF;
         LOG_DEBUG("sendData 1data-PropertyId mData0:{}, mData1:{}, mData2:{}, mData3:{} ", mData0, mData1, mData2, mData3);
         LOG_DEBUG("sendData 2data-PropertyId data0:{}, data1:{}, data2:{}, data3:{} ", pDataBuf[0], pDataBuf[1], pDataBuf[2], pDataBuf[3]);
 #endif
@@ -1471,33 +1563,33 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
             i2c_msg_t send_i2c_pack_msg;
             memset(&send_i2c_pack_msg, 0, sizeof(i2c_msg_t));
             send_i2c_pack_msg.header.len   = alignI2CDataLen;  // G2R_GET_VERSION_CMD_LEN;
-            send_i2c_pack_msg.header.code  = nOpcode;          // G2R_GET_VERSION_CMD_CODE;
+            send_i2c_pack_msg.header.code  = opcode;           // G2R_GET_VERSION_CMD_CODE;
             send_i2c_pack_msg.header.index = nId;              // inde++;
             // memcpy(send_i2c_pack_msg._data, pDataBuf, mI2cPackDataLen);
             std::memcpy(send_i2c_pack_msg._data, pDataBuf, mI2cPackDataLen);
 
             if((mI2cPackDataLen <= 2) && (mI2cPackDataLen > 0)) {
-                mPropertyId = *(uint16_t *)send_i2c_pack_msg._data;
-                LOG_DEBUG("sendData PropertyId:{} ", mPropertyId);
+                propertyId = *(uint16_t *)send_i2c_pack_msg._data;
+                LOG_DEBUG("sendData PropertyId:{} ", propertyId);
                 // LOG_DEBUG("sendData 04data-PropertyId dat0:{}, data1:{} ", send_i2c_pack_msg._data[0], send_i2c_pack_msg._data[1]);
             }
             else if(mI2cPackDataLen >= 4) {
-                mPropertyId = *(uint32_t *)send_i2c_pack_msg._data;
-                LOG_DEBUG("sendData PropertyId:{} ", mPropertyId);
+                propertyId = *(uint32_t *)send_i2c_pack_msg._data;
+                LOG_DEBUG("sendData PropertyId:{} ", propertyId);
                 // LOG_DEBUG("sendData 4data-PropertyId dat0:{}, data1:{}, data2:{}, data3:{} ", send_i2c_pack_msg._data[0], send_i2c_pack_msg._data[1],
                 // send_i2c_pack_msg._data[2], send_i2c_pack_msg._data[3]);
             }
 
-            if(mPropertyId == 202) {  // OB_PROP_DEVICE_REPOWER_BOOL
+            if(propertyId == 202) {  // OB_PROP_DEVICE_REPOWER_BOOL
                 int value = *(uint8_t *)(send_i2c_pack_msg._data + 4);
                 LOG_DEBUG("sendData value:{} ", value);
                 if(value == 1) {
-                    LOG_DEBUG("sendData PropertyId:{} -not need read i2c response status. handle resetGmslDriver.", mPropertyId);
+                    LOG_DEBUG("sendData PropertyId:{} -not need read i2c response status. handle resetGmslDriver.", propertyId);
                     resetGmslDriver();
                     return true;
                 }
                 else if(value == 0) {
-                    LOG_DEBUG("sendData PropertyId:{} -do not anything! -value:{} ", mPropertyId, value);
+                    LOG_DEBUG("sendData PropertyId:{} -do not anything! -value:{} ", propertyId, value);
                     return true;
                 }
                 else {
@@ -1891,9 +1983,9 @@ bool ObV4lGmslDevicePort::setXuExt(uint32_t ctrl, const uint8_t *data, uint32_t 
     auto fd  = deviceHandles_.front()->fd;
     auto cid = ctrl;  // CIDFromOBPropertyID(ctrl);
 
-    i2c_msg_t *msg         = (i2c_msg_t *)data;
-    uint32_t   mPropertyId = *(uint32_t *)msg->_data;
-    LOG_DEBUG("-Entry setXuExt PropertyId:{}, len:{}, ctrl:{}", mPropertyId, ctrl, len);
+    i2c_msg_t *msg        = (i2c_msg_t *)data;
+    uint32_t   propertyId = *(uint32_t *)msg->_data;
+    LOG_DEBUG("-Entry setXuExt PropertyId:{}, len:{}, ctrl:{}", propertyId, ctrl, len);
 
     if(G2R_CAMERA_CID_SET_DATA == ctrl) {
         // struct v4l2_ext_control xctrl { cid, G2R_RW_DATA_LEN, 0, 0 };
@@ -2013,10 +2105,10 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
             // repeat pack usb protocolHeader
             ProtocolMsg usbProtocolMsg;
             memset(&usbProtocolMsg, 0, sizeof(usbProtocolMsg));
-            usbProtocolMsg.header.nOpcode = pRecvDataBuf->header.code;
-            usbProtocolMsg.header.nId     = pRecvDataBuf->header.index;  // return I2C resp index
-            // usbProtocolMsg.header.nHalfWordSize = ( (pRecvDataBuf->header.len - HP_HEADER_SIZE) +1 ) / sizeof(uint16_t) ;
-            usbProtocolMsg.header.nMagic     = 0x4252;  // HP_RESPONSE_MAGIC;
+            usbProtocolMsg.header.opcode = pRecvDataBuf->header.code;
+            usbProtocolMsg.header.nId    = pRecvDataBuf->header.index;  // return I2C resp index
+            // usbProtocolMsg.header.halfWordSize = ( (pRecvDataBuf->header.len - HP_HEADER_SIZE) +1 ) / sizeof(uint16_t) ;
+            usbProtocolMsg.header.magic      = 0x4252;  // HP_RESPONSE_MAGIC;
             usbProtocolMsg.buf.data.resp.res = pRecvDataBuf->body.res;
 
             uint16_t readRespDataSize = (pRecvDataBuf->header.len - sizeof(pRecvDataBuf->header) - sizeof(pRecvDataBuf->body.res));
@@ -2039,15 +2131,15 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
             }
 
             LOG_DEBUG("cal readRespDataSize: {} ", readRespDataSize);
-            usbProtocolMsg.header.nHalfWordSize = (readRespDataSize + sizeof(usbProtocolMsg.buf.data.resp.res) + 1) / sizeof(uint16_t);
-            LOG_DEBUG("cal usbProtocolMsg.header.nHalfWordSize: {} ", std::to_string(usbProtocolMsg.header.nHalfWordSize));
+            usbProtocolMsg.header.halfWordSize = (readRespDataSize + sizeof(usbProtocolMsg.buf.data.resp.res) + 1) / sizeof(uint16_t);
+            LOG_DEBUG("cal usbProtocolMsg.header.halfWordSize: {} ", std::to_string(usbProtocolMsg.header.halfWordSize));
 
             LOG_DEBUG("cal readRespDataSize:    {} ", readRespDataSize);
             usbProtocolMsg.buf.len = readRespDataSize + sizeof(usbProtocolMsg.buf.data.resp.res);
             LOG_DEBUG("cal recal usbProtocolMsg.buf.len:    {}", std::to_string(usbProtocolMsg.buf.len));
 
 #if 0
-            if(usbProtocolMsg.header.nOpcode == 3) {
+            if(usbProtocolMsg.header.opcode == 3) {
                 auto       *tmp = reinterpret_cast<VersionInfoTypeDef *>(pRecvDataBuf->body.data);
                 //std::string sn  = "987654321-01234";
                 //strcpy(tmp->serial_number, sn.c_str());
@@ -2082,7 +2174,7 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
             // std::memcpy(usbProtocolMsg.buf.data.resp.data, pRecvDataBuf->body.data, readRespDataSize);
 
 #if 0  // test
-        if((usbProtocolMsg.header.nOpcode==29)){
+        if((usbProtocolMsg.header.opcode==29)){
             for(int i=0; i<(*len-2); i++){
                 uint8_t data = *(uint8_t*)(&usbProtocolMsg.buf.data+i);
                 LOG_DEBUG("--->>>i:{}, data: 0x{:0x} ", i, data);
@@ -2095,7 +2187,7 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
             // memcpy(data, &usbProtocolMsg, *len);
             std::memcpy(data, &usbProtocolMsg, *len);
 #if 0
-            if(usbProtocolMsg.header.nOpcode==3){
+            if(usbProtocolMsg.header.opcode==3){
                 uint16_t respMsgDataOffset = sizeof(usbProtocolMsg.header) + sizeof(usbProtocolMsg.buf.data.resp.res);
                 LOG_DEBUG("-----------------------------------------------------");
                 auto *tmp3 = reinterpret_cast<VersionInfoTypeDef*>(data+respMsgDataOffset);

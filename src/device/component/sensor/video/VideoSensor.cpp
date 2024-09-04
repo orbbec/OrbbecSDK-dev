@@ -32,6 +32,9 @@ VideoSensor::VideoSensor(IDevice *owner, OBSensorType sensorType, const std::sha
 
     auto backendSpList = vsPort->getStreamProfileList();
     for(auto &backendSp: backendSpList) {
+        if(backendSp->getType() != OB_STREAM_VIDEO && backendSp->getType() != streamType) {
+            continue;
+        }
         auto sp = backendSp->clone();
         sp->bindOwner(lazySelf);
         sp->setType(streamType);
@@ -81,7 +84,7 @@ VideoSensor::~VideoSensor() noexcept {
 
 #define MIN_VIDEO_FRAME_DATA_SIZE 1024
 void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback callback) {
-
+    LOG_INFO("Try to start stream: {}", sp);
     // validate stream profile
     {
         auto owner    = getOwner();
@@ -114,6 +117,7 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
     }
 
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
+    LOG_INFO("Start backend stream: {}", currentBackendStreamProfile_);
     vsPort->startStream(currentBackendStreamProfile_, [this](std::shared_ptr<Frame> frame) { onBackendFrameCallback(frame); });
 }
 

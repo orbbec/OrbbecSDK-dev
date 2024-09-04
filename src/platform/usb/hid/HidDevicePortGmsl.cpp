@@ -7,6 +7,7 @@
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
 #include "exception/ObException.hpp"
+#include "frame/FrameFactory.hpp"
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -28,15 +29,6 @@ namespace libobsensor {
 const int IMU_FRAME_MAX_NUM  = 9;  // 5;
 const int IMU_RETRY_READ_NUM = 30;
 const int POLL_INTERVAL      = 10;  // poll interval time
-
-int xioctlGmsl(int fh, unsigned long request, void *arg) {
-    int ret   = 0;
-    int retry = 5;
-    do {
-        ret = ioctl(fh, request, arg);
-    } while(ret < 0 && (errno == EINTR || errno == EAGAIN) && retry--);
-    return ret;
-}
 
 /**
  * cal: 1*1000/fps * (IMU_FRAME_MAX_NUM-4)
@@ -96,6 +88,7 @@ std::shared_ptr<const SourcePortInfo> HidDevicePortGmsl::getSourcePortInfo() con
 }
 
 void HidDevicePortGmsl::startStream(MutableFrameCallback callback) {
+    LOG_DEBUG("Try to start stream");
     if(isStreaming_) {
         throw wrong_api_call_sequence_exception("HidDevicePort::startStream() called while streaming");
     }
@@ -173,15 +166,18 @@ void HidDevicePortGmsl::pollData() {
     int groupCount = 0;
 
     // LOG_DEBUG("HidDevicePortGmsl::pollData start...");
-    OBImuOrigMsg imuOrigFrameMsg;
-    memset(&imuOrigFrameMsg, 0, sizeof(OBImuOrigMsg));
-    // OBImuOriginData  imuFrameData;
-    imuOrigFrameMsg.imuHeader.reportId   = 1;
-    imuOrigFrameMsg.imuHeader.sampleRate = 200;
-    imuOrigFrameMsg.imuHeader.groupLen   = sizeof(OBImuOriginData);
-    imuOrigFrameMsg.imuHeader.groupCount = 1;
-    imuOrigFrameMsg.imuHeader.reserved   = 0;
-    imuOrigFrameMsg.reserved             = 0;
+    auto frame = FrameFactory::createFrame(OB_FRAME_UNKNOWN, OB_FORMAT_UNKNOWN, sizeof(OBImuOrigMsg));
+
+    OBImuOrigMsg *imuOrigFrameMsg = reinterpret_cast<OBImuOrigMsg *>(frame->getDataMutable());
+
+    memset(imuOrigFrameMsg, 0, sizeof(OBImuOrigMsg));
+
+    imuOrigFrameMsg->imuHeader.reportId   = 1;
+    imuOrigFrameMsg->imuHeader.sampleRate = 200;
+    imuOrigFrameMsg->imuHeader.groupLen   = sizeof(OBImuOriginData);
+    imuOrigFrameMsg->imuHeader.groupCount = 1;
+    imuOrigFrameMsg->imuHeader.reserved   = 0;
+    imuOrigFrameMsg->reserved             = 0;
 
     uint8_t imuFrameMaxSize = sizeof(OBImuOriginData) * (IMU_FRAME_MAX_NUM) + sizeof(i2c_msg_header_t) + sizeof(uint16_t);
 
@@ -201,7 +197,7 @@ void HidDevicePortGmsl::pollData() {
         groupCount = (mOnceReadLen - 8) / sizeof(OBImuOriginData);
         // LOG_DEBUG("-read imu data groupCount:{}, header.len:{}, imuPollInterval:{}ms ", groupCount, mOnceReadLen, imuPollInterval);
         if(groupCount > 0) {
-            imuOrigFrameMsg.imuHeader.groupCount = groupCount;
+            imuOrigFrameMsg->imuHeader.groupCount = groupCount;
         }
         else {
             LOG_DEBUG("-read imu data groupCount is 0 ");
@@ -229,7 +225,7 @@ void HidDevicePortGmsl::pollData() {
             LOG_DEBUG("-> timestamp[1]: {}  \n", tmp->timestamp[1]);
 #endif
 
-        memcpy(imuOrigFrameMsg.imuFrameData, tmp, sizeof(imu_origin_data_t) * groupCount);
+        memcpy(imuOrigFrameMsg->imuFrameData, tmp, sizeof(imu_origin_data_t) * groupCount);
 
 #if 0  // for test debug
             for(int i=0; i< groupCount; i++) {
@@ -245,7 +241,9 @@ void HidDevicePortGmsl::pollData() {
                 LOG_DEBUG("-->{} timestamp[1]: {}  \n", i, imuOrigFrameMsg.imuFrameData[i].timestamp[1]);
             }
 #endif
-        // todo: frameQueue_
+        auto realtime = utils::getNowTimesUs();
+        frame->setSystemTimeStampUsec(realtime);
+        frameQueue_.enqueue(frame);
     }
 }
 
@@ -264,8 +262,10 @@ int HidDevicePortGmsl::getImuFps() {
     ctrl.id    = ORBBEC_CAMERA_CID_GET_IMU_FPS;
     ctrl.size  = 4;
     ctrl.p_u32 = &size;
-
-    ret = xioctlGmsl(imu_fd_, VIDIOC_G_EXT_CTRLS, &ctrls);
+    {
+        std::unique_lock<std::mutex> lk(mMultiThreadI2CMutex);
+        ret = xioctlGmsl(imu_fd_, VIDIOC_G_EXT_CTRLS, &ctrls);
+    }
     if(ret < 0) {
         LOG_ERROR("{}:{} ioctl failed on getdate errno:{}, strerror:{} \n ", __FILE__, __LINE__, errno, strerror(errno));
         return -1;

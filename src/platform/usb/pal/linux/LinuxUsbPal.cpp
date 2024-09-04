@@ -7,6 +7,7 @@
 #include "exception/ObException.hpp"
 
 #include "usb/hid/HidDevicePort.hpp"
+#include "usb/hid/HidDevicePortGmsl.hpp"
 #include "usb/vendor/VendorUsbDevicePort.hpp"
 #include "usb/uvc/ObLibuvcDevicePort.hpp"
 #include "usb/uvc/ObV4lUvcDevicePort.hpp"
@@ -192,7 +193,7 @@ std::shared_ptr<ISourcePort> LinuxUsbPal::getSourcePort(std::shared_ptr<const So
         auto usbPortInfo = std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo);
         if(ObV4lGmslDevicePort::isGmslDeviceForPlatformNvidia(usbPortInfo)) {
             // LOG_DEBUG("HID GMSL device have been create with V4L2 backend! url:{}, hubId:{}", usbPortInfo->url, usbPortInfo->hubId);
-            // port = std::make_shared<HidDevicePortGmsl>(usbPortInfo);
+            port = std::make_shared<HidDevicePortGmsl>(usbPortInfo);
         }
         else {
             auto usbDev = usbEnumerator_->openUsbDevice(std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->url);

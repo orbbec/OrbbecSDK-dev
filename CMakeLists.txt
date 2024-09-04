@@ -14,13 +14,6 @@ endif()
 
 # load project options
 include(cmake/options.cmake)
-if(OB_BUILD_USB_PAL)
-    add_definitions(-DBUILD_USB_PAL)
-endif()
-
-if(OB_BUILD_NET_PAL)
-    add_definitions(-DBUILD_NET_PAL)
-endif()
 
 # load macros
 include(cmake/macro.cmake)

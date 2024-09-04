@@ -16,12 +16,12 @@ DepthFrame can obtain relevant information about the depth
         // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled.
         std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
-        // Enable depth stream.
+        //This is the default depth streamprofile that is enabled. If you want to modify it, you can do so in the configuration file.
         config->enableVideoStream(OB_STREAM_DEPTH);
 
     ```
 
-2. Calculate the distance from the center pixel to the opposite side from the acquired Y16 depth stream format and display it in the window. The distance is refreshed every 30 frames
+2. Calculate the distance from the center pixel to the opposite side from the acquired Y16 depth stream format and display it in the window. The distance is refreshed every 30 frames.The default depth unit for the SDK is millimeters.
 
     ```cpp
         // Get the depth Frame form depthFrameRaw.

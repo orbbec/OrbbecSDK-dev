@@ -2,7 +2,7 @@
 
 ## Overview
 
-Use the SDK interface to demonstrate the synchronization and alignment of sensor data streams, display the aligned image, and exit the program using the ESC_KEY key.
+Use the SDK interface to demonstrate the synchronization and alignment of sensor data streams,display the aligned image,and exit the program using the ESC_KEY key.
 
 ### Knowledge
 
@@ -11,6 +11,10 @@ Pipeline is a pipeline for processing data streams, providing multi-channel stre
 Frameset is a combination of different types of Frames
 
 win is used to display the frame data.
+
+C2D（Color to Depth）is the transformation from the color image coordinate system to the depth image coordinate system.To map the pixel positions in the color image to the corresponding positions in the depth image. This is commonly used to align color and depth images so that both types of information can be used in the same coordinate system.
+
+D2C（Depth to Color）is the transformation from the depth image coordinate system to the color image coordinate system.To map the pixel positions in the depth image to the corresponding positions in the color image. This transformation allows depth data to be applied to the color image, facilitating the annotation or analysis of depth information within the color image.
 
 ## Code overview
 
@@ -54,4 +58,9 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![image](/docs/resource/SyncAlign.jpg)
+Sync
+![image](/docs/resource/sync.jpg)
+D2C  
+![image](/docs/resource/d2c.jpg)
+C2D  
+![image](/docs/resource/c2d.jpg)

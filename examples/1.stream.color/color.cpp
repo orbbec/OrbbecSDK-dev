@@ -29,6 +29,9 @@ int main(void) try {
 
         // get color frame from frameset.
         auto colorFrame = frameSet->getFrame(OB_FRAME_COLOR);
+        auto exposure = colorFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_EXPOSURE);
+        auto gain = colorFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_GAIN);
+        std::cout << "================exposure: " << exposure << ", gain: " << gain << std::endl;
         // Render colorFrame.
         win.pushFramesToView(colorFrame);
     }

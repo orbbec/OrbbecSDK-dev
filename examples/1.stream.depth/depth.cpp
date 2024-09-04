@@ -51,6 +51,10 @@ int main(void) try {
             win.addLog("Facing an object at a distance of " + ob_smpl::toString(centerDistance, 3) + " mm. ");
         }
 
+        auto exposure = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_EXPOSURE);
+        auto gain = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_GAIN);
+        std::cout << "================exposure: " << exposure << ", gain: " << gain << std::endl;
+
         // Render frame in the window.
         win.pushFramesToView(depthFrame);
     }

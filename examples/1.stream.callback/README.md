@@ -49,7 +49,7 @@ Sensor can be used to obtain different components of the camera and the stream o
             }
     ```
 
-3. In this callback function, you can add what you want to do with the data.
+3. In this callback function, you can add what you want to do with the data.Avoid performing complex computational operations within callback functions; prolonged operations can lead to data frame drops. It is recommended to use a queue for processing.
 
     ```c++
         // Start the pipeline with callback.

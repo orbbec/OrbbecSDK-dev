@@ -18,13 +18,13 @@ Pipeline is a pipeline for processing data streams, providing multi-channel stre
         auto align = std::make_shared<ob::Align>(OB_STREAM_COLOR); // align depth frame to color frame
     ```
 
-2. Create RGBD PointCloud.
+2. Create RGBD Point Cloud.Note that the AlignFilter processing is needed before the PointCloud processing.
 
     ```cpp
         // align depth frame to color frame
         auto alignedFrameset = align->process(frameset);
 
-        // set to create RGB point cloud format (will be effective only if color frame and depth frame are contained in the frameset)
+        // set to create RGBD point cloud format (will be effective only if color frame and depth frame are contained in the frameset)
         pointCloud->setCreatePointFormat(OB_FORMAT_RGB_POINT);
 
         // process the frameset to generate point cloud frame

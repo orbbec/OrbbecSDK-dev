@@ -4,7 +4,7 @@ This is a comprehensive guide on installing the SDK, setting up the development 
 
 ## Step-by-Step Guide
 
-****### 1.Download the precompiled SDK package
+### 1.Download the precompiled SDK package
 
 - Download the zip package "OrbbecSDK_v2.x.x_xxx.zip" from [https://github.com/orbbec/OrbbecSDK-dev/releases](https://github.com/orbbec/OrbbecSDK-dev/releases).
 - Unzip the OrbbecSDK to the directory you want

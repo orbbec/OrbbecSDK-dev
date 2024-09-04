@@ -31,6 +31,9 @@ public:
     void                        setStructureDataProtoV1_1(uint32_t propertyId, const std::vector<uint8_t> &data, uint16_t cmdVersion) override;
     const std::vector<uint8_t> &getStructureDataListProtoV1_1(uint32_t propertyId, uint16_t cmdVersion) override;
 
+    void setRawdataTransferPacketSize(uint32_t size);
+    void setStructListDataTransferPacketSize(uint32_t size);
+
 private:
     void clearBuffers();
 
@@ -42,5 +45,7 @@ private:
     std::vector<uint8_t>              sendData_;
     std::vector<uint8_t>              outputData_;
     std::vector<std::vector<uint8_t>> structureDataList_;  // for cmd version 1.1
+    uint32_t                          rawdataTransferPacketSize_;
+    uint32_t                          structListDataTransferPacketSize_;
 };
 }  // namespace libobsensor

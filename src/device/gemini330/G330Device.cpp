@@ -41,8 +41,8 @@
 
 namespace libobsensor {
 
-constexpr uint8_t INTERFACE_COLOR = 4;
-constexpr uint8_t INTERFACE_DEPTH = 0;
+constexpr uint8_t  INTERFACE_COLOR        = 4;
+constexpr uint8_t  INTERFACE_DEPTH        = 0;
 constexpr uint16_t GMSL_MAX_CMD_DATA_SIZE = 232;
 
 G330Device::G330Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info), isGmslDevice_(info->getConnectionType() == "GMSL2") {
@@ -850,6 +850,9 @@ void G330Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_STOP_IR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_COLOR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_DEPTH_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
+            if(isGmslDevice_) {
+                propertyServer->registerProperty(OB_PROP_DEVICE_REPOWER_BOOL, "w", "w", vendorPropertyAccessor);
+            }
         }
         else if(sensor == OB_SENSOR_ACCEL) {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", sensor);

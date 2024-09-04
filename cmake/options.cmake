@@ -25,5 +25,8 @@ if(OB_BUILD_NET_PAL)
 endif()
 
 if(OB_BUILD_GMSL_PAL)
+    if(NOT OB_BUILD_USB_PAL)
+        message(FATAL_ERROR "GMSL PAL requires USB PAL to be enabled")
+    endif()
     add_definitions(-DBUILD_GMSL_PAL)
 endif()

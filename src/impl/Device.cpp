@@ -92,12 +92,12 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
 ob_device *ob_device_list_get_device(const ob_device_list *list, uint32_t index, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_UNSIGNED_INDEX(index, list->list.size());
-    auto &info = list->list[index];
-    auto deviceMgr = info->getDeviceManager();
-    auto device    = deviceMgr->createDevice(info);
+    auto &info      = list->list[index];
+    auto  deviceMgr = info->getDeviceManager();
+    auto  device    = deviceMgr->createDevice(info);
 
-    auto impl      = new ob_device();
-    impl->device   = device;
+    auto impl    = new ob_device();
+    impl->device = device;
     return impl;
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, index)
@@ -246,6 +246,20 @@ void ob_device_get_structured_data(ob_device *device, ob_property_id property_id
     *data_size = static_cast<uint32_t>(firmwareData.size());
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, data, data_size)
+
+void ob_device_get_raw_data(ob_device *device, ob_property_id property_id, ob_get_data_callback cb, void *user_data, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    auto propServer = device->device->getPropertyServer();
+    propServer->getRawData(
+        property_id,
+        [=](OBDataTranState state, OBDataChunk *dataChunk) {
+            if(cb) {
+                cb(state, dataChunk, user_data);
+            }
+        },
+        libobsensor::PROP_ACCESS_USER);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(device, property_id, user_data)
 
 uint32_t ob_device_get_supported_property_count(const ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);

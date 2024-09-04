@@ -8,6 +8,7 @@ void transformation2dto2d(std::shared_ptr<ob::Frame> colorFrame, std::shared_ptr
 void transformation2dto3d(std::shared_ptr<ob::Frame> colorFrame, std::shared_ptr<ob::Frame> depthFrame);
 void transformation3dto2d(std::shared_ptr<ob::Frame> colorFrame, std::shared_ptr<ob::Frame> depthFrame);
 void transformation3dto3d(std::shared_ptr<ob::Frame> colorFrame, std::shared_ptr<ob::Frame> depthFrame);
+
 int main(void) try {
     // Configure which streams to enable or disable for the Pipeline by creating a Config
     auto config = std::make_shared<ob::Config>();
@@ -22,13 +23,14 @@ int main(void) try {
     // Create a pipeline with default device to manage stream
     auto pipe = std::make_shared<ob::Pipeline>();
 
-    std::string testType = "1";
-    printUsage();
-    testType = inputWatcher();
+    std::string testType = "1";   
 
     // Start the pipeline with config
     pipe->start(config);
     while(1) {
+        printUsage();
+        testType = inputWatcher();
+
         // Wait for a frameset from the pipeline
         auto frameSet = pipe->waitForFrameset(100);  
         if(frameSet == nullptr) {
@@ -52,7 +54,6 @@ int main(void) try {
         } else {
             std::cout << "Invalid command" << std::endl;
         }  
-        break; 
      }
      
     pipe->stop();

@@ -28,7 +28,7 @@ $SCRIPT_DIR = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 $PROJECT_ROOT = "$SCRIPT_DIR/../../"
 Set-Location $PROJECT_ROOT
 
-Write-Output  "Building openorbbecsdk for ${fullPlatform}"
+Write-Output  "Building OrbbecSDK for ${fullPlatform}"
 
 # Variables for version from CMakeLists.txt project
 $verPattern = 'project\(.*?VERSION\s+([0-9]+(?:\.[0-9]+)+)\s'
@@ -90,7 +90,7 @@ $exactMatch = $false
 # matching vc&vs version
 foreach ($version in $availableVersions) {
     $versionNumber = [int]($version.Name -replace "vc", "")
-    
+
     # Find the correct version and stop searching
     if ($versionNumber -eq $vsversion) {
         $selectedVersion = $version.Name
@@ -140,7 +140,7 @@ Add-Type -assembly "system.io.compression.filesystem"
 Write-Output  "Package zip file created at ${zip_file_path}"
 
 
-Write-Output  "openorbbecsdk for ${fullPlatform} build and install completed"
+Write-Output  "OrbbecSDK for ${fullPlatform} build and install completed"
 
 # return to current_dir
 Set-Location  $current_dir

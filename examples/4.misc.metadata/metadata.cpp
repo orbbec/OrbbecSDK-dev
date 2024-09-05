@@ -30,18 +30,20 @@ int                 main() try {
 
         for(uint32_t i = 0; i < frameCount; i++) {
             // get the frame from frameSet
-            auto frame     = frameSet->getFrame(i);
-            auto frameType = frameSet->type();
-            std::cout << "---------" << "frame type: " << frameType << " ---------" << std::endl;
-            // get the metadata of the frame
-            for(uint32_t j = 0; j < static_cast<uint32_t>(metadataCount); j++) {
-                // if the frame has the metadata, get the metadata value
-                if(frame->hasMetadata(static_cast<OBFrameMetadataType>(j))) {
-                    std::cout << "metadata type: " << static_cast<OBFrameMetadataType>(j)
-                              << " metadata value: " << frame->getMetadataValue(static_cast<OBFrameMetadataType>(j)) << std::endl;
+            auto frame      = frameSet->getFrame(i);
+            auto frameType  = frameSet->type();
+            auto frameIndex = frame->index();
+            // get the metadata of the frame, and print the metadata every 30 frames
+            if(frameIndex % 30 == 0) {
+                std::cout << "---------" << "frame type: " << frameType << " ---------" << std::endl;
+                for(uint32_t j = 0; j < static_cast<uint32_t>(metadataCount); j++) {
+                    // if the frame has the metadata, get the metadata value
+                    if(frame->hasMetadata(static_cast<OBFrameMetadataType>(j))) {
+                        std::cout << "metadata type: " << static_cast<OBFrameMetadataType>(j)
+                                  << " metadata value: " << frame->getMetadataValue(static_cast<OBFrameMetadataType>(j)) << std::endl;
+                    }
                 }
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     }
     // Stop the Pipeline, no frame data will be generated

@@ -59,9 +59,9 @@ Metadata is used to describe the various properties and states of a frame
     ```cpp
     //get the metadata of the frame
     for(uint32_t j = 0; j < static_cast<uint32_t>(metadataCount); j++) {
-        //if the frame has the metadata, get the metadata value
+        // if the frame has the metadata, get the metadata value
         if(frame->hasMetadata(static_cast<OBFrameMetadataType>(j))) {
-            std::cout << "metadata type: " << static_cast<OBFrameMetadataType>(j)
+            std::cout << "metadata type: " << std::left << std::setw(50) << metadataTypeMap[j]
                         << " metadata value: " << frame->getMetadataValue(static_cast<OBFrameMetadataType>(j)) << std::endl;
         }
     }
@@ -80,4 +80,4 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![image](/docs/resource/metadata.png)
+![image](/openorbbecsdkgroup/OpenOrbbecSDK/docs/resource/metadata.jpg)

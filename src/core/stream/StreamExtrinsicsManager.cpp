@@ -73,14 +73,12 @@ StreamExtrinsicsManager::~StreamExtrinsicsManager() noexcept = default;
 
 void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const StreamProfile> &from, const std::shared_ptr<const StreamProfile> &to,
                                                  const OBExtrinsic &extrinsics) {
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        cleanExpiredStreamProfiles();  // clean expired stream profiles first
-    }
-
-    if(from == nullptr || to == nullptr) {
+    if(!from || !to) {
         throw invalid_value_exception("Invalid stream profile, from or to is null");
     }
+
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    cleanExpiredStreamProfiles();  // clean expired stream profiles first
 
     // judge if already registered and if the extrinsics is the same
     bool alreadyRegistered   = false;
@@ -108,7 +106,6 @@ void StreamExtrinsicsManager::registerExtrinsics(const std::shared_ptr<const Str
     bool isIdentityExtrinsics = (memcmp(&extrinsics, &IdentityExtrinsics, sizeof(OBExtrinsic)) == 0);
 
     // register the extrinsics
-    std::unique_lock<std::mutex> lock(mutex_);
     if(alreadyRegistered) {
         // if already registered, remove the old one, and then register the new one
         eraseStreamProfile(from);
@@ -174,7 +171,8 @@ bool StreamExtrinsicsManager::hasExtrinsics(std::shared_ptr<const StreamProfile>
         return false;
     }
 
-    auto fromId = getStreamProfileId(from);
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    auto                                   fromId = getStreamProfileId(from);
     if(fromId == 0) {
         return false;
     }
@@ -196,12 +194,12 @@ bool StreamExtrinsicsManager::hasExtrinsics(std::shared_ptr<const StreamProfile>
 }
 
 OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamProfile> from, std::shared_ptr<const StreamProfile> to) {
-    std::unique_lock<std::mutex> lock(mutex_);
     if(!from || !to) {
         throw invalid_value_exception("Invalid stream profile");
     }
 
-    auto fromId = getStreamProfileId(from);
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    auto                                   fromId = getStreamProfileId(from);
     if(fromId == 0) {
         throw invalid_value_exception("From Stream profile not registered!");
     }
@@ -234,7 +232,9 @@ OBExtrinsic StreamExtrinsicsManager::getExtrinsics(std::shared_ptr<const StreamP
     auto extrinsics = calculateExtrinsics(path);
 
     // register the extrinsics `from`->`to` directly to avoid redundant calculation
-    registerExtrinsics(from, to, extrinsics);
+    // registerExtrinsics(from, to, extrinsics);
+    extrinsicsGraph_[fromId].push_back({ toId, extrinsics });                     // add the extrinsics to the graph: from -> to
+    extrinsicsGraph_[toId].push_back({ fromId, inverseExtrinsics(extrinsics) });  // add the inverse extrinsics to the graph: to -> from
 
     return extrinsics;
 }
@@ -401,7 +401,7 @@ class unit_test_extrinsics_manager {
 public:
     unit_test_extrinsics_manager() {
         // auto ctx = Context::getInstance();
-        StreamExtrinsicsManager manager;
+        auto manager = StreamExtrinsicsManager::getInstance();
 
         // Using the width as the identifier of the stream profile for print purpose
         auto sp1 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 1, 0, 0);
@@ -412,29 +412,29 @@ public:
         auto sp6 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 6, 0, 0);
         auto sp7 = std::make_shared<VideoStreamProfile>(nullptr, OB_STREAM_VIDEO, OB_FORMAT_YUYV, 7, 0, 0);
 
-        manager.registerExtrinsics(sp1, sp2, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0 });
-        manager.registerExtrinsics(sp1, sp3, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0 });
-        manager.registerExtrinsics(sp2, sp4, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10 });
-        manager.registerExtrinsics(sp3, sp5, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8, 0 });
-        manager.registerExtrinsics(sp4, sp6, { 1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -4 });
-        manager.registerSameExtrinsics(sp7, sp6);
+        manager->registerExtrinsics(sp1, sp2, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0 });
+        manager->registerExtrinsics(sp1, sp3, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0 });
+        manager->registerExtrinsics(sp2, sp4, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10 });
+        manager->registerExtrinsics(sp3, sp5, { 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8, 0 });
+        manager->registerExtrinsics(sp4, sp6, { 1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -4 });
+        manager->registerSameExtrinsics(sp7, sp6);
 
-        // auto extrinsics12 = manager.getExtrinsics(sp1, sp2);
-        // auto extrinsics13 = manager.getExtrinsics(sp1, sp3);
-        // auto extrinsics24 = manager.getExtrinsics(sp2, sp4);
-        // auto extrinsics35 = manager.getExtrinsics(sp3, sp5);
-        // auto extrinsics46 = manager.getExtrinsics(sp4, sp6);
-        // auto extrinsics16 = manager.getExtrinsics(sp1, sp6);
-        // auto extrinsics61 = manager.getExtrinsics(sp6, sp1);
-        auto extrinsics56 = manager.getExtrinsics(sp5, sp6);
+        // auto extrinsics12 = manager->getExtrinsics(sp1, sp2);
+        // auto extrinsics13 = manager->getExtrinsics(sp1, sp3);
+        // auto extrinsics24 = manager->getExtrinsics(sp2, sp4);
+        // auto extrinsics35 = manager->getExtrinsics(sp3, sp5);
+        // auto extrinsics46 = manager->getExtrinsics(sp4, sp6);
+        // auto extrinsics16 = manager->getExtrinsics(sp1, sp6);
+        // auto extrinsics61 = manager->getExtrinsics(sp6, sp1);
+        auto extrinsics56 = manager->getExtrinsics(sp5, sp6);
         std::cout << "extrinsics56: " << extrinsics56.trans[0] << "," << extrinsics56.trans[1] << "," << extrinsics56.trans[2] << std::endl;
-        auto extrinsics65 = manager.getExtrinsics(sp6, sp5);
+        auto extrinsics65 = manager->getExtrinsics(sp6, sp5);
         std::cout << "extrinsics65: " << extrinsics65.trans[0] << "," << extrinsics65.trans[1] << "," << extrinsics65.trans[2] << std::endl;
-        auto newExtrinsics56 = manager.getExtrinsics(sp5, sp6);
+        auto newExtrinsics56 = manager->getExtrinsics(sp5, sp6);
         std::cout << "new extrinsics56: " << newExtrinsics56.trans[0] << "," << newExtrinsics56.trans[1] << "," << newExtrinsics56.trans[2] << std::endl;
-        auto extrinsics63 = manager.getExtrinsics(sp6, sp3);
+        auto extrinsics63 = manager->getExtrinsics(sp6, sp3);
         std::cout << "extrinsics63: " << extrinsics63.trans[0] << "," << extrinsics63.trans[1] << "," << extrinsics63.trans[2] << std::endl;
-        auto extrinsics57 = manager.getExtrinsics(sp5, sp7);
+        auto extrinsics57 = manager->getExtrinsics(sp5, sp7);
         std::cout << "extrinsics57: " << extrinsics57.trans[0] << "," << extrinsics57.trans[1] << "," << extrinsics57.trans[2] << std::endl;
     }
 };

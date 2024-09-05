@@ -37,7 +37,7 @@ private:
     uint64_t getStreamProfileId(std::shared_ptr<const StreamProfile> profile) const;
 
 private:
-    std::mutex                                                          mutex_;
+    std::recursive_mutex                                                mutex_;
     std::map<uint64_t, std::vector<std::weak_ptr<const StreamProfile>>> streamProfileMap_;  // vertices
     std::map<uint64_t, std::vector<std::pair<uint64_t, OBExtrinsic>>>   extrinsicsGraph_;   // graph adjacency list
 };

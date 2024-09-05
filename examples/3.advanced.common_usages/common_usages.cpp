@@ -86,14 +86,11 @@ int main(void) try {
     printUsage();
 
     inputWatchThread = std::thread(inputWatcher);
-
     inputWatchThread.detach();
 
     while(win->run()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-
-    // inputWatchThread.join();
 
     if(pipeline) {
         pipeline->stop();

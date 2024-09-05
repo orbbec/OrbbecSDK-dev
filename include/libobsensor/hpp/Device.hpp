@@ -737,6 +737,11 @@ public:
         Error::handle(&error);
         return std::make_shared<CameraParamList>(impl);
     }
+
+    void loadDepthFilterConfig(const char *filePath) {
+        // In order to compile, some high-version compilers will warn that the function parameters are not used.
+        (void)filePath;
+    }
 };
 
 /**

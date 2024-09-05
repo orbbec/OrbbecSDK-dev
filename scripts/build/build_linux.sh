@@ -23,7 +23,7 @@ echo "Building openorbbecsdk for $PLATFORM"
 VERSION=$(grep -oP 'project\(\w+\s+VERSION\s+\d+\.\d+\.\d+' $PROJECT_ROOT/CMakeLists.txt | grep -oP '\d+\.\d+\.\d+')
 TIMESTAMP=$(date +"%Y%m%d%H%M")
 
-git config --global --add safe.directory /workspace/OpenOrbbecSDK
+
 COMMIT_HASH=$(git rev-parse --short HEAD)
 PACKAGE_NAME="openorbbecsdk_${VERSION}_${TIMESTAMP}_${COMMIT_HASH}_${PLATFORM}"
 

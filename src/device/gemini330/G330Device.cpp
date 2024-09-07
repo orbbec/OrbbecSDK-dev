@@ -100,10 +100,97 @@ void G330Device::init() {
     registerComponent(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, deviceClockSynchronizer);
 }
 
+std::shared_ptr<const StreamProfile> G330Device::loadDefaultStreamProfile(OBSensorType sensorType) {
+    std::shared_ptr<StreamProfile> defaultStreamProfile = nullptr;
+    LOG_DEBUG("loadDefaultStreamProfile: deviceConnectionType:={}", deviceInfo_->connectionType_);
+
+    OBStreamType defStreamType = OB_STREAM_UNKNOWN;
+    int          defFps        = 10;
+    int          defWidth      = 848;
+    int          defHeight     = 480;
+    OBFormat     defFormat     = OB_FORMAT_Y16;
+
+    // USB2.0 default resolution config
+    if(deviceInfo_->connectionType_ == "USB2.1") {
+        LOG_DEBUG("loadDefaultStreamProfile set USB2.1 device default stream profile.");
+        switch(sensorType) {
+        case OB_SENSOR_DEPTH:
+            defStreamType = OB_STREAM_DEPTH;
+            break;
+        case OB_SENSOR_IR_LEFT:
+            defFormat     = OB_FORMAT_Y8;
+            defStreamType = OB_STREAM_IR_LEFT;
+            break;
+        case OB_SENSOR_IR_RIGHT:
+            defFormat     = OB_FORMAT_Y8;
+            defStreamType = OB_STREAM_IR_RIGHT;
+            break;
+        case OB_SENSOR_IR:
+            defFormat     = OB_FORMAT_Y8;
+            defStreamType = OB_STREAM_IR;
+            break;
+        case OB_SENSOR_COLOR: {
+            defFormat     = OB_FORMAT_MJPG;
+            defStreamType = OB_STREAM_COLOR;
+            defWidth      = 1280;
+            defHeight     = 720;
+
+        } break;
+        default:
+            break;
+        }
+    }
+
+    // GMSL2 default resolution config
+    if(deviceInfo_->connectionType_ == "GMSL2") {
+        LOG_DEBUG("loadDefaultStreamProfile set GMSL2 device default stream profile.");
+        defFps = 30;
+        switch(sensorType) {
+        case OB_SENSOR_DEPTH:
+            defStreamType = OB_STREAM_DEPTH;
+            break;
+        case OB_SENSOR_IR_LEFT:
+            defFormat     = OB_FORMAT_Y8;
+            defStreamType = OB_STREAM_IR_LEFT;
+            break;
+        case OB_SENSOR_IR_RIGHT:
+            defFormat     = OB_FORMAT_Y8;
+            defStreamType = OB_STREAM_IR_RIGHT;
+            break;
+        case OB_SENSOR_IR:
+            defFormat     = OB_FORMAT_Y8;
+            defStreamType = OB_STREAM_IR;
+            break;
+        case OB_SENSOR_COLOR: {
+            defFormat     = OB_FORMAT_YUYV;
+            defStreamType = OB_STREAM_COLOR;
+            defWidth      = 1280;
+            defHeight     = 720;
+
+        } break;
+        default:
+            break;
+        }
+    }
+
+    if(defStreamType != OB_STREAM_UNKNOWN) {
+        defaultStreamProfile = StreamProfileFactory::createVideoStreamProfile(defStreamType, defFormat, defWidth, defHeight, defFps);
+        LOG_DEBUG("default profile StreamType:{}, Format:{}, Width:{}, Height:{}, Fps:{}", defStreamType, defFormat, defWidth, defHeight, defFps);
+    }
+
+    return defaultStreamProfile;
+}
+
 void G330Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     auto streamProfile = StreamProfileFactory::getDefaultStreamProfileFromEnvConfig(deviceInfo_->name_, sensor->getSensorType());
     if(streamProfile) {
-        sensor->updateDefaultStreamProfile(streamProfile);
+        auto defaultStreamProfile = loadDefaultStreamProfile(sensor->getSensorType());
+        if(defaultStreamProfile != nullptr) {
+            sensor->updateDefaultStreamProfile(defaultStreamProfile);
+        }
+        else {
+            sensor->updateDefaultStreamProfile(streamProfile);
+        }
     }
 
     // bind params: extrinsics, intrinsics, etc.

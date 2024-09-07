@@ -24,6 +24,9 @@ private:
     void initSensorStreamProfile(std::shared_ptr<ISensor> sensor);
 
 private:
+    std::shared_ptr<const StreamProfile> loadDefaultStreamProfile(OBSensorType sensorType);
+
+private:
     std::shared_ptr<IFrameMetadataParserContainer> colorMdParserContainer_;
     std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
 

@@ -826,27 +826,11 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
                                                   std::shared_ptr<VideoFrame> videoFrame) {
     // LOG_DEBUG("-Entry handleSpecialResolution");
     VALIDATE_NOT_NULL(devHandle);
-    //---------------------------------------------------------------------------------------------------------------------------------
-    // LOG_DEBUG("-SpecialResolution profile->width:{}, profile->height:{}, profile->streamType:{}, videoFrame.frameSize:{}", devHandle->profile->width ,
-    // devHandle->profile->height, devHandle->profile->streamType, videoFrame.frameSize);
-
-#if 0
-//save raw video to file for test
-    try {
-        std::string filename="output/saveraw_"+ std::to_string(buf.sequence) +".raw";
-        writeBufferToFile((char*)videoFrame.frameData, videoFrame.frameSize, filename);
-        std::cout << "数据已成功写入文件output.raw" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "发生错误: " << e.what() << std::endl;
-    }
-#endif
-
-    // auto start = std::chrono::high_resolution_clock::now();
     // handle 848x480; 848x100; 424x240, 480x270 resolution
     auto width      = devHandle->profile->getWidth();
     auto height     = devHandle->profile->getHeight();
     auto streamType = devHandle->profile->getType();
-    if(((width % 424) == 0) || ((width == 480) && (height == 270))) {
+    if((width % 424) == 0 || (width == 480 && height == 270)) {
         int originalWidth  = width;
         int originalHeight = height;
         int paddedWidth    = 0;
@@ -854,8 +838,7 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
         int trimRight      = 0;
         int trimBottom     = 0;
 
-        if((streamType == OB_STREAM_IR_LEFT) || (streamType == OB_STREAM_IR_RIGHT) || (streamType == OB_STREAM_IR))  // AND
-        {
+        if(streamType == OB_STREAM_IR_LEFT || streamType == OB_STREAM_IR_RIGHT || streamType == OB_STREAM_IR) {
             if(originalWidth == 848) {
                 paddedWidth = (originalWidth + 48);
             }
@@ -866,18 +849,16 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
                 paddedWidth = (originalWidth + 32);
             }
 
-            paddedHeight = (originalHeight + 0);
+            paddedHeight = originalHeight;
 
             // Calculate the number of pixels to fill
             trimRight  = paddedWidth - originalWidth;
             trimBottom = paddedHeight - originalHeight;
             // LOG_DEBUG("-SpecialResolution paddedWidth:{}, paddedHeight:{}, trimRight:{}, trimBottom:{}", paddedWidth, paddedHeight, trimRight, trimBottom);
-
-            // std::vector<uint8_t> croppedImage(originalWidth*originalHeight);
             try {
-                // cropDepthImage((uint8_t *)frameInfo.data, &croppedImage[0], paddedWidth, paddedHeight, trimRight, trimBottom);
                 cropDepthImage(srcData, videoFrame->getDataMutable(), paddedWidth, paddedHeight, trimRight, trimBottom);
                 videoFrame->setDataSize(originalWidth * originalHeight);
+                return;
             }
             catch(const std::exception &e) {
                 std::cerr << "Error: " << e.what() << std::endl;
@@ -891,49 +872,26 @@ void ObV4lGmslDevicePort::handleSpecialResolution(std::shared_ptr<V4lDeviceHandl
             else if(originalWidth == 424) {
                 paddedWidth = (originalWidth + 24);
             }
-            paddedHeight = (originalHeight + 0);
+            paddedHeight = originalHeight;
 
             // Calculate the number of pixels to fill
             trimRight  = paddedWidth - originalWidth;
             trimBottom = paddedHeight - originalHeight;
             // LOG_DEBUG("-SpecialResolution paddedWidth:{}, paddedHeight:{}, trimRight:{}, trimBottom:{}", paddedWidth, paddedHeight, trimRight, trimBottom);
 
-#if 1
-            // std::vector<uint8_t> croppedImage(originalWidth*originalHeight);
             try {
-                // cropDepthImage((uint8_t *)frameInfo.data, &croppedImage[0], paddedWidth, paddedHeight, trimRight, trimBottom);
                 cropDepthImage16(reinterpret_cast<const uint16_t *>(srcData), reinterpret_cast<uint16_t *>(videoFrame->getDataMutable()), paddedWidth,
                                  paddedHeight, trimRight, trimBottom);
                 videoFrame->setDataSize(originalWidth * originalHeight * 2);
+                return;
             }
             catch(const std::exception &e) {
                 // Handle exceptions
                 std::cerr << "Error: " << e.what() << std::endl;
             }
-#endif
         }
     }
-    else {
-        // LOG_DEBUG("-SpecialResolution profile->width:{}, profile->height:{}, profile->streamType:{}", devHandle->profile->getWidth(),
-        //           devHandle->profile->getHeight(), devHandle->profile->getType());
-        videoFrame->updateData(srcData, srcSize);
-    }
-
-    // auto end = std::chrono::high_resolution_clock::now();
-    // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
-    // LOG_DEBUG("--->Fucntion took {} millisecounds to execute. ", duration.count() );
-
-#if 0
-//save process video to file
-    try {
-        std::string filename="output/saveraw_"+ std::to_string(buf.sequence) +".raw";
-        writeBufferToFile((char*)videoFrame.frameData, videoFrame.frameSize, filename);
-        std::cout << "数据已成功写入文件output.raw" << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "发生错误: " << e.what() << std::endl;
-    }
-#endif
-    //
+    videoFrame->updateData(srcData, srcSize);
 }
 
 StreamProfileList ObV4lGmslDevicePort::getStreamProfileList() {

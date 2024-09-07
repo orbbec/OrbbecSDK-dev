@@ -2105,7 +2105,7 @@ std::vector<std::string> get_video_paths(std::vector<std::string> &video_paths) 
 }
 
 UsbInterfaceInfo get_ImuInfo_from_mipi_device_path(const std::string &video_path, const std::string &name) {
-    uint16_t    vid{}, pid{}, mi{}, portCls{};
+    uint16_t    vid{}, pid{}, mi{};
     UsbSpec     usb_specification(gmsl2_type);  // usb3_type);  //usb_undefined);
     std::string bus_info, card, sn, imuDev;
 
@@ -2133,8 +2133,7 @@ UsbInterfaceInfo get_ImuInfo_from_mipi_device_path(const std::string &video_path
 
     // if(ind == 35)
     {
-        mi      = 4;  // IMU node indicator
-        portCls = 4;
+        mi = 4;  // IMU node indicator
         // LOG_DEBUG("---set IMU port index 4-- ind:{}, portCls:{}", ind, portCls);
     }
     // LOG_DEBUG("-----------------------set test-------------------------------------");

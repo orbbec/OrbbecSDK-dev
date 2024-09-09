@@ -139,7 +139,6 @@ public:
 
 protected:
     int resetGmslDriver();
-    int setSyncGpio(uint8_t gpio, int value);
 
 private:
     static void captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> deviceHandle);

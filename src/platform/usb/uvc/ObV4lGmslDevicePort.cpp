@@ -1359,9 +1359,11 @@ uint32_t ObV4lGmslDevicePort::sendAndReceive(const uint8_t *send, uint32_t sendL
 bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
     VALIDATE_NOT_NULL(data);
 
-    uint16_t opcode, nId = 0, halfWordSize = 0, magic = 0;
+    uint16_t opcode, nId = 0;
+    // , halfWordSize = 0, magic = 0;
     uint32_t propertyId = 0, alignDataLen = 0, alignI2CDataLen = 0, ctrl = 0;
-    uint8_t  mI2cPackDataLen = 0, mI2cPackLen = 0;
+    uint8_t  mI2cPackDataLen = 0;
+    // , mI2cPackLen = 0;
     bool     ret = false;
 
     // LOG_DEBUG("-Entry sendData-dataLen:{} ", dataLen);
@@ -1375,13 +1377,13 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
     {
         opcode       = ((ProtocolHeader *)(data))->opcode;
         nId          = ((ProtocolHeader *)(data))->nId;
-        halfWordSize = ((ProtocolHeader *)(data))->halfWordSize;
-        magic        = ((ProtocolHeader *)(data))->magic;
-        LOG_DEBUG("------------------------------------------------------------------------");
+        // halfWordSize = ((ProtocolHeader *)(data))->halfWordSize;
+        // magic        = ((ProtocolHeader *)(data))->magic;
+        // LOG_DEBUG("------------------------------------------------------------------------");
 
         uint8_t *pDataBuf = ((uint8_t *)(data)) + sizeof(ProtocolHeader);
         propertyId        = *(uint32_t *)pDataBuf;
-        LOG_DEBUG("sendData opcode:{}, nId:{}, halfWordSize:{}, magic:0x{:0x}, PropertyId:{}", opcode, nId, halfWordSize, magic, propertyId);
+        // LOG_DEBUG("sendData opcode:{}, nId:{}, halfWordSize:{}, magic:0x{:0x}, PropertyId:{}", opcode, nId, halfWordSize, magic, propertyId);
 
 #if 0
         if(opcode==13 || opcode==14 ||opcode==18 ||opcode==25 ||opcode==30)//with offset
@@ -1395,8 +1397,8 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
 #endif
 
         mI2cPackDataLen = dataLen - sizeof(ProtocolHeader);  //-sizeof(uint16_t);
-        mI2cPackLen     = mI2cPackDataLen + sizeof(i2c_msg_header_t);
-        LOG_DEBUG("sendData mI2cPackDataLen:{}, alignDataLen:{}, mI2cPackLen:{} ", mI2cPackDataLen, alignDataLen, mI2cPackLen);
+                                                             // mI2cPackLen     = mI2cPackDataLen + sizeof(i2c_msg_header_t);
+        // LOG_DEBUG("sendData mI2cPackDataLen:{}, alignDataLen:{}, mI2cPackLen:{} ", mI2cPackDataLen, alignDataLen, mI2cPackLen);
 
 #if 0
         mData0 = propertyId & 0x000000FF;
@@ -1410,7 +1412,7 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
         // LOG_DEBUG("--------------------------------------------------------------------------");
         {
             alignI2CDataLen = alignDataLen - 2;  // cal i2c_msg_t len
-            LOG_DEBUG("sendData alignI2CDataLen:{} ", alignI2CDataLen);
+            // LOG_DEBUG("sendData alignI2CDataLen:{} ", alignI2CDataLen);
             i2c_msg_t send_i2c_pack_msg;
             memset(&send_i2c_pack_msg, 0, sizeof(i2c_msg_t));
             send_i2c_pack_msg.header.len   = alignI2CDataLen;  // G2R_GET_VERSION_CMD_LEN;
@@ -1421,12 +1423,12 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
 
             if((mI2cPackDataLen <= 2) && (mI2cPackDataLen > 0)) {
                 propertyId = *(uint16_t *)send_i2c_pack_msg._data;
-                LOG_DEBUG("sendData PropertyId:{} ", propertyId);
+                // LOG_DEBUG("sendData PropertyId:{} ", propertyId);
                 // LOG_DEBUG("sendData 04data-PropertyId dat0:{}, data1:{} ", send_i2c_pack_msg._data[0], send_i2c_pack_msg._data[1]);
             }
             else if(mI2cPackDataLen >= 4) {
                 propertyId = *(uint32_t *)send_i2c_pack_msg._data;
-                LOG_DEBUG("sendData PropertyId:{} ", propertyId);
+                // LOG_DEBUG("sendData PropertyId:{} ", propertyId);
                 // LOG_DEBUG("sendData 4data-PropertyId dat0:{}, data1:{}, data2:{}, data3:{} ", send_i2c_pack_msg._data[0], send_i2c_pack_msg._data[1],
                 // send_i2c_pack_msg._data[2], send_i2c_pack_msg._data[3]);
             }
@@ -1435,7 +1437,7 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
                 int value = *(uint8_t *)(send_i2c_pack_msg._data + 4);
                 LOG_DEBUG("sendData value:{} ", value);
                 if(value == 1) {
-                    LOG_DEBUG("sendData PropertyId:{} -not need read i2c response status. handle resetGmslDriver.", propertyId);
+                    // LOG_DEBUG("sendData PropertyId:{} -not need read i2c response status. handle resetGmslDriver.", propertyId);
                     resetGmslDriver();
                     return true;
                 }
@@ -1464,7 +1466,7 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
 
 bool ObV4lGmslDevicePort::recvData(uint8_t *data, uint32_t *dataLen) {
 
-    LOG_DEBUG("-Entry recvData-dataLen:{0}", *dataLen);
+    // LOG_DEBUG("-Entry recvData-dataLen:{0}", *dataLen);
     uint32_t ctrl = 0;
 
     VALIDATE_NOT_NULL(data);
@@ -1549,7 +1551,7 @@ bool ObV4lGmslDevicePort::setPu(uint32_t propertyId, int32_t value) {
 bool ObV4lGmslDevicePort::getPu(uint32_t propertyId, int32_t &value) {
     auto fd = deviceHandles_.front()->fd;
 
-    LOG_DEBUG("-Entry ObV4lGmslDevicePort::getPu propertyId={}, devNode:{}", propertyId, deviceHandles_.front()->info->name);
+    // LOG_DEBUG("-Entry ObV4lGmslDevicePort::getPu propertyId={}, devNode:{}", propertyId, deviceHandles_.front()->info->name);
 
 #if 0
     int num=deviceHandles_.size();
@@ -1576,14 +1578,14 @@ bool ObV4lGmslDevicePort::getPu(uint32_t propertyId, int32_t &value) {
         control.value = (V4L2_EXPOSURE_MANUAL == control.value) ? 0 : 1;
     }
     value = control.value;
-    LOG_DEBUG("Leave ObV4lGmslDevicePort getPu Success! propertyId={}, value: {} ", propertyId, value);
+    // LOG_DEBUG("Leave ObV4lGmslDevicePort getPu Success! propertyId={}, value: {} ", propertyId, value);
 
     return true;
 }
 
 UvcControlRange ObV4lGmslDevicePort::getPuRange(uint32_t propertyId) {
     auto fd = deviceHandles_.front()->fd;
-    LOG_DEBUG("-Entry ObV4lGmslDevicePort::getPuRange propertyId={}, devNode:{}", propertyId, deviceHandles_.front()->info->name);
+    // LOG_DEBUG("-Entry ObV4lGmslDevicePort::getPuRange propertyId={}, devNode:{}", propertyId, deviceHandles_.front()->info->name);
 
 #if 0
     int num=deviceHandles_.size();
@@ -1614,13 +1616,13 @@ UvcControlRange ObV4lGmslDevicePort::getPuRange(uint32_t propertyId) {
     }
 
     UvcControlRange range(query.minimum, query.maximum, query.step, query.default_value);
-    LOG_DEBUG("Leave ObV4lGmslDevicePort::getPuRange propertyId:{}, query.minimum:{}, query.maximum:{}, query.step:{}, query.default_value:{} ", propertyId,
-              query.minimum, query.maximum, query.step, query.default_value);
+    // LOG_DEBUG("Leave ObV4lGmslDevicePort::getPuRange propertyId:{}, query.minimum:{}, query.maximum:{}, query.step:{}, query.default_value:{} ", propertyId,
+    //           query.minimum, query.maximum, query.step, query.default_value);
     return range;
 }
 
 bool ObV4lGmslDevicePort::setPuExt(uint32_t propertyId, int32_t value) {
-    LOG_DEBUG("-Entry ObV4lGmslDevicePort::setPuExt---propertyId={0} value:{1}", propertyId, value);
+    // LOG_DEBUG("-Entry ObV4lGmslDevicePort::setPuExt---propertyId={0} value:{1}", propertyId, value);
 
     auto fd  = deviceHandles_.front()->fd;
     auto cid = CIDFromOBPropertyIDGmsl(propertyId);
@@ -1644,7 +1646,7 @@ bool ObV4lGmslDevicePort::setPuExt(uint32_t propertyId, int32_t value) {
         throw io_exception("set propertyId " + std::to_string(propertyId) + "xioctlGmsl(VIDIOC_S_EXT_CTRLS) failed! err: " + strerror(errno));
     }
 
-    LOG_DEBUG("-Leave ObV4lGmslDevicePort::setPuExt---propertyId={0} ", propertyId);
+    // LOG_DEBUG("-Leave ObV4lGmslDevicePort::setPuExt---propertyId={0} ", propertyId);
 
     return true;
 }
@@ -1705,12 +1707,13 @@ bool ObV4lGmslDevicePort::setPuRaw(uint32_t propertyId, int32_t value) {
 
 bool ObV4lGmslDevicePort::setXuExt(uint32_t ctrl, const uint8_t *data, uint32_t len) {
     VALIDATE_NOT_NULL(data);
+    (void)len;
     auto fd  = deviceHandles_.front()->fd;
     auto cid = ctrl;  // CIDFromOBPropertyID(ctrl);
 
-    i2c_msg_t *msg        = (i2c_msg_t *)data;
-    uint32_t   propertyId = *(uint32_t *)msg->_data;
-    LOG_DEBUG("-Entry setXuExt PropertyId:{}, len:{}, ctrl:{}", propertyId, ctrl, len);
+    // i2c_msg_t *msg        = (i2c_msg_t *)data;
+    // uint32_t   propertyId = *(uint32_t *)msg->_data;
+    // LOG_DEBUG("-Entry setXuExt PropertyId:{}, len:{}, ctrl:{}", propertyId, ctrl, len);
 
     if(G2R_CAMERA_CID_SET_DATA == ctrl) {
         // struct v4l2_ext_control xctrl { cid, G2R_RW_DATA_LEN, 0, 0 };
@@ -1825,8 +1828,9 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
             // handle  pRecvDataBuf->header.len==0 status exception
             if((pRecvDataBuf->header.len == 0) || (pRecvDataBuf->header.code == 0) || (pRecvDataBuf->header.len == 65535) || (pRecvDataBuf->header.len > 248)) {
                 readRespDataSize = 0;
-                LOG_DEBUG("I2C read data err!. pRecvDataBuf->header.len:{}, pRecvDataBuf->header.code:{}, tries:{}", std::to_string(pRecvDataBuf->header.len),
-                          std::to_string(pRecvDataBuf->header.code), tries);
+                // LOG_DEBUG("I2C read data err!. pRecvDataBuf->header.len:{}, pRecvDataBuf->header.code:{}, tries:{}",
+                // std::to_string(pRecvDataBuf->header.len),
+                //           std::to_string(pRecvDataBuf->header.code), tries);
 
                 utils::sleepMs(TRY_INTERVAL_MS);
 
@@ -1938,36 +1942,6 @@ int ObV4lGmslDevicePort::resetGmslDriver() {
         return -1;
     }
     LOG_DEBUG("-Leave ObV4lGmslDevicePort::rebootFirmware");
-    return 0;
-}
-
-// SYNC GPIO
-// gpio num; current support only 0.
-// value: 0:1
-int ObV4lGmslDevicePort::setSyncGpio(uint8_t gpio, int value) {
-    LOG_DEBUG("-Entry ObV4lGmslDevicePort::setSyncGpio");
-    auto    fd     = deviceHandles_.front()->fd;
-    uint8_t buf[2] = { 0 };
-
-    v4l2_ext_controls controls;
-    v4l2_ext_control  control;
-    memset(&controls, 0, sizeof(controls));
-    memset(&control, 0, sizeof(control));
-    controls.ctrl_class = V4L2_CTRL_CLASS_CAMERA;
-    controls.controls   = &control;
-    controls.count      = 1;
-
-    buf[0] = gpio;   // gpio num; current support only 0.
-    buf[1] = value;  // value: 0:1
-
-    control.id   = G2R_CAMERA_CID_SET_GPIO;
-    control.size = 2;
-    control.p_u8 = const_cast<uint8_t *>(buf);
-
-    if(xioctlGmsl(fd, VIDIOC_S_EXT_CTRLS, &controls) < 0) {
-        LOG_ERROR("xioctlGmsl(G2R_CAMERA_CID_RESET_POWER) with control_id={} failed!", G2R_CAMERA_CID_RESET_POWER);
-        return -1;
-    }
     return 0;
 }
 

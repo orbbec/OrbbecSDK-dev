@@ -6,31 +6,9 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "utils/Utils.hpp"
+#include "timestamp/FrameTimestampCalculator.hpp"
 
 namespace libobsensor {
-
-static const std::multimap<OBPropertyID, std::vector<OBFrameMetadataType>> initMetadataTypeIdMap() {
-    std::multimap<OBPropertyID, std::vector<OBFrameMetadataType>> map;
-
-    map.insert({ OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, { OB_FRAME_METADATA_TYPE_EXPOSURE } });
-    map.insert({ OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, { OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE } });
-    map.insert({ OB_PROP_COLOR_WHITE_BALANCE_INT, { OB_FRAME_METADATA_TYPE_WHITE_BALANCE } });
-    map.insert({ OB_PROP_COLOR_BRIGHTNESS_INT, { OB_FRAME_METADATA_TYPE_BRIGHTNESS } });
-    map.insert({ OB_PROP_COLOR_CONTRAST_INT, { OB_FRAME_METADATA_TYPE_CONTRAST } });
-    map.insert({ OB_PROP_COLOR_SATURATION_INT, { OB_FRAME_METADATA_TYPE_SATURATION } });
-    map.insert({ OB_PROP_COLOR_SHARPNESS_INT, { OB_FRAME_METADATA_TYPE_SHARPNESS } });
-    map.insert({ OB_PROP_COLOR_BACKLIGHT_COMPENSATION_INT, { OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION } });
-    map.insert({ OB_PROP_COLOR_HUE_INT, { OB_FRAME_METADATA_TYPE_HUE } });
-    map.insert({ OB_PROP_COLOR_GAMMA_INT, { OB_FRAME_METADATA_TYPE_GAMMA } });
-    map.insert({ OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, { OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY } });
-    map.insert({ OB_STRUCT_COLOR_AE_ROI,
-                 { OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, OB_FRAME_METADATA_TYPE_AE_ROI_TOP, OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT,
-                   OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM } });
-
-    return map;
-}
-
-static const std::multimap<OBPropertyID, std::vector<OBFrameMetadataType>> metadataTypeIdMap = initMetadataTypeIdMap();
 
 template <typename T, typename Field> class StructureMetadataParser : public IFrameMetadataParser {
 public:
@@ -145,6 +123,57 @@ public:
     }
 };
 
+class G330PayloadHeadMetadataTimestampParser : public G330ScrMetadataParserBase {
+public:
+    G330PayloadHeadMetadataTimestampParser(IDevice *device, uint64_t deviceTimeFreq, uint64_t frameTimeFreq)
+        : device_(device), deviceTimeFreq_(deviceTimeFreq), frameTimeFreq_(frameTimeFreq) {
+        timestampCalculator_ = std::make_shared<FrameTimestampCalculatorBaseDeviceTime>(device, deviceTimeFreq_, frameTimeFreq_);
+    }
+    virtual ~G330PayloadHeadMetadataTimestampParser() = default;
+
+    int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
+        if(!isSupported(metadata, dataSize)) {
+            LOG_WARN_INTVL("Current metadata does not contain timestamp!");
+            return 0;
+        }
+        auto standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
+        auto calculatedTimestamp = timestampCalculator_->calculate(static_cast<uint64_t>(standardUvcMetadata.dwPresentationTime));
+
+        return calculatedTimestamp;
+    }
+
+private:
+    IDevice *device_;
+
+    uint64_t deviceTimeFreq_;
+
+    uint64_t frameTimeFreq_;
+
+    std::shared_ptr<FrameTimestampCalculatorBaseDeviceTime> timestampCalculator_;
+};
+
+class G330PayloadHeadMetadataColorSensorTimestampParser : public G330PayloadHeadMetadataTimestampParser {
+public:
+    G330PayloadHeadMetadataColorSensorTimestampParser(IDevice *device, uint64_t deviceTimeFreq, uint64_t frameTimeFreq)
+        : G330PayloadHeadMetadataTimestampParser(device, deviceTimeFreq, frameTimeFreq) {}
+    virtual ~G330PayloadHeadMetadataColorSensorTimestampParser() = default;
+
+    int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
+        if(!isSupported(metadata, dataSize)) {
+            LOG_WARN_INTVL("Current metadata does not contain color sensor timestamp!");
+            return 0;
+        }
+
+        auto calculatedTimestamp = G330PayloadHeadMetadataTimestampParser::getValue(metadata, dataSize);
+        // get frame offset,unit 100us
+        auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
+        int16_t frameOffset         = (((standardUvcMetadata.scrSourceClock[1] & 0b11111000) >> 3) | (standardUvcMetadata.scrSourceClock[2] << 8)) * 100;
+        calculatedTimestamp += frameOffset;
+
+        return calculatedTimestamp;
+    }
+};
+
 class G330ColorScrMetadataExposureParser : public G330ScrMetadataParserBase {
 public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -153,22 +182,9 @@ public:
             return 0;
         }
         auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint16_t exposure            = standardUvcMetadata.scrSourceClock[0] | ((standardUvcMetadata.scrSourceClock[1] & 0b00000111) << 8);
+        uint32_t exposure            = standardUvcMetadata.scrSourceClock[0] | ((standardUvcMetadata.scrSourceClock[1] & 0b00000111) << 8) * 100;  // unit 100us
 
         return static_cast<int64_t>(exposure);
-    }
-};
-
-class G330ColorScrMetadataTimestampOffsetParser : public G330ScrMetadataParserBase {
-public:
-    int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
-        if(!isSupported(metadata, dataSize)) {
-            LOG_WARN_INTVL("Current metadata does not contain color timestamp offset!");
-            return 0;
-        }
-        auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint8_t timestampOffset     = ((standardUvcMetadata.scrSourceClock[1] & 0b11111000) >> 3);
-        return static_cast<int64_t>(timestampOffset);
     }
 };
 
@@ -186,68 +202,27 @@ public:
     }
 };
 
-class G330ColorMetadataParser : public IFrameMetadataParser {
+class G330PayloadHeadMetadataDepthSensorTimestampParser : public G330PayloadHeadMetadataTimestampParser {
 public:
-    G330ColorMetadataParser(IDevice *device, OBFrameMetadataType type) {
-        for(const auto &item: metadataTypeIdMap) {
-            const std::vector<OBFrameMetadataType> &types = item.second;
-            if(std::find(types.begin(), types.end(), type) != types.end()) {
-                propertyId_ = item.first;
-                break;
-            }
-        }
-
-        auto propertyServer = device->getPropertyServer();
-        propertyServer->registerAccessCallback(propertyId_,
-                                               [this, type](uint32_t propertyId, const uint8_t *data, size_t dataSize, PropertyOperationType operationType) {
-                                                   utils::unusedVar(dataSize);
-                                                   utils::unusedVar(operationType);
-                                                   if(propertyId != static_cast<uint32_t>(propertyId_)) {
-                                                       return;
-                                                   }
-                                                   if(propertyId == OB_STRUCT_COLOR_AE_ROI) {
-                                                       auto roi = *(reinterpret_cast<const OBRegionOfInterest *>(data));
-                                                       if(type == OB_FRAME_METADATA_TYPE_AE_ROI_LEFT) {
-                                                           data_ = reinterpret_cast<void *>(&roi.x0_left);
-                                                       }
-                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT) {
-                                                           data_ = reinterpret_cast<void *>(&roi.x1_right);
-                                                       }
-                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_TOP) {
-                                                           data_ = reinterpret_cast<void *>(&roi.y0_top);
-                                                       }
-                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM) {
-                                                           data_ = reinterpret_cast<void *>(&roi.y1_bottom);
-                                                       }
-                                                   }
-                                                   else {
-                                                       data_ = reinterpret_cast<void *>(&data);
-                                                   }
-                                               });
-    };
-
-    virtual ~G330ColorMetadataParser() = default;
+    G330PayloadHeadMetadataDepthSensorTimestampParser(IDevice *device, uint64_t deviceTimeFreq, uint64_t frameTimeFreq)
+        : G330PayloadHeadMetadataTimestampParser(device, deviceTimeFreq, frameTimeFreq) {}
+    virtual ~G330PayloadHeadMetadataDepthSensorTimestampParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
-            LOG_WARN_INTVL("Current metadata does not contain depth exposure!");
+            LOG_WARN_INTVL("Current metadata does not contain color sensor timestamp!");
             return 0;
         }
 
-        auto value = *(reinterpret_cast<int64_t *>(data_));
-        return value;
+        auto calculatedTimestamp = G330PayloadHeadMetadataTimestampParser::getValue(metadata, dataSize);
+        // get depth exposure,unit 1us
+        auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
+        uint32_t exposure =
+            standardUvcMetadata.scrSourceClock[0] | (standardUvcMetadata.scrSourceClock[1] << 8) | ((standardUvcMetadata.scrSourceClock[2] & 0b00000011) << 16);
+        calculatedTimestamp = calculatedTimestamp - (exposure / 2);
+
+        return calculatedTimestamp;
     }
-
-    bool isSupported(const uint8_t *metadata, size_t dataSize) override {
-        utils::unusedVar(metadata);
-        utils::unusedVar(dataSize);
-        return true;
-    }
-
-private:
-    OBPropertyID propertyId_;
-
-    void *data_;
 };
 
 class G330DepthScrMetadataExposureParser : public G330ScrMetadataParserBase {
@@ -269,7 +244,7 @@ class G330DepthScrMetadataLaserStatusParser : public G330ScrMetadataParserBase {
 public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
-            LOG_WARN_INTVL("Current metadata does not contain depth exposure!");
+            LOG_WARN_INTVL("Current metadata does not contain laser status!");
             return 0;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
@@ -280,22 +255,29 @@ public:
 
 class G330DepthScrMetadataLaserPowerLevelParser : public G330ScrMetadataParserBase {
 public:
+    G330DepthScrMetadataLaserPowerLevelParser(FrameMetadataModifier modifier = nullptr) : modifier_(modifier) {}
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
-            LOG_WARN_INTVL("Current metadata does not contain depth exposure!");
+            LOG_WARN_INTVL("Current metadata does not contain laser power level!");
             return 0;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint8_t laserPowerLevel     = (standardUvcMetadata.scrSourceClock[2] & 0b00111000) >> 3;
+        if(modifier_) {
+            laserPowerLevel = static_cast<uint8_t>(modifier_(static_cast<int64_t>(laserPowerLevel)));
+        }
         return static_cast<int64_t>(laserPowerLevel);
     }
+
+private:
+    FrameMetadataModifier modifier_;
 };
 
 class G330DepthScrMetadataHDRSequenceIDParser : public G330ScrMetadataParserBase {
 public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
-            LOG_WARN_INTVL("Current metadata does not contain depth exposure!");
+            LOG_WARN_INTVL("Current metadata does not contain hdr sequence id!");
             return 0;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
@@ -308,13 +290,106 @@ class G330DepthScrMetadataGainParser : public G330ScrMetadataParserBase {
 public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
-            LOG_WARN_INTVL("Current metadata does not contain depth exposure!");
+            LOG_WARN_INTVL("Current metadata does not contain depth gain!");
             return 0;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint8_t gain                = standardUvcMetadata.scrSourceClock[3];
         return static_cast<int64_t>(gain);
     }
+};
+
+class G330MetadataParserBase : public IFrameMetadataParser {
+public:
+    G330MetadataParserBase(IDevice *device, OBFrameMetadataType type, FrameMetadataModifier modifier,
+                           const std::multimap<OBPropertyID, std::vector<OBFrameMetadataType>> metadataTypeIdMap)
+        : modifier_(modifier) {
+        for(const auto &item: metadataTypeIdMap) {
+            const std::vector<OBFrameMetadataType> &types = item.second;
+            if(std::find(types.begin(), types.end(), type) != types.end()) {
+                propertyId_ = item.first;
+                break;
+            }
+        }
+
+        auto propertyServer = device->getPropertyServer();
+        propertyServer->registerAccessCallback(propertyId_,
+                                               [this, type](uint32_t propertyId, const uint8_t *data, size_t dataSize, PropertyOperationType operationType) {
+                                                   utils::unusedVar(dataSize);
+                                                   utils::unusedVar(operationType);
+                                                   if(propertyId != static_cast<uint32_t>(propertyId_)) {
+                                                       return;
+                                                   }
+                                                   if(propertyId == OB_STRUCT_COLOR_AE_ROI || propertyId == OB_STRUCT_DEPTH_AE_ROI) {
+                                                       auto roi = *(reinterpret_cast<const OBRegionOfInterest *>(data));
+                                                       if(type == OB_FRAME_METADATA_TYPE_AE_ROI_LEFT) {
+                                                           data_ = static_cast<int64_t>(roi.x0_left);
+                                                       }
+                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT) {
+                                                           data_ = static_cast<int64_t>(roi.x1_right);
+                                                       }
+                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_TOP) {
+                                                           data_ = static_cast<int64_t>(roi.y0_top);
+                                                       }
+                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM) {
+                                                           data_ = static_cast<int64_t>(roi.y1_bottom);
+                                                       }
+                                                   }
+                                                   else if(propertyId == OB_STRUCT_DEPTH_HDR_CONFIG) {
+                                                       auto hdrConfig = *(reinterpret_cast<const OBHdrConfig *>(data));
+                                                       if(type == OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME) {
+                                                           data_ = static_cast<int64_t>(hdrConfig.sequence_name);
+                                                       }
+                                                       else if(type == OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE) {
+                                                           data_ = static_cast<int64_t>(hdrConfig.enable);
+                                                       }
+                                                   }
+                                                   else {
+                                                       auto value = reinterpret_cast<const OBPropertyValue *>(data);
+                                                       // TODO: support float type
+                                                       data_ = static_cast<int64_t>(value->intValue);
+                                                   }
+                                               });
+    };
+
+    virtual ~G330MetadataParserBase() = default;
+
+    int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
+        if(!isSupported(metadata, dataSize)) {
+            return 0;
+        }
+        if(modifier_) {
+            data_ = modifier_(data_);
+        }
+        return data_;
+    }
+
+    bool isSupported(const uint8_t *metadata, size_t dataSize) override {
+        utils::unusedVar(metadata);
+        utils::unusedVar(dataSize);
+        return true;
+    }
+
+private:
+    OBPropertyID propertyId_;
+
+    int64_t data_ = 0;
+
+    FrameMetadataModifier modifier_ = nullptr;
+};
+
+class G330ColorMetadataParser : public G330MetadataParserBase {
+public:
+    G330ColorMetadataParser(IDevice *device, OBFrameMetadataType type, FrameMetadataModifier modifier = nullptr)
+        : G330MetadataParserBase(device, type, modifier, initMetadataTypeIdMap(OB_SENSOR_COLOR)) {}
+    virtual ~G330ColorMetadataParser() = default;
+};
+
+class G330DepthMetadataParser : public G330MetadataParserBase {
+public:
+    G330DepthMetadataParser(IDevice *device, OBFrameMetadataType type, FrameMetadataModifier modifier = nullptr)
+        : G330MetadataParserBase(device, type, modifier, initMetadataTypeIdMap(OB_SENSOR_DEPTH)) {}
+    virtual ~G330DepthMetadataParser() = default;
 };
 
 }  // namespace libobsensor

@@ -2,6 +2,7 @@
 #include "DeviceBase.hpp"
 #include "IDeviceManager.hpp"
 #include "frameprocessor/FrameProcessor.hpp"
+#include "G330FrameMetadataParserContainer.hpp"
 
 #include <map>
 #include <memory>
@@ -27,8 +28,8 @@ private:
     std::shared_ptr<const StreamProfile> loadDefaultStreamProfile(OBSensorType sensorType);
 
 private:
-    std::shared_ptr<IFrameMetadataParserContainer> colorMdParserContainer_;
-    std::shared_ptr<IFrameMetadataParserContainer> depthMdParserContainer_;
+    std::shared_ptr<G330FrameMetadataParserContainer> colorMdParserContainer_;
+    std::shared_ptr<G330FrameMetadataParserContainer> depthMdParserContainer_;
 
     const uint64_t                                              deviceTimeFreq_ = 1000;     // in ms
     const uint64_t                                              frameTimeFreq_  = 1000000;  // in us

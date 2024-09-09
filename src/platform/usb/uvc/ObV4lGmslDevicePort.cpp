@@ -647,7 +647,6 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
     int metadataBufferIndex = -1;
     int colorFrameNum       = 0;  // color drop 1~3 frame -> fix color green screen issue.
     try {
-        LOG_DEBUG("-Entry-ObV4lGmslDevicePort::captureLoop");
         int max_fd = std::max({ devHandle->fd, devHandle->metadataFd, devHandle->stopPipeFd[0], devHandle->stopPipeFd[1] });
 
         if(devHandle->metadataFd >= 0) {
@@ -667,7 +666,6 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
         }
 
         while(devHandle->isCapturing) {
-            // LOG_DEBUG("-ObV4lGmslDevicePort::captureLoop-devHandle->fd:{} ", devHandle->fd );
             struct timeval remaining = { 0, 500000 };  // 500ms
             fd_set         fds{};
             FD_ZERO(&fds);
@@ -698,7 +696,6 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                 continue;
             }
 
-            // LOG_DEBUG("-Entry -ObV4lGmslDevicePort::captureLoop-");
             if(FD_ISSET(devHandle->stopPipeFd[0], &fds) || FD_ISSET(devHandle->stopPipeFd[1], &fds)) {
                 if(!devHandle->isCapturing) {
                     LOG_DEBUG("V4L stream is closed: {}", devHandle->info->name);
@@ -709,29 +706,17 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                 break;
             }
 
-            // LOG_DEBUG("-metadata-ObV4lGmslDevicePort::captureLoop-");
             if(devHandle->metadataFd >= 0 && FD_ISSET(devHandle->metadataFd, &fds)) {
                 FD_CLR(devHandle->metadataFd, &fds);
                 v4l2_buffer buf = { 0 };
                 memset(&buf, 0, sizeof(buf));
                 buf.type   = LOCAL_V4L2_BUF_TYPE_META_CAPTURE_GMSL;
                 buf.memory = USE_MEMORY_MMAP ? V4L2_MEMORY_MMAP : V4L2_MEMORY_USERPTR;
-                // LOG_DEBUG("-metadata-ObV4lGmslDevicePort::captureLoop-");
                 if(xioctlGmsl(devHandle->metadataFd, VIDIOC_DQBUF, &buf) < 0) {
                     LOG_DEBUG("VIDIOC_DQBUF failed, {}, {}", strerror(errno), devHandle->metadataInfo->name);
                 }
-                // LOG_DEBUG("---ObV4lGmslDevicePort::captureLoop-metadata--buf.bytesused:{}, buf.index:{}, buf.length:{} ", buf.bytesused, buf.index,
-                // buf.length);
 
-#if 0
-                for(int i=0; i< buf.length; i++){
-                    printf("[%s][%d]:rgb-md frame.data[%d]:%x  \n", __FUNCTION__, __LINE__, i, devHandle->metadataBuffers[buf.index].ptr[i]  );
-                }
-#endif
-
-                // if( (buf.bytesused) && (buf.flags&V4L2_BUF_FLAG_DONE) )
                 if((buf.bytesused) && (!(buf.flags & V4L2_BUF_FLAG_ERROR)))
-                // if(buf.bytesused)
                 {
                     devHandle->metadataBuffers[buf.index].actual_length = buf.bytesused;
                     devHandle->metadataBuffers[buf.index].sequence      = buf.sequence;
@@ -740,16 +725,13 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                     // buf.bytesused, buf.index);
                 }
 
-                // LOG_DEBUG("-metadata-ObV4lGmslDevicePort::captureLoop-");
                 if(devHandle->isCapturing) {
-                    // LOG_DEBUG("-metadata-ObV4lGmslDevicePort::captureLoop-");
                     if(xioctlGmsl(devHandle->metadataFd, VIDIOC_QBUF, &buf) < 0) {
                         LOG_ERROR("devHandle->metadataFd VIDIOC_QBUF, errno: {0}, {1}, {3}", strerror(errno), errno, __LINE__);
                     }
                 }
             }
 
-            // LOG_DEBUG("-ObV4lGmslDevicePort::captureLoop-");
             if(FD_ISSET(devHandle->fd, &fds)) {
                 FD_CLR(devHandle->fd, &fds);
                 v4l2_buffer buf = {};
@@ -773,9 +755,9 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                         videoFrame->updateData(devHandle->buffers[buf.index].ptr, buf.bytesused);
                     }
 
-                    if(metadataBufferIndex >= 0 && devHandle->metadataBuffers[metadataBufferIndex].sequence == buf.sequence) {
+                    //if(metadataBufferIndex >= 0 && devHandle->metadataBuffers[metadataBufferIndex].sequence == buf.sequence) {
+                    if(metadataBufferIndex >= 0) { //temp fix orbbecviewer metadata view flash issue. reason:Occasional missing of one frame in metadata data.
                         auto &metaBuf = devHandle->metadataBuffers[metadataBufferIndex];
-                        // LOG_DEBUG("---ObV4lGmslDevicePort::captureLoop-metadata--buf.index:{}, buf.length:{} ", metaBuf.sequence, metaBuf.actual_length);
                         auto uvc_payload_header     = metaBuf.ptr;
                         auto uvc_payload_header_len = metaBuf.actual_length;
                         videoFrame->updateMetadata(static_cast<const uint8_t *>(uvc_payload_header), 12);
@@ -793,7 +775,6 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
 
                     if(devHandle->profile->getType() == OB_STREAM_COLOR) {
                         if(colorFrameNum >= 3) {
-                            // LOG_DEBUG("captureLoop-videoFrame.frameSize:{}", videoFrame->getDataSize());
                             devHandle->frameCallback(videoFrame);
                         }
                         else {
@@ -802,14 +783,11 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                         }
                     }
                     else {
-                        // LOG_DEBUG("captureLoop-videoFrame.frameSize:{}", videoFrame->getDataSize());
                         devHandle->frameCallback(videoFrame);
                     }
                 }
 
                 if(devHandle->isCapturing) {
-                    // LOG_DEBUG("-Entry -ObV4lGmslDevicePort::captureLoop-");
-                    // xioctlGmsl(devHandle->fd, VIDIOC_QBUF, &buf);
                     if(xioctlGmsl(devHandle->fd, VIDIOC_QBUF, &buf) < 0) {
                         LOG_ERROR(" VIDIOC_QBUF, strerrno:{}, errno:{}", strerror(errno), errno);
                     }

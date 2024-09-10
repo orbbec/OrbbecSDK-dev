@@ -123,18 +123,13 @@ ob_device *ob_device_list_get_device_by_uid(const ob_device_list *list, const ch
     VALIDATE_NOT_NULL(uid);
 
     for(auto &info: list->list) {
+        auto deviceUid = info->getUid();
+        if(deviceUid == uid
 #if defined(__linux__)
-        auto uidStr   = std::string(uid);
-        auto posLast  = uidStr.find_last_of('-');
-        auto posFirst = uidStr.find_first_of('-');
-        auto port     = (posFirst == posLast) ? uidStr : uidStr.substr(0, posLast);
-
-        auto posCmp  = info->getUid().find_last_of('-');
-        auto portCmp = info->getUid().substr(0, posCmp);
-        if(port == portCmp) {
-#else
-        if(info->getUid() == uid) {
+           // For linux platform, the usb device uid is like "bus-port-dev", try to rm the dev part to match the uid
+           || deviceUid.substr(0, deviceUid.find_last_of('-')) == uid
 #endif
+        ) {
             auto deviceMgr = info->getDeviceManager();
             auto device    = deviceMgr->createDevice(info);
             auto impl      = new ob_device();

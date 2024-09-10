@@ -121,7 +121,6 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, list, serial_number)
 ob_device *ob_device_list_get_device_by_uid(const ob_device_list *list, const char *uid, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(list);
     VALIDATE_NOT_NULL(uid);
-
     for(auto &info: list->list) {
         auto deviceUid = info->getUid();
         if(deviceUid == uid

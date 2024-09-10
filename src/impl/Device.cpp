@@ -127,6 +127,7 @@ ob_device *ob_device_list_get_device_by_uid(const ob_device_list *list, const ch
 #if defined(__linux__)
            // For linux platform, the usb device uid is like "bus-port-dev", try to rm the dev part to match the uid
            || deviceUid.substr(0, deviceUid.find_last_of('-')) == uid
+#endif
         ) {
             auto deviceMgr = info->getDeviceManager();
             auto device    = deviceMgr->createDevice(info);

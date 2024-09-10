@@ -756,6 +756,8 @@ public:
         init(impl);
     }
 
+    ~HoleFillingFilter() noexcept = default;
+
     /**
      * @brief Set the HoleFillingFilter mode.
      *
@@ -787,6 +789,8 @@ public:
         Error::handle(&error);
         init(impl);
     }
+
+     ~NoiseRemovalFilter() noexcept = default;
 
     /**
      * @brief Set the noise removal filter params.
@@ -856,6 +860,8 @@ public:
         Error::handle(&error);
         init(impl);
     }
+
+    ~TemporalFilter() noexcept = default;
 
     /**
      * @brief Get the TemporalFilter diffscale range.

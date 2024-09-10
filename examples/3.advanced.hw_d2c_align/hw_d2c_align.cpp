@@ -42,9 +42,10 @@ std::shared_ptr<ob::Config> createHwD2CAlignConfig(std::shared_ptr<ob::Pipeline>
 
         auto hwD2CAlignConfig = std::make_shared<ob::Config>();
         auto depthProfile     = hwD2CSupportedDepthStreamProfiles->getProfile(0);
-        hwD2CAlignConfig->enableStream(colorProfile);       // enable color stream
-        hwD2CAlignConfig->enableStream(depthProfile);       // enable depth stream
-        hwD2CAlignConfig->setAlignMode(ALIGN_D2C_HW_MODE);  // enable hardware depth-to-color alignment
+        hwD2CAlignConfig->enableStream(colorProfile);                                                     // enable color stream
+        hwD2CAlignConfig->enableStream(depthProfile);                                                     // enable depth stream
+        hwD2CAlignConfig->setAlignMode(ALIGN_D2C_HW_MODE);                                                // enable hardware depth-to-color alignment
+        hwD2CAlignConfig->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE);  // output frameset with all types of frames
         return hwD2CAlignConfig;
     }
     return nullptr;

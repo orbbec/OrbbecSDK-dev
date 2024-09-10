@@ -755,8 +755,7 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                         videoFrame->updateData(devHandle->buffers[buf.index].ptr, buf.bytesused);
                     }
 
-                    //if(metadataBufferIndex >= 0 && devHandle->metadataBuffers[metadataBufferIndex].sequence == buf.sequence) {
-                    if(metadataBufferIndex >= 0) { //temp fix orbbecviewer metadata view flash issue. reason:Occasional missing of one frame in metadata data.
+                    if(metadataBufferIndex >= 0 && devHandle->metadataBuffers[metadataBufferIndex].sequence == buf.sequence) {
                         auto &metaBuf = devHandle->metadataBuffers[metadataBufferIndex];
                         auto uvc_payload_header     = metaBuf.ptr;
                         auto uvc_payload_header_len = metaBuf.actual_length;
@@ -767,23 +766,23 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                             auto payloadHeader = (StandardUvcFramePayloadHeader *)uvc_payload_header;
                             videoFrame->setTimeStampUsec(payloadHeader->dwPresentationTime);
                         }
-                    }
 
-                    auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-                    videoFrame->setSystemTimeStampUsec(realtime);
-                    videoFrame->setNumber(buf.sequence);
+                        auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+                        videoFrame->setSystemTimeStampUsec(realtime);
+                        videoFrame->setNumber(buf.sequence);
 
-                    if(devHandle->profile->getType() == OB_STREAM_COLOR) {
-                        if(colorFrameNum >= 3) {
-                            devHandle->frameCallback(videoFrame);
+                        if(devHandle->profile->getType() == OB_STREAM_COLOR) {
+                            if(colorFrameNum >= 3) {
+                                devHandle->frameCallback(videoFrame);
+                            }
+                            else {
+                                colorFrameNum++;
+                                LOG_DEBUG("captureLoop colorFrameNum<3 drop. colorFrameNum:{}", colorFrameNum);
+                            }
                         }
                         else {
-                            colorFrameNum++;
-                            LOG_DEBUG("captureLoop colorFrameNum<3 drop. colorFrameNum:{}", colorFrameNum);
+                            devHandle->frameCallback(videoFrame);
                         }
-                    }
-                    else {
-                        devHandle->frameCallback(videoFrame);
                     }
                 }
 

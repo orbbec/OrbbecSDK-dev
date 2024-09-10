@@ -125,11 +125,6 @@ public:
     bool            setPu(uint32_t propertyId, int32_t value) override;
     UvcControlRange getPuRange(uint32_t propertyId) override;
 
-    // add for mipi
-    bool            getPuExt(uint32_t propertyId, int32_t &value);
-    bool            setPuExt(uint32_t propertyId, int32_t value);
-    UvcControlRange getPuRangeExt(uint32_t propertyId);
-
     virtual std::shared_ptr<const SourcePortInfo>          getSourcePortInfo() const override;
     static std::vector<std::shared_ptr<V4lDeviceInfoGmsl>> queryRelatedDevices(std::shared_ptr<const USBSourcePortInfo> portInfo);
     static bool                                            isContainedMetadataDevice(std::shared_ptr<const USBSourcePortInfo> portInfo);
@@ -139,7 +134,6 @@ public:
 
 protected:
     int resetGmslDriver();
-    int setSyncGpio(uint8_t gpio, int value);
 
 private:
     static void captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> deviceHandle);

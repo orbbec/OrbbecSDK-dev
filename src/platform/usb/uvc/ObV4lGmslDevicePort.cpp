@@ -716,8 +716,7 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                     LOG_DEBUG("VIDIOC_DQBUF failed, {}, {}", strerror(errno), devHandle->metadataInfo->name);
                 }
 
-                if((buf.bytesused) && (!(buf.flags & V4L2_BUF_FLAG_ERROR)))
-                {
+                if((buf.bytesused) && (!(buf.flags & V4L2_BUF_FLAG_ERROR))) {
                     devHandle->metadataBuffers[buf.index].actual_length = buf.bytesused;
                     devHandle->metadataBuffers[buf.index].sequence      = buf.sequence;
                     metadataBufferIndex                                 = buf.index;
@@ -755,10 +754,10 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                         videoFrame->updateData(devHandle->buffers[buf.index].ptr, buf.bytesused);
                     }
 
-                    if(metadataBufferIndex >= 0 && devHandle->metadataBuffers[metadataBufferIndex].sequence == buf.sequence) {
-                        auto &metaBuf = devHandle->metadataBuffers[metadataBufferIndex];
-                        auto uvc_payload_header     = metaBuf.ptr;
-                        auto uvc_payload_header_len = metaBuf.actual_length;
+                    if(metadataBufferIndex >= 0) {  // temp fix orbbecviewer metadata view flash issue. reason:Occasional missing of one frame in metadata data.
+                        auto &metaBuf                = devHandle->metadataBuffers[metadataBufferIndex];
+                        auto  uvc_payload_header     = metaBuf.ptr;
+                        auto  uvc_payload_header_len = metaBuf.actual_length;
                         videoFrame->updateMetadata(static_cast<const uint8_t *>(uvc_payload_header), 12);
                         videoFrame->appendMetadata(static_cast<const uint8_t *>(uvc_payload_header), uvc_payload_header_len);
 
@@ -1320,13 +1319,13 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
 }
 #endif
 
-#define BASE_WAIT_RESPONSE_TIME_MS 20
+#define BASE_WAIT_RESPONSE_TIME_US 300
 uint32_t ObV4lGmslDevicePort::sendAndReceive(const uint8_t *send, uint32_t sendLen, uint8_t *recv, uint32_t exceptedRecvLen) {
     std::unique_lock<std::mutex> lk(mMultiThreadI2CMutex);
     if(!sendData(send, sendLen)) {
         return -1;
     }
-    utils::sleepMs(BASE_WAIT_RESPONSE_TIME_MS);
+    utils::sleepUs(BASE_WAIT_RESPONSE_TIME_US);
     if(!recvData(recv, &exceptedRecvLen)) {
         return -1;
     }
@@ -1341,7 +1340,7 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
     uint32_t propertyId = 0, alignDataLen = 0, alignI2CDataLen = 0, ctrl = 0;
     uint8_t  mI2cPackDataLen = 0;
     // , mI2cPackLen = 0;
-    bool     ret = false;
+    bool ret = false;
 
     // LOG_DEBUG("-Entry sendData-dataLen:{} ", dataLen);
     if(alignDataLen >= OB_GMSL_FW_I2C_DATA_LEN_CUR_MAX) {
@@ -1352,8 +1351,8 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
     }
 
     {
-        opcode       = ((ProtocolHeader *)(data))->opcode;
-        nId          = ((ProtocolHeader *)(data))->nId;
+        opcode = ((ProtocolHeader *)(data))->opcode;
+        nId    = ((ProtocolHeader *)(data))->nId;
         // halfWordSize = ((ProtocolHeader *)(data))->halfWordSize;
         // magic        = ((ProtocolHeader *)(data))->magic;
         // LOG_DEBUG("------------------------------------------------------------------------");
@@ -1937,11 +1936,11 @@ bool ObV4lGmslDevicePort::isGmslDeviceForPlatformNvidia(std::shared_ptr<const US
     return is_gmsl_mipi_device_for_nvidia(portInfo);
 }
 
-void get_mipi_device_info(const std::string &dev_name, std::string &bus_info, std::string &card) {
+void getMipiDeviceInfo(const std::string &dev_name, std::string &bus_info, std::string &card) {
     struct v4l2_capability vcap;
     int                    fd = -1;
 
-    LOG_DEBUG("-Entry get_mipi_device_info---dev_name:{}", dev_name);
+    // LOG_DEBUG("-Entry getMipiDeviceInfo---dev_name:{}", dev_name);
 
     fd = open(dev_name.c_str(), O_RDWR);
     if(fd < 0) {
@@ -1989,8 +1988,8 @@ int file_exists(const char *filename) {
     return (access(filename, F_OK) != -1);
 }
 
-std::vector<std::string> get_video_paths(std::vector<std::string> &video_paths) {
-    LOG_DEBUG("-Entry v4l_uvc_device::get_video_paths- ");
+std::vector<std::string> getVideoPaths(std::vector<std::string> &video_paths) {
+    // LOG_DEBUG("-Entry v4l_uvc_device::getVideoPaths- ");
     // std::vector<std::string> video_paths;
     video_paths.resize(0);
 
@@ -2022,12 +2021,12 @@ std::vector<std::string> get_video_paths(std::vector<std::string> &video_paths) 
         }
 
         if(real_path.empty()) {
-            LOG_DEBUG("-get_video_paths real_path.empty()");
+            // LOG_DEBUG("-getVideoPaths real_path.empty()");
+            continue;
         }
-        else {
-            LOG_DEBUG("-get_video_paths real_path:{}", real_path);
-            video_paths.push_back(real_path);
-        }
+
+        // LOG_DEBUG("-getVideoPaths real_path:{}", real_path);
+        video_paths.push_back(real_path);
     }
     closedir(dir);
 
@@ -2049,9 +2048,9 @@ std::vector<std::string> get_video_paths(std::vector<std::string> &video_paths) 
             second_index >> right_id;
             return left_id < right_id;
         });
-        LOG_DEBUG("-get_video_paths-video_paths.size:{}, video_paths.at(1):{}", video_paths.size(), video_paths.at(1));
+        LOG_DEBUG("-getVideoPaths-video_paths.size:{}, video_paths.at(1):{}", video_paths.size(), video_paths.at(1));
     }
-    LOG_DEBUG("Leave:-get_video_paths");
+    // LOG_DEBUG("Leave:-getVideoPaths");
     return video_paths;
 }
 
@@ -2063,7 +2062,7 @@ UsbInterfaceInfo get_ImuInfo_from_mipi_device_path(const std::string &video_path
     auto dev_name = "/dev/" + name;
 
     // LOG_DEBUG("-Entry getInfoFromMipiDevicePath-video_path: {}, dev_name: {}", video_path, dev_name);
-    // get_mipi_device_info(dev_name, bus_info, card);
+    // getMipiDeviceInfo(dev_name, bus_info, card);
     if(dev_name == "/dev/v4l-subdev35") {
         bus_info = "platform:tegra-capture-vi:0";
         card     = "vi-output, DS5 mux 30-0066";
@@ -2119,127 +2118,10 @@ static const std::map<UsbSpec, std::string> usb_spec_names_v4l2 = { { usb_undefi
                                                                     { usb2_type, "2.0" },           { usb2_1_type, "2.1" }, { usb3_type, "3.0" },
                                                                     { usb3_1_type, "3.1" },         { usb3_2_type, "3.2" } };
 
-bool is_usb_device_path(const std::string &video_path) {
-    LOG_DEBUG("-Entry is_usb_device_path");
+bool isUsbDevicePath(const std::string &video_path) {
+    LOG_DEBUG("-Entry isUsbDevicePath");
     static const std::regex uvc_pattern("(\\/usb\\d+\\/)\\w+");  // Locate UVC device path pattern ../usbX/...
     return std::regex_search(video_path, uvc_pattern);
-}
-
-// retrieve the USB specification attributed to a specific USB device.
-// This functionality is required to find the USB connection type for UVC device
-// Note that the input parameter is passed by value
-static UsbSpec get_usb_connection_type(std::string path) {
-    LOG_DEBUG("Entry get_usb_connection_type-path: " + path);
-    UsbSpec res{ usb_undefined };
-
-    char usb_actual_path[PATH_MAX] = { 0 };
-    if(realpath(path.c_str(), usb_actual_path) != nullptr) {
-        path = std::string(usb_actual_path);
-        std::string val;
-        if(!(std::ifstream(path + "/version") >> val))
-            throw pal_exception("Failed to read usb version specification ");
-
-        LOG_DEBUG("-val:{}", val);
-
-#if 0
-        auto kvp = std::find_if(usb_spec_names.begin(), usb_spec_names.end(), [&val](const std::pair<UsbSpec, std::string> &kpv) { return (std::string::npos != val.find(kpv.second)); });
-        if(kvp != std::end(usb_spec_names))
-            res = kvp->first;
-#endif
-
-        auto kvp = std::find_if(usb_spec_names_v4l2.begin(), usb_spec_names_v4l2.end(),
-                                [&val](const std::pair<UsbSpec, std::string> &kpv) { return (std::string::npos != val.find(kpv.second)); });
-        if(kvp != std::end(usb_spec_names_v4l2))
-            res = kvp->first;
-    }
-    LOG_DEBUG("Leave get_usb_connection_type-res:0x{:0x}", res);
-    return res;
-}
-
-const size_t MAX_DEV_PARENT_DIR = 10;
-bool         is_usb_path_valid(const std::string &usb_video_path, const std::string &dev_name, std::string &busnum, std::string &devnum, std::string &devpath) {
-    utils::unusedVar(usb_video_path);
-    struct stat st = {};
-    if(stat(dev_name.c_str(), &st) < 0) {
-        throw pal_exception("Cannot identify " + dev_name);
-    }
-    if(!S_ISCHR(st.st_mode))
-        throw pal_exception(dev_name + " is no device");
-
-    // Search directory and up to three parent directories to find busnum/devnum
-    auto               valid_path = false;
-    std::ostringstream ss;
-    ss << "/sys/dev/char/" << major(st.st_rdev) << ":" << minor(st.st_rdev) << "/device/";
-
-    auto char_dev_path = ss.str();
-
-    for(auto i = 0U; i < MAX_DEV_PARENT_DIR; ++i) {
-        if(std::ifstream(char_dev_path + "busnum") >> busnum) {
-            if(std::ifstream(char_dev_path + "devnum") >> devnum) {
-                if(std::ifstream(char_dev_path + "devpath") >> devpath) {
-                    valid_path = true;
-                    break;
-                }
-            }
-        }
-        char_dev_path += "../";
-    }
-    LOG_DEBUG("Leave v4l_uvc_device::get_video_paths-valid_path:{} \n", valid_path);
-    return valid_path;
-}
-
-UsbInterfaceInfo get_info_from_usb_device_path(const std::string &video_path, const std::string &name) {
-    std::string busnum, devnum, devpath;
-    auto        dev_name = "/dev/" + name;
-
-    LOG_DEBUG("Entry get_info_from_usb_device_path-video_path:{} ", video_path.c_str());
-    if(!is_usb_path_valid(video_path, dev_name, busnum, devnum, devpath)) {
-
-#ifndef RS2_USE_CUDA
-        /*On the Jetson TX, the camera module is CSI & I2C and does not report as this code expects
-        Patch suggested by JetsonHacks: https://github.com/jetsonhacks/buildLibrealsense2TX*/
-        LOG_INFO("Failed to read busnum/devnum. Device Path: " + ("/sys/class/video4linux/" + name));
-#endif
-        throw pal_exception("Failed to read busnum/devnum of usb device");
-    }
-
-    LOG_INFO("Enumerating UVC " + name + " realpath=" + video_path);
-    uint16_t vid{}, pid{}, mi{};
-    UsbSpec  usb_specification(usb_undefined);
-
-    std::string modalias;
-    if(!(std::ifstream("/sys/class/video4linux/" + name + "/device/modalias") >> modalias))
-        throw pal_exception("Failed to read modalias");
-    if(modalias.size() < 14 || modalias.substr(0, 5) != "usb:v" || modalias[9] != 'p')
-        throw pal_exception("Not a usb format modalias");
-    if(!(std::istringstream(modalias.substr(5, 4)) >> std::hex >> vid))
-        throw pal_exception("Failed to read vendor ID");
-    if(!(std::istringstream(modalias.substr(10, 4)) >> std::hex >> pid))
-        throw pal_exception("Failed to read product ID");
-    if(!(std::ifstream("/sys/class/video4linux/" + name + "/device/bInterfaceNumber") >> std::hex >> mi))
-        throw pal_exception("Failed to read interface number");
-
-    // Find the USB specification (USB2/3) type from the underlying device
-    // Use device mapping obtained in previous step to traverse node tree
-    // and extract the required descriptors
-    // Traverse from
-    /// sys/devices/pci0000:00/0000:00:xx.0/ABC/M-N/3-6:1.0/video4linux/video0
-    // to
-    /// sys/devices/pci0000:00/0000:00:xx.0/ABC/M-N/version
-    usb_specification = get_usb_connection_type(video_path + "/../../../");
-
-    UsbInterfaceInfo info{};
-    info.pid       = pid;
-    info.vid       = vid;
-    info.infIndex  = mi;          // usb interface
-    info.infName   = dev_name;    // video name
-    info.infUrl    = video_path;  // video path
-    info.uid       = busnum + "-" + devpath + "-" + devnum;
-    info.conn_spec = usb_specification;
-    // info.uvc_capabilities = get_dev_capabilities(dev_name);
-
-    LOG_DEBUG("Leave get_info_from_usb_device_path-info.id: {} \n", info.uid.c_str());
-    return info;
 }
 
 UsbInterfaceInfo getInfoFromMipiDevicePath(const std::string &video_path, const std::string &name) {
@@ -2255,19 +2137,11 @@ UsbInterfaceInfo getInfoFromMipiDevicePath(const std::string &video_path, const 
 
     LOG_DEBUG("-Entry getInfoFromMipiDevicePath video_path:{}, dev_name:{}", video_path, dev_name);
 
-    get_mipi_device_info(dev_name, bus_info, card);
+    getMipiDeviceInfo(dev_name, bus_info, card);
 
     static std::regex video_dev_index("\\d+$");
     std::smatch       match;
-    uint8_t           ind{};
-    if(std::regex_search(name, match, video_dev_index)) {
-        ind = static_cast<uint8_t>(std::stoi(match[0]));
-    }
-    else {
-        LOG_DEBUG("Unresolved Video4Linux device pattern:  name device is skipped");
-    }
 
-    // if(ind==0)//depth
     {
         struct orbbec_device_info devInfo;
         memset(&devInfo, 0, sizeof(orbbec_device_info));
@@ -2317,13 +2191,12 @@ UsbInterfaceInfo getInfoFromMipiDevicePath(const std::string &video_path, const 
     }
 
     vid = GMSL_VID_ORBBEC;
-    pid = devPid;  // 0x080B; ///0x06D0; //0x080B;  //0x06D0;  //D457 dev
-    sn  = devSn;   //"0123456789";
+    pid = devPid;
+    sn  = devSn;
     LOG_DEBUG("-set dev pid&sn vid:{}, pid:{}, sn:{}, sub_num", vid, pid, sn, sub_num);
 
-    info.pid = pid;
-    info.vid = vid;
-    // info.infIndex     = ind;         //dev/video* video index
+    info.pid              = pid;
+    info.vid              = vid;
     info.infName          = dev_name;    // video name
     info.infUrl           = video_path;  // video path
     info.infNameDescIndex = mi;          // video type;
@@ -2336,17 +2209,9 @@ UsbInterfaceInfo getInfoFromMipiDevicePath(const std::string &video_path, const 
     else if(portCls == 4) {
         info.cls = OB_USB_CLASS_HID;  // dev porttype
     }
-    // unique id for MIPI: This will assign sensor set for each camera.
-    // it cannot be generated as in usb, because the params busnum, devpath and
-    // devnum are not available via mipi assign unique id for mipi by appending
-    // camera id to bus_info (bus_info is same for each mipi port) Note -jetson
-    // can use only bus_info, as card is different for each sensor and metadata
-    // node.
-    //"usb://06d0:2bc5/1/4";
-    info.url = "gmsl2://" + std::to_string(info.pid) + ":" + std::to_string(info.vid) + "/1/" + std::to_string(cam_id);
-    // info.uid = bus_info + "-" + std::to_string(cam_id);  //use bus_info as per camera unique id for mipi
-    info.uid = "gmsl2-" + std::to_string(info.pid) + "-" + std::to_string(info.vid) + "-" + std::to_string(cam_id) + "-" + std::to_string(ind) + "-"
-               + std::to_string(sub_num) + "-" + std::to_string(video_type);
+
+    info.url       = "gmsl2://" + std::to_string(info.pid) + ":" + std::to_string(info.vid) + "/1/" + std::to_string(cam_id);
+    info.uid       = "gmsl2-" + std::to_string(cam_num);  // Unique id for gmsl device is the index of the gmsl port
     info.conn_spec = usb_specification;
     // info.uvc_capabilities = get_dev_capabilities(dev_name);
 
@@ -2362,7 +2227,7 @@ const std::vector<UsbInterfaceInfo> ObV4lGmslDevicePort::queryDevicesInfo() {
     std::vector<std::string>      video_paths, imu_paths;
     devInfoList_.resize(0);
 
-    get_video_paths(video_paths);
+    getVideoPaths(video_paths);
     if(video_paths.size() > 0) {
         for(auto &&video_path: video_paths) {
             // following line grabs video0 from
@@ -2371,7 +2236,7 @@ const std::vector<UsbInterfaceInfo> ObV4lGmslDevicePort::queryDevicesInfo() {
             try {
                 UsbInterfaceInfo info{};
 
-                if(is_usb_device_path(video_path)) {
+                if(isUsbDevicePath(video_path)) {
                     continue;
                 }
 
@@ -2429,7 +2294,7 @@ const std::vector<UsbInterfaceInfo> ObV4lGmslDevicePort::queryDevicesInfo() {
             auto name = video_path.substr(video_path.find_last_of('/') + 1);
             try {
                 UsbInterfaceInfo info{};
-                if(!is_usb_device_path(video_path)) {
+                if(!isUsbDevicePath(video_path)) {
                     info = getInfoFromMipiDevicePath(video_path, name);
 
                     auto uid = info.uid;

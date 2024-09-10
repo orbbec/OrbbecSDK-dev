@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <algorithm>
 
 #include "IFrame.hpp"
 #include "G330MetadataTypes.hpp"
@@ -49,7 +50,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain timestamp!");
-            return 0;
+            return -1;
         }
         auto md = reinterpret_cast<const T *>(metadata);
         return (int64_t)md->timestamp_sof_sec * 1000000 + md->timestamp_sof_nsec / 1000 - md->timestamp_offset_usec;
@@ -71,7 +72,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain timestamp!");
-            return 0;
+            return -1;
         }
         auto md          = reinterpret_cast<const G330CommonUvcMetadata *>(metadata);
         auto exp_in_usec = exp_to_usec_ ? exp_to_usec_(md->exposure) : md->exposure;
@@ -96,7 +97,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain timestamp!");
-            return 0;
+            return -1;
         }
         auto md = reinterpret_cast<const G330ColorUvcMetadata *>(metadata);
         // auto exp_in_usec = exp_to_usec_ ? exp_to_usec_(md->exposure) : md->exposure;
@@ -134,7 +135,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain timestamp!");
-            return 0;
+            return -1;
         }
         auto standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         auto calculatedTimestamp = timestampCalculator_->calculate(static_cast<uint64_t>(standardUvcMetadata.dwPresentationTime));
@@ -161,7 +162,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain color sensor timestamp!");
-            return 0;
+            return -1;
         }
 
         auto calculatedTimestamp = G330PayloadHeadMetadataTimestampParser::getValue(metadata, dataSize);
@@ -179,13 +180,38 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain color exposure!");
-            return 0;
+            return -1;
         }
         auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint32_t exposure            = standardUvcMetadata.scrSourceClock[0] | ((standardUvcMetadata.scrSourceClock[1] & 0b00000111) << 8) * 100;  // unit 100us
+        uint32_t exposure = (standardUvcMetadata.scrSourceClock[0] | ((standardUvcMetadata.scrSourceClock[1] & 0b00000111) << 8)) * 100;  // unit 100us
 
         return static_cast<int64_t>(exposure);
     }
+};
+
+class G330ColorScrMetadataActualFrameRateParser : public G330ColorScrMetadataExposureParser {
+public:
+    G330ColorScrMetadataActualFrameRateParser(IDevice *device) : device_(device) {}
+    int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
+        if(!isSupported(metadata, dataSize)) {
+            LOG_WARN_INTVL("Current metadata does not contain color actual frame rate!");
+            return -1;
+        }
+        auto exposure = G330ColorScrMetadataExposureParser::getValue(metadata, dataSize);
+        auto fps      = static_cast<uint32_t>(1000000.f / exposure);
+
+        auto colorSensor   = device_->getComponentT<VideoSensor>(OB_DEV_COMPONENT_COLOR_SENSOR);
+        auto streamProfile = colorSensor->getCurrentBackendStreamProfile();
+        if(streamProfile) {
+            auto videoStreamProfile = streamProfile->as<VideoStreamProfile>();
+            fps                     = std::min(fps, videoStreamProfile->getFps());
+        }
+
+        return static_cast<int64_t>(fps);
+    }
+
+private:
+    IDevice *device_;
 };
 
 class G330ColorScrMetadataGainParser : public G330ScrMetadataParserBase {
@@ -193,10 +219,10 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain color gain!");
-            return 0;
+            return -1;
         }
         auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint16_t gain                = standardUvcMetadata.scrSourceClock[2];
+        uint16_t gain                = standardUvcMetadata.scrSourceClock[3];
 
         return static_cast<int64_t>(gain);
     }
@@ -211,7 +237,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain color sensor timestamp!");
-            return 0;
+            return -1;
         }
 
         auto calculatedTimestamp = G330PayloadHeadMetadataTimestampParser::getValue(metadata, dataSize);
@@ -230,7 +256,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain depth exposure!");
-            return 0;
+            return -1;
         }
         auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint32_t exposure =
@@ -240,12 +266,37 @@ public:
     }
 };
 
+class G330DepthScrMetadataActualFrameRateParser : public G330DepthScrMetadataExposureParser {
+public:
+    G330DepthScrMetadataActualFrameRateParser(IDevice *device) : device_(device) {}
+    int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
+        if(!isSupported(metadata, dataSize)) {
+            LOG_WARN_INTVL("Current metadata does not contain depth actual frame rate!");
+            return -1;
+        }
+        auto exposure = G330DepthScrMetadataExposureParser::getValue(metadata, dataSize);
+        auto fps      = static_cast<uint32_t>(1000000.f / exposure);
+
+        auto depthSensor   = device_->getComponentT<VideoSensor>(OB_DEV_COMPONENT_DEPTH_SENSOR);
+        auto streamProfile = depthSensor->getCurrentBackendStreamProfile();
+        if(streamProfile) {
+            auto videoStreamProfile = streamProfile->as<VideoStreamProfile>();
+            fps                     = std::min(fps, videoStreamProfile->getFps());
+        }
+
+        return static_cast<int64_t>(fps);
+    }
+
+private:
+    IDevice *device_;
+};
+
 class G330DepthScrMetadataLaserStatusParser : public G330ScrMetadataParserBase {
 public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain laser status!");
-            return 0;
+            return -1;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint8_t laserStatus         = (standardUvcMetadata.scrSourceClock[2] & 0b00000100) >> 2;
@@ -259,7 +310,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain laser power level!");
-            return 0;
+            return -1;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint8_t laserPowerLevel     = (standardUvcMetadata.scrSourceClock[2] & 0b00111000) >> 3;
@@ -278,7 +329,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain hdr sequence id!");
-            return 0;
+            return -1;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint8_t hdrSequenceId       = (standardUvcMetadata.scrSourceClock[2] & 0b11000000) >> 6;
@@ -291,7 +342,7 @@ public:
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
             LOG_WARN_INTVL("Current metadata does not contain depth gain!");
-            return 0;
+            return -1;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint8_t gain                = standardUvcMetadata.scrSourceClock[3];
@@ -356,7 +407,7 @@ public:
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
         if(!isSupported(metadata, dataSize)) {
-            return 0;
+            return -1;
         }
         if(modifier_) {
             data_ = modifier_(data_);

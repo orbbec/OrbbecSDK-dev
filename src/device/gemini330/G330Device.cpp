@@ -1062,6 +1062,8 @@ void G330Device::initFrameMetadataParserContainer() {
                                             std::make_shared<G330PayloadHeadMetadataDepthSensorTimestampParser>(this, deviceTimeFreq_, frameTimeFreq_));
     depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_GAIN, std::make_shared<G330DepthScrMetadataGainParser>());
     depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE, std::make_shared<G330DepthScrMetadataExposureParser>());
+    depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, std::make_shared<G330DepthScrMetadataActualFrameRateParser>(this));
+
     // depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY,
     // std::make_shared<G330DepthMetadataParser>(this, OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY));
     depthMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_LASER_POWER,
@@ -1093,6 +1095,7 @@ void G330Device::initFrameMetadataParserContainer() {
                                             std::make_shared<G330PayloadHeadMetadataColorSensorTimestampParser>(this, deviceTimeFreq_, frameTimeFreq_));
     colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_GAIN, std::make_shared<G330ColorScrMetadataGainParser>());
     colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE, std::make_shared<G330ColorScrMetadataExposureParser>());
+    colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, std::make_shared<G330ColorScrMetadataActualFrameRateParser>(this));
 
     colorMdParserContainer_->registerParser(OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE,
                                             std::make_shared<G330ColorMetadataParser>(this, OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE));

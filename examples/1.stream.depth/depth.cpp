@@ -9,7 +9,7 @@ int main(void) try {
 
     // Create a pipeline with default device.
     ob::Pipeline pipe;
-    
+
     // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled.
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
@@ -51,9 +51,11 @@ int main(void) try {
             win.addLog("Facing an object at a distance of " + ob_smpl::toString(centerDistance, 3) + " mm. ");
         }
 
-        auto exposure = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_EXPOSURE);
-        auto gain = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_GAIN);
-        std::cout << "================exposure: " << exposure << ", gain: " << gain << std::endl;
+        auto roiLeft   = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_AE_ROI_LEFT);
+        auto roiRight  = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT);
+        auto roiTop    = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_AE_ROI_TOP);
+        auto roiBottom = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM);
+        std::cout << "============roi:" << roiLeft << "," << roiRight << "," << roiTop << "," << roiBottom << std::endl;
 
         // Render frame in the window.
         win.pushFramesToView(depthFrame);

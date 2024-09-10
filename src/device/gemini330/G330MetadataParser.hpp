@@ -168,7 +168,7 @@ public:
         auto calculatedTimestamp = G330PayloadHeadMetadataTimestampParser::getValue(metadata, dataSize);
         // get frame offset,unit 100us
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        int16_t frameOffset         = (((standardUvcMetadata.scrSourceClock[1] & 0b11111000) >> 3) | (standardUvcMetadata.scrSourceClock[2] << 8)) * 100;
+        int16_t frameOffset         = (((standardUvcMetadata.scrSourceClock[1] & 0xF8) >> 3) | (standardUvcMetadata.scrSourceClock[2] << 8)) * 100;
         calculatedTimestamp += frameOffset;
 
         return calculatedTimestamp;
@@ -183,7 +183,7 @@ public:
             return -1;
         }
         auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint32_t exposure = (standardUvcMetadata.scrSourceClock[0] | ((standardUvcMetadata.scrSourceClock[1] & 0b00000111) << 8)) * 100;  // unit 100us
+        uint32_t exposure            = (standardUvcMetadata.scrSourceClock[0] | ((standardUvcMetadata.scrSourceClock[1] & 0x07) << 8)) * 100;  // unit 100us
 
         return static_cast<int64_t>(exposure);
     }
@@ -244,7 +244,7 @@ public:
         // get depth exposure,unit 1us
         auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint32_t exposure =
-            standardUvcMetadata.scrSourceClock[0] | (standardUvcMetadata.scrSourceClock[1] << 8) | ((standardUvcMetadata.scrSourceClock[2] & 0b00000011) << 16);
+            standardUvcMetadata.scrSourceClock[0] | (standardUvcMetadata.scrSourceClock[1] << 8) | ((standardUvcMetadata.scrSourceClock[2] & 0x03) << 16);
         calculatedTimestamp = calculatedTimestamp - (exposure / 2);
 
         return calculatedTimestamp;
@@ -260,7 +260,7 @@ public:
         }
         auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
         uint32_t exposure =
-            standardUvcMetadata.scrSourceClock[0] | (standardUvcMetadata.scrSourceClock[1] << 8) | ((standardUvcMetadata.scrSourceClock[2] & 0b00000011) << 16);
+            standardUvcMetadata.scrSourceClock[0] | (standardUvcMetadata.scrSourceClock[1] << 8) | ((standardUvcMetadata.scrSourceClock[2] & 0x03) << 16);
 
         return static_cast<int64_t>(exposure);
     }
@@ -299,7 +299,7 @@ public:
             return -1;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint8_t laserStatus         = (standardUvcMetadata.scrSourceClock[2] & 0b00000100) >> 2;
+        uint8_t laserStatus         = (standardUvcMetadata.scrSourceClock[2] & 0x04) >> 2;
         return static_cast<int64_t>(laserStatus);
     }
 };
@@ -313,7 +313,7 @@ public:
             return -1;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint8_t laserPowerLevel     = (standardUvcMetadata.scrSourceClock[2] & 0b00111000) >> 3;
+        uint8_t laserPowerLevel     = (standardUvcMetadata.scrSourceClock[2] & 0x38) >> 3;
         if(modifier_) {
             laserPowerLevel = static_cast<uint8_t>(modifier_(static_cast<int64_t>(laserPowerLevel)));
         }
@@ -332,7 +332,7 @@ public:
             return -1;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint8_t hdrSequenceId       = (standardUvcMetadata.scrSourceClock[2] & 0b11000000) >> 6;
+        uint8_t hdrSequenceId       = (standardUvcMetadata.scrSourceClock[2] & 0xC0) >> 6;
         return static_cast<int64_t>(hdrSequenceId);
     }
 };

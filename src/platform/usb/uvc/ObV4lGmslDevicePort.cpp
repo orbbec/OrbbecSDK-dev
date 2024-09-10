@@ -93,9 +93,9 @@ int getPidSn(const std::string &dev_name, void *data) {
     return 0;
 }
 
-int getDeviceInfoFromFW(const std::string &dev_name, void *data) {
+int getGmslDeviceInfoFromFW(const std::string &dev_name, void *data) {
     int ret = 0, fd = -1;
-    LOG_DEBUG("-Entry get_pid_sn dev_name:{}", dev_name);
+    // LOG_DEBUG("-Entry get_pid_sn dev_name:{}", dev_name);
 
     VALIDATE_NOT_NULL(data);
     fd = open(dev_name.c_str(), O_RDWR);
@@ -118,7 +118,7 @@ int getDeviceInfoFromFW(const std::string &dev_name, void *data) {
 
     ret = xioctlGmsl(fd, VIDIOC_G_EXT_CTRLS, &ctrls);
     if(ret < 0) {
-        LOG_DEBUG("ioctl failed on getDeviceInfoFromFW-pid-vid from videox strerror:{}", strerror(errno));  // printf err message
+        LOG_DEBUG("ioctl failed on getGmslDeviceInfoFromFW-pid-vid from videox strerror:{}", strerror(errno));  // printf err message
         ret = -1;
     }
     close(fd);
@@ -208,30 +208,11 @@ std::vector<std::shared_ptr<V4lDeviceInfoGmsl>> ObV4lGmslDevicePort::queryRelate
 
     int min_node = 0, max_node = 0;
 
-    LOG_DEBUG("Entry queryRelatedDevices infName:{}, portInfo->uid:{} ", portInfo->infName, portInfo->uid);
     std::string portInfo_streamType = portInfo->uid.substr(portInfo->uid.find_last_of('-') + 1);
-    LOG_DEBUG("-portInfo_streamType:{} ", portInfo_streamType);
     // int portInfo_streamType_int = std::stoi(portInfo_streamType);
 
     int portinfo_videoIndex = checkVideoIndex(portInfo->infName);
-    LOG_DEBUG("portinfo_videoIndex: {}", portinfo_videoIndex);
 
-    // if(portInfo_streamType_int == ORB_MUX_PAD_DEPTH) {
-    //     min_node = portinfo_videoIndex -0;
-    //     max_node = portinfo_videoIndex + 7;
-    // }
-    // else if(portInfo_streamType_int == ORB_MUX_PAD_RGB) {
-    //     min_node = portinfo_videoIndex -2;
-    //     max_node = portinfo_videoIndex + 5;
-    // }
-    // else if(portInfo_streamType_int == ORB_MUX_PAD_IR_L) {
-    //     min_node = portinfo_videoIndex -4;
-    //     max_node = portinfo_videoIndex + 3;
-    // }
-    // else if(portInfo_streamType_int == ORB_MUX_PAD_IR_R) {
-    //     min_node = portinfo_videoIndex -6;
-    //     max_node = portinfo_videoIndex + 1;
-    // }
     min_node = portinfo_videoIndex;
     max_node = portinfo_videoIndex + 1;
 
@@ -297,34 +278,6 @@ std::vector<std::shared_ptr<V4lDeviceInfoGmsl>> ObV4lGmslDevicePort::queryRelate
                 }
                 searchPath += "../";
             }
-#if 0
-            if(!validPath) {
-                LOG_DEBUG("Cannot find busnum/devnum for {}", devname);
-                continue;
-            }
-            std::string modalias;
-            if(!(std::ifstream("/sys/class/video4linux/" + name + "/device/modalias") >> modalias)) {
-                LOG_DEBUG("Failed to read modalias");
-                continue;
-            }
-            if(modalias.size() < 14 || modalias.substr(0, 5) != "usb:v" || modalias[9] != 'p') {
-                LOG_DEBUG("Not a usb format modalias");
-                continue;
-            }
-            if(!(std::istringstream(modalias.substr(5, 4)) >> std::hex >> vid)) {
-                LOG_DEBUG("Failed to read vendor ID");
-                continue;
-            }
-            if(!(std::istringstream(modalias.substr(10, 4)) >> std::hex >> pid)) {
-                LOG_DEBUG("Failed to read product ID");
-                continue;
-            }
-            if(!(std::ifstream("/sys/class/video4linux/" + name + "/device/bInterfaceNumber") >> std::hex >> mi)) {
-                LOG_DEBUG("Failed to read interface number");
-                continue;
-            }
-#endif
-
             // auto url = busNum + "-" + devPath + "-" + devNum;
             // auto url = "usb://06d0:2bc5/1/0";
             // LOG_DEBUG("----------------------vid: {0}, pid: {1}, portInfo->vid: {2}, portInfo->pid: {3}", vid, pid, portInfo->vid, portInfo->pid);
@@ -419,12 +372,6 @@ void foreachProfileGmsl(std::vector<std::shared_ptr<V4lDeviceHandleGmsl>>       
                 frame_interval.width            = frame_size.discrete.width;
                 frame_interval.height           = frame_size.discrete.height;
 
-#if 0  // filter remove 1920/960/320 resolution
-                if(frame_interval.width==1920 || frame_interval.width==960 || frame_interval.width==320 ){
-//LOG_DEBUG("--->fileter resolution 1920x1080, 1920x*...");
-                    continue;
-                }
-#endif
                 while(!quit && xioctlGmsl(devHandle->fd, VIDIOC_ENUM_FRAMEINTERVALS, &frame_interval) == 0) {
                     if(frame_interval.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
                         if(frame_interval.discrete.numerator != 0) {
@@ -641,7 +588,6 @@ void writeBufferToFile(const char *buf, std::size_t size, const std::string &fil
     // close file
     file.close();
 }
-//---------------------------------------------------------------------------------------------------------------------------------
 
 void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHandle) {
     int metadataBufferIndex = -1;
@@ -931,18 +877,6 @@ void ObV4lGmslDevicePort::startStream(std::shared_ptr<const StreamProfile> profi
         const std::vector<uint32_t> requires_formats   = { LOCAL_V4L2_META_FMT_D4XX_GMSL, V4L2_META_FMT_UVC };
         bool                        set_format_success = false;
 
-#if 0
-        for(auto required_format: requires_formats) {
-            memcpy(fmt.fmt.raw_data, &required_format, sizeof(required_format));
-            if(xioctlGmsl(devHandle->metadataFd, VIDIOC_S_FMT, &fmt) >= 0) {
-                LOG_DEBUG("Set metadata format to {}", fourccToStringGmsl(required_format));
-                set_format_success = true;
-                break;
-            }
-        }
-#endif
-
-#if 1
         fmt.fmt.pix.width       = 1482175047;
         fmt.fmt.pix.height      = 96;
         fmt.fmt.pix.pixelformat = 0;
@@ -951,7 +885,6 @@ void ObV4lGmslDevicePort::startStream(std::shared_ptr<const StreamProfile> profi
             LOG_DEBUG("-metadata-Set metadata format to {}", fmt.fmt.pix.pixelformat);
             set_format_success = true;
         }
-#endif
 
         if(!set_format_success) {
             throw io_exception("Failed to set metadata format!" + devHandle->metadataInfo->name + ", " + strerror(errno));
@@ -1166,21 +1099,11 @@ void ObV4lGmslDevicePort::stopStream(std::shared_ptr<const StreamProfile> profil
 
     auto videoProfile = profile->as<VideoStreamProfile>();
     for(auto &devHandle: deviceHandles_) {
-
-#if 1
         if(!devHandle->profile || !(*devHandle->profile == *videoProfile)) {
             LOG_DEBUG("-deviceHandles devHandle->profile:{}, profile:{}, continue...", devHandle->profile, profile);
             continue;
         }
         LOG_DEBUG("-deviceHandles- devHandle->isCapturing:{}, devHandle->profile:{}, profile:{}", devHandle->isCapturing, devHandle->profile, profile);
-#endif
-
-#if 0
-        if(!devHandle->profile || !(*devHandle->profile == *profile) || !devHandle->isCapturing) {
-            LOG_DEBUG("-deviceHandles- devHandle->isCapturing:{}, devHandle->profile:{}, profile:{}",devHandle->isCapturing, devHandle->profile, profile);
-            continue;
-        }
-#endif
 
         devHandle->isCapturing = false;
         // signal the capture loop to stop
@@ -1249,76 +1172,6 @@ std::shared_ptr<const SourcePortInfo> ObV4lGmslDevicePort::getSourcePortInfo() c
     return portInfo_;
 }
 
-//--------------------------------------------------------------------------------------
-#if 0
-bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) {
-
-    LOG_DEBUG("-Entry ObV4lGmslDevicePort::sendData-ctrl:{} ", dataLen);
-
-    uint16_t opcode, nId, halfWordSize, magic;
-    uint32_t propertyId = 0;
-    uint8_t  mData0 = 0, mData1 = 0, mData2 = 0, mData3 = 0;
-    uint8_t  mHeaderLen   = dataLen - 4;
-    uint32_t alignDataLen = 0, alignI2CDataLen = 0;
-    LOG_DEBUG("-Entry ObV4lGmslDevicePort::mHeaderLen:{} ", mHeaderLen);
-
-#if 0
-    uint32_t ctrl         = OB_VENDOR_XU_CTRL_ID_64;
-    auto    alignDataLen = dataLen;
-    if(alignDataLen <= 64) {
-        ctrl         = OB_VENDOR_XU_CTRL_ID_64;
-        alignDataLen = 64;
-    }
-    else if(alignDataLen > 512) {
-        ctrl         = OB_VENDOR_XU_CTRL_ID_1024;
-        alignDataLen = 1024;
-    }
-    else {
-        ctrl         = OB_VENDOR_XU_CTRL_ID_512;
-        alignDataLen = 512;
-    }
-#endif
-
-    if(data != NULL) {
-        opcode       = ((ProtocolHeader *)(data))->opcode;
-        nId           = ((ProtocolHeader *)(data))->nId;
-        halfWordSize = ((ProtocolHeader *)(data))->halfWordSize;
-        magic        = ((ProtocolHeader *)(data))->magic;
-        LOG_DEBUG("--->>> opcode:{}, nId:{}, halfWordSize:{}, magic:0x{:0x} ", opcode, nId, halfWordSize, magic);
-
-        uint8_t *pDataBuf = ((uint8_t *)(data)) + HP_HEADER_SIZE;
-        propertyId       = *(uint32_t *)pDataBuf;
-        LOG_DEBUG("--->>> propertyId: {} ", propertyId);
-
-        mData0 = propertyId & 0x000000FF;
-        mData1 = (propertyId >> 8) & 0x000000FF;
-        mData2 = (propertyId >> 16) & 0x000000FF;
-        mData3 = (propertyId >> 24) & 0x000000FF;
-        LOG_DEBUG("--->>> mData0:0x{:0x}, mData1:0x{:0x}, mData2:{:0x}, mData3:{:0x} ", mData0, mData1, mData2, mData3);
-
-//if(propertyId==1000)
-        {
-            LOG_DEBUG("-ObV4lGmslDevicePort-mHeaderLen:{}", mHeaderLen);
-            i2c_msg_t get_version_cmd;
-            memset( &get_version_cmd, 0, sizeof(i2c_msg_t) );
-            get_version_cmd.header.len   = mHeaderLen;//G2R_GET_VERSION_CMD_LEN;
-            get_version_cmd.header.code  = opcode;//G2R_GET_VERSION_CMD_CODE;
-            get_version_cmd.header.index = nId;//inde++;
-            get_version_cmd._data[0]     = mData0;//0xe8;
-            get_version_cmd._data[1]     = mData1;//0x03;
-            get_version_cmd._data[2]     = mData2;
-            get_version_cmd._data[3]     = mData3;
-
-            alignDataLen = mHeaderLen;//OB_GMSL_FW_I2C_DATA_LEN_CUR_MAX;  //252; //172;  GMSL I2C read 252 bytes/per
-            return setXuExt(G2R_CAMERA_CID_SET_DATA, (uint8_t *)(&get_version_cmd), alignDataLen);
-        }
-    }
-
-    LOG_ERROR("-Entry ObV4lGmslDevicePort::data is nullprt!!! ");
-    return false;//setXuExt(ctrl, data, alignDataLen);
-}
-#endif
-
 #define BASE_WAIT_RESPONSE_TIME_US 300
 uint32_t ObV4lGmslDevicePort::sendAndReceive(const uint8_t *send, uint32_t sendLen, uint8_t *recv, uint32_t exceptedRecvLen) {
     std::unique_lock<std::mutex> lk(mMultiThreadI2CMutex);
@@ -1360,17 +1213,6 @@ bool ObV4lGmslDevicePort::sendData(const uint8_t *data, const uint32_t dataLen) 
         uint8_t *pDataBuf = ((uint8_t *)(data)) + sizeof(ProtocolHeader);
         propertyId        = *(uint32_t *)pDataBuf;
         // LOG_DEBUG("sendData opcode:{}, nId:{}, halfWordSize:{}, magic:0x{:0x}, PropertyId:{}", opcode, nId, halfWordSize, magic, propertyId);
-
-#if 0
-        if(opcode==13 || opcode==14 ||opcode==18 ||opcode==25 ||opcode==30)//with offset
-        {
-            uint32_t mOffset = *(uint32_t *)(pDataBuf + 4);
-            LOG_DEBUG("sendData mOffset:{} ", mOffset);
-
-            uint32_t mSize = *(uint32_t *)(pDataBuf + 8);
-            LOG_DEBUG("sendData mSize:{} ", mSize);
-        }
-#endif
 
         mI2cPackDataLen = dataLen - sizeof(ProtocolHeader);  //-sizeof(uint16_t);
                                                              // mI2cPackLen     = mI2cPackDataLen + sizeof(i2c_msg_header_t);
@@ -1597,73 +1439,6 @@ UvcControlRange ObV4lGmslDevicePort::getPuRange(uint32_t propertyId) {
     return range;
 }
 
-bool ObV4lGmslDevicePort::setPuExt(uint32_t propertyId, int32_t value) {
-    // LOG_DEBUG("-Entry ObV4lGmslDevicePort::setPuExt---propertyId={0} value:{1}", propertyId, value);
-
-    auto fd  = deviceHandles_.front()->fd;
-    auto cid = CIDFromOBPropertyIDGmsl(propertyId);
-
-    struct v4l2_ext_control control {
-        cid, 0, 0, value
-    };
-
-    if(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL == propertyId) {
-        control.value = value ? V4L2_EXPOSURE_AUTO : V4L2_EXPOSURE_MANUAL;
-    }
-
-    // Extract the control group from the underlying control query
-    struct v4l2_ext_controls ctrls_block {
-        control.id & 0xffff0000, 1, 0, 0, 0, &control
-    };
-    if(xioctlGmsl(fd, VIDIOC_S_EXT_CTRLS, &ctrls_block) < 0) {
-        if(errno == EIO || errno == EAGAIN)  // TODO: Log?
-            return false;
-
-        throw io_exception("set propertyId " + std::to_string(propertyId) + "xioctlGmsl(VIDIOC_S_EXT_CTRLS) failed! err: " + strerror(errno));
-    }
-
-    // LOG_DEBUG("-Leave ObV4lGmslDevicePort::setPuExt---propertyId={0} ", propertyId);
-
-    return true;
-}
-
-bool ObV4lGmslDevicePort::getPuExt(uint32_t propertyId, int32_t &value) {
-
-    // LOG_DEBUG("-Entry ObV4lGmslDevicePort::getPuExt---propertyId={0} ", propertyId);
-
-    auto fd  = deviceHandles_.front()->fd;
-    auto cid = CIDFromOBPropertyIDGmsl(propertyId);
-
-    struct v4l2_ext_control control {
-        cid, 0, 0, 0
-    };
-    // Extract the control group from the underlying control query
-    struct v4l2_ext_controls ctrls_block {
-        control.id & 0xffff0000, 1, 0, 0, 0, &control
-    };
-
-    if(xioctlGmsl(fd, VIDIOC_G_EXT_CTRLS, &ctrls_block) < 0) {
-        if(errno == EIO || errno == EAGAIN)  // TODO: Log?
-        {
-            LOG_ERROR("get {0} xioctlGmsl(VIDIOC_G_EXT_CTRLS) failed, {1}", propertyId, strerror(errno));
-            return false;
-        }
-        throw io_exception("propertyId:" + std::to_string(propertyId) + "xioctlGmsl(VIDIOC_G_EXT_CTRLS) failed! err:" + strerror(errno));
-    }
-
-    if(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL == propertyId) {
-        control.value = (V4L2_EXPOSURE_MANUAL == control.value) ? 0 : 1;
-    }
-    value = control.value;
-
-    // LOG_DEBUG("---Leave ObV4lGmslDevicePort::getPuExt---propertyId={0} ", propertyId);
-    return true;
-}
-
-UvcControlRange ObV4lGmslDevicePort::getPuRangeExt(uint32_t propertyId) {
-    return getPuRange(propertyId);
-}
-
 bool ObV4lGmslDevicePort::setPuRaw(uint32_t propertyId, int32_t value) {
     // LOG_DEBUG("-Entry ObV4lGmslDevicePort::setPuRaw---cid={0} value:{1}", propertyId, value);
 
@@ -1778,20 +1553,6 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
             memcpy(data, (void *)(&control.value), *len);
         }
         else if(ctrl == G2R_CAMERA_CID_GET_DATA) {
-
-#if 0
-            *len=*len-8;
-            std::string sn="123456789012345";
-            memcpy(control.p_u8+8+80, sn.c_str(), 16 );
-            memcpy(data, control.p_u8+8, (*len-8));
-
-            printf("GET DATA:");
-            for(int i = 0;i<128;i++){
-                printf("%d ,", data[i]);
-            }
-            printf("\n");
-#endif
-
             auto *pRecvDataBuf = reinterpret_cast<i2c_msg_t *>(&dataRecvBuf[0]);
             // LOG_DEBUG("--------------------------------------------------------------------------");
             // LOG_DEBUG("recvData resp code:  {} ", std::to_string(pRecvDataBuf->header.code));
@@ -1828,30 +1589,6 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
             // LOG_DEBUG("cal readRespDataSize:    {} ", readRespDataSize);
             // LOG_DEBUG("cal recal usbProtocolMsg.buf.len:    {}", std::to_string(usbProtocolMsg.buf.len));
 
-#if 0
-            if(usbProtocolMsg.header.opcode == 3) {
-                auto       *tmp = reinterpret_cast<VersionInfoTypeDef *>(pRecvDataBuf->body.data);
-//std::string sn  = "987654321-01234";
-//strcpy(tmp->serial_number, sn.c_str());
-#if 1
-                LOG_DEBUG("---> firmware_version: {} ", tmp->firmware_version );
-                LOG_DEBUG("---> system_version: {} ", tmp->system_version );
-                LOG_DEBUG("---> sdk_version: {} ", tmp->sdk_version );
-                LOG_DEBUG("---> depth_chip: {} ", tmp->depth_chip );
-                LOG_DEBUG("---> system_chip: {} ", tmp->system_chip );
-                LOG_DEBUG("---> serial_number: {} ", tmp->serial_number );
-                LOG_DEBUG("---> device_type: {} ", std::to_string( tmp->device_type) );
-                std::string deviceName(tmp->deviceName);
-                LOG_DEBUG("---> deviceName.size: {} ", deviceName.size());
-                deviceName = deviceName.substr(0,16);
-                strcpy(tmp->deviceName, deviceName.c_str());
-                LOG_DEBUG("---> deviceName: {} ", tmp->deviceName );
-
-                LOG_DEBUG("---> VersionInfoTypeDef.size: {} ", std::to_string(sizeof(VersionInfoTypeDef)) );
-                LOG_DEBUG("---> usbProtocolMsg.buf.len: {} ", std::to_string( usbProtocolMsg.buf.len) );
-#endif
-            }
-#endif
             // check handle  pRecvDataBuf->header.len==0 status exception
             if(readRespDataSize > 0) {
                 // memcpy(usbProtocolMsg.buf.data.resp.data, pRecvDataBuf->body.data, readRespDataSize);
@@ -1862,15 +1599,6 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
             }
             // memcpy(usbProtocolMsg.buf.data.resp.data, pRecvDataBuf->body.data, readRespDataSize);
             // std::memcpy(usbProtocolMsg.buf.data.resp.data, pRecvDataBuf->body.data, readRespDataSize);
-
-#if 0  // test
-        if((usbProtocolMsg.header.opcode==29)){
-            for(int i=0; i<(*len-2); i++){
-                uint8_t data = *(uint8_t*)(&usbProtocolMsg.buf.data+i);
-                LOG_DEBUG("--->>>i:{}, data: 0x{:0x} ", i, data);
-            }
-        }
-#endif
 
             *len = sizeof(usbProtocolMsg.header) + usbProtocolMsg.buf.len + sizeof(usbProtocolMsg.buf.len);
             // LOG_DEBUG("-copy_usbProtocolMsg *len: {}", *len);
@@ -1927,20 +1655,17 @@ bool is_gmsl_mipi_device(const std::string bus_info) {
     return bus_info.find(GMSL_MIPI_DEVICE_TAG) != std::string::npos;
 }
 
-bool is_gmsl_mipi_device_for_nvidia(std::shared_ptr<const USBSourcePortInfo> portInfo) {
+bool isGmslMipiDeviceForNvidia(std::shared_ptr<const USBSourcePortInfo> portInfo) {
     return (portInfo->hubId.find(GMSL_MIPI_DEVICE_TAG) != std::string::npos) && (portInfo->connSpec == "GMSL2");
 }
 
 bool ObV4lGmslDevicePort::isGmslDeviceForPlatformNvidia(std::shared_ptr<const USBSourcePortInfo> portInfo) {
-    // return is_gmsl_mipi_device(portInfo->hubId);
-    return is_gmsl_mipi_device_for_nvidia(portInfo);
+    return isGmslMipiDeviceForNvidia(portInfo);
 }
 
-void getMipiDeviceInfo(const std::string &dev_name, std::string &bus_info, std::string &card) {
+void getV4lDeviceBusInfo(const std::string &dev_name, std::string &bus_info, std::string &card) {
     struct v4l2_capability vcap;
     int                    fd = -1;
-
-    // LOG_DEBUG("-Entry getMipiDeviceInfo---dev_name:{}", dev_name);
 
     fd = open(dev_name.c_str(), O_RDWR);
     if(fd < 0) {
@@ -1989,8 +1714,6 @@ int file_exists(const char *filename) {
 }
 
 std::vector<std::string> getVideoPaths(std::vector<std::string> &video_paths) {
-    // LOG_DEBUG("-Entry v4l_uvc_device::getVideoPaths- ");
-    // std::vector<std::string> video_paths;
     video_paths.resize(0);
 
     // Enumerate all subdevices present on the system
@@ -2015,24 +1738,17 @@ std::vector<std::string> getVideoPaths(std::vector<std::string> &video_paths) {
             if(real_path.find("virtual") != std::string::npos)
                 continue;
             if(!std::regex_search(real_path, video_dev_pattern)) {
-                // LOG_INFO("Skipping Video4Linux entry {} -not a device", real_path );
                 continue;
             }
         }
 
         if(real_path.empty()) {
-            // LOG_DEBUG("-getVideoPaths real_path.empty()");
             continue;
         }
 
-        // LOG_DEBUG("-getVideoPaths real_path:{}", real_path);
         video_paths.push_back(real_path);
     }
     closedir(dir);
-
-    // UVC nodes shall be traversed in ascending order for metadata nodes
-    // assignment ("dev/video1, Video2.. Replace lexicographic with numeric sort
-    // to ensure "video2" is listed before "video11"
 
     if(video_paths.size() > 0) {
         std::sort(video_paths.begin(), video_paths.end(), [](const std::string &first, const std::string &second) {
@@ -2048,330 +1764,85 @@ std::vector<std::string> getVideoPaths(std::vector<std::string> &video_paths) {
             second_index >> right_id;
             return left_id < right_id;
         });
-        LOG_DEBUG("-getVideoPaths-video_paths.size:{}, video_paths.at(1):{}", video_paths.size(), video_paths.at(1));
     }
-    // LOG_DEBUG("Leave:-getVideoPaths");
     return video_paths;
 }
 
-UsbInterfaceInfo get_ImuInfo_from_mipi_device_path(const std::string &video_path, const std::string &name) {
-    uint16_t    vid{}, pid{}, mi{};
-    UsbSpec     usb_specification(gmsl2_type);  // usb3_type);  //usb_undefined);
-    std::string bus_info, card, sn, imuDev;
-
-    auto dev_name = "/dev/" + name;
-
-    // LOG_DEBUG("-Entry getInfoFromMipiDevicePath-video_path: {}, dev_name: {}", video_path, dev_name);
-    // getMipiDeviceInfo(dev_name, bus_info, card);
-    if(dev_name == "/dev/v4l-subdev35") {
-        bus_info = "platform:tegra-capture-vi:0";
-        card     = "vi-output, DS5 mux 30-0066";
-        LOG_DEBUG("set bus_info: {}, card: {}", bus_info, card);
-    }
-
-    static std::regex video_dev_index("\\d+$");
-    std::smatch       match;
-    uint8_t           ind{};
-    if(std::regex_search(name, match, video_dev_index)) {
-        ind = static_cast<uint8_t>(std::stoi(match[0]));
-    }
-    else {
-        LOG_DEBUG("Unresolved Video4Linux device pattern:  name device is skipped");
-    }
-
-    int cam_id = 0;  // ind /camera_video_nodes;
-
-    // if(ind == 35)
-    {
-        mi = 4;  // IMU node indicator
-        // LOG_DEBUG("---set IMU port index 4-- ind:{}, portCls:{}", ind, portCls);
-    }
-    // LOG_DEBUG("-----------------------set test-------------------------------------");
-
-    vid = GMSL_VID_ORBBEC;
-    pid = devPid;  // 0x080B; ///0x06D0; //0x080B;  //0x06D0;  //D457 dev
-    sn  = devSn;   //"0123456789";
-    // LOG_DEBUG("--->>>imu set dev pid&sn vid:{}, pid:{}, sn:{}", vid, pid, sn);
-
-    UsbInterfaceInfo info{};
-    info.pid              = pid;
-    info.vid              = vid;
-    info.infIndex         = ind;         // dev/video* video index
-    info.infName          = dev_name;    // devname
-    info.infUrl           = video_path;  // devpath
-    info.infNameDescIndex = mi;          // video type;
-
-    info.serial = sn;                // dev sn
-    info.hubId  = bus_info;          // std::to_string(cam_id); //camera index
-    info.cls    = OB_USB_CLASS_HID;  // dev porttype
-
-    info.url       = "usb://" + std::to_string(info.pid) + ":" + std::to_string(info.vid) + "/1/" + std::to_string(cam_id);  //"usb://06d0:2bc5/1/4";
-    info.uid       = "1-1." + std::to_string(ind) + "-" + std::to_string(cam_id);
-    info.conn_spec = usb_specification;
-
-    LOG_DEBUG("-info.uid:{}, info.url:{}, info.infUrl:{}, info.infIndex:{}, info.hubId:{}, info.cls:{}", info.uid, info.url, info.infUrl, info.infIndex,
-              info.hubId, info.cls);
-    return info;
-}
-
-static const std::map<UsbSpec, std::string> usb_spec_names_v4l2 = { { usb_undefined, "Undefined" }, { usb1_type, "1.0" },   { usb1_1_type, "1.1" },
-                                                                    { usb2_type, "2.0" },           { usb2_1_type, "2.1" }, { usb3_type, "3.0" },
-                                                                    { usb3_1_type, "3.1" },         { usb3_2_type, "3.2" } };
-
 bool isUsbDevicePath(const std::string &video_path) {
-    LOG_DEBUG("-Entry isUsbDevicePath");
     static const std::regex uvc_pattern("(\\/usb\\d+\\/)\\w+");  // Locate UVC device path pattern ../usbX/...
     return std::regex_search(video_path, uvc_pattern);
 }
 
-UsbInterfaceInfo getInfoFromMipiDevicePath(const std::string &video_path, const std::string &name) {
-    uint16_t vid{}, pid{}, mi{}, portCls{};
-    uint16_t video_type = 0, sub_num = 1, cam_id = 0;
-    uint32_t cam_num = 0;
+const std::vector<UsbInterfaceInfo> ObV4lGmslDevicePort::queryDevicesInfo() {
+    std::vector<std::string> video_paths;
+    getVideoPaths(video_paths);
+    if(video_paths.empty()) {
+        return {};
+    }
 
-    UsbSpec     usb_specification(gmsl2_type);
-    std::string bus_info, card, sn, imuDev;
-    auto        dev_name = "/dev/" + name;
+    std::vector<UsbInterfaceInfo> devInfoList;
 
-    UsbInterfaceInfo info{};
+    for(auto &&video_path: video_paths) {
+        if(isUsbDevicePath(video_path)) {
+            continue;
+        }
 
-    LOG_DEBUG("-Entry getInfoFromMipiDevicePath video_path:{}, dev_name:{}", video_path, dev_name);
+        auto name    = video_path.substr(video_path.find_last_of('/') + 1);  // from "/sys/class/video4linux/videoX" to get "videoX"
+        auto devName = "/dev/" + name;
 
-    getMipiDeviceInfo(dev_name, bus_info, card);
+        std::string bus_info, card;
+        getV4lDeviceBusInfo(devName, bus_info, card);
 
-    static std::regex video_dev_index("\\d+$");
-    std::smatch       match;
-
-    {
         struct orbbec_device_info devInfo;
         memset(&devInfo, 0, sizeof(orbbec_device_info));
-        int res = getDeviceInfoFromFW(dev_name, &devInfo);
-        if(res == 0) {
-            LOG_DEBUG("-GetPidSn VID:{}, PID:{}, SN:{}, AsicSN:{}, video_type:{}, cam_num:{}, sub_num:{}", devInfo.vid, devInfo.pid, (char *)devInfo.sn,
-                      (char *)devInfo.asic_sn, devInfo.video_type, devInfo.cam_num, devInfo.sub_num);
-            devPid    = devInfo.pid;
-            devSn     = (char *)devInfo.sn;
-            devAsicSn = (char *)devInfo.asic_sn;
+        int res = getGmslDeviceInfoFromFW(devName, &devInfo);
+        if(res != 0) {
+            LOG_DEBUG("getGmslDeviceInfoFromFW failed! devName:{}", devName);
+            continue;
+        }
 
-            video_type = devInfo.video_type;
-            sub_num    = devInfo.sub_num;
-            cam_num    = devInfo.cam_num;
-
-            /**
-             *1:ORB_MUX_PAD_DEPTH
-             *2:ORB_MUX_PAD_RGB
-             *3:ORB_MUX_PAD_IR_L
-             *4:ORB_MUX_PAD_IR_R
-             */
-            if(video_type == ORB_MUX_PAD_DEPTH) {
-                info.infIndex = INTERFACE_DEPTH;
-            }
-            else if(video_type == ORB_MUX_PAD_RGB) {
-                info.infIndex = INTERFACE_COLOR;
-            }
-            else if(video_type == ORB_MUX_PAD_IR_L) {
-                info.infIndex = INTERFACE_IR_LEFT;
-            }
-            else if(video_type == ORB_MUX_PAD_IR_R) {
-                info.infIndex = INTERFACE_IR_RIGHT;
-            }
-
-            mi      = 0;  // video node indicator
-            portCls = 1;
-            cam_id  = cam_num;
-            LOG_INFO("-video_type:{}, sub_num:{}, cam_num:{}, info.infIndex:{}, portCls:{}, cam_id:{} ", video_type, sub_num, cam_num, info.infIndex, portCls,
-                     cam_id);
+        UsbInterfaceInfo info{};
+        info.vid              = GMSL_VID_ORBBEC;
+        info.pid              = devInfo.pid;
+        info.infName          = devName;
+        info.infUrl           = video_path;
+        info.infNameDescIndex = 0;  // unsupported
+        info.serial           = reinterpret_cast<char *>(devInfo.sn);
+        info.hubId            = bus_info;
+        info.url              = "gmsl2://" + std::to_string(info.pid) + ":" + std::to_string(info.vid) + "/1/" + std::to_string(devInfo.cam_num);
+        info.uid              = "gmsl2-" + std::to_string(devInfo.cam_num);
+        info.conn_spec        = gmsl2_type;
+        info.cls              = OB_USB_CLASS_VIDEO;  // borrowed from usb
+        if(devInfo.video_type == ORB_MUX_PAD_DEPTH) {
+            info.infIndex = INTERFACE_DEPTH;
+        }
+        else if(devInfo.video_type == ORB_MUX_PAD_RGB) {
+            info.infIndex = INTERFACE_COLOR;
+        }
+        else if(devInfo.video_type == ORB_MUX_PAD_IR_L) {
+            info.infIndex = INTERFACE_IR_LEFT;
+        }
+        else if(devInfo.video_type == ORB_MUX_PAD_IR_R) {
+            info.infIndex = INTERFACE_IR_RIGHT;
         }
         else {
-            devPid    = GMSL_PID_G335L;
-            devSn     = GMSL_SN_DEFAULT;
-            devAsicSn = GMSL_ASIC_SN_DEFAULT;
-            LOG_DEBUG("-GetPidSn failed, set faultPidSN devPid:{}, SN:{}, AsicSN:{}", devPid, devSn, devAsicSn);
+            continue;
+            LOG_DEBUG("Unsupported video type:{}", devInfo.video_type);
+        }
+        devInfoList.push_back(info);
+        LOG_DEBUG("Gmsl video port found! devName:{}, infName:{}", devName, info.infName);
+
+        if(info.infIndex == INTERFACE_DEPTH) {
+            UsbInterfaceInfo imuInfo = info;
+            imuInfo.cls              = OB_USB_CLASS_HID;  // borrowed from usb
+            imuInfo.infName          = "/dev/v4l-subdev" + std::to_string(devInfo.sub_num);
+            devInfoList.push_back(imuInfo);
+            LOG_DEBUG("Gmsl hid device found! devName:{}, infName:{}", devName, imuInfo.infName);
         }
     }
 
-    vid = GMSL_VID_ORBBEC;
-    pid = devPid;
-    sn  = devSn;
-    LOG_DEBUG("-set dev pid&sn vid:{}, pid:{}, sn:{}, sub_num", vid, pid, sn, sub_num);
-
-    info.pid              = pid;
-    info.vid              = vid;
-    info.infName          = dev_name;    // video name
-    info.infUrl           = video_path;  // video path
-    info.infNameDescIndex = mi;          // video type;
-
-    info.serial = sn;        // dev sn
-    info.hubId  = bus_info;  // std::to_string(cam_id); //camera index
-    if(portCls == 1) {
-        info.cls = OB_USB_CLASS_VIDEO;  // dev porttype
-    }
-    else if(portCls == 4) {
-        info.cls = OB_USB_CLASS_HID;  // dev porttype
-    }
-
-    info.url       = "gmsl2://" + std::to_string(info.pid) + ":" + std::to_string(info.vid) + "/1/" + std::to_string(cam_id);
-    info.uid       = "gmsl2-" + std::to_string(cam_num);  // Unique id for gmsl device is the index of the gmsl port
-    info.conn_spec = usb_specification;
-    // info.uvc_capabilities = get_dev_capabilities(dev_name);
-
-    LOG_DEBUG("-info.uid:{}, info.url:{}, info.infUrl:{}, info.infIndex:{}, info.hubId:{}", info.uid, info.url, info.infUrl, info.infIndex, info.hubId);
-    return info;
-}
-
-const std::vector<UsbInterfaceInfo> ObV4lGmslDevicePort::queryDevicesInfo() {
-
-    LOG_DEBUG("-Entry ObV4lGmslDevicePort::queryDevicesInfo");
-
-    std::vector<UsbInterfaceInfo> devInfoList_;
-    std::vector<std::string>      video_paths, imu_paths;
-    devInfoList_.resize(0);
-
-    getVideoPaths(video_paths);
-    if(video_paths.size() > 0) {
-        for(auto &&video_path: video_paths) {
-            // following line grabs video0 from
-            auto name = video_path.substr(video_path.find_last_of('/') + 1);
-
-            try {
-                UsbInterfaceInfo info{};
-
-                if(isUsbDevicePath(video_path)) {
-                    continue;
-                }
-
-                info = getInfoFromMipiDevicePath(video_path, name);
-
-#if 0
-                    auto uid=info.uid;
-                    LOG_DEBUG("--uid:{}",uid);
-                    auto streamType = uid.substr(uid.find_last_of('-') + 1);
-
-                    LOG_DEBUG("--streamType:{}", streamType );
-                    auto tmp_substr=uid.substr(0, uid.find_last_of('-'));
-                    LOG_DEBUG("--tmp_substr:{}", tmp_substr );
-                    auto imu_num = tmp_substr.substr(tmp_substr.find_last_of('-') + 1);
-                    LOG_DEBUG("--imu_num:{}", imu_num );
-
-                    if( stoi(streamType) == ORB_MUX_PAD_DEPTH ){
-                        UsbInterfaceInfo info2{};
-                        std::memcpy(&info2, &info, sizeof(UsbInterfaceInfo));
-                        info2.cls = OB_USB_CLASS_HID;//dev porttype
-
-                        auto dev_imu_name = "/dev/v4l-subdev" + imu_num;
-                        LOG_DEBUG("-dev_imu_name:{}, info2.infUrl:{}, info2.hubId:{}", dev_imu_name, info2.infUrl, info2.hubId);
-
-//if( (info.vid == ORBBEC_USB_VID) && (is_gmsl_mipi_device(info.hubId)) ) //Filter out non-ORBBEC devices by vid==0X2bc5
-                        if(info2.vid == ORBBEC_USB_VID)
-                        {
-//dev info list .push back(info2);
-                        }
-                    }
-#endif
-
-                //{ info = getInfoFromMipiDevicePath(video_path, name); }
-                auto dev_name = "/dev/" + name;
-                LOG_DEBUG("-dev_name:{}, info.infUrl:{}, info.hubId:{}", dev_name, info.infUrl, info.hubId);
-                // uvc_nodes.emplace_back(info, dev_name);
-
-                // if( (info.vid == ORBBEC_USB_VID) && (is_gmsl_mipi_device(info.hubId)) ) //Filter out non-ORBBEC devices by vid==0X2bc5
-                if(info.vid == ORBBEC_USB_VID) {
-                    devInfoList_.push_back(info);
-                }
-            }
-            catch(const std::exception &e) {
-                LOG_DEBUG("Not a GMSL MIPI video device! ex:{}", e.what());
-            }
-        }
-    }
-
-    LOG_DEBUG("video queryDevicesInfo devInfoList_.size():{}", devInfoList_.size());
-
-#if 1
-    if(video_paths.size() > 0) {
-        for(auto &&video_path: video_paths) {
-            // following line grabs video0 from
-            auto name = video_path.substr(video_path.find_last_of('/') + 1);
-            try {
-                UsbInterfaceInfo info{};
-                if(!isUsbDevicePath(video_path)) {
-                    info = getInfoFromMipiDevicePath(video_path, name);
-
-                    auto uid = info.uid;
-                    LOG_DEBUG("--uid:{}", uid);
-                    auto streamType = uid.substr(uid.find_last_of('-') + 1);
-                    LOG_DEBUG("--streamType:{}", streamType);
-                    auto tmp_substr = uid.substr(0, uid.find_last_of('-'));
-                    LOG_DEBUG("--tmp_substr:{}", tmp_substr);
-                    auto imu_num = tmp_substr.substr(tmp_substr.find_last_of('-') + 1);
-                    LOG_DEBUG("--imu_num:{}", imu_num);
-
-                    if(stoi(streamType) == ORB_MUX_PAD_DEPTH) {
-                        info.cls          = OB_USB_CLASS_HID;  // dev porttype
-                        auto dev_imu_name = "/dev/v4l-subdev" + imu_num;
-                        LOG_DEBUG("-dev_imu_name:{}, info.infUrl:{}, info.hubId:{}", dev_imu_name, info.infUrl, info.hubId);
-                        info.infName = dev_imu_name;
-
-                        // if( (info.vid == ORBBEC_USB_VID) && (is_gmsl_mipi_device(info.hubId)) ) //Filter out non-ORBBEC devices by vid==0X2bc5
-                        if(info.vid == ORBBEC_USB_VID) {
-                            devInfoList_.push_back(info);
-                        }
-                    }
-                }
-            }
-            catch(const std::exception &e) {
-                LOG_DEBUG("Get a GMSL MIPI IMU device! ex:{}", e.what());
-            }
-        }
-    }
-#endif
-
-    LOG_DEBUG("Leave queryDevicesInfo devInfoList_.size():{}", devInfoList_.size());
+    LOG_DEBUG("video queryDevicesInfo devInfoList.size():{}", devInfoList.size());
     LOG_DEBUG("queryDevicesInfo done!");
-    return devInfoList_;
+    return devInfoList;
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-#if 0
-//for mutil-device-sync
-typedef struct {
-    uint8_t mode;
-    uint16_t fps;
-} cs_param_t;
-
-int setSocHardwareSync(){
-    cs_param_t rd_par = {0, 0}, param = {1, 3040};//30.4
-    int ret, fd;
-
-//Check if the device node exists
-    if (access("/dev/camsync", F_OK) != 0) {
-        std::cerr << "Device node /dev/camsync does not exist." << std::endl;
-        return -1;
-    }
-
-    fd = open("/dev/camsync", O_RDWR);
-    if(fd < 0) {
-        printf("open /dev/camsync failed\n");
-        return 0;
-    }
-
-    ret = write(fd, &param, sizeof(param));
-    if(ret < 0) {
-        printf("write /dev/camsync failed\n");
-        return 0;
-    }
-
-    ret = read(fd, &rd_par, sizeof(rd_par));
-    if(ret < 0) {
-        printf("write /dev/camsync failed\n");
-        return 0;
-    }
-    printf("mode=%d, fps=%d\n", rd_par.mode, rd_par.fps);
-
-    close(fd);
-    return 0;
-}
-#endif
-
 }  // namespace libobsensor

@@ -203,18 +203,13 @@ void DeviceManager::enableDeviceClockSync(uint64_t repeatInterval) {
         do {
             std::unique_lock<std::mutex> lock(createdDevicesMutex_);
             if(!destroy_) {
-                std::map<std::string, std::weak_ptr<IDevice>> devList;
-                {
-                    std::unique_lock<std::mutex> lock(createdDevicesMutex_);
-                    devList = createdDevices_;
-                }
-                for(auto &item: devList) {
+                for(auto &item: createdDevices_) {
                     auto dev = item.second.lock();
                     if(!dev) {
                         continue;
                     }
                     auto synchronizer = dev->getComponentT<IDeviceClockSynchronizer>(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, false);
-                    synchronizer->timerSyncWithHost();
+                    TRY_EXECUTE(synchronizer->timerSyncWithHost());
                 }
             }
             multiDeviceSyncCv_.wait_for(lock, std::chrono::milliseconds(multiDeviceSyncIntervalMs_));

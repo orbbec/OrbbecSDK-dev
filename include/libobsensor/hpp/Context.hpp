@@ -125,9 +125,9 @@ public:
      *
      * @param repeatInterval The interval for auto-repeated synchronization, in milliseconds. If the value is 0, synchronization is performed only once.
      */
-    void enableDeviceClockSync(uint64_t repeatInterval) const {
+    void enableDeviceClockSync(uint64_t repeatIntervalMsec) const {
         ob_error *error = nullptr;
-        ob_enable_device_clock_sync(impl_, repeatInterval, &error);
+        ob_enable_device_clock_sync(impl_, repeatIntervalMsec, &error);
         Error::handle(&error);
     }
 

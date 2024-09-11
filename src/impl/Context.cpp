@@ -70,12 +70,12 @@ void ob_set_device_changed_callback(ob_context *context, ob_device_changed_callb
 }
 HANDLE_EXCEPTIONS_NO_RETURN(context, callback, user_data)
 
-void ob_enable_device_clock_sync(ob_context *context, uint64_t repeatInterval, ob_error **error) BEGIN_API_CALL {
+void ob_enable_device_clock_sync(ob_context *context, uint64_t repeat_interval_msec, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(context);
     auto deviceMgr = context->context->getDeviceManager();
-    deviceMgr->enableDeviceClockSync(repeatInterval);
+    deviceMgr->enableDeviceClockSync(repeat_interval_msec);
 }
-HANDLE_EXCEPTIONS_NO_RETURN(context, repeatInterval)
+HANDLE_EXCEPTIONS_NO_RETURN(context, repeat_interval_msec)
 
 void ob_free_idle_memory(ob_context *context, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(context);

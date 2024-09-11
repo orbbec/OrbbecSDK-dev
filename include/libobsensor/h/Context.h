@@ -86,10 +86,10 @@ OB_EXPORT void ob_set_device_changed_callback(ob_context *context, ob_device_cha
  * @brief Activates device clock synchronization to synchronize the clock of the host and all created devices (if supported).
  *
  * @param[in] context Pointer to the context object
- * @param[in] repeatInterval The interval for auto-repeated synchronization, in milliseconds. If the value is 0, synchronization is performed only once.
+ * @param[in] repeat_interval_msec The interval for auto-repeated synchronization, in milliseconds. If the value is 0, synchronization is performed only once.
  * @param[out] error Pointer to an error object that will be populated if an error occurs during execution
  */
-OB_EXPORT void ob_enable_device_clock_sync(ob_context *context, uint64_t repeatInterval, ob_error **error);
+OB_EXPORT void ob_enable_device_clock_sync(ob_context *context, uint64_t repeat_interval_msec, ob_error **error);
 
 /**
  * @brief Free idle memory from the internal frame memory pool

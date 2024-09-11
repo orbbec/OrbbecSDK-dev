@@ -37,7 +37,7 @@ void FilterExtension::pushFrame(std::shared_ptr<const Frame> frame) {
                 rstFrame = FrameFactory::createFrameFromOtherFrame(frameToProcess, true);
             }
             std::unique_lock<std::mutex> lock(callbackMutex_);
-            if(callback_) {
+            if(callback_ && rstFrame) {
                 callback_(rstFrame);
             }
         });

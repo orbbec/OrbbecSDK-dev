@@ -172,6 +172,9 @@ public:
         ob_error *error  = nullptr;
         auto      result = ob_filter_process(impl_, frame->getImpl(), &error);
         Error::handle(&error);
+        if(!result) {
+            return nullptr;
+        }
         return std::make_shared<Frame>(result);
     }
 

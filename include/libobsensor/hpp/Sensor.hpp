@@ -28,7 +28,7 @@ public:
     typedef std::function<void(std::shared_ptr<Frame> frame)> FrameCallback;
 
 protected:
-    ob_sensor_t * impl_;
+    ob_sensor_t  *impl_;
     FrameCallback callback_;
 
 public:
@@ -49,7 +49,7 @@ public:
         return *this;
     }
 
-    Sensor(const Sensor &sensor) = delete;
+    Sensor(const Sensor &sensor)            = delete;
     Sensor &operator=(const Sensor &sensor) = delete;
 
     virtual ~Sensor() noexcept {
@@ -98,6 +98,8 @@ public:
             Error::handle(&error);
             filters.push_back(std::make_shared<Filter>(filterImpl));
         }
+        ob_delete_filter_list(list, &error);
+        Error::handle(&error, false);
         return filters;
     }
 

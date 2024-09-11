@@ -1008,8 +1008,7 @@ void ObV4lGmslDevicePort::startStream(std::shared_ptr<const StreamProfile> profi
             else {
                 uint8_t  md_extra         = (V4L2_BUF_TYPE_VIDEO_CAPTURE == buf.type) ? MAX_META_DATA_SIZE : 0;
                 uint32_t _length          = buf.length + md_extra;
-                devHandle->buffers[i].ptr = static_cast<uint8_t *>(malloc(_length));
-                ;
+                devHandle->buffers[i].ptr    = static_cast<uint8_t *>(malloc(_length));
                 devHandle->buffers[i].length = _length;
 
                 if(!devHandle->buffers[i].ptr) {

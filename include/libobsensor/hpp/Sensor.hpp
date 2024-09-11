@@ -83,12 +83,13 @@ public:
     }
 
     /**
-     * @brief Request recommended filters
+     * @brief Create a list of recommended filters for the sensor.
+     *
      * @return OBFilterList list of frame processing block
      */
-    std::vector<std::shared_ptr<Filter>> getRecommendedFilters() const {
+    std::vector<std::shared_ptr<Filter>> createRecommendedFilters() const {
         ob_error *error = nullptr;
-        auto      list  = ob_sensor_get_recommended_filter_list(impl_, &error);
+        auto      list  = ob_sensor_create_recommended_filter_list(impl_, &error);
         Error::handle(&error);
         auto filter_count = ob_filter_list_get_count(list, &error);
 
@@ -146,6 +147,10 @@ public:
     // The following interfaces are deprecated and are retained here for compatibility purposes.
     OBSensorType type() const {
         return getType();
+    }
+
+    std::vector<std::shared_ptr<Filter>> getRecommendedFilters() const {
+        return createRecommendedFilters();
     }
 };
 

@@ -3,6 +3,7 @@
 #include "ImplTypes.hpp"
 #include "logger/Logger.hpp"
 #include "context/Context.hpp"
+#include "environment/EnvConfig.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -105,6 +106,11 @@ void ob_set_logger_to_console(ob_log_severity severity, ob_error **error) BEGIN_
     libobsensor::Logger::setConsoleLogSeverity(severity);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(severity)
+
+void ob_set_extensions_directory(const char *directory, ob_error **error) BEGIN_API_CALL {
+    libobsensor::EnvConfig::setExtensionsDirectory(directory);
+}
+HANDLE_EXCEPTIONS_NO_RETURN(directory)
 
 #ifdef __cplusplus
 }

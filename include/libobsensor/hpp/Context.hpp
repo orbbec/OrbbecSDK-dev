@@ -189,6 +189,20 @@ public:
         Error::handle(&error);
     }
 
+    /**
+     * @brief Set the extensions directory
+     * @brief The extensions directory is used to search for dynamic libraries that provide additional functionality to the SDK， such as the Frame filters.
+     *
+     * @attention Should be called before creating the context and pipeline, otherwise the default extensions directory (./extensions) will be used.
+     *
+     * @param directory Path to the extensions directory. If the path is empty, the existing settings will continue to be used (if the existing
+     */
+    static void setExtensionsDirectory(const char *directory) {
+        ob_error *error = nullptr;
+        ob_set_extensions_directory(directory, &error);
+        Error::handle(&error);
+    }
+
 private:
     static void deviceChangedCallback(ob_device_list *removedList, ob_device_list *addedList, void *userData) {
         auto ctx = static_cast<Context *>(userData);

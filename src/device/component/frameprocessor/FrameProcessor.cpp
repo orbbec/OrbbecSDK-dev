@@ -1,10 +1,12 @@
 #include "FrameProcessor.hpp"
 #include "frame/FrameFactory.hpp"
 #include "utils/Utils.hpp"
+#include "environment/EnvConfig.hpp"
 
 namespace libobsensor {
 FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBase(owner) {
-    dylib_ = std::make_shared<dylib>(moduleLoadPath_.c_str(), "ob_frame_processor");
+    std::string moduleLoadPath = EnvConfig::getExtensionsDirectory() + "/frameprocessor/";
+    dylib_                     = std::make_shared<dylib>(moduleLoadPath.c_str(), "ob_frame_processor");
 
     auto dylib = dylib_;
     context_   = std::shared_ptr<FrameProcessorContext>(new FrameProcessorContext(), [dylib](FrameProcessorContext *context) {
@@ -30,8 +32,8 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBa
     }
 
     if(context_->create_context && !context_->context) {
-        auto cDevice          = new ob_device;
-        cDevice->device  = owner->shared_from_this();
+        auto cDevice      = new ob_device;
+        cDevice->device   = owner->shared_from_this();
         ob_error *error   = nullptr;
         context_->context = context_->create_context(cDevice, &error);
         if(error) {
@@ -46,8 +48,7 @@ FrameProcessorFactory::FrameProcessorFactory(IDevice *owner) : DeviceComponentBa
     }
 }
 
-FrameProcessorFactory::~FrameProcessorFactory() noexcept {
-}
+FrameProcessorFactory::~FrameProcessorFactory() noexcept {}
 
 std::shared_ptr<FrameProcessor> FrameProcessorFactory::createFrameProcessor(OBSensorType sensorType) {
     if(context_ && (!context_->context || context_->create_processor == nullptr)) {
@@ -241,7 +242,8 @@ void DepthFrameProcessor::setHardwareD2CProcessParams(uint32_t colorWidth, uint3
         }
     }
 
-    bool valid = currentD2CProfile.colorWidth != 0 && currentD2CProfile.colorHeight != 0 && currentD2CProfile.depthWidth != 0 && currentD2CProfile.depthHeight != 0;
+    bool valid =
+        currentD2CProfile.colorWidth != 0 && currentD2CProfile.colorHeight != 0 && currentD2CProfile.depthWidth != 0 && currentD2CProfile.depthHeight != 0;
     if(!valid || static_cast<size_t>(currentD2CProfile.paramIndex) + 1 > calibrationCameraParams.size()) {
         throw invalid_value_exception("Current stream profile is not support hardware d2c process");
         return;

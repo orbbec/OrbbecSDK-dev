@@ -137,6 +137,17 @@ OB_EXPORT void ob_set_logger_to_callback(ob_log_severity severity, ob_log_callba
  */
 OB_EXPORT void ob_set_logger_to_console(ob_log_severity severity, ob_error **error);
 
+/**
+ * @brief Set the extensions directory
+ * @brief The extensions directory is used to search for dynamic libraries that provide additional functionality to the SDK， such as the Frame filters.
+ *
+ * @attention Should be called before creating the context and pipeline, otherwise the default extensions directory (./extensions) will be used.
+ *
+ * @param directory Path to the extensions directory. If the path is empty, the existing settings will continue to be used (if the existing
+ * @param error Pointer to an error object that will be populated if an error occurs during extensions directory setting
+ */
+OB_EXPORT void ob_set_extensions_directory(const char *directory, ob_error **error);
+
 // The following interfaces are deprecated and are retained here for compatibility purposes.
 #define ob_enable_multi_device_sync ob_enable_device_clock_sync
 #define ob_set_logger_callback ob_set_logger_to_callback

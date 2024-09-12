@@ -204,10 +204,10 @@ void DeviceManager::enableDeviceClockSync(uint64_t repeatInterval) {
             if(!destroy_) {
                 for(auto &item: createdDevices_) {
                     auto dev = item.second.lock();
-                    if(!dev) {
+                    if(!dev || !dev->isComponentExists(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER)) {
                         continue;
                     }
-                    auto synchronizer = dev->getComponentT<IDeviceClockSynchronizer>(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, false);
+                    auto synchronizer = dev->getComponentT<IDeviceClockSynchronizer>(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER);
                     TRY_EXECUTE(synchronizer->timerSyncWithHost());
                 }
             }

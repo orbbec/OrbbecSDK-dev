@@ -27,6 +27,7 @@ Compared to v1.x.x, the v2.x.x version has many optimizations and refactoring. A
 |-------------------|-----------------------------|
 | Gemini 335        | 1.2.20                      |
 | Gemini 335L       | 1.2.20                     |
+| Gemini 335Lg      | 1.3.46                     |
 | Femto Bolt        | 1.0.6/1.0.9                 |
 | Femto Mega        | 1.1.7/1.2.7                 |
 | Astra 2           | 2.8.20                      |
@@ -64,8 +65,6 @@ More asked and answered questions can be found in the [issues](https://github.co
 ## 3. Gallery
 
 ### 3.1 The QuickStart Example
-
-Code snippet of the QuickStart example:
 
 ```c++
 // Create a pipeline.
@@ -108,6 +107,6 @@ This project is licensed under the MIT License with some other licenses for thir
 ## 6. Links
 
 - [Orbbec SDK Open Source Repo](https://github.com/orbbec/OrbbecSDK-dev)
-- [Orbbec SDK pre-compiled Repo](https://github.com/orbbec/OrbbecSDK)
+- [Orbbec SDK Pre-Compiled Repo](https://github.com/orbbec/OrbbecSDK)
 - [Orbbec Main Page](https://www.orbbec.com/)
 - [Orbbec 3D Club](https://3dclub.orbbec3d.com)

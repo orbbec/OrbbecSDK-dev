@@ -167,7 +167,6 @@ void DeviceManager::onDeviceChanged(const DeviceEnumInfoList &removed, const Dev
     LOG_INFO("Device changed! removed: {0}, added: {1}", removed.size(), added.size());
     if(!removed.empty()) {
         for(const auto &info: removed) {
-            std::unique_lock<std::mutex> lock(createdDevicesMutex_);
             auto                         iter = createdDevices_.find(info->getUid());
             if(iter != createdDevices_.end()) {
                 auto dev = iter->second.lock();

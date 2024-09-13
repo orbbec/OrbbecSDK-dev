@@ -385,7 +385,7 @@ class G330MetadataParserBase : public IFrameMetadataParser {
 public:
     G330MetadataParserBase(IDevice *device, OBFrameMetadataType type, FrameMetadataModifier modifier,
                            const std::multimap<OBPropertyID, std::vector<OBFrameMetadataType>> metadataTypeIdMap)
-        : modifier_(modifier) {
+        : device_(device), metadataType_(type), data_(0), modifier_(modifier) {
         for(const auto &item: metadataTypeIdMap) {
             const std::vector<OBFrameMetadataType> &types = item.second;
             if(std::find(types.begin(), types.end(), type) != types.end()) {
@@ -402,35 +402,7 @@ public:
                                                    if(propertyId != static_cast<uint32_t>(propertyId_)) {
                                                        return;
                                                    }
-                                                   if(propertyId == OB_STRUCT_COLOR_AE_ROI || propertyId == OB_STRUCT_DEPTH_AE_ROI) {
-                                                       auto roi = *(reinterpret_cast<const OBRegionOfInterest *>(data));
-                                                       if(type == OB_FRAME_METADATA_TYPE_AE_ROI_LEFT) {
-                                                           data_ = static_cast<int64_t>(roi.x0_left);
-                                                       }
-                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT) {
-                                                           data_ = static_cast<int64_t>(roi.x1_right);
-                                                       }
-                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_TOP) {
-                                                           data_ = static_cast<int64_t>(roi.y0_top);
-                                                       }
-                                                       else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM) {
-                                                           data_ = static_cast<int64_t>(roi.y1_bottom);
-                                                       }
-                                                   }
-                                                   else if(propertyId == OB_STRUCT_DEPTH_HDR_CONFIG) {
-                                                       auto hdrConfig = *(reinterpret_cast<const OBHdrConfig *>(data));
-                                                       if(type == OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME) {
-                                                           data_ = static_cast<int64_t>(hdrConfig.sequence_name);
-                                                       }
-                                                       else if(type == OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE) {
-                                                           data_ = static_cast<int64_t>(hdrConfig.enable);
-                                                       }
-                                                   }
-                                                   else {
-                                                       auto value = reinterpret_cast<const OBPropertyValue *>(data);
-                                                       // TODO: support float type
-                                                       data_ = static_cast<int64_t>(value->intValue);
-                                                   }
+                                                   data_ = parsePropertyValue(type, propertyId, data);
                                                });
     };
 
@@ -440,6 +412,30 @@ public:
         if(!isSupported(metadata, dataSize)) {
             return -1;
         }
+
+        // first time get value,should sync property value
+        if(data_ == 0) {
+            PropertyAccessType accessType     = PROP_ACCESS_USER;
+            auto               propertyServer = device_->getPropertyServer();
+            auto               propertyItem   = propertyServer->getPropertyItem(propertyId_, accessType);
+            if(propertyItem.type == OB_STRUCT_PROPERTY) {
+                auto structValue = propertyServer->getStructureData(propertyId_, accessType);
+                data_            = parsePropertyValue(metadataType_, static_cast<uint32_t>(propertyId_), structValue.data());
+            }
+            else {
+                OBPropertyValue value = {};
+                propertyServer->getPropertyValue(propertyId_, &value, accessType);
+                void *valueData = nullptr;
+                if(propertyItem.type == OB_FLOAT_PROPERTY) {
+                    valueData = &value.floatValue;
+                }
+                else {
+                    valueData = &value.intValue;
+                }
+                data_ = parsePropertyValue(metadataType_, static_cast<uint32_t>(propertyId_), (const uint8_t *)valueData);
+            }
+        }
+
         if(modifier_) {
             data_ = modifier_(data_);
         }
@@ -453,11 +449,57 @@ public:
     }
 
 private:
+    int64_t parsePropertyValue(OBFrameMetadataType type, uint32_t propertyId, const uint8_t *data) {
+        int64_t parsedData = 0;
+        if(propertyId == OB_STRUCT_COLOR_AE_ROI || propertyId == OB_STRUCT_DEPTH_AE_ROI) {
+            auto roi = *(reinterpret_cast<const OBRegionOfInterest *>(data));
+            if(type == OB_FRAME_METADATA_TYPE_AE_ROI_LEFT) {
+                parsedData = static_cast<int64_t>(roi.x0_left);
+            }
+            else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT) {
+                parsedData = static_cast<int64_t>(roi.x1_right);
+            }
+            else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_TOP) {
+                parsedData = static_cast<int64_t>(roi.y0_top);
+            }
+            else if(type == OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM) {
+                parsedData = static_cast<int64_t>(roi.y1_bottom);
+            }
+        }
+        else if(propertyId == OB_STRUCT_DEPTH_HDR_CONFIG) {
+            auto hdrConfig = *(reinterpret_cast<const OBHdrConfig *>(data));
+            if(type == OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME) {
+                parsedData = static_cast<int64_t>(hdrConfig.sequence_name);
+            }
+            else if(type == OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE) {
+                parsedData = static_cast<int64_t>(hdrConfig.enable);
+            }
+        }
+        else {
+            auto value          = reinterpret_cast<const OBPropertyValue *>(data);
+            auto propertyServer = device_->getPropertyServer();
+            auto propertyItem   = propertyServer->getPropertyItem(propertyId, PROP_ACCESS_USER);
+            if(propertyItem.type == OB_INT_PROPERTY || propertyItem.type == OB_BOOL_PROPERTY) {
+                parsedData = static_cast<int64_t>(value->intValue);
+            }
+            else if(propertyItem.type == OB_FLOAT_PROPERTY) {
+                parsedData = static_cast<int64_t>(value->floatValue);
+            }
+        }
+
+        return parsedData;
+    }
+
+private:
+    IDevice *device_;
+
+    OBFrameMetadataType metadataType_;
+
     OBPropertyID propertyId_;
 
-    int64_t data_ = 0;
+    int64_t data_;
 
-    FrameMetadataModifier modifier_ = nullptr;
+    FrameMetadataModifier modifier_;
 };
 
 class G330ColorMetadataParser : public G330MetadataParserBase {

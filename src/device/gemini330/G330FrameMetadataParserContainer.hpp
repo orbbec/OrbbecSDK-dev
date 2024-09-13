@@ -75,52 +75,10 @@ public:
     virtual ~G330DepthFrameMetadataParserContainer() = default;
 };
 
-class G330FrameMetadataParserContainerByScr : public FrameMetadataParserContainer {
-public:
-    G330FrameMetadataParserContainerByScr(IDevice *owner) : FrameMetadataParserContainer(owner) {}
-
-    void registerParser(OBFrameMetadataType type, std::shared_ptr<IFrameMetadataParser> phaser) override {
-        for(const auto &pair: idMap_) {
-            auto propertyId = pair.first;
-            auto types      = pair.second;
-            if(std::find(types.begin(), types.end(), type) == types.end()) {
-                continue;
-            }
-            if(std::find(syncProperties_.begin(), syncProperties_.end(), propertyId) != syncProperties_.end()) {
-                continue;
-            }
-            syncProperties_.push_back(propertyId);
-        }
-        FrameMetadataParserContainer::registerParser(type, phaser);
-    }
-
-    void syncProperties() {
-        auto               device         = getOwner();
-        auto               propertyServer = device->getPropertyServer();
-        OBPropertyValue    value          = {};
-        PropertyAccessType accessType     = PROP_ACCESS_USER;
-        for(const auto &property: syncProperties_) {
-            if(property == OB_STRUCT_COLOR_AE_ROI || property == OB_STRUCT_DEPTH_AE_ROI || property == OB_STRUCT_DEPTH_HDR_CONFIG) {
-                propertyServer->getStructureData(property, accessType);
-            }
-            else {
-                propertyServer->getPropertyValue(property, &value, accessType);
-            }
-        }
-    }
-
-protected:
-    std::multimap<OBPropertyID, std::vector<OBFrameMetadataType>> idMap_;
-
-private:
-    std::vector<OBPropertyID> syncProperties_;
-};
-
-class G330ColorFrameMetadataParserContainerByScr : public G330FrameMetadataParserContainerByScr {
+class G330ColorFrameMetadataParserContainerByScr : public FrameMetadataParserContainer {
 public:
     G330ColorFrameMetadataParserContainerByScr(IDevice *owner, const uint64_t deviceTimeFreq, const uint64_t frameTimeFreq)
-        : G330FrameMetadataParserContainerByScr(owner) {
-        idMap_      = initMetadataTypeIdMap(OB_SENSOR_COLOR);
+        : FrameMetadataParserContainer(owner) {
         auto device = getOwner();
 
         registerParser(OB_FRAME_METADATA_TYPE_TIMESTAMP, std::make_shared<G330PayloadHeadMetadataTimestampParser>(device, deviceTimeFreq, frameTimeFreq));
@@ -149,16 +107,13 @@ public:
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_TOP, std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_TOP));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM));
-
-        syncProperties();
     };
 };
 
-class G330DepthFrameMetadataParserContainerByScr : public G330FrameMetadataParserContainerByScr {
+class G330DepthFrameMetadataParserContainerByScr : public FrameMetadataParserContainer {
 public:
     G330DepthFrameMetadataParserContainerByScr(IDevice *owner, const uint64_t deviceTimeFreq, const uint64_t frameTimeFreq)
-        : G330FrameMetadataParserContainerByScr(owner) {
-        idMap_      = initMetadataTypeIdMap(OB_SENSOR_DEPTH);
+        : FrameMetadataParserContainer(owner) {
         auto device = getOwner();
         registerParser(OB_FRAME_METADATA_TYPE_TIMESTAMP, std::make_shared<G330PayloadHeadMetadataTimestampParser>(device, deviceTimeFreq, frameTimeFreq));
         registerParser(OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP,
@@ -182,8 +137,6 @@ public:
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_TOP, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_TOP));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM));
-
-        syncProperties();
     }
 };
 

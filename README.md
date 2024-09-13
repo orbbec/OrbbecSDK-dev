@@ -15,8 +15,8 @@ Compared to v1.x.x, the v2.x.x version has many optimizations and refactoring. A
 ### 1.1 Supported Platforms
 
 - Windows 10 or later: x86 and x64 architectures
-- Linux x64: tested on Ubuntu 18.04 and 20.04
-- Linux ARM64: tested on NVIDIA Jetson Nano, TX2, and Xavier NX
+- Linux x64: tested on Ubuntu 18.04, 20.04 and 24.04
+- Linux ARM64: tested on AGX Orin and AGX Xavier
 - Android: coming soon
 - macOS: coming soon
 - Linux ARM32: coming soon

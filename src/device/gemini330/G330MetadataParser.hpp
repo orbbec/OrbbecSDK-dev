@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <algorithm>
+#include <set>
 
 #include "IFrame.hpp"
 #include "G330MetadataTypes.hpp"
@@ -8,6 +9,8 @@
 #include "logger/LoggerInterval.hpp"
 #include "utils/Utils.hpp"
 #include "timestamp/FrameTimestampCalculator.hpp"
+#include "sensor/video/VideoSensor.hpp"
+#include "stream/StreamProfile.hpp"
 
 namespace libobsensor {
 
@@ -200,14 +203,13 @@ public:
         auto exposure = G330ColorScrMetadataExposureParser::getValue(metadata, dataSize);
         auto fps      = static_cast<uint32_t>(1000000.f / exposure);
 
-        auto colorSensor   = device_->getComponentT<VideoSensor>(OB_DEV_COMPONENT_COLOR_SENSOR);
-        auto streamProfile = colorSensor->getCurrentBackendStreamProfile();
-        if(streamProfile) {
-            auto videoStreamProfile = streamProfile->as<VideoStreamProfile>();
-            fps                     = std::min(fps, videoStreamProfile->getFps());
+        auto colorSensor              = device_->getComponentT<VideoSensor>(OB_DEV_COMPONENT_COLOR_SENSOR);
+        auto colorActiveStreamProfile = colorSensor->getActivatedStreamProfile();
+        if(!colorActiveStreamProfile) {
+            return -1;
         }
-
-        return static_cast<int64_t>(fps);
+        auto colorCurrentStreamProfileFps = colorActiveStreamProfile->as<VideoStreamProfile>()->getFps();
+        return static_cast<int64_t>((std::min)(fps, colorCurrentStreamProfileFps));
     }
 
 private:
@@ -277,14 +279,43 @@ public:
         auto exposure = G330DepthScrMetadataExposureParser::getValue(metadata, dataSize);
         auto fps      = static_cast<uint32_t>(1000000.f / exposure);
 
-        auto depthSensor   = device_->getComponentT<VideoSensor>(OB_DEV_COMPONENT_DEPTH_SENSOR);
-        auto streamProfile = depthSensor->getCurrentBackendStreamProfile();
-        if(streamProfile) {
-            auto videoStreamProfile = streamProfile->as<VideoStreamProfile>();
-            fps                     = std::min(fps, videoStreamProfile->getFps());
+        auto                  depthSensor = device_->getComponentT<VideoSensor>(OB_DEV_COMPONENT_DEPTH_SENSOR);
+        std::vector<uint32_t> currentStreamProfileFpsVector;
+        auto                  depthStreamProfileList   = depthSensor->getStreamProfileList();
+        auto                  depthActiveStreamProfile = depthSensor->getActivatedStreamProfile();
+        if(!depthActiveStreamProfile) {
+            return -1;
+        }
+        auto depthCurrentStreamProfileFps = depthActiveStreamProfile->as<VideoStreamProfile>()->getFps();
+
+        for(const auto &profile: depthStreamProfileList) {
+            auto videoStreamProfile = profile->as<VideoStreamProfile>();
+            if(!videoStreamProfile) {
+                continue;
+            }
+
+            auto curFps = videoStreamProfile->getFps();
+            if(std::find(currentStreamProfileFpsVector.begin(), currentStreamProfileFpsVector.end(), curFps) != currentStreamProfileFpsVector.end()) {
+                continue;
+            }
+
+            currentStreamProfileFpsVector.push_back(curFps);
+        }
+        std::sort(currentStreamProfileFpsVector.begin(), currentStreamProfileFpsVector.end());
+
+        if(fps >= currentStreamProfileFpsVector.back()) {
+            fps = currentStreamProfileFpsVector.back();
+        }
+        else {
+            for(auto i = 0; i < currentStreamProfileFpsVector.size() - 1; i++) {
+                if(fps < currentStreamProfileFpsVector[i + 1]) {
+                    fps = currentStreamProfileFpsVector[i];
+                    break;
+                }
+            }
         }
 
-        return static_cast<int64_t>(fps);
+        return static_cast<int64_t>((std::min)(fps, depthCurrentStreamProfileFps));
     }
 
 private:

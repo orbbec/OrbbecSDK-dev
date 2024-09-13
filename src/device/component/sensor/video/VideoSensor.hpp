@@ -38,8 +38,6 @@ public:
     void         setStreamProfileList(const StreamProfileList &profileList) override;
     void         setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcessor);
 
-    std::shared_ptr<const StreamProfile> getCurrentBackendStreamProfile();
-
 protected:
     virtual void trySendStopStreamVendorCmd();
     void         onBackendFrameCallback(std::shared_ptr<Frame> frame);

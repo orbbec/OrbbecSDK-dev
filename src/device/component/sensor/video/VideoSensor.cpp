@@ -297,8 +297,4 @@ void VideoSensor::setFrameProcessor(std::shared_ptr<FrameProcessor> frameProcess
     frameProcessor_ = frameProcessor;
 }
 
-std::shared_ptr<const StreamProfile> VideoSensor::getCurrentBackendStreamProfile() {
-    return currentBackendStreamProfile_;
-}
-
 }  // namespace libobsensor

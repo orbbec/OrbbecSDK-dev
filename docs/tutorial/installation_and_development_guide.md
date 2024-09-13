@@ -101,3 +101,27 @@ find_package(OrbbecSDK REQUIRED)
 
 target_link_libraries(MyOrbbecApp ob::OrbbecSDK)
 ```
+
+### 2.4 Develop the Application
+
+Now you can develop your application using the Orbbec SDK. You can refer to the sample programs in the Orbbec SDK to get started.
+
+### 2.5 Compile and place the library files
+
+As a cmake project, you can compile the project as the cmake way, depends on your build system and habit. Here is an example of using the command line to compile the project:
+
+```shell
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+cd ..
+```
+
+After compiling, **it is important to copy the Orbbec SDK library and its extentions files to the target directory**.
+
+```shell
+cp -r lib/orbbecsdk/lib/* build/bin/
+```
+
+After all these steps, you can run the application by executing the binary file in the build/bin directory.

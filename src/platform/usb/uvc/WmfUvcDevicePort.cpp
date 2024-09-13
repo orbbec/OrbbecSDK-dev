@@ -797,7 +797,7 @@ StreamProfileList WmfUvcDevicePort::getStreamProfileList() {
             profileList_.push_back(mfp.profile);
             if(mfp.profile->getFormat() == OB_FORMAT_NV12) {
                 std::shared_ptr<StreamProfile> sp         = mfp.profile;
-                auto bgrProfile = sp->clone(OB_FORMAT_BGR)->as<VideoStreamProfile>();
+                auto                           bgrProfile = sp->clone(OB_FORMAT_BGR)->as<VideoStreamProfile>();
                 profileList_.push_back(bgrProfile);
                 auto bgraProfile = sp->clone(OB_FORMAT_BGRA)->as<VideoStreamProfile>();
                 profileList_.push_back(bgraProfile);
@@ -1087,39 +1087,41 @@ STDMETHODIMP WmfUvcDevicePort::OnReadSample(HRESULT hrStatus, DWORD streamIndex,
                 byte *byte_buffer = nullptr;
                 DWORD max_length{}, current_length{};
                 if(SUCCEEDED(buffer->Lock(&byte_buffer, &max_length, &current_length))) {
-                    std::lock_guard<std::mutex> lock(streamsMutex_);
-                    auto                       &stream = streams_[streamIndex];
-                    auto                        frame  = FrameFactory::createFrameFromStreamProfile(stream.profile);
-                    auto                        vsp    = frame->as<VideoFrame>();
+                    TRY_EXECUTE({
+                        std::lock_guard<std::mutex> lock(streamsMutex_);
+                        auto                       &stream = streams_[streamIndex];
+                        auto                        frame  = FrameFactory::createFrameFromStreamProfile(stream.profile);
+                        auto                        vsp    = frame->as<VideoFrame>();
 
-                    stream.frameCounter++;
-                    vsp->setNumber(stream.frameCounter);
+                        stream.frameCounter++;
+                        vsp->setNumber(stream.frameCounter);
 
-                    auto realtime = utils::getNowTimesUs();
-                    vsp->setSystemTimeStampUsec(realtime);
+                        auto realtime = utils::getNowTimesUs();
+                        vsp->setSystemTimeStampUsec(realtime);
 
-                    auto metadata                     = frame->getMetadataMutable();
-                    auto uvcMetadata                  = reinterpret_cast<UvcMetadata *>(metadata);
-                    uvcMetadata->header.bHeaderLength = 12;
-                    uvcMetadata->header.bmHeaderInfo  = 0;  // not used
+                        auto metadata                     = frame->getMetadataMutable();
+                        auto uvcMetadata                  = reinterpret_cast<UvcMetadata *>(metadata);
+                        uvcMetadata->header.bHeaderLength = 12;
+                        uvcMetadata->header.bmHeaderInfo  = 0;  // not used
 
 #ifdef METADATA_SUPPORT
-                    auto metadataExtraSize = try_read_metadata(sample, uvcMetadata);
-                    /*LOG( INFO ) << "metadataSize=" << ( int )metadataSize;
-                    for ( int i = 0; i < metadataSize; i++ ) {
-                        printf( "0x%02x ", metadata[ i ] );
-                        if ( i % 16 == 15 ) {
-                            printf( "\n" );
+                        auto metadataExtraSize = try_read_metadata(sample, uvcMetadata);
+                        /*LOG( INFO ) << "metadataSize=" << ( int )metadataSize;
+                        for ( int i = 0; i < metadataSize; i++ ) {
+                            printf( "0x%02x ", metadata[ i ] );
+                            if ( i % 16 == 15 ) {
+                                printf( "\n" );
+                            }
                         }
-                    }
-                    printf( "\n\n" );*/
-                    vsp->setTimeStampUsec(uvcMetadata->header.dwPresentationTime);
-                    vsp->setMetadataSize(uvcMetadata->header.bHeaderLength + metadataExtraSize);
+                        printf( "\n\n" );*/
+                        vsp->setTimeStampUsec(uvcMetadata->header.dwPresentationTime);
+                        vsp->setMetadataSize(uvcMetadata->header.bHeaderLength + metadataExtraSize);
 #endif
 
-                    vsp->updateData(byte_buffer, current_length);
+                        vsp->updateData(byte_buffer, current_length);
 
-                    TRY_EXECUTE(stream.callback(frame));
+                        stream.callback(frame);
+                    });
                     buffer->Unlock();
                 }
             }

@@ -121,7 +121,8 @@ cd ..
 After compiling, **it is important to copy the Orbbec SDK library and its extentions files to the target directory**.
 
 ```shell
-cp -r lib/orbbecsdk/lib/* build/bin/
+cp -r lib/orbbecsdk/lib/extensions build/bin/
+cp -r lib/orbbecsdk/lib/libOrbbecSDK.so build/bin/
 ```
 
 After all these steps, you can run the application by executing the binary file in the build/bin directory.

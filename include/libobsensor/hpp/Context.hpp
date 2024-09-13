@@ -226,5 +226,7 @@ private:
 // for backward compatibility
 #define enableMultiDeviceSync enableDeviceClockSync
 };
+
+Context::LogCallback Context::logCallback_ = nullptr;
 }  // namespace ob
 

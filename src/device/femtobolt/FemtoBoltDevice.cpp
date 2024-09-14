@@ -228,10 +228,8 @@ void FemtoBoltDevice::initSensorList() {
                 auto port     = platform->getSourcePort(colorPortInfo);
                 auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
 
-                std::vector<FormatFilterConfig> formatFilterConfigs = {
-                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
-                };
-                auto formatConverter = getSensorFrameFilter("FormatConverter", OB_SENSOR_COLOR, false);
+                std::vector<FormatFilterConfig> formatFilterConfigs = {};
+                auto                            formatConverter     = getSensorFrameFilter("FormatConverter", OB_SENSOR_COLOR, false);
                 if(formatConverter) {
 #ifdef WIN32
                     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_BGR, OB_FORMAT_RGB, formatConverter });
@@ -239,6 +237,7 @@ void FemtoBoltDevice::initSensorList() {
                     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_RGB, formatConverter });
                     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_BGR, formatConverter });
                     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_BGRA, formatConverter });
+                    formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_NV12, formatConverter });
 #endif
                 }
                 sensor->updateFormatFilterConfig(formatFilterConfigs);

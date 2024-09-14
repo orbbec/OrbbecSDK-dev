@@ -110,7 +110,7 @@ void DeviceBase::deactivate() {
     while(!tempComponents.empty()) {
         // The clear order should be reversed as the order of the components are added.
         // Otherwise, the dependency between components may be broken and cause crash.
-        tempComponents.erase(components_.end() - 1);
+        tempComponents.erase(tempComponents.end() - 1);
     }
     sensorPortInfos_.clear();
 }

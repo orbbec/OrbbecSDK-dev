@@ -2,6 +2,8 @@
 #include "femtomega/FemtoMegaDeviceInfo.hpp"
 #include "ethernet/RTSPStreamPort.hpp"
 #include "ethernet/NetDataStreamPort.hpp"
+#include "property/VendorPropertyAccessor.hpp"
+#include "property/InternalProperty.hpp"
 
 #include "utils/Utils.hpp"
 
@@ -9,12 +11,6 @@
 #include <string>
 
 namespace libobsensor {
-
-const std::map<uint16_t, std::string> pidToNameMap = {
-    { static_cast<uint16_t>(0x0669), "Femto Mega" },
-    { static_cast<uint16_t>(0x06c0), "Femto Mega i" },
-    { static_cast<uint16_t>(0x0671), "Gemini2 XL" },
-};
 
 NetDeviceEnumerator::NetDeviceEnumerator(DeviceChangedCallback callback) : platform_(Platform::getInstance()), deviceChangedCallback_(callback) {
     deviceInfoList_ = queryDeviceList();
@@ -40,11 +36,32 @@ NetDeviceEnumerator::~NetDeviceEnumerator() noexcept {
 
 DeviceEnumInfoList NetDeviceEnumerator::queryDeviceList() {
     std::unique_lock<std::recursive_mutex> lock(deviceInfoListMutex_);
-    sourcePortInfoList_ = platform_->queryNetSourcePort();
+    sourcePortInfoList_.clear();
+    auto portInfoList = platform_->queryNetSourcePort();
 
-    if(sourcePortInfoList_.empty()) {
+    if(portInfoList.empty()) {
         LOG_DEBUG("No net source port found!");
         return {};
+    }
+
+    for(const auto &portInfo: portInfoList) {
+        auto info = std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo);
+        if(info->pid != 0) {
+            sourcePortInfoList_.push_back(info);
+            continue;
+        }
+
+        // try fetch pid from device via vendor property
+        BEGIN_TRY_EXECUTE({
+            auto            port               = platform_->getSourcePort(info);
+            auto            vendorPropAccessor = std::make_shared<VendorPropertyAccessor>(nullptr, port);
+            OBPropertyValue value;
+            value.intValue = 0;
+            vendorPropAccessor->getPropertyValue(OB_PROP_DEVICE_PID_INT, &value);
+            auto newInfo = std::make_shared<NetSourcePortInfo>(info->portType, info->address, info->port, info->mac, info->serialNumber, value.intValue);
+            sourcePortInfoList_.push_back(newInfo);
+        })
+        CATCH_EXCEPTION_AND_LOG(DEBUG, "Get device pid failed! address:{}, port:{}", info->address, info->port);
     }
 
     LOG_DEBUG("Current net source port list:");
@@ -62,9 +79,8 @@ DeviceEnumInfoList NetDeviceEnumerator::getDeviceInfoList() {
 
 DeviceEnumInfoList NetDeviceEnumerator::deviceInfoMatch(const SourcePortInfoList infoList) {
     DeviceEnumInfoList deviceInfoList;
-    auto               megaDevices = FemtoMegaDeviceInfo::pickDevices(infoList);
+    auto               megaDevices = FemtoMegaDeviceInfo::pickNetDevices(infoList);
     deviceInfoList.insert(deviceInfoList.end(), megaDevices.begin(), megaDevices.end());
-
     return deviceInfoList;
 }
 
@@ -129,26 +145,20 @@ void NetDeviceEnumerator::onPlatformDeviceChanged(OBDeviceChangedType changeType
 }
 
 std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::string address, uint16_t port) {
-    // todo: refactor this code, try get pid from device and create source port info at XxxDeviceInfo class
-    SourcePortInfoList list;
-    auto               info =
-        std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, address, static_cast<uint16_t>(8090), address + ":" + std::to_string(port), "Unknown",
-                                            static_cast<uint16_t>(0x0669));  // 0x0669 for mega pid
-    list.push_back(info);
-    list.emplace_back(std::make_shared<RTSPStreamPortInfo>(info->address, static_cast<uint16_t>(8888), info->port, OB_STREAM_COLOR, info->mac,
-                                                           info->serialNumber, info->pid));
-    list.emplace_back(std::make_shared<RTSPStreamPortInfo>(info->address, static_cast<uint16_t>(8554), info->port, OB_STREAM_DEPTH, info->mac,
-                                                           info->serialNumber, info->pid));
-    list.emplace_back(
-        std::make_shared<RTSPStreamPortInfo>(info->address, static_cast<uint16_t>(8554), info->port, OB_STREAM_IR, info->mac, info->serialNumber, info->pid));
-    list.emplace_back(
-        std::make_shared<NetDataStreamPortInfo>(info->address, static_cast<uint16_t>(8900), info->port, info->mac, info->serialNumber, info->pid));
+    auto info =
+        std::make_shared<NetSourcePortInfo>(SOURCE_PORT_NET_VENDOR, address, static_cast<uint16_t>(8090), address + ":" + std::to_string(port), "Unknown", 0);
+    auto            sourcePort         = Platform::getInstance()->getNetSourcePort(info);
+    auto            vendorPropAccessor = std::make_shared<VendorPropertyAccessor>(nullptr, sourcePort);
+    OBPropertyValue value;
+    value.intValue = 0;
+    vendorPropAccessor->getPropertyValue(OB_PROP_DEVICE_PID_INT, &value);
+    info->pid = static_cast<uint16_t>(value.intValue);
 
-    auto deviceEnumInfoList = deviceInfoMatch(list);
+    auto deviceEnumInfoList = deviceInfoMatch({ info });
     if(deviceEnumInfoList.empty()) {
-        throw std::runtime_error("No device found");
+        throw invalid_value_exception("No supported device found for address: " + address + ":" + std::to_string(port));
     }
-
+    LOG_DEBUG("Create device for address: {}:{}", address, port);
     return deviceEnumInfoList.front()->createDevice();
 }
 

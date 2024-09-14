@@ -99,14 +99,20 @@ void DeviceBase::deactivate() {
         LOG_WARN("Device is deactivated or disconnected while there are still sensors streaming!");
     }
 
-    std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
-    while(!components_.empty()) {
+    isDeactivated_ = true;
+
+    std::vector<ComponentItem> tempComponents;  // using temp to avoid deadlock when deactivating components
+    {
+        std::lock_guard<std::recursive_mutex> lock(componentsMutex_);
+        tempComponents = components_;
+        components_.clear();
+    }
+    while(!tempComponents.empty()) {
         // The clear order should be reversed as the order of the components are added.
         // Otherwise, the dependency between components may be broken and cause crash.
-        components_.erase(components_.end() - 1);
+        tempComponents.erase(components_.end() - 1);
     }
     sensorPortInfos_.clear();
-    isDeactivated_ = true;
 }
 
 void DeviceBase::reboot() {

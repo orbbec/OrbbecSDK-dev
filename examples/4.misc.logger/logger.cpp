@@ -25,8 +25,8 @@ int  main() try {
     // Registering a log callback, The first parameter sets the level of callback reception
     context->setLoggerToCallback(OBLogSeverity::OB_LOG_SEVERITY_DEBUG, [](OBLogSeverity severity, const char *logMsg) {
         // You can print as you want. For example, print logs with a level higher than ERROR
-        if(severity >= OBLogSeverity::OB_LOG_SEVERITY_ERROR) {
-            std::cout << "[Callback Message]" << logMsg << std::endl;
+        if(severity >= OBLogSeverity::OB_LOG_SEVERITY_DEBUG) {
+            std::cout << "[Callback Message]" << logMsg;
         }
     });
 

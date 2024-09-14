@@ -174,9 +174,11 @@ void FilterExtension::setConfigValue(const std::string &configName, double value
     }
 
     std::unique_lock<std::mutex> lock(configMutex_);
-    configChanged_         = true;
-    configMap_[configName] = value;  // store the value in the map, will be applied in the next process() call
-    LOG_DEBUG("Filter {}: config item {} value set to {}", name_, configName, value);
+    if(configMap_[configName] != value) {
+        configChanged_         = true;
+        configMap_[configName] = value;  // store the value in the map, will be applied in the next process() call
+        LOG_DEBUG("Filter {}: config item {} value set to {}", name_, configName, value);
+    }
 }
 
 void FilterExtension::setConfigValueSync(const std::string &name, double value) {

@@ -483,7 +483,7 @@ void FemtoMegaNetDevice::fetchDeviceInfo() {
     auto netPortInfo                  = std::dynamic_pointer_cast<const NetSourcePortInfo>(portInfo);
     deviceInfo->ipAddress_            = netPortInfo->address;
     deviceInfo_                       = deviceInfo;
-    deviceInfo_->name_                = version.deviceName;
+    deviceInfo_->name_                = enumInfo_->getName();
     deviceInfo_->fwVersion_           = version.firmwareVersion;
     deviceInfo_->deviceSn_            = version.serialNumber;
     deviceInfo_->asicName_            = version.depthChip;

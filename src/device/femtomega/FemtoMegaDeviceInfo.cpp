@@ -9,7 +9,7 @@
 #include "ethernet/NetDataStreamPort.hpp"
 namespace libobsensor {
 const std::map<int, std::string> FemtoMegaDeviceNameMap = {
-    { 0x06c0, "Femto Megai" },
+    { 0x06c0, "Femto Mega i" },
     { 0x0669, "Femto Mega" },
 };
 

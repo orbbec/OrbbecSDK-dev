@@ -970,13 +970,13 @@ void WmfUvcDevicePort::startStream(std::shared_ptr<const StreamProfile> profile,
     if(powerState_ != kD0) {
         setPowerStateD0();
     }
-    auto vsp = profile->as<VideoStreamProfile>();
-    BEGIN_TRY_EXECUTE({ playProfile(vsp, callback); })
+    auto videoFrame = profile->as<VideoStreamProfile>();
+    BEGIN_TRY_EXECUTE({ playProfile(videoFrame, callback); })
     CATCH_EXCEPTION_AND_EXECUTE({
         LOG_WARN("Retry to start stream!");
         TRY_EXECUTE(stopAllStream());
         reloadSourceAndReader();
-        playProfile(vsp, callback);
+        playProfile(videoFrame, callback);
     })
 }
 
@@ -1087,25 +1087,28 @@ STDMETHODIMP WmfUvcDevicePort::OnReadSample(HRESULT hrStatus, DWORD streamIndex,
                 byte *byte_buffer = nullptr;
                 DWORD max_length{}, current_length{};
                 if(SUCCEEDED(buffer->Lock(&byte_buffer, &max_length, &current_length))) {
+                    std::lock_guard<std::mutex> lock(streamsMutex_);
+                    auto                       &stream = streams_[streamIndex];
+                    std::shared_ptr<VideoFrame> videoFrame;
                     TRY_EXECUTE({
-                        std::lock_guard<std::mutex> lock(streamsMutex_);
-                        auto                       &stream = streams_[streamIndex];
-                        auto                        frame  = FrameFactory::createFrameFromStreamProfile(stream.profile);
-                        auto                        vsp    = frame->as<VideoFrame>();
+                        auto frame = FrameFactory::createFrameFromStreamProfile(stream.profile);
+                        videoFrame = frame->as<VideoFrame>();
+                        videoFrame->updateData(byte_buffer, current_length);
 
                         stream.frameCounter++;
-                        vsp->setNumber(stream.frameCounter);
+                        videoFrame->setNumber(stream.frameCounter);
 
                         auto realtime = utils::getNowTimesUs();
-                        vsp->setSystemTimeStampUsec(realtime);
+                        videoFrame->setSystemTimeStampUsec(realtime);
+                    });
 
-                        auto metadata                     = frame->getMetadataMutable();
+#ifdef METADATA_SUPPORT
+                    TRY_EXECUTE({
+                        auto metadata                     = videoFrame->getMetadataMutable();
                         auto uvcMetadata                  = reinterpret_cast<UvcMetadata *>(metadata);
                         uvcMetadata->header.bHeaderLength = 12;
                         uvcMetadata->header.bmHeaderInfo  = 0;  // not used
-
-#ifdef METADATA_SUPPORT
-                        auto metadataExtraSize = try_read_metadata(sample, uvcMetadata);
+                        auto metadataExtraSize            = try_read_metadata(sample, uvcMetadata);
                         /*LOG( INFO ) << "metadataSize=" << ( int )metadataSize;
                         for ( int i = 0; i < metadataSize; i++ ) {
                             printf( "0x%02x ", metadata[ i ] );
@@ -1114,14 +1117,12 @@ STDMETHODIMP WmfUvcDevicePort::OnReadSample(HRESULT hrStatus, DWORD streamIndex,
                             }
                         }
                         printf( "\n\n" );*/
-                        vsp->setTimeStampUsec(uvcMetadata->header.dwPresentationTime);
-                        vsp->setMetadataSize(uvcMetadata->header.bHeaderLength + metadataExtraSize);
+                        videoFrame->setTimeStampUsec(uvcMetadata->header.dwPresentationTime);
+                        videoFrame->setMetadataSize(uvcMetadata->header.bHeaderLength + metadataExtraSize);
+                    });
 #endif
 
-                        vsp->updateData(byte_buffer, current_length);
-
-                        stream.callback(frame);
-                    });
+                    TRY_EXECUTE({ stream.callback(videoFrame); });
                     buffer->Unlock();
                 }
             }

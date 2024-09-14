@@ -796,7 +796,7 @@ public:
         init(impl);
     }
 
-     ~NoiseRemovalFilter() noexcept = default;
+    ~NoiseRemovalFilter() noexcept = default;
 
     /**
      * @brief Set the noise removal filter params.
@@ -923,15 +923,30 @@ public:
 };
 
 /**
+ * @brief Depth to disparity or disparity to depth
+ */
+class DisparityTransform : public Filter {
+public:
+    DisparityTransform(const std::string &activationKey = "") {
+        ob_error *error = nullptr;
+        auto      impl  = ob_create_private_filter("DisparityTransform", activationKey.c_str(), &error);
+        Error::handle(&error);
+        init(impl);
+    }
+
+    ~DisparityTransform() noexcept = default;
+};
+
+/**
  * @brief Define the Filter type map
  */
-static const std::unordered_map<std::string, std::type_index> typeMap = {
+static const std::unordered_map<std::string, std::type_index> obFilterTypeMap = {
     { "PointCloudFilter", typeid(PointCloudFilter) },   { "Align", typeid(Align) },
     { "FormatConverter", typeid(FormatConvertFilter) }, { "HDRMerge", typeid(HdrMerge) },
     { "SequenceIdFilter", typeid(SequenceIdFilter) },   { "DecimationFilter", typeid(DecimationFilter) },
     { "ThresholdFilter", typeid(ThresholdFilter) },     { "SpatialAdvancedFilter", typeid(SpatialAdvancedFilter) },
     { "HoleFillingFilter", typeid(HoleFillingFilter) }, { "NoiseRemovalFilter", typeid(NoiseRemovalFilter) },
-    { "TemporalFilter", typeid(TemporalFilter) }
+    { "TemporalFilter", typeid(TemporalFilter) },       { "DisparityTransform", typeid(DisparityTransform) }
 };
 
 /**
@@ -939,8 +954,8 @@ static const std::unordered_map<std::string, std::type_index> typeMap = {
  */
 template <typename T> bool Filter::is() {
     std::string name = type();
-    auto        it   = typeMap.find(name);
-    if(it != typeMap.end()) {
+    auto        it   = obFilterTypeMap.find(name);
+    if(it != obFilterTypeMap.end()) {
         return std::type_index(typeid(T)) == it->second;
     }
     return false;

@@ -482,7 +482,7 @@ void ObV4lUvcDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandle> devHandle)
                         videoFrame->setSystemTimeStampUsec(realtime);
                         videoFrame->setNumber(buf.sequence);
                         devHandle->frameCallback(videoFrame);
-                    )}
+                    })
                 }
 
                 if(devHandle->isCapturing) {

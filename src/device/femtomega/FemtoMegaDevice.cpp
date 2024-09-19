@@ -530,6 +530,8 @@ void FemtoMegaNetDevice::initSensorList() {
             },
             true);
 
+        registerSensorPortInfo(OB_SENSOR_DEPTH, depthPortInfo);
+
         registerComponent(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, [this]() {
             auto factory = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
 
@@ -563,7 +565,7 @@ void FemtoMegaNetDevice::initSensorList() {
                 return sensor;
             },
             true);
-
+        registerSensorPortInfo(OB_SENSOR_IR, irPortInfo);
         registerComponent(OB_DEV_COMPONENT_IR_FRAME_PROCESSOR, [this]() {
             auto factory = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
 
@@ -612,7 +614,7 @@ void FemtoMegaNetDevice::initSensorList() {
                 return sensor;
             },
             true);
-
+        registerSensorPortInfo(OB_SENSOR_COLOR, colorPortInfo);
         registerComponent(OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR, [this]() {
             auto factory        = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
             auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_COLOR);
@@ -689,7 +691,7 @@ void FemtoMegaNetDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
     auto vendorPortInfo         = *vendorPortInfoIter;
-    auto vendorPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, vendorPortInfo]() {
+    auto vendorPropertyAccessor = std::make_shared<LazySuperPropertyAccessor>([this, vendorPortInfo]() {
         auto platform = Platform::getInstance();
         auto port     = platform->getSourcePort(vendorPortInfo);
         auto accessor = std::make_shared<VendorPropertyAccessor>(this, port);

@@ -13,7 +13,7 @@ int main(void) try {
     // By creating config to configure which streams to enable or disable for the pipeline, here the depth stream will be enabled.
     std::shared_ptr<ob::Config> config = std::make_shared<ob::Config>();
 
-    //This is the default depth streamprofile that is enabled. If you want to modify it, you can do so in the configuration file.
+    // This is the default depth streamprofile that is enabled. If you want to modify it, you can do so in the configuration file.
     config->enableVideoStream(OB_STREAM_DEPTH);
 
     // Start the pipeline with config.
@@ -50,12 +50,6 @@ int main(void) try {
             // // attention: if the distance is 0, it means that the depth camera cannot detect the object (may be out of detection range).
             win.addLog("Facing an object at a distance of " + ob_smpl::toString(centerDistance, 3) + " mm. ");
         }
-
-        auto roiLeft   = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_AE_ROI_LEFT);
-        auto roiRight  = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT);
-        auto roiTop    = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_AE_ROI_TOP);
-        auto roiBottom = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM);
-        std::cout << "============roi:" << roiLeft << "," << roiRight << "," << roiTop << "," << roiBottom << std::endl;
 
         // Render frame in the window.
         win.pushFramesToView(depthFrame);

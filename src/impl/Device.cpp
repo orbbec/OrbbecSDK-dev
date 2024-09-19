@@ -460,6 +460,9 @@ HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)
 const char *ob_device_info_get_ip_address(const ob_device_info *info, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(info);
     auto netDeviceInfo = std::static_pointer_cast<const libobsensor::NetDeviceInfo>(info->info);
+    if(!netDeviceInfo) {
+        throw libobsensor::invalid_value_exception("Not a network device");
+    }
     return netDeviceInfo->ipAddress_.c_str();
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, info)

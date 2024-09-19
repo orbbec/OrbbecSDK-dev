@@ -7,12 +7,38 @@
 #include <memory>
 
 namespace libobsensor {
-class G2XLDevice : public DeviceBase {
+class G2XLDeviceBase : public DeviceBase {
 public:
-    G2XLDevice(const std::shared_ptr<const IDeviceEnumInfo> &info);
-    virtual ~G2XLDevice() noexcept;
+    G2XLDeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info);
+    virtual ~G2XLDeviceBase() noexcept;
+
+    void init() override;
 
     std::vector<std::shared_ptr<IFilter>> createRecommendedPostProcessingFilters(OBSensorType type) override;
+
+protected:
+    void initSensorStreamProfile(std::shared_ptr<ISensor> sensor);
+
+protected:
+    const uint64_t frameTimeFreq_  = 1000000;
+    uint64_t       deviceTimeFreq_ = 1000;
+};
+
+class G2XLUSBDevice : public G2XLDeviceBase {
+public:
+    G2XLUSBDevice(const std::shared_ptr<const IDeviceEnumInfo> &info);
+    virtual ~G2XLUSBDevice() noexcept;
+
+private:
+    void init() override;
+    void initSensorList();
+    void initProperties();
+};
+
+class G2XLNetDevice : public G2XLDeviceBase {
+public:
+    G2XLNetDevice(const std::shared_ptr<const IDeviceEnumInfo> &info);
+    virtual ~G2XLNetDevice() noexcept;
 
 private:
     void init() override;
@@ -20,9 +46,11 @@ private:
     void initProperties();
     void initSensorStreamProfile(std::shared_ptr<ISensor> sensor);
 
+    void fetchDeviceInfo() override;
+
 private:
-    const uint64_t                                              frameTimeFreq_  = 1000000;
-    uint64_t                                                    deviceTimeFreq_ = 1000000;
+    const uint64_t netStandardframeTimeFreq_  = 90000;
+
 };
 
 }  // namespace libobsensor

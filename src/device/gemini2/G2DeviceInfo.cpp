@@ -65,7 +65,10 @@ G2DeviceInfo::~G2DeviceInfo() noexcept {}
 
 std::shared_ptr<IDevice> G2DeviceInfo::createDevice() const {
     if(pid_ == 0x0671) {
-        return std::make_shared<G2XLDevice>(shared_from_this());
+        if(IS_NET_PORT(sourcePortInfoList_.front()->portType)) {
+            return std::make_shared<G2XLNetDevice>(shared_from_this());
+        }
+        return std::make_shared<G2XLUSBDevice>(shared_from_this());
     }
     return std::make_shared<G2Device>(shared_from_this());
 }

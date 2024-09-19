@@ -16,7 +16,7 @@ namespace libobsensor {
 
 template <typename T, typename Field> class StructureMetadataParser : public IFrameMetadataParser {
 public:
-    StructureMetadataParser(Field T::*field, FrameMetadataModifier mod) : field_(field), modifier_(mod){};
+    StructureMetadataParser(Field T::*field, FrameMetadataModifier mod) : field_(field), modifier_(mod) {};
     virtual ~StructureMetadataParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -47,7 +47,7 @@ std::shared_ptr<StructureMetadataParser<T, Field>> makeStructureMetadataParser(F
 
 template <typename T> class G330MetadataTimestampParser : public IFrameMetadataParser {
 public:
-    G330MetadataTimestampParser(){};
+    G330MetadataTimestampParser() {};
     virtual ~G330MetadataTimestampParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -68,8 +68,8 @@ public:
 // for depth and ir sensor
 class G330MetadataSensorTimestampParser : public IFrameMetadataParser {
 public:
-    G330MetadataSensorTimestampParser(){};
-    explicit G330MetadataSensorTimestampParser(FrameMetadataModifier exp_to_usec) : exp_to_usec_(exp_to_usec){};
+    G330MetadataSensorTimestampParser() {};
+    explicit G330MetadataSensorTimestampParser(FrameMetadataModifier exp_to_usec) : exp_to_usec_(exp_to_usec) {};
     virtual ~G330MetadataSensorTimestampParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -93,8 +93,8 @@ private:
 
 class G330ColorMetadataSensorTimestampParser : public IFrameMetadataParser {
 public:
-    G330ColorMetadataSensorTimestampParser(){};
-    explicit G330ColorMetadataSensorTimestampParser(FrameMetadataModifier exp_to_usec) : exp_to_usec_(exp_to_usec){};
+    G330ColorMetadataSensorTimestampParser() {};
+    explicit G330ColorMetadataSensorTimestampParser(FrameMetadataModifier exp_to_usec) : exp_to_usec_(exp_to_usec) {};
     virtual ~G330ColorMetadataSensorTimestampParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -118,7 +118,7 @@ private:
 
 class G330ScrMetadataParserBase : public IFrameMetadataParser {
 public:
-    G330ScrMetadataParserBase(){};
+    G330ScrMetadataParserBase() {};
     virtual ~G330ScrMetadataParserBase() = default;
 
     bool isSupported(const uint8_t *metadata, size_t dataSize) override {
@@ -307,7 +307,7 @@ public:
             fps = currentStreamProfileFpsVector.back();
         }
         else {
-            for(auto i = 0; i < currentStreamProfileFpsVector.size() - 1; i++) {
+            for(size_t i = 0; i < currentStreamProfileFpsVector.size() - 1; i++) {
                 if(fps < currentStreamProfileFpsVector[i + 1]) {
                     fps = currentStreamProfileFpsVector[i];
                     break;

@@ -1044,6 +1044,9 @@ void G330Device::initProperties() {
 std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessingFilters(OBSensorType type) {
     auto filterFactory = FilterFactory::getInstance();
     if(type == OB_SENSOR_DEPTH) {
+        // activate depth frame processor library
+        getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+
         std::vector<std::shared_ptr<IFilter>> depthFilterList;
 
         if(filterFactory->isFilterCreatorExists("DecimationFilter")) {
@@ -1111,6 +1114,9 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
         return depthFilterList;
     }
     else if(type == OB_SENSOR_COLOR) {
+        // activate color frame processor library
+        getComponentT<FrameProcessor>(OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR, false);
+
         std::vector<std::shared_ptr<IFilter>> colorFilterList;
         if(filterFactory->isFilterCreatorExists("DecimationFilter")) {
             auto decimationFilter = filterFactory->createFilter("DecimationFilter");

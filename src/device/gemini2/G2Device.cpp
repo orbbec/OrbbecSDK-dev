@@ -625,6 +625,9 @@ std::vector<std::shared_ptr<IFilter>> G2Device::createRecommendedPostProcessingF
     if(type != OB_SENSOR_DEPTH) {
         return {};
     }
+    // activate depth frame processor library
+    getComponentT<FrameProcessor>(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, false);
+
     auto                                  filterFactory = FilterFactory::getInstance();
     std::vector<std::shared_ptr<IFilter>> depthFilterList;
 

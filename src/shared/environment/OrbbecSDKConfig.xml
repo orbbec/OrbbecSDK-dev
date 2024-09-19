@@ -87,6 +87,8 @@
         value -->
         <LinuxUVCBackend>LibUVC</LinuxUVCBackend>
 
+        <!-- Frame metadata parsing path;optinal values: PayloadHeader,ExtensionHeader-->
+        <FrameMetadataParsingPath>PayloadHeader</FrameMetadataParsingPath>
 
         <!-- The device corresponding to Astra adv is astra+ -->
         <AstraAdv>

@@ -107,16 +107,6 @@ void Astra2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     for(auto &profile: profiles) {
         LOG_INFO(" - {}", profile);
     }
-
-    // sensor->registerStreamStateChangedCallback([this](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
-    //     auto streamStrategy = getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
-    //     if(state == STREAM_STATE_STARTING) {
-    //         streamStrategy->markStreamActivated (sp);
-    //     }
-    //     else if(state == STREAM_STATE_STOPPED) {
-    //         streamStrategy->markStreamDeactivated(sp);
-    //     }
-    // });
 }
 
 void Astra2Device::initSensorList() {
@@ -379,7 +369,6 @@ void Astra2Device::initProperties() {
             });
 
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
-            // propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyAccessor);  // replace by vendor property accessor
             propertyServer->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyAccessor);

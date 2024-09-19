@@ -97,16 +97,6 @@ void FemtoMegaUsbDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor
     for(auto &profile: profiles) {
         LOG_INFO(" - {}", profile);
     }
-
-    // sensor->registerStreamStateChangedCallback([this](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
-    //     auto streamStrategy = getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
-    //     if(state == STREAM_STATE_STARTING) {
-    //         streamStrategy->markStreamStarted(sp);
-    //     }
-    //     else if(state == STREAM_STATE_STOPPED) {
-    //         streamStrategy->markStreamStopped(sp);
-    //     }
-    // });
 }
 
 void FemtoMegaUsbDevice::initSensorList() {
@@ -333,7 +323,6 @@ void FemtoMegaUsbDevice::initProperties() {
             });
 
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
-            // propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyAccessor);
@@ -442,7 +431,7 @@ void FemtoMegaNetDevice::init() {
 
     fetchDeviceInfo();
     fetchExtensionInfo();
-    fetchAllProfileList();
+    fetchAllVideoStreamProfileList();
 
     if(getFirmwareVersionInt() >= 10209) {
         deviceTimeFreq_     = 1000000;
@@ -849,7 +838,7 @@ void FemtoMegaNetDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor
     auto              sensorType = sensor->getSensorType();
     OBStreamType      streamType = utils::mapSensorTypeToStreamType(sensorType);
     StreamProfileList ProfileList;
-    for(const auto &profile: allNetProfileList_) {
+    for(const auto &profile: allVideoStreamProfileList_) {
         if(streamType == profile->getType()) {
             ProfileList.push_back(profile);
         }
@@ -877,7 +866,7 @@ void FemtoMegaNetDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor
     }
 }
 
-void FemtoMegaNetDevice::fetchAllProfileList() {
+void FemtoMegaNetDevice::fetchAllVideoStreamProfileList() {
     auto propServer = getPropertyServer();
 
     std::vector<uint8_t> data;
@@ -900,12 +889,12 @@ void FemtoMegaNetDevice::fetchAllProfileList() {
         std::vector<OBInternalStreamProfile> outputProfiles;
         uint16_t                             dataSize = static_cast<uint16_t>(data.size());
         outputProfiles                                = parseBuffer<OBInternalStreamProfile>(data.data(), dataSize);
-        allNetProfileList_.clear();
+        allVideoStreamProfileList_.clear();
         for(auto item: outputProfiles) {
             OBStreamType streamType = utils::mapSensorTypeToStreamType((OBSensorType)item.sensorType);
             OBFormat     format     = utils::uvcFourccToOBFormat(item.profile.video.formatFourcc);
-            allNetProfileList_.push_back(StreamProfileFactory::createVideoStreamProfile(streamType, format, item.profile.video.width, item.profile.video.height,
-                                                                                        item.profile.video.fps));
+            allVideoStreamProfileList_.push_back(StreamProfileFactory::createVideoStreamProfile(streamType, format, item.profile.video.width,
+                                                                                                item.profile.video.height, item.profile.video.fps));
         }
     }
     else {

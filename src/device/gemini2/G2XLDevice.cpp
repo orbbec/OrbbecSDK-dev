@@ -56,19 +56,6 @@ void G2XLDevice::init() {
     fetchDeviceInfo();
     fetchExtensionInfo();
 
-    videoFrameTimestampCalculatorCreator_ = [this]() {
-        // std::shared_ptr<IFrameTimestampCalculator> calculator;
-        // if(deviceInfo_->pid_ == GEMINI2XL_PID) {
-        //     deviceTimeFreq_ = 1000;
-        //     calculator      = std::make_shared<G2LVideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
-        // }
-        // else {
-        //     calculator = std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
-        // }
-        // return calculator;
-        return std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
-    };
-
     auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
@@ -147,16 +134,6 @@ void G2XLDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     for(auto &profile: profiles) {
         LOG_INFO(" - {}", profile);
     }
-
-    // sensor->registerStreamStateChangedCallback([this](OBStreamState state, const std::shared_ptr<const StreamProfile> &sp) {
-    //     auto streamStrategy = getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY);
-    //     if(state == STREAM_STATE_STARTING) {
-    //         streamStrategy->markStreamActivated (sp);
-    //     }
-    //     else if(state == STREAM_STATE_STOPPED) {
-    //         streamStrategy->markStreamDeactivated(sp);
-    //     }
-    // });
 }
 
 void G2XLDevice::initSensorList() {
@@ -188,7 +165,7 @@ void G2XLDevice::initSensorList() {
                 };
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
 
-                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                auto frameTimestampCalculator = std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(frameTimestampCalculator);
 
                 auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
@@ -252,7 +229,7 @@ void G2XLDevice::initSensorList() {
                 auto port     = platform->getSourcePort(leftIrPortInfo);
                 auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
 
-                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                auto frameTimestampCalculator = std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(frameTimestampCalculator);
 
                 auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
@@ -289,7 +266,7 @@ void G2XLDevice::initSensorList() {
                 auto port     = platform->getSourcePort(rightIrPortInfo);
                 auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
 
-                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                auto frameTimestampCalculator = std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(frameTimestampCalculator);
 
                 auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
@@ -341,7 +318,7 @@ void G2XLDevice::initSensorList() {
                 }
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
 
-                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                auto frameTimestampCalculator = std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
                 sensor->setFrameTimestampCalculator(frameTimestampCalculator);
 
                 auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
@@ -446,7 +423,6 @@ void G2XLDevice::initProperties() {
             });
 
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_BOOL, "rw", "rw", uvcPropertyAccessor);
-            // propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", uvcPropertyAccessor);  // replace by vendor property accessor
             propertyServer->registerProperty(OB_PROP_COLOR_GAIN_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_SATURATION_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_WHITE_BALANCE_BOOL, "rw", "rw", uvcPropertyAccessor);

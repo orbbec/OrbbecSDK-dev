@@ -7,7 +7,6 @@
 #include <memory>
 
 namespace libobsensor {
-
 class G2XLDevice : public DeviceBase {
 public:
     G2XLDevice(const std::shared_ptr<const IDeviceEnumInfo> &info);
@@ -24,7 +23,6 @@ private:
 private:
     const uint64_t                                              frameTimeFreq_  = 1000000;
     uint64_t                                                    deviceTimeFreq_ = 1000000;
-    std::function<std::shared_ptr<IFrameTimestampCalculator>()> videoFrameTimestampCalculatorCreator_;
 };
 
 }  // namespace libobsensor

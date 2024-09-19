@@ -22,12 +22,12 @@ template <typename T> void generateConfidenceMap(const T *ir, uint8_t *map, int 
 
 template <typename T> void triangleWeights(std::vector<uint8_t> &w) {
     int length = 1 << (sizeof(T) * 8);
-    int half   = length >> 2;
-    for(int i = 0; i < length; i++) {
-        uint8_t tmp = static_cast<uint8_t>(255.f * i / half);
-        if(i > half)
-            tmp = static_cast<uint8_t>(512 - 255.f * i / half);
-        w.push_back(tmp);
+    w.resize(length, 0);
+    int   half  = length >> 1;
+    float slope = 256.f / half;
+    for(int i = 0; i < half; i++) {
+        w[i]              = static_cast<uint8_t>(i * slope);
+        w[length - i - 1] = w[i];
     }
 }
 
@@ -35,9 +35,17 @@ template <typename T> void mergeFramesUsingIr(uint16_t *new_data, uint16_t *d0, 
     int pix_num = width * height;
 
     for(int i = 0; i < pix_num; i++) {
-        uint8_t c0  = EXP_LUT_.second[ir0[i]];
-        uint8_t c1  = EXP_LUT_.second[ir1[i]];
-        new_data[i] = c0 > c1 ? d0[i] : d1[i];
+        uint8_t c0 = EXP_LUT_.second[ir0[i]];
+        uint8_t c1 = EXP_LUT_.second[ir1[i]];
+        // new_data[i] = c0 > c1 ? d0[i] : d1[i];
+        uint8_t c = c0, idx = 0;
+        if(c1 > c0) {
+            c   = c1;
+            idx = 1;
+        }
+        if(c) {  // over-staturated or completely dark pixels
+            new_data[i] = idx ? d1[i] : d0[i];
+        }
     }
 }
 
@@ -285,11 +293,18 @@ std::shared_ptr<Frame> HDRMerge::merge(std::shared_ptr<const Frame> first_fs, st
                     triangleWeights<uint16_t>(EXP_LUT_.second);
             }
             if(OB_FORMAT_Y8 == ir_format) {
-                mergeFramesUsingIr<uint8_t>(d, d0, d1, first_ir->getData(), second_ir->getData(), width, height);
+                if(first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_EXPOSURE) == first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_EXPOSURE))
+                    mergeFramesUsingIr<uint8_t>(d, d0, d1, first_ir->getData(), second_ir->getData(), width, height);
+                else
+                    mergeFramesUsingIr<uint8_t>(d, d0, d1, second_ir->getData(), first_ir->getData(), width, height);
             }
             else {
-                mergeFramesUsingIr<uint16_t>(d, d0, d1, (uint16_t *)first_ir->getData(), (uint16_t *)second_ir->getData(), width, height);
+                if(first_depth->getMetadataValue(OB_FRAME_METADATA_TYPE_EXPOSURE) == first_ir->getMetadataValue(OB_FRAME_METADATA_TYPE_EXPOSURE))
+                    mergeFramesUsingIr<uint16_t>(d, d0, d1, (uint16_t *)first_ir->getData(), (uint16_t *)second_ir->getData(), width, height);
+                else
+                    mergeFramesUsingIr<uint16_t>(d, d0, d1, (uint16_t *)second_ir->getData(), (uint16_t *)first_ir->getData(), width, height);
             }
+
         }
         else {
             mergeFramesUsingOnlyDepth(d, d0, d1, width, height);

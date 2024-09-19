@@ -71,7 +71,7 @@ void SensorBase::setStreamProfileFilter(std::shared_ptr<IStreamProfileFilter> fi
     streamProfileFilter_ = filter;
 }
 
-void SensorBase::updateStreamProfileList(const StreamProfileList &profileList) {
+void SensorBase::setStreamProfileList(const StreamProfileList &profileList) {
     streamProfileList_ = profileList;
 }
 

@@ -82,6 +82,10 @@ void DeviceBase::fetchExtensionInfo() {
     extensionInfo_["AllSensorsUsingSameClock"] = "true";
 }
 
+bool DeviceBase::isExtensionInfoExists(const std::string &infoKey) const {
+    return extensionInfo_.find(infoKey) != extensionInfo_.end();
+}
+
 const std::string &DeviceBase::getExtensionInfo(const std::string &infoKey) const {
     auto it = extensionInfo_.find(infoKey);
     if(it != extensionInfo_.end()) {

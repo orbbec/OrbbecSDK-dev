@@ -1,4 +1,4 @@
-#include "G2Device.hpp"
+#include "G2XLDevice.hpp"
 
 #include "DevicePids.hpp"
 #include "InternalTypes.hpp"
@@ -38,19 +38,18 @@
 
 namespace libobsensor {
 
-constexpr uint8_t INTERFACE_COLOR = 4;
-constexpr uint8_t INTERFACE_IR    = 2;
-constexpr uint8_t INTERFACE_DEPTH = 0;
+static const uint8_t INTERFACE_COLOR    = 0;
+static const uint8_t INTERFACE_LEFT_IR  = 4;
+static const uint8_t INTERFACE_DEPTH    = 2;
+static const uint8_t INTERFACE_RIGHT_IR = 6;
 
-constexpr uint16_t GEMINI2L_PID = 0x0673;
-
-G2Device::G2Device(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
+G2XLDevice::G2XLDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) : DeviceBase(info) {
     init();
 }
 
-G2Device::~G2Device() noexcept {}
+G2XLDevice::~G2XLDevice() noexcept {}
 
-void G2Device::init() {
+void G2XLDevice::init() {
     initSensorList();
     initProperties();
 
@@ -58,15 +57,16 @@ void G2Device::init() {
     fetchExtensionInfo();
 
     videoFrameTimestampCalculatorCreator_ = [this]() {
-        std::shared_ptr<IFrameTimestampCalculator> calculator;
-        if(deviceInfo_->pid_ == GEMINI2L_PID) {
-            deviceTimeFreq_ = 1000;
-            calculator      = std::make_shared<G2LVideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
-        }
-        else {
-            calculator = std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
-        }
-        return calculator;
+        // std::shared_ptr<IFrameTimestampCalculator> calculator;
+        // if(deviceInfo_->pid_ == GEMINI2XL_PID) {
+        //     deviceTimeFreq_ = 1000;
+        //     calculator      = std::make_shared<G2LVideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+        // }
+        // else {
+        //     calculator = std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+        // }
+        // return calculator;
+        return std::make_shared<G2VideoFrameTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
     };
 
     auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
@@ -104,22 +104,21 @@ void G2Device::init() {
     deviceSyncConfigurator->updateModeAliasMap(syncModeOldToNewMap, syncModeNewToOldMap);
 
     registerComponent(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, [this] {
-        std::shared_ptr<DeviceClockSynchronizer> deviceClockSynchronizer;
-        if(deviceInfo_->pid_ == GEMINI2L_PID) {
-            deviceTimeFreq_         = 1000;
-            deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, deviceTimeFreq_);
-        }
-        else {
-            deviceTimeFreq_         = 1000000;
-            deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, 1000);
-        }
-        return deviceClockSynchronizer;
+        // std::shared_ptr<DeviceClockSynchronizer> deviceClockSynchronizer;
+        // if(deviceInfo_->pid_ == GEMINI2XL_PID) {
+        //     deviceTimeFreq_         = 1000;
+        //     deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, deviceTimeFreq_);
+        // }
+        // else {
+        //     deviceTimeFreq_         = 1000000;
+        //     deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, 1000);
+        // }
+        // return deviceClockSynchronizer;
+        return std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, deviceTimeFreq_);
     });
-
-    fixSensorList();  // fix sensor list according to depth alg work mode
 }
 
-void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
+void G2XLDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
 
     auto streamProfileFilter = getComponentT<IStreamProfileFilter>(OB_DEV_COMPONENT_STREAM_PROFILE_FILTER);
     sensor->setStreamProfileFilter(streamProfileFilter.get());
@@ -160,7 +159,7 @@ void G2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {
     // });
 }
 
-void G2Device::initSensorList() {
+void G2XLDevice::initSensorList() {
     registerComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY, [this]() {
         std::shared_ptr<FrameProcessorFactory> factory;
         TRY_EXECUTE({ factory = std::make_shared<FrameProcessorFactory>(this); })
@@ -185,12 +184,8 @@ void G2Device::initSensorList() {
                 auto sensor   = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
-                    { FormatFilterPolicy::REPLACE, OB_FORMAT_MJPG, OB_FORMAT_RLE, nullptr },
+                    { FormatFilterPolicy::REPLACE, OB_FORMAT_MJPG, OB_FORMAT_RVL, nullptr },
                 };
-                // auto formatConverter = getSensorFrameFilter("FrameUnpacker", OB_SENSOR_DEPTH, false);
-                // if(formatConverter) {
-                //     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_Y16, formatConverter });
-                // }
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
 
                 auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
@@ -206,9 +201,9 @@ void G2Device::initSensorList() {
 
                 auto propServer = getPropertyServer();
 
-                propServer->setPropertyValueT<bool>(OB_PROP_DISPARITY_TO_DEPTH_BOOL, false);
-                propServer->setPropertyValueT<bool>(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, true);
-                sensor->markOutputDisparityFrame(true);
+                propServer->setPropertyValueT<bool>(OB_PROP_DISPARITY_TO_DEPTH_BOOL, true);
+                propServer->setPropertyValueT<bool>(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, false);
+                sensor->markOutputDisparityFrame(false);
 
                 propServer->setPropertyValueT(OB_PROP_DEPTH_PRECISION_LEVEL_INT, OB_PRECISION_1MM);
                 sensor->setDepthUnit(1.0f);
@@ -224,39 +219,6 @@ void G2Device::initSensorList() {
         registerComponent(OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR, [this]() {
             auto factory        = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
             auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_DEPTH);
-            return frameProcessor;
-        });
-
-        // right ir stream is using depth stream port when depth work mode optionCode is MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL
-        registerComponent(
-            OB_DEV_COMPONENT_RIGHT_IR_SENSOR,
-            [this, depthPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(depthPortInfo);
-                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
-
-                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
-                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
-
-                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
-                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
-
-                auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR, false);
-                if(frameProcessor) {
-                    sensor->setFrameProcessor(frameProcessor.get());
-                }
-
-                initSensorStreamProfile(sensor);
-
-                return sensor;
-            },
-            true);
-
-        registerSensorPortInfo(OB_SENSOR_IR_RIGHT, depthPortInfo);
-
-        registerComponent(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR, [this]() {
-            auto factory        = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
-            auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR_RIGHT);
             return frameProcessor;
         });
 
@@ -277,49 +239,17 @@ void G2Device::initSensorList() {
         });
     }
 
-    auto irPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {
-        return portInfo->portType == SOURCE_PORT_USB_UVC && std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->infIndex == INTERFACE_IR;
+    auto leftIrPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {
+        return portInfo->portType == SOURCE_PORT_USB_UVC && std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->infIndex == INTERFACE_LEFT_IR;
     });
 
-    if(irPortInfoIter != sourcePortInfoList.end()) {
-        auto irPortInfo = *irPortInfoIter;
-        registerComponent(
-            OB_DEV_COMPONENT_IR_SENSOR,
-            [this, irPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(irPortInfo);
-                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR, port);
-
-                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
-                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
-
-                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
-                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
-
-                auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_IR_FRAME_PROCESSOR, false);
-                if(frameProcessor) {
-                    sensor->setFrameProcessor(frameProcessor.get());
-                }
-
-                initSensorStreamProfile(sensor);
-
-                return sensor;
-            },
-            true);
-        registerSensorPortInfo(OB_SENSOR_IR, irPortInfo);
-
-        registerComponent(OB_DEV_COMPONENT_IR_FRAME_PROCESSOR, [this]() {
-            auto factory        = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
-            auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR);
-            return frameProcessor;
-        });
-
-        // left ir stream is using the same port as the ir stream when depth work mode optionCode is MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL
+    if(leftIrPortInfoIter != sourcePortInfoList.end()) {
+        auto leftIrPortInfo = *leftIrPortInfoIter;
         registerComponent(
             OB_DEV_COMPONENT_LEFT_IR_SENSOR,
-            [this, irPortInfo]() {
+            [this, leftIrPortInfo]() {
                 auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(irPortInfo);
+                auto port     = platform->getSourcePort(leftIrPortInfo);
                 auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
 
                 auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
@@ -338,11 +268,46 @@ void G2Device::initSensorList() {
                 return sensor;
             },
             true);
-        registerSensorPortInfo(OB_SENSOR_IR_LEFT, irPortInfo);
+        registerSensorPortInfo(OB_SENSOR_IR_LEFT, leftIrPortInfo);
 
         registerComponent(OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR, [this]() {
             auto factory        = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
             auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR_LEFT);
+            return frameProcessor;
+        });
+    }
+
+    auto rightIrPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {
+        return portInfo->portType == SOURCE_PORT_USB_UVC && std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->infIndex == INTERFACE_RIGHT_IR;
+    });
+    if(rightIrPortInfoIter != sourcePortInfoList.end()) {
+        auto rightIrPortInfo = *rightIrPortInfoIter;
+        registerComponent(
+            OB_DEV_COMPONENT_RIGHT_IR_SENSOR,
+            [this, rightIrPortInfo]() {
+                auto platform = Platform::getInstance();
+                auto port     = platform->getSourcePort(rightIrPortInfo);
+                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
+
+                auto frameTimestampCalculator = videoFrameTimestampCalculatorCreator_();
+                sensor->setFrameTimestampCalculator(frameTimestampCalculator);
+
+                auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, frameTimeFreq_);
+                sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
+
+                auto frameProcessor = getComponentT<FrameProcessor>(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR, false);
+                if(frameProcessor) {
+                    sensor->setFrameProcessor(frameProcessor.get());
+                }
+
+                initSensorStreamProfile(sensor);
+                return sensor;
+            },
+            true);
+        registerSensorPortInfo(OB_SENSOR_IR_RIGHT, rightIrPortInfo);
+        registerComponent(OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR, [this]() {
+            auto factory        = getComponentT<FrameProcessorFactory>(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY);
+            auto frameProcessor = factory->createFrameProcessor(OB_SENSOR_IR_RIGHT);
             return frameProcessor;
         });
     }
@@ -460,22 +425,7 @@ void G2Device::initSensorList() {
     }
 }
 
-void G2Device::fixSensorList() {
-    auto depthWorkModeManager = getComponentT<G2DepthWorkModeManager>(OB_DEV_COMPONENT_DEPTH_WORK_MODE_MANAGER);
-    auto currentMode          = depthWorkModeManager->getCurrentDepthWorkMode();
-
-    // deregister unsupported sensors according to depth work mode option code
-    if(currentMode.optionCode == OBDepthModeOptionCode::MX6600_RIGHT_IR_FROM_DEPTH_CHANNEL) {
-        deregisterSensor(OB_SENSOR_IR);
-        deregisterSensor(OB_SENSOR_DEPTH);
-    }
-    else {
-        deregisterSensor(OB_SENSOR_IR_LEFT);
-        deregisterSensor(OB_SENSOR_IR_RIGHT);
-    }
-}
-
-void G2Device::initProperties() {
+void G2XLDevice::initProperties() {
     auto propertyServer = std::make_shared<PropertyServer>(this);
 
     auto d2dPropertyAccessor = std::make_shared<G2Disp2DepthPropertyAccessor>(this);
@@ -507,7 +457,7 @@ void G2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_COLOR_POWER_LINE_FREQUENCY_INT, "rw", "rw", uvcPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_COLOR_STREAM_BOOL, "", "w", uvcPropertyAccessor);
         }
-        else if(sensor == OB_SENSOR_IR) {
+        else if(sensor == OB_SENSOR_IR_LEFT) {
             auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([sourcePortInfo]() {
                 auto platform = Platform::getInstance();
                 auto port     = platform->getSourcePort(sourcePortInfo);
@@ -621,7 +571,7 @@ void G2Device::initProperties() {
     registerComponent(OB_DEV_COMPONENT_PROPERTY_SERVER, propertyServer, true);
 }
 
-std::vector<std::shared_ptr<IFilter>> G2Device::createRecommendedPostProcessingFilters(OBSensorType type) {
+std::vector<std::shared_ptr<IFilter>> G2XLDevice::createRecommendedPostProcessingFilters(OBSensorType type) {
     if(type != OB_SENSOR_DEPTH) {
         return {};
     }

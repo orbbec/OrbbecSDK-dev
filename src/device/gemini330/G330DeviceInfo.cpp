@@ -40,8 +40,7 @@ G330DeviceInfo::G330DeviceInfo(const SourcePortInfoList groupedInfoList) {
 G330DeviceInfo::~G330DeviceInfo() noexcept {}
 
 std::shared_ptr<IDevice> G330DeviceInfo::createDevice() const {
-    auto device = std::make_shared<G330Device>(shared_from_this());
-    return device;
+    return std::make_shared<G330Device>(shared_from_this());
 }
 
 std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfo::pickDevices(const SourcePortInfoList infoList) {

@@ -52,10 +52,12 @@ public:
      * @param[in] depth_unit_mm depth scale in millimeter
      * @param[in] add_target_distortion switch to add distortion of the target frame
      * @param[in] gap_fill_copy switch to fill gaps with copy or nearest-interpolation after alignment
+     * @param[in] auto_scale_down switch to automatically scale down resolution of depth frame
+     * @retval    down-scaler if auto_scale_down set true
      *
      */
-    void initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
-                    OBExtrinsic depth_to_rgb, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy);
+    float initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
+                    OBExtrinsic depth_to_rgb, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy, bool auto_scale_down);
 
     /**
      * @brief Get depth unit in millimeter
@@ -64,6 +66,14 @@ public:
      */
     float getDepthUnit() {
         return depth_unit_mm_;
+    };
+
+    /**
+     * @brief Get valid color intrinsics of current implementation
+     * @return intrinsics
+    */
+    OBCameraIntrinsic getRGBIntrinsic(){
+        return rgb_intric_;
     };
 
     /**
@@ -140,10 +150,12 @@ private:
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_y;
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_z;
 
-    float              depth_unit_mm_;          // depth scale
-    bool               add_target_distortion_;  // distort align frame with target coefficent
-    bool               need_to_undistort_depth_;    // undistort depth is necessary
-    bool               gap_fill_copy_;          // filling cracks with copy
+    float              depth_unit_mm_;            // depth scale
+    bool               add_target_distortion_;    // distort align frame with target coefficent
+    bool               need_to_undistort_depth_;  // undistort depth is necessary
+    bool               gap_fill_copy_;            // filling cracks with copy
+    float              auto_down_scale_;          // depth resolution scale
+    float              resv[3];                   // reserved for alignment
     OBCameraIntrinsic  depth_intric_{};
     OBCameraIntrinsic  rgb_intric_{};
     OBCameraDistortion depth_disto_{};

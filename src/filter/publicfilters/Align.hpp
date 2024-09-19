@@ -48,6 +48,7 @@ private:
     float                depth_unit_mm_;
     bool                 add_target_distortion_;
     bool                 gap_fill_copy_;
+    bool                 auto_scale_down_;
     OBCameraIntrinsic    from_intrin_;
     OBCameraDistortion   from_disto_;
     OBCameraIntrinsic    to_intrin_;

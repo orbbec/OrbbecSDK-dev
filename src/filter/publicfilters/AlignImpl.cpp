@@ -79,8 +79,9 @@ const __m128i AlignImpl::ZERO       = _mm_setzero_si128();
 const __m128  AlignImpl::ZERO_F     = _mm_set_ps1(0.0);
 
 AlignImpl::AlignImpl() : initialized_(false) {
-    depth_unit_mm_ = 1.0;
-    r2_max_loc_    = 0.0;
+    depth_unit_mm_   = 1.0;
+    r2_max_loc_      = 0.0;
+    auto_down_scale_ = 1.0;
     memset(&depth_intric_, 0, sizeof(OBCameraIntrinsic));
     memset(&depth_disto_, 0, sizeof(OBCameraDistortion));
     memset(&rgb_intric_, 0, sizeof(OBCameraIntrinsic));
@@ -92,18 +93,33 @@ AlignImpl::~AlignImpl() {
     initialized_ = false;
 }
 
-void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
-                           OBExtrinsic extrin, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy) {
+float AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
+                            OBExtrinsic extrin, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy, bool auto_scale_down) {
     if(initialized_ && memcmp(&depth_intrin, &depth_intric_, sizeof(OBCameraIntrinsic)) == 0
        && memcmp(&depth_disto, &depth_disto_, sizeof(OBCameraDistortion)) == 0 && memcmp(&rgb_intrin, &rgb_intric_, sizeof(OBCameraIntrinsic)) == 0
        && memcmp(&rgb_disto, &rgb_disto_, sizeof(OBCameraDistortion)) == 0 && memcmp(&extrin, &transform_, sizeof(OBExtrinsic)) == 0
        && depth_unit_mm == depth_unit_mm_ && add_target_distortion == add_target_distortion_ && gap_fill_copy == gap_fill_copy_) {
-        return;
+        return auto_down_scale_;
     }
     memcpy(&depth_intric_, &depth_intrin, sizeof(OBCameraIntrinsic));
     memcpy(&depth_disto_, &depth_disto, sizeof(OBCameraDistortion));
     memcpy(&rgb_intric_, &rgb_intrin, sizeof(OBCameraIntrinsic));
     memcpy(&rgb_disto_, &rgb_disto, sizeof(OBCameraDistortion));
+
+    if(auto_scale_down) {
+        float scale_x = rgb_intric_.fx / depth_intric_.fx, scale_y = rgb_intrin.fy / depth_intric_.fy;
+        float scale = scale_x > scale_y ? scale_x : scale_y;
+        if(scale > 1.499) {
+            auto_down_scale_ = 1.f * int(scale) + 0.5f * (int(scale + 0.5) - int(scale));
+            rgb_intric_.fx /= auto_down_scale_;
+            rgb_intric_.fy /= auto_down_scale_;
+            rgb_intric_.cx /= auto_down_scale_;
+            rgb_intric_.cy /= auto_down_scale_;
+            rgb_intric_.width  = static_cast<int16_t>(rgb_intric_.width / auto_down_scale_);
+            rgb_intric_.height = static_cast<int16_t>(rgb_intric_.height / auto_down_scale_);
+        }
+    }
+
     memcpy(&transform_, &extrin, sizeof(OBExtrinsic));
     add_target_distortion_ = add_target_distortion;
     // since undistorted depth (whether d2c or c2d) is necessory ...
@@ -134,6 +150,7 @@ void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion de
 
     prepareDepthResolution();
     initialized_ = true;
+    return auto_down_scale_;
 }
 
 void AlignImpl::reset() {

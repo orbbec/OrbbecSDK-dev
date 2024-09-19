@@ -25,6 +25,7 @@ Align::Align() : align_to_stream_(OB_STREAM_COLOR) {
     depth_unit_mm_         = 1.f;
     add_target_distortion_ = true;
     gap_fill_copy_         = false;
+    auto_scale_down_       = false;
 }
 
 Align::~Align() noexcept {
@@ -36,9 +37,9 @@ Align::~Align() noexcept {
 }
 
 void Align::updateConfig(std::vector<std::string> &params) {
-    // AlignType, TargetDistortion, GapFillCopy
+    // AlignType, TargetDistortion, GapFillCopy, AutoScaleDown
     std::lock_guard<std::recursive_mutex> lock(alignMutex_);
-    if(params.size() != 3) {
+    if(params.size() != 4) {
         throw invalid_value_exception("Align config error: params size not match");
     }
     try {
@@ -48,6 +49,7 @@ void Align::updateConfig(std::vector<std::string> &params) {
         }
         add_target_distortion_ = bool(std::stoi(params[1]));
         gap_fill_copy_         = bool(std::stoi(params[2]));
+        auto_scale_down_       = bool(std::stoi(params[3]));
     }
     catch(const std::exception &e) {
         throw invalid_value_exception("Align config error: " + std::string(e.what()));
@@ -57,7 +59,8 @@ void Align::updateConfig(std::vector<std::string> &params) {
 const std::string &Align::getConfigSchema() const {
     static const std::string schema = "AlignType, integer, 1, 7, 1, 2, aligned to the type of data stream\n"
                                       "TargetDistortion, boolean, 0, 1, 1, 1, add distortion of the target stream\n"
-                                      "GapFillCopy, boolean, 0, 1, 1, 0, enable gap fill";
+                                      "GapFillCopy, boolean, 0, 1, 1, 0, enable gap fill\n"
+                                      "AutoScaleDown, boolean, 0, 1, 1, 0, enable automatic scale down\n";
     return schema;
 }
 
@@ -193,7 +196,7 @@ void Align::alignFrames(std::shared_ptr<Frame> aligned, const std::shared_ptr<co
         memset(alignedData, 0, aligned->getDataSize());
         // check if already initialized inside
         auto depth_other_extrin = toProfile->getExtrinsicTo(fromProfile);
-        pImpl->initialize(to_intrin_, to_disto_, from_intrin_, from_disto_, depth_other_extrin, depth_unit_mm_, add_target_distortion_, gap_fill_copy_);
+        pImpl->initialize(to_intrin_, to_disto_, from_intrin_, from_disto_, depth_other_extrin, depth_unit_mm_, add_target_distortion_, gap_fill_copy_, false);
         auto depth = reinterpret_cast<const uint16_t *>(to->getData());
         auto in    = const_cast<const void *>((const void *)from->getData());
         auto out   = const_cast<void *>((void *)aligned->getData());
@@ -203,8 +206,14 @@ void Align::alignFrames(std::shared_ptr<Frame> aligned, const std::shared_ptr<co
     else {
         uint16_t *alignedData = reinterpret_cast<uint16_t *>(const_cast<void *>((void *)aligned->getData()));
         memset(alignedData, 0, aligned->getDataSize());
-        pImpl->initialize(from_intrin_, from_disto_, to_intrin_, to_disto_, from_to_extrin_, depth_unit_mm_, add_target_distortion_, gap_fill_copy_);
+        float s = pImpl->initialize(from_intrin_, from_disto_, to_intrin_, to_disto_, from_to_extrin_, depth_unit_mm_, add_target_distortion_, gap_fill_copy_, auto_scale_down_);
+        if (s > 1) {
+            /// TODO
+            OBCameraIntrinsic actual = pImpl->getRGBIntrinsic();
+        }
+
         auto in = reinterpret_cast<const uint16_t *>(from->getData());
+
         pImpl->D2C(in, fromVideoProfile->getWidth(), fromVideoProfile->getHeight(), alignedData, toVideoProfile->getWidth(), toVideoProfile->getHeight());
     }
 }

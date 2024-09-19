@@ -3,6 +3,7 @@
 #include "utils/PublicTypeHelper.hpp"
 #include "frame/Frame.hpp"
 #include "stream/StreamProfile.hpp"
+#include "logger/LoggerHelper.hpp"
 
 namespace libobsensor {
 SensorBase::SensorBase(IDevice *owner, OBSensorType sensorType, const std::shared_ptr<ISourcePort> &backend)
@@ -257,6 +258,7 @@ void SensorBase::outputFrame(std::shared_ptr<Frame> frame) {
     }
 
     frameCallback_(frame);
+    LOG_FREQ_CALC(INFO, 5000, "{} Streaming... frameRate={freq}fps", sensorType_);
 }
 
 }  // namespace libobsensor

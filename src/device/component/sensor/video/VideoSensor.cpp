@@ -130,7 +130,6 @@ void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
     }
     frame->setStreamProfile(activatedStreamProfile_);
     outputFrame(frame);
-    LOG_FREQ_CALC(INFO, 5000, "{} Streaming... frameRate={freq}fps", sensorType_);
 }
 
 void VideoSensor::outputFrame(std::shared_ptr<Frame> frame) {

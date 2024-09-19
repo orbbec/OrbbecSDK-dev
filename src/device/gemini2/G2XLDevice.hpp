@@ -20,8 +20,7 @@ protected:
     void initSensorStreamProfile(std::shared_ptr<ISensor> sensor);
 
 protected:
-    const uint64_t frameTimeFreq_  = 1000000;
-    uint64_t       deviceTimeFreq_ = 1000;
+    uint64_t deviceTimeFreq_ = 1000;
 };
 
 class G2XLUSBDevice : public G2XLDeviceBase {
@@ -33,6 +32,9 @@ private:
     void init() override;
     void initSensorList();
     void initProperties();
+
+private:
+    const uint64_t frameTimeFreq_ = 1000000;
 };
 
 class G2XLNetDevice : public G2XLDeviceBase {
@@ -49,8 +51,8 @@ private:
     void fetchDeviceInfo() override;
 
 private:
-    const uint64_t netStandardframeTimeFreq_  = 90000;
-
+    const uint64_t frameTimeFreq_      = 1000;
+    const uint64_t colorframeTimeFreq_ = 90000;
 };
 
 }  // namespace libobsensor

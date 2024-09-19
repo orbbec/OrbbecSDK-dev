@@ -16,7 +16,7 @@ namespace libobsensor {
 
 template <typename T, typename Field> class StructureMetadataParser : public IFrameMetadataParser {
 public:
-    StructureMetadataParser(Field T::*field, FrameMetadataModifier mod) : field_(field), modifier_(mod) {};
+    StructureMetadataParser(Field T::*field, FrameMetadataModifier mod) : field_(field), modifier_(mod){};
     virtual ~StructureMetadataParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -47,7 +47,7 @@ std::shared_ptr<StructureMetadataParser<T, Field>> makeStructureMetadataParser(F
 
 template <typename T> class G330MetadataTimestampParser : public IFrameMetadataParser {
 public:
-    G330MetadataTimestampParser() {};
+    G330MetadataTimestampParser(){};
     virtual ~G330MetadataTimestampParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -68,8 +68,8 @@ public:
 // for depth and ir sensor
 class G330MetadataSensorTimestampParser : public IFrameMetadataParser {
 public:
-    G330MetadataSensorTimestampParser() {};
-    explicit G330MetadataSensorTimestampParser(FrameMetadataModifier exp_to_usec) : exp_to_usec_(exp_to_usec) {};
+    G330MetadataSensorTimestampParser(){};
+    explicit G330MetadataSensorTimestampParser(FrameMetadataModifier exp_to_usec) : exp_to_usec_(exp_to_usec){};
     virtual ~G330MetadataSensorTimestampParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -93,8 +93,8 @@ private:
 
 class G330ColorMetadataSensorTimestampParser : public IFrameMetadataParser {
 public:
-    G330ColorMetadataSensorTimestampParser() {};
-    explicit G330ColorMetadataSensorTimestampParser(FrameMetadataModifier exp_to_usec) : exp_to_usec_(exp_to_usec) {};
+    G330ColorMetadataSensorTimestampParser(){};
+    explicit G330ColorMetadataSensorTimestampParser(FrameMetadataModifier exp_to_usec) : exp_to_usec_(exp_to_usec){};
     virtual ~G330ColorMetadataSensorTimestampParser() = default;
 
     int64_t getValue(const uint8_t *metadata, size_t dataSize) override {
@@ -118,7 +118,7 @@ private:
 
 class G330ScrMetadataParserBase : public IFrameMetadataParser {
 public:
-    G330ScrMetadataParserBase() {};
+    G330ScrMetadataParserBase(){};
     virtual ~G330ScrMetadataParserBase() = default;
 
     bool isSupported(const uint8_t *metadata, size_t dataSize) override {
@@ -402,7 +402,14 @@ public:
                                                    if(propertyId != static_cast<uint32_t>(propertyId_)) {
                                                        return;
                                                    }
-                                                   data_ = parsePropertyValue(type, propertyId, data);
+                                                   auto propertyServer = device_->getPropertyServer();
+                                                   auto propertyItem   = propertyServer->getPropertyItem(propertyId_, PROP_ACCESS_USER);
+                                                   if(propertyItem.type == OB_STRUCT_PROPERTY) {
+                                                       data_ = parseStructurePropertyValue(type, propertyId, data);
+                                                   }
+                                                   else {
+                                                       data_ = parsePropertyValue(propertyId, data);
+                                                   }
                                                });
     };
 
@@ -420,7 +427,7 @@ public:
             auto               propertyItem   = propertyServer->getPropertyItem(propertyId_, accessType);
             if(propertyItem.type == OB_STRUCT_PROPERTY) {
                 auto structValue = propertyServer->getStructureData(propertyId_, accessType);
-                data_            = parsePropertyValue(metadataType_, static_cast<uint32_t>(propertyId_), structValue.data());
+                data_            = parseStructurePropertyValue(metadataType_, static_cast<uint32_t>(propertyId_), structValue.data());
             }
             else {
                 OBPropertyValue value = {};
@@ -432,7 +439,7 @@ public:
                 else {
                     valueData = &value.intValue;
                 }
-                data_ = parsePropertyValue(metadataType_, static_cast<uint32_t>(propertyId_), (const uint8_t *)valueData);
+                data_ = parsePropertyValue(static_cast<uint32_t>(propertyId_), (const uint8_t *)valueData);
             }
         }
 
@@ -449,7 +456,22 @@ public:
     }
 
 private:
-    int64_t parsePropertyValue(OBFrameMetadataType type, uint32_t propertyId, const uint8_t *data) {
+    int64_t parsePropertyValue(uint32_t propertyId, const uint8_t *data) {
+        int64_t parsedData     = 0;
+        auto    value          = reinterpret_cast<const OBPropertyValue *>(data);
+        auto    propertyServer = device_->getPropertyServer();
+        auto    propertyItem   = propertyServer->getPropertyItem(propertyId, PROP_ACCESS_USER);
+        if(propertyItem.type == OB_INT_PROPERTY || propertyItem.type == OB_BOOL_PROPERTY) {
+            parsedData = static_cast<int64_t>(value->intValue);
+        }
+        else if(propertyItem.type == OB_FLOAT_PROPERTY) {
+            parsedData = static_cast<int64_t>(value->floatValue);
+        }
+
+        return parsedData;
+    }
+
+    int64_t parseStructurePropertyValue(OBFrameMetadataType type, uint32_t propertyId, const uint8_t *data) {
         int64_t parsedData = 0;
         if(propertyId == OB_STRUCT_COLOR_AE_ROI || propertyId == OB_STRUCT_DEPTH_AE_ROI) {
             auto roi = *(reinterpret_cast<const OBRegionOfInterest *>(data));
@@ -473,17 +495,6 @@ private:
             }
             else if(type == OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE) {
                 parsedData = static_cast<int64_t>(hdrConfig.enable);
-            }
-        }
-        else {
-            auto value          = reinterpret_cast<const OBPropertyValue *>(data);
-            auto propertyServer = device_->getPropertyServer();
-            auto propertyItem   = propertyServer->getPropertyItem(propertyId, PROP_ACCESS_USER);
-            if(propertyItem.type == OB_INT_PROPERTY || propertyItem.type == OB_BOOL_PROPERTY) {
-                parsedData = static_cast<int64_t>(value->intValue);
-            }
-            else if(propertyItem.type == OB_FLOAT_PROPERTY) {
-                parsedData = static_cast<int64_t>(value->floatValue);
             }
         }
 

@@ -119,7 +119,8 @@ DeviceSyncConfiguratorOldProtocol::DeviceSyncConfiguratorOldProtocol(IDevice *ow
       supportedSyncModes_(supportedSyncModes),
       isSyncConfigInit_(false),
       syncModeOldToNewMap_(DefaultSyncModeMapV1ToV2),
-      syncModeNewToOldMap_(DefaultSyncModeMapV2ToV1) {}
+      syncModeNewToOldMap_(DefaultSyncModeMapV2ToV1),
+      isDepthDelaySupported_(false) {}
 
 OBMultiDeviceSyncConfig DeviceSyncConfiguratorOldProtocol::getSyncConfig() {
     if(isSyncConfigInit_) {
@@ -160,7 +161,9 @@ void DeviceSyncConfiguratorOldProtocol::setSyncConfig(const OBMultiDeviceSyncCon
         return;
     }
     OBMultiDeviceSyncConfig v2SyncConfig = deviceSyncConfig;
-    v2SyncConfig.depthDelayUs            = v2SyncConfig.trigger2ImageDelayUs;
+    if(!isDepthDelaySupported_) {
+        v2SyncConfig.depthDelayUs = v2SyncConfig.trigger2ImageDelayUs;
+    }
     if(deviceSyncConfig.syncMode == OB_MULTI_DEVICE_SYNC_MODE_PRIMARY) {
         v2SyncConfig.triggerOutEnable  = true;
         v2SyncConfig.triggerOutDelayUs = 0;
@@ -207,5 +210,9 @@ void DeviceSyncConfiguratorOldProtocol::updateModeAliasMap(const std::map<OBSync
     syncModeOldToNewMap_ = oldToNewMap;
     syncModeNewToOldMap_ = newToOldMap;
 }
+
+void DeviceSyncConfiguratorOldProtocol::enableDepthDelaySupport(bool enable) {
+    isDepthDelaySupported_ = enable;
+};
 
 }  // namespace libobsensor

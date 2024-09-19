@@ -142,7 +142,6 @@ const std::string &HDRMerge::getConfigSchema() const {
 
 void HDRMerge::reset() {
     frames_.clear();
-    depth_merged_frame_.reset();
 }
 
 std::shared_ptr<Frame> HDRMerge::process(std::shared_ptr<const Frame> frame) {
@@ -174,16 +173,25 @@ std::shared_ptr<Frame> HDRMerge::process(std::shared_ptr<const Frame> frame) {
         auto    depth_seq_id = depthFrame->getMetadataValue(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX);
         int64_t frameSize    = static_cast<int64_t>(frames_.size());
         if(frameSize == depth_seq_id) {
-            frames_[depth_seq_id] = depthFrame;
+            frames_[depth_seq_id] = frame;
         }
 
         discardDepthMergedFrameIfNeeded(depthFrame);
 
         if(frames_.size() >= 2) {
-            auto frame_0             = frames_[0];
-            auto frame_0_framenumber = frame_0->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
-            auto frame_1             = frames_[1];
-            auto frame_1_framenumber = frame_1->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+            auto frame_0       = frames_[0];
+            auto depth_frame_0 = frame_0;
+            if(frame_0->is<FrameSet>()) {
+                depth_frame_0 = frame_0->as<FrameSet>()->getFrame(OB_FRAME_DEPTH);
+            }
+            auto frame_0_framenumber = depth_frame_0->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
+
+            auto frame_1       = frames_[1];
+            auto depth_frame_1 = frame_1;
+            if(depth_frame_1->is<FrameSet>()) {
+                depth_frame_1 = depth_frame_1->as<FrameSet>()->getFrame(OB_FRAME_DEPTH);
+            }
+            auto frame_1_framenumber = depth_frame_1->getMetadataValue(OB_FRAME_METADATA_TYPE_FRAME_NUMBER);
             frames_.clear();
 
             // two adjancent frames
@@ -194,24 +202,18 @@ std::shared_ptr<Frame> HDRMerge::process(std::shared_ptr<const Frame> frame) {
                 }
             }
         }
-
-        if(depth_merged_frame_) {
-            if(frame->is<FrameSet>()) {
-                auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
-                auto frameSet = outFrame->as<FrameSet>();
-                frameSet->pushFrame(std::move(depth_merged_frame_));
-                return outFrame;
-            }
-            else {
-                return depth_merged_frame_;
-            }
-        }
     }
     catch(...) {
     }
 
-    std::shared_ptr<Frame> outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
-    return outFrame;
+    if(frame->is<FrameSet>() && depth_merged_frame_) {
+        auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
+        auto frameSet = outFrame->as<FrameSet>();
+        frameSet->pushFrame(std::move(depth_merged_frame_));
+        return outFrame;
+    }
+
+    return depth_merged_frame_;
 }
 
 void HDRMerge::discardDepthMergedFrameIfNeeded(std::shared_ptr<const Frame> frame) {

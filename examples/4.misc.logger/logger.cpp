@@ -5,62 +5,51 @@
 #include <iostream>
 #include <functional>
 
+#if 0 // 
 static const std::unordered_map<std::string, OBLogSeverity> logLevelMap = {
     { "DEBUG", OBLogSeverity::OB_LOG_SEVERITY_DEBUG }, { "ERROR", OBLogSeverity::OB_LOG_SEVERITY_ERROR }, { "FATAL", OBLogSeverity::OB_LOG_SEVERITY_FATAL },
     { "INFO", OBLogSeverity::OB_LOG_SEVERITY_INFO },   { "OFF", OBLogSeverity::OB_LOG_SEVERITY_OFF },     { "WARN", OBLogSeverity::OB_LOG_SEVERITY_WARN },
     { "debug", OBLogSeverity::OB_LOG_SEVERITY_DEBUG }, { "error", OBLogSeverity::OB_LOG_SEVERITY_ERROR }, { "fatal", OBLogSeverity::OB_LOG_SEVERITY_FATAL },
     { "info", OBLogSeverity::OB_LOG_SEVERITY_INFO },   { "off", OBLogSeverity::OB_LOG_SEVERITY_OFF },     { "warn", OBLogSeverity::OB_LOG_SEVERITY_WARN }
 };
+#endif
 
 void printUsage();
 bool handleCommand(std::vector<std::string> &args, const std::shared_ptr<ob::Context> &context);
 int  main() try {
-    // Create a context.
+    // Configure the output level of the log by creating a context
     std::shared_ptr<ob::Context> context = std::make_shared<ob::Context>();
 
-    // Configure the log level output to the terminal
-    context->setLoggerToConsole(OBLogSeverity::OB_LOG_SEVERITY_ERROR);
-    // Configure the log level and path output to the file
-    context->setLoggerToFile(OBLogSeverity::OB_LOG_SEVERITY_DEBUG, "");
-    // Registering a log callback, The first parameter sets the level of callback reception
-    context->setLoggerToCallback(OBLogSeverity::OB_LOG_SEVERITY_DEBUG, [](OBLogSeverity severity, const char *logMsg) {
-        // You can print as you want. For example, print logs with a level higher than ERROR
-        if(severity >= OBLogSeverity::OB_LOG_SEVERITY_DEBUG) {
-            std::cout << "[Callback Message]" << logMsg;
-        }
+    // Configure the log level output to the terminal.
+    context->setLoggerToConsole(OB_LOG_SEVERITY_ERROR);
+
+    // Configure the log level and path output to the file.
+    context->setLoggerToFile(OB_LOG_SEVERITY_DEBUG, "");
+
+    // Register a log callback, you can get log information in the callback.
+    context->setLoggerToCallback(OB_LOG_SEVERITY_DEBUG, [](OBLogSeverity severity, const char *logMsg) {
+        std::cout << "[CallbackMessage][Level:" << severity << "]" << logMsg;
     });
 
-    // Start working with the SDK interface
-    std::shared_ptr<ob::Pipeline> pipe   = std::make_shared<ob::Pipeline>();
+    // Configure which streams to enable or disable for the Pipeline by creating a Config
     std::shared_ptr<ob::Config>   config = std::make_shared<ob::Config>();
     config->enableVideoStream(OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_Y16);
     config->enableVideoStream(OB_STREAM_COLOR, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_RGB);
 
+    // Create a pipeline with default device to manage stream
+    std::shared_ptr<ob::Pipeline> pipe   = std::make_shared<ob::Pipeline>();
+
+    // Start the pipeline with config
     pipe->start(config);
 
-    std::cout << "Current terminal log level:[ERROR]" << std::endl;
-    std::cout << "Current file log level:[DEBUG], Log file will be created at: \"./Log/OrbbecSDK.log\"" << std::endl;
-    std::cout << "Please input \"help\" or \"h\" for usage instructions." << std::endl;
-    while(true) {
-        std::cout << "Enter command: ";
-        std::string cmd;
-        std::getline(std::cin, cmd);
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 
-        std::istringstream       iss(cmd);
-        std::string              arg;
-        std::vector<std::string> args;
-
-        while(iss >> arg) {
-            args.push_back(arg);
-        }
-
-        if(!handleCommand(args, context)) {
-            break;
-        }
-    }
-
+    // Stop the Pipeline, no frame data will be generated
     pipe->stop();
 
+	context->setLoggerToCallback(OB_LOG_SEVERITY_OFF, nullptr);
+	std::cout << "\nThe sample has ended normally. Press any key to exit.";
+    ob_smpl::waitForKeyPressed();
     return 0;
 }
 catch(ob::Error &e) {
@@ -70,6 +59,8 @@ catch(ob::Error &e) {
     exit(EXIT_FAILURE);
 }
 
+
+#if 0
 void printUsage() {
     std::cout << "-----------------------------------------------------------------------------" << std::endl;
     std::cout << "Usage: <output_mode> <log_level> [output_path]" << std::endl;
@@ -153,3 +144,4 @@ bool handleCommand(std::vector<std::string> &args, const std::shared_ptr<ob::Con
     }
     return true;  // Continue the loop
 }
+#endif

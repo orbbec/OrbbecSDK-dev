@@ -113,19 +113,7 @@ HANDLE_EXCEPTIONS_NO_RETURN(frame)
 void ob_frame_copy_info(const ob_frame *src_frame, ob_frame *dst_frame, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(src_frame);
     VALIDATE_NOT_NULL(dst_frame);
-    FILE    *fp        = fopen("frame_depth_before.raw", "wb");
-    uint8_t *data      = const_cast<uint8_t *>(dst_frame->frame->getData());
-    size_t   data_size = dst_frame->frame->getDataSize();
-    fwrite(data, data_size, 1, fp);
-    fclose(fp);
-
     dst_frame->frame->copyInfoFromOther(src_frame->frame);
-
-    FILE    *fp2        = fopen("frame_depth_after.raw", "wb");
-    uint8_t *data2      = const_cast<uint8_t *>(dst_frame->frame->getData());
-    size_t   data_size2 = dst_frame->frame->getDataSize();
-    fwrite(data2, data_size2, 1, fp2);
-    fclose(fp2);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(src_frame, dst_frame)
 

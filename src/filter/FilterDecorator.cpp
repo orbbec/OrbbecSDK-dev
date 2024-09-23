@@ -205,6 +205,22 @@ double FilterExtension::getConfigValue(const std::string &configName) {
     return it->second;
 }
 
+OBFilterConfigSchemaItem FilterExtension::getConfigSchemaItem(const std::string &name) {
+    auto                     schemaVec  = getConfigSchemaVec();
+    OBFilterConfigSchemaItem resultItem = {};
+    if(schemaVec.empty()) {
+        return resultItem;
+    }
+
+    for(auto item: schemaVec) {
+        if(item.name == name) {
+            resultItem = item;
+        }
+    }
+
+    return resultItem;
+}
+
 std::string filterConfigValueToString(double value, OBFilterConfigValueType valueType) {
     if(valueType == OB_FILTER_CONFIG_VALUE_TYPE_INT) {
         return std::to_string(static_cast<int>(value));

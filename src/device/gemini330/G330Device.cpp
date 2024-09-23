@@ -26,6 +26,7 @@
 #include "property/PropertyServer.hpp"
 #include "property/CommonPropertyAccessors.hpp"
 #include "property/FilterPropertyAccessors.hpp"
+#include "property/PrivateFilterPropertyAccessors.hpp"
 #include "monitor/DeviceMonitor.hpp"
 #include "syncconfig/DeviceSyncConfigurator.hpp"
 
@@ -902,6 +903,11 @@ void G330Device::initProperties() {
     propertyServer->registerProperty(OB_PROP_SDK_DISPARITY_TO_DEPTH_BOOL, "rw", "rw", d2dPropertyAccessor);  // sw
     propertyServer->registerProperty(OB_PROP_DEPTH_UNIT_FLEXIBLE_ADJUSTMENT_FLOAT, "rw", "rw", d2dPropertyAccessor);
 
+    auto privatePropertyAccessor = std::make_shared<PrivateFilterPropertyAccessor>(this);
+    propertyServer->registerProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, "rw", "rw", privatePropertyAccessor);
+    propertyServer->registerProperty(OB_PROP_DEPTH_MAX_DIFF_INT, "rw", "rw", privatePropertyAccessor);
+    propertyServer->registerProperty(OB_PROP_DEPTH_MAX_SPECKLE_SIZE_INT, "rw", "rw", privatePropertyAccessor);
+
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
         auto  platform       = Platform::getInstance();
@@ -1062,14 +1068,6 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
         if(filterFactory->isFilterCreatorExists("SequenceIdFilter")) {
             auto sequenceIdFilter = filterFactory->createFilter("SequenceIdFilter");
             depthFilterList.push_back(sequenceIdFilter);
-        }
-
-        if(filterFactory->isFilterCreatorExists("NoiseRemovalFilter")) {
-            auto noiseFilter = filterFactory->createFilter("NoiseRemovalFilter");
-            // max_size, min_diff, width, height
-            std::vector<std::string> params = { "80", "256", "848", "480" };
-            noiseFilter->updateConfig(params);
-            depthFilterList.push_back(noiseFilter);
         }
 
         if(filterFactory->isFilterCreatorExists("SpatialAdvancedFilter")) {

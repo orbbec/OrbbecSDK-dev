@@ -117,7 +117,7 @@ std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uin
 }
 
 std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<const IDeviceEnumInfo> &info) {
-    LOG_DEBUG("DeviceManager  createDevice...");
+    LOG_DEBUG("DeviceManager createDevice...");
 
     // check if the device has been created
     {
@@ -129,6 +129,8 @@ std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<const
                     createdDevices_.erase(iter);
                     break;
                 }
+                LOG_DEBUG("Device has already been created, return existing device! Name: {0}, PID: 0x{1:04x}, SN/ID: {2}", info->getName(), info->getPid(),
+                          info->getDeviceSn());
                 return iter->second.lock();
             }
         }

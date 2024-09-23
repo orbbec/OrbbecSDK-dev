@@ -60,7 +60,8 @@ void Astra2Disp2DepthPropertyAccessor::setPropertyValue(uint32_t propertyId, con
         // update depth unit
         auto sensor = owner_->getComponentT<DisparityBasedSensor>(OB_DEV_COMPONENT_DEPTH_SENSOR, false);
         if(sensor) {
-            sensor->setDepthUnit(value.floatValue);
+            auto depthUnit = utils::depthPrecisionLevelToUnit(static_cast<OBDepthPrecisionLevel>(value.intValue));
+            sensor->setDepthUnit(depthUnit);
         }
 
     } break;
@@ -128,6 +129,32 @@ void Astra2Disp2DepthPropertyAccessor::markOutputDisparityFrame(bool enable) {
     if(sensor) {
         sensor->markOutputDisparityFrame(enable);
     }
+}
+
+void Astra2Disp2DepthPropertyAccessor::setStructureData(uint32_t propertyId, const std::vector<uint8_t> &data) {
+    utils::unusedVar(data);
+    if(propertyId == OB_STRUCT_DEPTH_PRECISION_SUPPORT_LIST) {
+        throw invalid_value_exception("OB_STRUCT_DEPTH_PRECISION_SUPPORT_LIST is read-only");
+    }
+    throw invalid_value_exception(utils::string::to_string() << "unsupported property id:" << propertyId);
+}
+
+const std::vector<uint8_t> &Astra2Disp2DepthPropertyAccessor::getStructureData(uint32_t propertyId) {
+    if(propertyId == OB_STRUCT_DEPTH_PRECISION_SUPPORT_LIST) {
+        if(hwDisparityToDepthEnabled_) {
+            static std::vector<uint16_t> hwD2DSupportList = { OB_PRECISION_0MM8, OB_PRECISION_0MM4, OB_PRECISION_0MM1 };
+            static std::vector<uint8_t>  hwD2DSupportListBytes(reinterpret_cast<uint8_t *>(hwD2DSupportList.data()),
+                                                               reinterpret_cast<uint8_t *>(hwD2DSupportList.data()) + hwD2DSupportList.size() * 2);
+            return hwD2DSupportListBytes;
+        }
+        else {
+            static std::vector<uint16_t> swD2DSupportList = { OB_PRECISION_1MM, OB_PRECISION_0MM8, OB_PRECISION_0MM4, OB_PRECISION_0MM2, OB_PRECISION_0MM1 };
+            static std::vector<uint8_t>  swD2DSupportListBytes(reinterpret_cast<uint8_t *>(swD2DSupportList.data()),
+                                                               reinterpret_cast<uint8_t *>(swD2DSupportList.data()) + swD2DSupportList.size() * 2);
+            return swD2DSupportListBytes;
+        }
+    }
+    throw invalid_value_exception(utils::string::to_string() << "unsupported property id:" << propertyId);
 }
 
 Astra2TempPropertyAccessor::Astra2TempPropertyAccessor(IDevice *owner) : owner_(owner) {}

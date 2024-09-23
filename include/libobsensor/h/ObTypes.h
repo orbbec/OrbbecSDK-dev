@@ -685,7 +685,7 @@ typedef enum {
     OB_PRECISION_UNKNOWN,
     OB_PRECISION_COUNT,
 } OBDepthPrecisionLevel,
-    ob_depth_precision_level, OB_DEPTH_PRECISION_LEVEL;
+    ob_depth_precision_level, OB_DEPTH_PRECISION_LEVEL, OBDepthUnit, ob_depth_unit;
 
 /**
  * @brief disparity parameters for disparity based camera

@@ -213,6 +213,6 @@ void DeviceSyncConfiguratorOldProtocol::updateModeAliasMap(const std::map<OBSync
 
 void DeviceSyncConfiguratorOldProtocol::enableDepthDelaySupport(bool enable) {
     isDepthDelaySupported_ = enable;
-};
+}
 
 }  // namespace libobsensor

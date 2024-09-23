@@ -22,7 +22,6 @@ private:
     IDevice *owner_;
 
     bool hwDisparityToDepthEnabled_;
-    bool swDisparityToDepthEnabled_;
 };
 
 }  // namespace libobsensor

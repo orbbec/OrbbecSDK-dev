@@ -937,6 +937,51 @@ public:
     ~DisparityTransform() noexcept = default;
 };
 
+class FilterList {
+private:
+    ob_filter_list_t* impl_;
+
+public:
+    explicit FilterList(ob_filter_list_t *impl) : impl_(impl) {}
+
+    ~FilterList() noexcept {
+        ob_error *error = nullptr;
+        ob_delete_filter_list(impl_, &error);
+        Error::handle(&error, false);
+    }
+
+    /**
+     * @brief Get the number of filters
+     *
+     * @return uint32_t The number of filters
+     */
+    uint32_t getCount() const {
+        ob_error *error = nullptr;
+        auto      count = ob_filter_list_get_count(impl_, &error);
+        Error::handle(&error);
+        return count;
+    }
+
+    /**
+     * @brief Get the Filter object at the specified index
+     *
+     * @param index The filter index. The range is [0, count-1]. If the index exceeds the range, an exception will be thrown.
+     * @return std::shared_ptr<Filter> The filter object.
+     */
+    std::shared_ptr<Filter> getFilter(uint32_t index) {
+        ob_error *error  = nullptr;
+        auto      filter = ob_filter_list_get_filter(impl_, index, &error);
+        Error::handle(&error);
+        return std::make_shared<Filter>(filter);
+    }
+
+public:
+    // The following interfaces are deprecated and are retained here for compatibility purposes.
+    uint32_t count() const {
+        return getCount();
+    }
+};
+
 /**
  * @brief Define the Filter type map
  */

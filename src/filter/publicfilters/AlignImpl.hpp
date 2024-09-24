@@ -57,7 +57,7 @@ public:
      *
      */
     float initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion depth_disto, OBCameraIntrinsic rgb_intrin, OBCameraDistortion rgb_disto,
-                    OBExtrinsic depth_to_rgb, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy, bool auto_scale_down);
+                    OBExtrinsic depth_to_rgb, float depth_unit_mm, bool add_target_distortion, bool gap_fill_copy);
 
     /**
      * @brief Get depth unit in millimeter
@@ -66,14 +66,6 @@ public:
      */
     float getDepthUnit() {
         return depth_unit_mm_;
-    };
-
-    /**
-     * @brief Get valid color intrinsics of current implementation
-     * @return intrinsics
-    */
-    OBCameraIntrinsic getRGBIntrinsic(){
-        return rgb_intric_;
     };
 
     /**

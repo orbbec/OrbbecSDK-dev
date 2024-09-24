@@ -309,7 +309,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     libobsensor::AlignImpl *impl = new libobsensor::AlignImpl();
-    float s = impl->initialize(depth_intr, depth_disto, color_intr, color_disto, transform, 1, true, true, true);
+    impl->initialize(depth_intr, depth_disto, color_intr, color_disto, transform, 1, true, true);
 
     ob_error *err = nullptr;
 
@@ -325,9 +325,6 @@ int main(int argc, char *argv[]) {
     fread(depth_data, depth_size, 1, depth_file);
     for(int i = 0; i < depth_intr.width * depth_intr.height; i++) {
         depth_data[i] = _byteswap_ushort(depth_data[i]);
-    }
-    if (s > 1) {
-        color_intr = impl->getRGBIntrinsic();
     }
 
     uint32_t  aligned_depth_size = color_intr.width * color_intr.height * sizeof(uint16_t);

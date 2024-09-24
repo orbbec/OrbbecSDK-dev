@@ -24,8 +24,8 @@ Align::Align() : align_to_stream_(OB_STREAM_COLOR) {
     memset(&from_to_extrin_, 0, sizeof(OBTransform));
     depth_unit_mm_         = 1.f;
     add_target_distortion_ = true;
-    gap_fill_copy_         = false;
-    auto_scale_down_       = false;
+    gap_fill_copy_         = true;
+    auto_scale_down_       = true;
 }
 
 Align::~Align() noexcept {
@@ -146,6 +146,7 @@ std::shared_ptr<Frame> Align::process(std::shared_ptr<const Frame> frame) {
         auto to_profile        = to->getStreamProfile()->as<VideoStreamProfile>();
         auto alignProfile      = createAlignedProfile(original_profile, to_profile);
 
+        //FrameFactory::createFrameFromStreamProfile
         aligned_frame = FrameFactory::createVideoFrame(depth->getType(), depth->getFormat(), alignProfile->getWidth(), alignProfile->getHeight(), 0);
         if(aligned_frame) {
             aligned_frame->copyInfoFromOther(depth);
@@ -196,7 +197,7 @@ void Align::alignFrames(std::shared_ptr<Frame> aligned, const std::shared_ptr<co
         memset(alignedData, 0, aligned->getDataSize());
         // check if already initialized inside
         auto depth_other_extrin = toProfile->getExtrinsicTo(fromProfile);
-        pImpl->initialize(to_intrin_, to_disto_, from_intrin_, from_disto_, depth_other_extrin, depth_unit_mm_, add_target_distortion_, gap_fill_copy_, false);
+        pImpl->initialize(to_intrin_, to_disto_, from_intrin_, from_disto_, depth_other_extrin, depth_unit_mm_, add_target_distortion_, gap_fill_copy_);
         auto depth = reinterpret_cast<const uint16_t *>(to->getData());
         auto in    = const_cast<const void *>((const void *)from->getData());
         auto out   = const_cast<void *>((void *)aligned->getData());
@@ -206,28 +207,67 @@ void Align::alignFrames(std::shared_ptr<Frame> aligned, const std::shared_ptr<co
     else {
         uint16_t *alignedData = reinterpret_cast<uint16_t *>(const_cast<void *>((void *)aligned->getData()));
         memset(alignedData, 0, aligned->getDataSize());
-        float s = pImpl->initialize(from_intrin_, from_disto_, to_intrin_, to_disto_, from_to_extrin_, depth_unit_mm_, add_target_distortion_, gap_fill_copy_, auto_scale_down_);
-        if (s > 1) {
-            /// TODO
-            OBCameraIntrinsic actual = pImpl->getRGBIntrinsic();
-        }
-
+        pImpl->initialize(from_intrin_, from_disto_, to_intrin_, to_disto_, from_to_extrin_, depth_unit_mm_, add_target_distortion_, gap_fill_copy_);
         auto in = reinterpret_cast<const uint16_t *>(from->getData());
-
         pImpl->D2C(in, fromVideoProfile->getWidth(), fromVideoProfile->getHeight(), alignedData, toVideoProfile->getWidth(), toVideoProfile->getHeight());
     }
 }
 
+void estimateFOV(OBCameraIntrinsic intrin, float* fovs) {
+        fovs[0] = atan2f(intrin.cx, intrin.fx) + atan2f(intrin.width - intrin.cx - 1.f, intrin.fx);
+        fovs[1] = atan2f(intrin.cy, intrin.fy) + atan2f(intrin.height - intrin.cy - 1.f, intrin.fy);
+}
+
 std::shared_ptr<VideoStreamProfile> Align::createAlignedProfile(std::shared_ptr<const VideoStreamProfile> original_profile,
                                                                 std::shared_ptr<const VideoStreamProfile> to_profile) {
-
     if(align_streams_.first != original_profile.get() || align_streams_.second != to_profile.get()) {
+        float ori_fov[2], to_fov[2];
+        estimateFOV(original_profile->getIntrinsic(), ori_fov);
+        estimateFOV(to_profile->getIntrinsic(), to_fov);
+
+        float ori_pix_per_ang[2] = { original_profile->getWidth() / ori_fov[0], original_profile->getHeight() / ori_fov[1] },
+              to_pix_per_ang[2]  = { to_profile->getWidth() / to_fov[0], to_profile->getHeight() / to_fov[1] };
+
+        if (align_to_stream_ == OBStreamType::OB_STREAM_DEPTH) {
+            gap_fill_copy_ = true;
+        }
+        else {
+			if((ori_pix_per_ang[0] / to_pix_per_ang[0] > 0.5f) && (ori_pix_per_ang[1] / to_pix_per_ang[1] > 0.5f)) {
+				gap_fill_copy_ = true;
+			}
+			else {
+				gap_fill_copy_ = false;
+			}
+        }
+
         auto aligned_profile = original_profile->clone()->as<VideoStreamProfile>();
         aligned_profile->setWidth(to_profile->getWidth());
         aligned_profile->setHeight(to_profile->getHeight());
         aligned_profile->bindIntrinsic(to_profile->getIntrinsic());
         aligned_profile->bindDistortion(to_profile->getDistortion());
         aligned_profile->bindSameExtrinsicTo(to_profile);
+
+		if(auto_scale_down_) {
+			//float scale_x = to_profile->getIntrinsic().fx / original_profile->getIntrinsic().fx, 
+                //scale_y = to_profile->getIntrinsic().fy / original_profile->getIntrinsic().fy;
+            float scale_x = 1.f * to_profile->getWidth() / original_profile->getWidth(),
+                  scale_y = 1.f * to_profile->getHeight() / original_profile->getHeight();
+			float scale = scale_x > scale_y ? scale_x : scale_y;
+			if(scale > 1.499) {
+				float s = 1.f * int(scale) + 0.5f * (int(scale + 0.5) - int(scale));
+                OBCameraIntrinsic intrin = aligned_profile->getIntrinsic();
+				intrin.fx /= s;
+				intrin.fy /= s;
+				intrin.cx /= s;
+				intrin.cy /= s;
+                intrin.width = static_cast<int16_t>(0.5f + (intrin.width >> 1) / s) << 1;
+                intrin.height = static_cast<int16_t>(0.5f + (intrin.height >> 1) / s) << 1;
+                aligned_profile->setWidth(intrin.width);
+                aligned_profile->setHeight(intrin.height);
+                aligned_profile->bindIntrinsic(intrin);
+			}
+		}
+
         target_stream_profile_ = aligned_profile;
         align_streams_         = { original_profile.get(), to_profile.get() };
     }

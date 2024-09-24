@@ -106,20 +106,6 @@ float AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion d
     memcpy(&rgb_intric_, &rgb_intrin, sizeof(OBCameraIntrinsic));
     memcpy(&rgb_disto_, &rgb_disto, sizeof(OBCameraDistortion));
 
-    if(auto_scale_down) {
-        float scale_x = rgb_intric_.fx / depth_intric_.fx, scale_y = rgb_intrin.fy / depth_intric_.fy;
-        float scale = scale_x > scale_y ? scale_x : scale_y;
-        if(scale > 1.499) {
-            auto_down_scale_ = 1.f * int(scale) + 0.5f * (int(scale + 0.5) - int(scale));
-            rgb_intric_.fx /= auto_down_scale_;
-            rgb_intric_.fy /= auto_down_scale_;
-            rgb_intric_.cx /= auto_down_scale_;
-            rgb_intric_.cy /= auto_down_scale_;
-            rgb_intric_.width  = static_cast<int16_t>(rgb_intric_.width / auto_down_scale_);
-            rgb_intric_.height = static_cast<int16_t>(rgb_intric_.height / auto_down_scale_);
-        }
-    }
-
     memcpy(&transform_, &extrin, sizeof(OBExtrinsic));
     add_target_distortion_ = add_target_distortion;
     // since undistorted depth (whether d2c or c2d) is necessory ...

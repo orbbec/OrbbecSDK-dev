@@ -309,7 +309,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     libobsensor::AlignImpl *impl = new libobsensor::AlignImpl();
-    float s = impl->initialize(depth_intr, depth_disto, color_intr, color_disto, transform, 1, true, true, true);
+    impl->initialize(depth_intr, depth_disto, color_intr, color_disto, transform, 1, true, true);
 
     ob_error *err = nullptr;
 

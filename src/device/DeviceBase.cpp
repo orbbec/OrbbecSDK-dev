@@ -4,6 +4,7 @@
 #include "exception/ObException.hpp"
 #include "utils/Utils.hpp"
 #include "property/InternalProperty.hpp"
+#include "firmwareupdater/FirmwareUpdater.hpp"
 #include <json/json.h>
 #include "InternalTypes.hpp"
 
@@ -400,10 +401,15 @@ int DeviceBase::getFirmwareVersionInt() {
 
 void DeviceBase::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) {
     // todo: implement update firmware logic
-    utils::unusedVar(firmware);
-    utils::unusedVar(updateCallback);
-    utils::unusedVar(async);
-    throw invalid_value_exception("Do not support update firmware yet!");
+    // utils::unusedVar(firmware);
+    // utils::unusedVar(updateCallback);
+    // utils::unusedVar(async);
+    // throw invalid_value_exception("Do not support update firmware yet!");
+
+    // todo: close stream
+
+    auto updater = getComponentT<FirmwareUpdater>(OB_DEV_COMPONENT_FIRMWARE_UPDATER, true);
+    updater->updateFirmwareFromRawDataExt(firmware.data(), firmware.size(), updateCallback, async, nullptr);
 }
 
 std::map<std::string, std::string> DeviceBase::parseExtensionInfo(std::string extensionInfo) {

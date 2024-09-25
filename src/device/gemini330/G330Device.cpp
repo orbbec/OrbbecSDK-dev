@@ -105,6 +105,12 @@ void G330Device::init() {
         return factory;
     });
 
+    registerComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY, [this]() {
+        std::shared_ptr<FirmwareUpdater> firmwareUpdater;
+        TRY_EXECUTE({ firmwareUpdater = std::make_shared<FirmwareUpdater>(this); })
+        return firmwareUpdater;
+    });
+
     registerComponent(OB_DEV_COMPONENT_COLOR_FRAME_METADATA_CONTAINER, [this]() {
         std::shared_ptr<FrameMetadataParserContainer> container;
         auto                                          envConfig                = EnvConfig::getInstance();

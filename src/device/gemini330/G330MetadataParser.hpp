@@ -385,7 +385,7 @@ class G330MetadataParserBase : public IFrameMetadataParser {
 public:
     G330MetadataParserBase(IDevice *device, OBFrameMetadataType type, FrameMetadataModifier modifier,
                            const std::multimap<OBPropertyID, std::vector<OBFrameMetadataType>> metadataTypeIdMap)
-        : device_(device), metadataType_(type), data_(0), modifier_(modifier) {
+        : device_(device), metadataType_(type), data_(0), modifier_(modifier), initPropertyValue_(true) {
         for(const auto &item: metadataTypeIdMap) {
             const std::vector<OBFrameMetadataType> &types = item.second;
             if(std::find(types.begin(), types.end(), type) != types.end()) {
@@ -421,7 +421,7 @@ public:
         }
 
         // first time get value,should sync property value
-        if(data_ == 0) {
+        if(initPropertyValue_) {
             PropertyAccessType accessType     = PROP_ACCESS_USER;
             auto               propertyServer = device_->getPropertyServer();
             auto               propertyItem   = propertyServer->getPropertyItem(propertyId_, accessType);
@@ -441,6 +441,7 @@ public:
                 }
                 data_ = parsePropertyValue(static_cast<uint32_t>(propertyId_), (const uint8_t *)valueData);
             }
+            initPropertyValue_ = false;
         }
 
         if(modifier_) {
@@ -511,6 +512,8 @@ private:
     int64_t data_;
 
     FrameMetadataModifier modifier_;
+
+    std::atomic<bool> initPropertyValue_;
 };
 
 class G330ColorMetadataParser : public G330MetadataParserBase {

@@ -23,14 +23,12 @@ public:
 
     static void onDeviceFwUpdateCallback(ob_fw_update_state state, const char *message, uint8_t percent, void *user_data);
 
-    void updateFirmwareExt(const std::string &path, DeviceFwUpdateCallback callback, bool async, void *user_data);
-    void updateFirmwareFromRawDataExt(const uint8_t *firmwareData, uint32_t firmwareSize, DeviceFwUpdateCallback callback, bool async, void *userData);
+    void updateFirmwareExt(const std::string &path, DeviceFwUpdateCallback callback, bool async);
+    void updateFirmwareFromRawDataExt(const uint8_t *firmwareData, uint32_t firmwareSize, DeviceFwUpdateCallback callback, bool async);
 
 private:
-    static void setDeviceFwUpdateCallback(DeviceFwUpdateCallback callback);
-    static DeviceFwUpdateCallback& getDeviceFwUpdateCallback();
-
     std::shared_ptr<FirmwareUpdateContext> ctx_;
+    DeviceFwUpdateCallback deviceFwUpdateCallback_;
 };
 
 }  // namespace libobsensor

@@ -937,14 +937,14 @@ public:
     ~DisparityTransform() noexcept = default;
 };
 
-class FilterList {
+class OBFilterList {
 private:
     ob_filter_list_t* impl_;
 
 public:
-    explicit FilterList(ob_filter_list_t *impl) : impl_(impl) {}
+    explicit OBFilterList(ob_filter_list_t *impl) : impl_(impl) {}
 
-    ~FilterList() noexcept {
+    ~OBFilterList() noexcept {
         ob_error *error = nullptr;
         ob_delete_filter_list(impl_, &error);
         Error::handle(&error, false);

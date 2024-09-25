@@ -105,7 +105,7 @@ void G330Device::init() {
         return factory;
     });
 
-    registerComponent(OB_DEV_COMPONENT_FRAME_PROCESSOR_FACTORY, [this]() {
+    registerComponent(OB_DEV_COMPONENT_FIRMWARE_UPDATER, [this]() {
         std::shared_ptr<FirmwareUpdater> firmwareUpdater;
         TRY_EXECUTE({ firmwareUpdater = std::make_shared<FirmwareUpdater>(this); })
         return firmwareUpdater;

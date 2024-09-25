@@ -401,15 +401,15 @@ int DeviceBase::getFirmwareVersionInt() {
 
 void DeviceBase::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) {
     // todo: implement update firmware logic
-    // utils::unusedVar(firmware);
-    // utils::unusedVar(updateCallback);
-    // utils::unusedVar(async);
+     //utils::unusedVar(firmware);
+     //utils::unusedVar(updateCallback);
+     //utils::unusedVar(async);
     // throw invalid_value_exception("Do not support update firmware yet!");
 
     // todo: close stream
 
     auto updater = getComponentT<FirmwareUpdater>(OB_DEV_COMPONENT_FIRMWARE_UPDATER, true);
-    updater->updateFirmwareFromRawDataExt(firmware.data(), firmware.size(), updateCallback, async, nullptr);
+    updater->updateFirmwareFromRawDataExt(firmware.data(), static_cast<uint32_t>(firmware.size()), updateCallback, async, nullptr);
 }
 
 std::map<std::string, std::string> DeviceBase::parseExtensionInfo(std::string extensionInfo) {

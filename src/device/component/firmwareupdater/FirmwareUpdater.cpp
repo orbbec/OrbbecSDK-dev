@@ -68,6 +68,7 @@ DeviceFwUpdateCallback& FirmwareUpdater::getDeviceFwUpdateCallback() {
 
 }
 void FirmwareUpdater::onDeviceFwUpdateCallback(ob_fw_update_state state, const char *message, uint8_t percent, void *user_data) {
+    (void)user_data;
     auto deviceFwUpdateCallback_ = getDeviceFwUpdateCallback();
     if (deviceFwUpdateCallback_) {
         deviceFwUpdateCallback_(state, message, percent);
@@ -81,7 +82,8 @@ void FirmwareUpdater::setDeviceFwUpdateCallback(DeviceFwUpdateCallback callback)
 void FirmwareUpdater::updateFirmwareExt(const std::string& path, DeviceFwUpdateCallback callback, bool async, void *user_data) {
     ob_error  *error  = nullptr;
     ob_device *c_device = new ob_device();
-    c_device->device    = std::make_shared<IDevice>(getOwner());
+    c_device->device    = getOwner()->shared_from_this();
+    setDeviceFwUpdateCallback(callback);
     ctx_->update_firmware_ext(c_device, path.c_str(), onDeviceFwUpdateCallback, async, user_data, &error);
     delete c_device;
     if(error) {
@@ -92,7 +94,7 @@ void FirmwareUpdater::updateFirmwareExt(const std::string& path, DeviceFwUpdateC
 void FirmwareUpdater::updateFirmwareFromRawDataExt(const uint8_t *firmwareData, uint32_t firmwareSize, DeviceFwUpdateCallback callback, bool async, void *userData) {
     ob_error  *error  = nullptr;
     ob_device *c_device = new ob_device();
-    c_device->device    = std::make_shared<IDevice>(getOwner());
+    c_device->device    = getOwner()->shared_from_this();
     setDeviceFwUpdateCallback(callback);
     ctx_->update_firmware_from_raw_data_ext(c_device, firmwareData, firmwareSize, onDeviceFwUpdateCallback, async, userData, &error);
     delete c_device;

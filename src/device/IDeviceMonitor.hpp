@@ -24,6 +24,6 @@ public:
     virtual void resumeHeartbeat()  = 0;
 
     // for debug and vendor specific purpose
-    virtual const std::vector<uint8_t> &sendAndReceiveData(const std::vector<uint8_t> &data, uint32_t exceptedRecvLen) = 0;
+    virtual void sendAndReceiveData(const uint8_t *sendData, uint32_t sendDataSize, uint8_t *receiveData, uint32_t *receiveDataSize) = 0;
 };
 }  // namespace libobsensor

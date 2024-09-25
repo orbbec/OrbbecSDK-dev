@@ -184,7 +184,7 @@ std::vector<UsbInterfaceInfo> queryInterfaces(libusb_device *device, libusb_devi
         libusb_config_descriptor *config = nullptr;
         auto                      ret    = libusb_get_config_descriptor(device, c, &config);
         if(LIBUSB_SUCCESS != ret) {
-            LOG_WARN("failed to read USB config descriptor: error={}", ret);
+            LOG_WARN("Failed to read USB config descriptor: error={}", ret);
             continue;
         }
 

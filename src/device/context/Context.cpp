@@ -26,8 +26,6 @@ Context::Context(const std::string &configFilePath) {
     streamIntrinsicsManager_ = StreamIntrinsicsManager::getInstance();
     streamExtrinsicsManager_ = StreamExtrinsicsManager::getInstance();
     filterFactory_           = FilterFactory::getInstance();
-
-    utils::unusedVar(configFilePath);  // todo: use to load config file
 }
 
 Context::~Context() noexcept {}

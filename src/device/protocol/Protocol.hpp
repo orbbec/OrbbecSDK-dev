@@ -254,11 +254,11 @@ GetPropertyReq      *initGetCmdVersionReq(uint8_t *dataBuf, uint32_t propertyId)
 GetStructureDataReqV1_1 *initGetStructureDataReqV1_1(uint8_t *dataBuf, uint32_t propertyId);
 SetStructureDataReqV1_1 *initSetStructureDataReqV1_1(uint8_t *dataBuf, uint32_t propertyId, uint16_t cmdVer, const uint8_t *data, uint16_t dataSize);
 
-StartGetStructureDataListReq  *initStartGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId);
-GetStructureDataListReq       *initGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t dataSize);
-FinishGetStructureDataListReq *initFinishGetStructureDataList(uint8_t *dataBuf, uint32_t propertyId);
-GetPropertyReq                *initGetRawDataLength(uint8_t *dataBuf, uint32_t propertyId, uint32_t cmd);
-ReadRawDataReq                *initReadRawData(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t size);
+StartGetStructureDataListReq  *initStartGetStructureDataListReq(uint8_t *dataBuf, uint32_t propertyId);
+GetStructureDataListReq       *initGetStructureDataListReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t dataSize);
+FinishGetStructureDataListReq *initFinishGetStructureDataListReq(uint8_t *dataBuf, uint32_t propertyId);
+GetPropertyReq                *initGetRawDataLengthReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t cmd);
+ReadRawDataReq                *initReadRawDataReq(uint8_t *dataBuf, uint32_t propertyId, uint32_t offset, uint32_t size);
 
 HeartbeatAndStateReq *initHeartbeatAndStateReq(uint8_t *dataBuf);
 

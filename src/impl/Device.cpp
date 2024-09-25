@@ -387,10 +387,7 @@ void ob_device_send_and_receive_data(ob_device *device, const uint8_t *send_data
     VALIDATE_NOT_NULL(receive_data_size);
 
     auto devMonitor = device->device->getComponentT<libobsensor::IDeviceMonitor>(libobsensor::OB_DEV_COMPONENT_DEVICE_MONITOR);
-    auto dataVec    = std::vector<uint8_t>(send_data, send_data + send_data_size);
-    auto result     = devMonitor->sendAndReceiveData(dataVec, *receive_data_size);
-    std::copy(result.begin(), result.end(), receive_data);
-    *receive_data_size = static_cast<uint32_t>(result.size());
+    devMonitor->sendAndReceiveData(send_data, send_data_size, receive_data, receive_data_size);
 }
 HANDLE_EXCEPTIONS_NO_RETURN(device, send_data, send_data_size, receive_data, receive_data_size)
 

@@ -10,7 +10,7 @@ public:
     DeviceMonitor(IDevice *owner, std::shared_ptr<ISourcePort> sourcePort);
     virtual ~DeviceMonitor() noexcept;
 
-    OBDeviceState getCurrentDeviceState()  const override;
+    OBDeviceState getCurrentDeviceState() const override;
     int           registerStateChangedCallback(DeviceStateChangedCallback callback) override;
     void          unregisterStateChangedCallback(int callbackId) override;
     void          enableHeartbeat() override;
@@ -19,7 +19,7 @@ public:
     void          pauseHeartbeat() override;
     void          resumeHeartbeat() override;
 
-    const std::vector<uint8_t> &sendAndReceiveData(const std::vector<uint8_t> &data, uint32_t exceptedRecvLen) override;
+    void sendAndReceiveData(const uint8_t *sendData, uint32_t sendDataSize, uint8_t *receiveData, uint32_t *receiveDataSize) override;
 
 private:
     void start();
@@ -41,9 +41,8 @@ private:
     std::atomic<bool>       heartbeatAndFetchStateThreadStarted_;
     std::condition_variable heartbeatAndFetchStateThreadCv_;
 
-    std::mutex           recvDataMutex_;
-    std::vector<uint8_t> recvData_;
-    std::vector<uint8_t> sendData_;
+    std::vector<uint8_t> hbRecvData_;
+    std::vector<uint8_t> hbSendData_;
 
     OBDeviceState devState_;
 };

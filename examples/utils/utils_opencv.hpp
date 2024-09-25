@@ -45,6 +45,9 @@ public:
     // set show frame info
     void setShowInfo(bool show);
 
+    // set show frame syncTime info
+    void setShowSyncTimeInfo(bool show);
+
     // set alpha, only valid when arrangeMode_ is ARRANGE_OVERLAY
     void setAlpha(float alpha);
 
@@ -68,12 +71,12 @@ private:
     void arrangeFrames();
 
     // add info to mat
-    static cv::Mat visualize(std::shared_ptr<const ob::Frame> frame);
+    cv::Mat visualize(std::shared_ptr<const ob::Frame> frame);
 
     // draw info to mat
-    static void drawInfo(cv::Mat &imageMat, std::shared_ptr<const ob::VideoFrame> &frame);
+    void drawInfo(cv::Mat &imageMat, std::shared_ptr<const ob::VideoFrame> &frame);
 
-    static cv::Mat resizeMatKeepAspectRatio(const cv::Mat &mat, int width, int height);
+    cv::Mat resizeMatKeepAspectRatio(const cv::Mat &mat, int width, int height);
 
 private:
     std::string name_;
@@ -82,6 +85,7 @@ private:
     uint32_t    height_;
     bool        closed_;
     bool        showInfo_;
+    bool        showSyncTimeInfo_;
     float       alpha_;
 
     std::thread                                                  processThread_;

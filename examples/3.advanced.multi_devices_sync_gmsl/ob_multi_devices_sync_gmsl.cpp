@@ -1,6 +1,6 @@
 /*
-Notes:
-on the Arm/Linux platform ,this sample requires users to compile with Opencv4.2 or above,otherwise, it cannot be rendered.
+Notes: ob_multi_devices_sync_gmsl.cpp for GMSL device
+on the nvidia arm64 xavier/orin platform ,this example demo sync multi gmsl devices.
 */
 #include <libobsensor/ObSensor.hpp>
 

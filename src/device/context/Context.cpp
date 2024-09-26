@@ -1,6 +1,7 @@
 #include "Context.hpp"
 #include "utils/Utils.hpp"
 #include "devicemanager/DeviceManager.hpp"
+#include "environment/Version.hpp"
 
 #include <mutex>
 
@@ -26,6 +27,13 @@ Context::Context(const std::string &configFilePath) {
     streamIntrinsicsManager_ = StreamIntrinsicsManager::getInstance();
     streamExtrinsicsManager_ = StreamExtrinsicsManager::getInstance();
     filterFactory_           = FilterFactory::getInstance();
+
+    if(configFilePath.empty()) {
+        LOG_DEBUG("Context created! Library version: v{}", OB_LIB_VERSION_STR);
+    }
+    else {
+        LOG_DEBUG("Context created! Library version: v{}, config file path: {}", OB_LIB_VERSION_STR, configFilePath);
+    }
 }
 
 Context::~Context() noexcept {}

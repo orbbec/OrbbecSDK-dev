@@ -414,8 +414,6 @@ void Astra2Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_COLOR_EXPOSURE_INT, "rw", "rw", vendorPropertyAccessor);  // using vendor property accessor
             propertyServer->registerProperty(OB_PROP_LDP_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_LASER_BOOL, "rw", "rw", vendorPropertyAccessor);
-            propertyServer->registerProperty(OB_PROP_MIN_DEPTH_INT, "rw", "rw", vendorPropertyAccessor);  // todo: map to d2d
-            propertyServer->registerProperty(OB_PROP_MAX_DEPTH_INT, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DEPTH_HOLEFILTER_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_LDP_STATUS_BOOL, "r", "r", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_DEPTH_ALIGN_HARDWARE_BOOL, "rw", "rw", vendorPropertyAccessor);
@@ -500,14 +498,6 @@ std::vector<std::shared_ptr<IFilter>> Astra2Device::createRecommendedPostProcess
         if(filterFactory->isFilterCreatorExists("DecimationFilter")) {
             auto decimationFilter = filterFactory->createFilter("DecimationFilter");
             depthFilterList.push_back(decimationFilter);
-        }
-
-        if(filterFactory->isFilterCreatorExists("NoiseRemovalFilter")) {
-            auto noiseFilter = filterFactory->createFilter("NoiseRemovalFilter");
-            // max_size, min_diff, width, height
-            std::vector<std::string> params = { "80", "256", "848", "480" };
-            noiseFilter->updateConfig(params);
-            depthFilterList.push_back(noiseFilter);
         }
 
         if(filterFactory->isFilterCreatorExists("SpatialAdvancedFilter")) {

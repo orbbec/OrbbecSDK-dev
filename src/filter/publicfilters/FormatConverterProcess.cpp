@@ -68,6 +68,13 @@ std::shared_ptr<Frame> FormatConverter::process(std::shared_ptr<const Frame> fra
     int      w          = videoFrame->getWidth();
     int      h          = videoFrame->getHeight();
     uint32_t dataSize   = w * h * 3;
+
+    if(frame->getFormat()== OB_FORMAT_YUYV) {
+        LOG_DEBUG("frame->getFormat()== OB_FORMAT_YUYV");
+        convertType_=FORMAT_YUYV_TO_RGB;
+    }
+    LOG_DEBUG("frmae->getFormat={}, convertType={}", frame->getFormat(), convertType_);
+
     switch(convertType_) {
     case FORMAT_MJPG_TO_I420:
     case FORMAT_MJPG_TO_NV21:

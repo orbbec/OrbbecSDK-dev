@@ -8,36 +8,29 @@ Context, which serves as the entry point to the underlying SDK. It is used to qu
 
 ## Code Overview
 
-1. Create a context object and set the log level to OB_LOG_LEVEL_INFO.
-
-    ```cpp
-    // Configure the output level of the log by creating a context
-    std::shared_ptr<ob::Context> context = std::make_shared<ob::Context>();
-    ```
-
-2. Configure the log level output to the terminal
+1. Configure the log level output to the terminal
 
     ```cpp
     // Configure the log level output to the terminal.
-    context->setLoggerToConsole(OB_LOG_SEVERITY_ERROR);
+    ob::Context::setLoggerToConsole(OB_LOG_SEVERITY_ERROR);
     ```
 
-3. Configure the log level output to the file.
+2. Configure the log level output to the file.
 The default output path settings(Windows/Linux) is `${CWD}/Log/OrbbecSDK.log`, where `${CWD}` represents the Current Working Directory. For Android, the path is `/sdcard/orbbec/Log`.
 
     ```cpp
     // Configure the log level and path output to the file.
     // The first parameter is the log level, and the second parameter is the output path.
     // If the output path is empty, the existing settings will continue to be used (if the existing configuration is also empty, the log will not be output to the file).
-    context->setLoggerToFile(OB_LOG_SEVERITY_DEBUG, "");
+    ob::Context::setLoggerToFile(OB_LOG_SEVERITY_DEBUG, "Log/Custom/");
     ```
 
-4. Registering a log callback
+3. Registering a log callback
 
     ```cpp
     // Register a log callback, you can get log information in the callback.
     // The first parameter is the log level, and the second parameter is the callback function.
-    context->setLoggerToCallback(OB_LOG_SEVERITY_DEBUG, [](OBLogSeverity severity, const char *logMsg) {
+    ob::Context::setLoggerToCallback(OB_LOG_SEVERITY_DEBUG, [](OBLogSeverity severity, const char *logMsg) {
         std::cout << "[CallbackMessage][Level:" << severity << "]" << logMsg;
     });
     ```

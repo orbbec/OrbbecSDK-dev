@@ -142,6 +142,11 @@ std::vector<std::shared_ptr<IFilter>> G2XLDeviceBase::createRecommendedPostProce
         depthFilterList.push_back(dtFilter);
     }
 
+    if(filterFactory->isFilterCreatorExists("ThresholdFilter")) {
+        auto ThresholdFilter = filterFactory->createFilter("ThresholdFilter");
+        depthFilterList.push_back(ThresholdFilter);
+    }
+
     return depthFilterList;
 }
 

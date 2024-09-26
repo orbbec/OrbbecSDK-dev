@@ -657,6 +657,11 @@ std::vector<std::shared_ptr<IFilter>> G2Device::createRecommendedPostProcessingF
         depthFilterList.push_back(dtFilter);
     }
 
+    if(filterFactory->isFilterCreatorExists("ThresholdFilter")) {
+        auto ThresholdFilter = filterFactory->createFilter("ThresholdFilter");
+        depthFilterList.push_back(ThresholdFilter);
+    }
+
     return depthFilterList;
 }
 

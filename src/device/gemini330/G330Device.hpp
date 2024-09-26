@@ -1,9 +1,6 @@
 #pragma once
 #include "DeviceBase.hpp"
 #include "IDeviceManager.hpp"
-#include "frameprocessor/FrameProcessor.hpp"
-#include "firmwareupdater/FirmwareUpdater.hpp"
-#include "G330FrameMetadataParserContainer.hpp"
 
 #include <map>
 #include <memory>

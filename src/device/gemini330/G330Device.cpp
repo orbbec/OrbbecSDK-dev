@@ -29,6 +29,8 @@
 #include "property/PrivateFilterPropertyAccessors.hpp"
 #include "monitor/DeviceMonitor.hpp"
 #include "syncconfig/DeviceSyncConfigurator.hpp"
+#include "firmwareupdater/FirmwareUpdater.hpp"
+#include "frameprocessor/FrameProcessor.hpp"
 
 #include "G330MetadataParser.hpp"
 #include "G330MetadataTypes.hpp"
@@ -37,6 +39,7 @@
 #include "G330DepthWorkModeManager.hpp"
 #include "G330SensorStreamStrategy.hpp"
 #include "G330PropertyAccessors.hpp"
+#include "G330FrameMetadataParserContainer.hpp"
 
 #include <algorithm>
 

@@ -1,12 +1,13 @@
 #include "DeviceBase.hpp"
 
+#include "utils/Utils.hpp"
 #include "context/Context.hpp"
 #include "exception/ObException.hpp"
-#include "utils/Utils.hpp"
 #include "property/InternalProperty.hpp"
 #include "firmwareupdater/FirmwareUpdater.hpp"
-#include <json/json.h>
 #include "InternalTypes.hpp"
+
+#include <json/json.h>
 
 namespace libobsensor {
 

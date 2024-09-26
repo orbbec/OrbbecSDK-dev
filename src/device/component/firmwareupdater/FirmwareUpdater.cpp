@@ -57,11 +57,13 @@ void FirmwareUpdater::updateFirmwareExt(const std::string &path, DeviceFwUpdateC
 
 void FirmwareUpdater::updateFirmwareFromRawDataExt(const uint8_t *firmwareData, uint32_t firmwareSize, DeviceFwUpdateCallback callback, bool async) {
     deviceFwUpdateCallback_ = callback;
-    auto func               = [this, firmwareData, firmwareSize, async]() {
+    // Prevent asynchronous call data from being destroyed
+    std::vector<uint8_t> data(firmwareData, firmwareData + firmwareSize);
+    auto func               = [this, data, firmwareSize, async]() {
         ob_error *error  = nullptr;
         auto      device = std::make_shared<ob_device>();
         device->device   = getOwner()->shared_from_this();
-        ctx_->update_firmware_from_raw_data_ext(device.get(), firmwareData, firmwareSize, onDeviceFwUpdateCallback, async, this, &error);
+        ctx_->update_firmware_from_raw_data_ext(device.get(), data.data(), firmwareSize, onDeviceFwUpdateCallback, async, this, &error);
         if(error) {
             throw libobsensor_exception(std::string(error->message), error->exception_type);
         }

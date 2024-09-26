@@ -85,10 +85,10 @@
 
         <!-- UVC Backend select on Linux; optional values: Auto, V4L2, LibUVC; Auto is the default
         value -->
-        <LinuxUVCBackend>LibUVC</LinuxUVCBackend>
+        <LinuxUVCBackend>V4L2</LinuxUVCBackend>
 
         <!-- Frame metadata parsing path; optinal values: PayloadHeader, ExtensionHeader-->
-        <FrameMetadataParsingPath>ExtensionHeader</FrameMetadataParsingPath>
+        <FrameMetadataParsingPath>PayloadHeader</FrameMetadataParsingPath>
 
         <!-- The device corresponding to Astra adv is astra+ -->
         <AstraAdv>

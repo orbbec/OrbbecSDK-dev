@@ -8,7 +8,7 @@
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "utils/Utils.hpp"
-#include "timestamp/FrameTimestampCalculator.hpp"
+#include "G330FrameTimestampCalculator.hpp"
 #include "sensor/video/VideoSensor.hpp"
 #include "stream/StreamProfile.hpp"
 
@@ -131,7 +131,7 @@ class G330PayloadHeadMetadataTimestampParser : public G330ScrMetadataParserBase 
 public:
     G330PayloadHeadMetadataTimestampParser(IDevice *device, uint64_t deviceTimeFreq, uint64_t frameTimeFreq)
         : device_(device), deviceTimeFreq_(deviceTimeFreq), frameTimeFreq_(frameTimeFreq) {
-        timestampCalculator_ = std::make_shared<FrameTimestampCalculatorBaseDeviceTime>(device, deviceTimeFreq_, frameTimeFreq_);
+        timestampCalculator_ = std::make_shared<G330FrameTimestampCalculatorBaseDeviceTime>(device, deviceTimeFreq_, frameTimeFreq_);
     }
     virtual ~G330PayloadHeadMetadataTimestampParser() = default;
 
@@ -140,8 +140,10 @@ public:
             LOG_WARN_INTVL("Current metadata does not contain timestamp!");
             return -1;
         }
-        auto standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        auto calculatedTimestamp = timestampCalculator_->calculate(static_cast<uint64_t>(standardUvcMetadata.dwPresentationTime));
+        auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
+        uint64_t transformedTimestamp =
+            ((standardUvcMetadata.dwPresentationTime >> 24) & 0xFF) * 1000000 + ((standardUvcMetadata.dwPresentationTime & 0xFFFFFF) << 8) / 1000;
+        auto calculatedTimestamp = timestampCalculator_->calculate(transformedTimestamp);
 
         return calculatedTimestamp;
     }
@@ -153,7 +155,7 @@ private:
 
     uint64_t frameTimeFreq_;
 
-    std::shared_ptr<FrameTimestampCalculatorBaseDeviceTime> timestampCalculator_;
+    std::shared_ptr<G330FrameTimestampCalculatorBaseDeviceTime> timestampCalculator_;
 };
 
 class G330PayloadHeadMetadataColorSensorTimestampParser : public G330PayloadHeadMetadataTimestampParser {

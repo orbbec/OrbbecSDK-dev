@@ -27,6 +27,7 @@
 #include "property/FilterPropertyAccessors.hpp"
 #include "property/PrivateFilterPropertyAccessors.hpp"
 #include "monitor/DeviceMonitor.hpp"
+#include "firmwareupdater/FirmwareUpdater.hpp"
 
 #include "Astra2AlgParamManager.hpp"
 #include "Astra2StreamProfileFilter.hpp"
@@ -77,6 +78,12 @@ void Astra2Device::init() {
 
     auto deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, 1000);
     registerComponent(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, deviceClockSynchronizer);
+
+    registerComponent(OB_DEV_COMPONENT_FIRMWARE_UPDATER, [this]() {
+        std::shared_ptr<FirmwareUpdater> firmwareUpdater;
+        TRY_EXECUTE({ firmwareUpdater = std::make_shared<FirmwareUpdater>(this); })
+        return firmwareUpdater;
+    });
 }
 
 void Astra2Device::initSensorStreamProfile(std::shared_ptr<ISensor> sensor) {

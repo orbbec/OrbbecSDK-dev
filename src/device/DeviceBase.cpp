@@ -1,11 +1,13 @@
 #include "DeviceBase.hpp"
 
+#include "utils/Utils.hpp"
 #include "context/Context.hpp"
 #include "exception/ObException.hpp"
-#include "utils/Utils.hpp"
 #include "property/InternalProperty.hpp"
-#include <json/json.h>
+#include "firmwareupdater/FirmwareUpdater.hpp"
 #include "InternalTypes.hpp"
+
+#include <json/json.h>
 
 namespace libobsensor {
 
@@ -399,11 +401,12 @@ int DeviceBase::getFirmwareVersionInt() {
 }
 
 void DeviceBase::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) {
-    // todo: implement update firmware logic
-    utils::unusedVar(firmware);
-    utils::unusedVar(updateCallback);
-    utils::unusedVar(async);
-    throw invalid_value_exception("Do not support update firmware yet!");
+    if (hasAnySensorStreamActivated()) {
+        throw libobsensor::wrong_api_call_sequence_exception("Device is streaming, please stop all sensors before updating firmware!");
+    }
+
+    auto updater = getComponentT<FirmwareUpdater>(OB_DEV_COMPONENT_FIRMWARE_UPDATER, true);
+    updater->updateFirmwareFromRawDataExt(firmware.data(), static_cast<uint32_t>(firmware.size()), updateCallback, async);
 }
 
 std::map<std::string, std::string> DeviceBase::parseExtensionInfo(std::string extensionInfo) {

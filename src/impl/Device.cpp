@@ -492,7 +492,7 @@ HANDLE_EXCEPTIONS_AND_RETURN(false, device, info_key)
 const char *ob_device_get_extension_info(const ob_device *device, const char *info_key, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(info_key);
-    auto extensionInfo = device->device->getExtensionInfo(info_key);
+    const auto &extensionInfo = device->device->getExtensionInfo(info_key);
     if(extensionInfo.empty()) {
         return nullptr;
     }

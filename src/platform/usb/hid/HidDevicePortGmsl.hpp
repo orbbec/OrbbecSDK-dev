@@ -43,9 +43,9 @@ private:
 
     std::thread pollThread_;
 
-    int imuRetryReadNum;
-    int imuReadFps;
-    int imuPollInterval;
+    std::atomic_int imuRetryReadNum;
+    std::atomic_int imuReadFps;
+    std::atomic_int imuPollInterval;
 };
 
 }  // namespace libobsensor

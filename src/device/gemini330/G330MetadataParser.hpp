@@ -171,7 +171,7 @@ public:
         auto calculatedTimestamp = G330PayloadHeadMetadataTimestampParser::getValue(metadata, dataSize);
         // get frame offset,unit 100us
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        int16_t frameOffset         = (((standardUvcMetadata.scrSourceClock[1] & 0xF8) >> 3) | (standardUvcMetadata.scrSourceClock[2] << 8)) * 100;
+        int16_t frameOffset         = (((standardUvcMetadata.scrSourceClock[1] & 0xF8) >> 3) | ((standardUvcMetadata.scrSourceClock[2] & 0x7F) << 8)) * 100;
         calculatedTimestamp += frameOffset;
 
         return calculatedTimestamp;
@@ -363,7 +363,7 @@ public:
             return -1;
         }
         auto    standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint8_t hdrSequenceId       = (standardUvcMetadata.scrSourceClock[2] & 0xC0) >> 6;
+        uint8_t hdrSequenceId       = (standardUvcMetadata.scrSourceClock[2] & 0x40) >> 6;
         return static_cast<int64_t>(hdrSequenceId);
     }
 };

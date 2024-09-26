@@ -313,7 +313,15 @@ bool DeviceBase::hasAnySensorStreamActivated() {
 }
 
 std::vector<std::shared_ptr<IFilter>> DeviceBase::createRecommendedPostProcessingFilters(OBSensorType type) {
-    utils::unusedVar(type);
+    if(type == OB_SENSOR_DEPTH) {
+        auto                                  filterFactory = FilterFactory::getInstance();
+        std::vector<std::shared_ptr<IFilter>> depthFilterList;
+        if(filterFactory->isFilterCreatorExists("ThresholdFilter")) {
+            auto ThresholdFilter = filterFactory->createFilter("ThresholdFilter");
+            depthFilterList.push_back(ThresholdFilter);
+        }
+        return depthFilterList;
+    }
     return {};
 }
 
@@ -401,7 +409,7 @@ int DeviceBase::getFirmwareVersionInt() {
 }
 
 void DeviceBase::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) {
-    if (hasAnySensorStreamActivated()) {
+    if(hasAnySensorStreamActivated()) {
         throw libobsensor::wrong_api_call_sequence_exception("Device is streaming, please stop all sensors before updating firmware!");
     }
 

@@ -63,7 +63,7 @@ void PointCloudFilter::updateConfig(std::vector<std::string> &params) {
 const std::string &PointCloudFilter::getConfigSchema() const {
     // csv format: name，type， min，max，step，default，description
     static const std::string schema = "pointFormat, integer, 19, 20, 1, 19, create point type: 19 is OB_FORMAT_POINT; 20 is OB_FORMAT_RGB_POINT\n"
-                                      "coordinateDataScale, float, 0.00001, 100, 0.00001, 1.0, coordinate data scale\n"
+                                      "coordinateDataScale, float, 0.00000001, 100, 0.00001, 1.0, coordinate data scale\n"
                                       "colorDataNormalization, integer, 0, 1, 1, 0, color data normal state\n"
                                       "coordinateSystemType, integer, 0, 1, 1, 1, Coordinate system representation type: 0 is left hand; 1 is right hand\n";
     return schema;

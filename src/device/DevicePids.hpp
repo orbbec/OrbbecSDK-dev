@@ -49,7 +49,7 @@ const std::vector<uint16_t> G330LDevPids = {
 const std::vector<uint16_t> Gemini2DevPids = {
     0x0670,  // Gemini2
     0x0673,  // Gemini2L
-    0x0671,  // Gemini2XL
+    // 0x0671,  // Gemini2XL // remove g2xl support temporarily as it is currently not fully supported
 };
 
 const std::vector<uint16_t> FemtoMegaDevPids = {

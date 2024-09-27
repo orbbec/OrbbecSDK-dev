@@ -8,8 +8,9 @@ FemtoBoltAlgParamManager::FemtoBoltAlgParamManager(IDevice *owner) : TOFDeviceCo
 
 void FemtoBoltAlgParamManager::fixD2CProfile() {
     for(auto item: d2cProfileList_) {
-        item.alignType = ALIGN_D2C_SW;
-        fixedD2CProfile_.emplace_back(item);
+        if(item.alignType == ALIGN_D2C_SW) {
+            fixedD2CProfile_.emplace_back(item);
+        }
     }
 }
 

@@ -35,6 +35,11 @@ std::shared_ptr<ob::Config> createHwD2CAlignConfig(std::shared_ptr<ob::Pipeline>
     auto count              = coloStreamProfiles->getCount();
     for(uint32_t i = 0; i < count; i++) {
         auto colorProfile                      = coloStreamProfiles->getProfile(i);
+        // RGB is used here for easy rendering
+        if (colorProfile->getFormat() != OB_FORMAT_RGB) {
+            continue;
+        }
+
         auto hwD2CSupportedDepthStreamProfiles = pipe->getD2CDepthProfileList(colorProfile, ALIGN_D2C_HW_MODE);
         if(hwD2CSupportedDepthStreamProfiles->count() == 0) {
             continue;

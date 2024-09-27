@@ -8,7 +8,7 @@ FirmwareUpdater::FirmwareUpdater(IDevice *owner) : DeviceComponentBase(owner) {
     std::string moduleLoadPath = EnvConfig::getExtensionsDirectory() + "/firmwareupdater/";
     try {
         ctx_                      = std::make_shared<FirmwareUpdateContext>();
-        ctx_->dylib_              = std::make_shared<dylib>(moduleLoadPath.c_str(), "OrbbecSDKExt");
+        ctx_->dylib_              = std::make_shared<dylib>(moduleLoadPath.c_str(), "firmwareupdater");
         ctx_->update_firmware_ext = ctx_->dylib_->get_function<void(ob_device *, const char *, ob_device_fw_update_callback, bool, void *, ob_error **)>(
             "ob_device_update_firmware_ext");
         ctx_->update_firmware_from_raw_data_ext =
@@ -16,7 +16,7 @@ FirmwareUpdater::FirmwareUpdater(IDevice *owner) : DeviceComponentBase(owner) {
                 "ob_device_update_firmware_from_raw_data_ext");
     }
     catch(const std::exception &e) {
-        LOG_DEBUG("Failed to load OrbbecSDKExt library: {}", e.what());
+        LOG_DEBUG("Failed to load firmwareupdater library: {}", e.what());
     }
 }
 

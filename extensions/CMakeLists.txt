@@ -28,6 +28,8 @@ if(OB_IS_MAIN_PROJECT)
     install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/filters/${OB_CURRENT_OS}/" DESTINATION "bin/extensions/filters")
     install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/frameprocessor/${OB_CURRENT_OS}/" DESTINATION "bin/extensions/frameprocessor")
     install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/depthengine/${OB_CURRENT_OS}/" DESTINATION "bin/extensions/depthengine")
+    install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/firmwareupdater/${OB_CURRENT_OS}/" DESTINATION "bin/extensions/firmwareupdater")
+
     install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/filters/${OB_CURRENT_OS}/" DESTINATION "lib/extensions/filters")
     install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/frameprocessor/${OB_CURRENT_OS}/" DESTINATION "lib/extensions/frameprocessor")
     install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/firmwareupdater/${OB_CURRENT_OS}/" DESTINATION "lib/extensions/firmwareupdater")

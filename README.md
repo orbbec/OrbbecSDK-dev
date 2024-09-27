@@ -58,7 +58,10 @@ Orbbec Viewer is an all-in-one graphical user interface (GUI) built on the Orbbe
 
 API Reference: [Orbbec_SDK_API_Reference.html](https://orbbec.github.io/OrbbecSDK/doc/api/English/index.html)
 
+<!--
+Remove the following as it is not updatded to v2.x.x yet.
 OrbbecSDK C++ API user guide：[orbbecsdk_c++_api_user_guide-v1.0.pdf](docs/api/orbbecsdk_c++_api_user_guide-v1.0.pdf)
+-->
 
 ### 2.3 Building from Source
 

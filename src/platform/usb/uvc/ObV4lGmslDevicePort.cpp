@@ -716,7 +716,14 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
 
                             auto realtime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
                             videoFrame->setSystemTimeStampUsec(realtime);
-                            videoFrame->setNumber(buf.sequence);
+                            // videoFrame->setNumber(buf.sequence);
+                            // for debug use. it is not necessary
+                            // auto metaFrameCount=*(uint32_t *)(uvc_payload_header);
+                            // LOG_DEBUG("read metaFrameCount:{}", metaFrameCount);
+
+                            // fix frame index zero issue.
+                            videoFrame->setNumber(devHandle->loopFrameIndex);
+                            // LOG_DEBUG("set loopFrameIndex:{}", devHandle->loopFrameIndex);
 
                             if(devHandle->profile->getType() == OB_STREAM_COLOR) {
                                 if(colorFrameNum >= 3) {
@@ -730,6 +737,7 @@ void ObV4lGmslDevicePort::captureLoop(std::shared_ptr<V4lDeviceHandleGmsl> devHa
                             else {
                                 devHandle->frameCallback(videoFrame);
                             }
+                            devHandle->loopFrameIndex++;
                         }
                     });
                 }

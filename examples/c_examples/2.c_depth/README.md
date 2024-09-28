@@ -112,4 +112,4 @@ Press 'ESC' key to stop the pipeline and exit the program.
 
 ### Result
 
-![Quick_Start_C](/docs/resource/quick_start_c.jpg)
+![Quick_Start_C](../../../docs/resource/quick_start_c.jpg)

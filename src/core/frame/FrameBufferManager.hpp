@@ -28,7 +28,7 @@ public:
     void     deallocate(uint8_t *ptr, size_t size);
 
 private:
-    uint64_t   maxSize_;
+    uint64_t   maxSizeInByte_;
     uint64_t   usedSize_;
     std::mutex mutex_;
 

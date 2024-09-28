@@ -46,6 +46,8 @@ More devices support will be added in the near future. If you can not find your 
 
 ## 2. Documentation
 
+*The Orbbec SDK documentation is available on [GitHub Pages](https://orbbec.github.io/OrbbecSDK-dev/).*
+
 ### 2.1 Quick Start
 
 If you do not intend to modify the SDK itself, it is recommended to use a pre-compiled distribution. For a comprehensive guide on installing the SDK, setting up your development environment, and developing applications, please consult the [Tutorial](docs/tutorial/installation_and_development_guide.md) section for detailed information.

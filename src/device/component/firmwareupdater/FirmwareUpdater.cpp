@@ -57,6 +57,8 @@ void FirmwareUpdater::updateFirmwareExt(const std::string &path, DeviceFwUpdateC
 
 void FirmwareUpdater::updateFirmwareFromRawDataExt(const uint8_t *firmwareData, uint32_t firmwareSize, DeviceFwUpdateCallback callback, bool async) {
     deviceFwUpdateCallback_ = callback;
+    deviceFwUpdateCallback_(STAT_FILE_TRANSFER, "Ready to update firmware...", 0);
+
     // Prevent asynchronous call data from being destroyed
     std::vector<uint8_t> data(firmwareData, firmwareData + firmwareSize);
     auto func               = [this, data, firmwareSize, async]() {

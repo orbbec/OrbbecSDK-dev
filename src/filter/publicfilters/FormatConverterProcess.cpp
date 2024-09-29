@@ -53,6 +53,8 @@ void FormatConverter::setConversion(OBFormat srcFormat, OBFormat dstFormat) {
     for(auto &item: FORMAT_CONVERT_MAP) {
         if(item.second.first == srcFormat && item.second.second == dstFormat) {
             convertType_ = item.first;
+            currentStreamProfile_.reset();
+            tarStreamProfile_.reset();
             return;
         }
     }
@@ -64,48 +66,34 @@ std::shared_ptr<Frame> FormatConverter::process(std::shared_ptr<const Frame> fra
         return nullptr;
     }
 
-    auto     videoFrame = frame->as<VideoFrame>();
-    int      w          = videoFrame->getWidth();
-    int      h          = videoFrame->getHeight();
-    uint32_t dataSize   = w * h * 3;
+    auto videoFrame = frame->as<VideoFrame>();
+    int  w          = videoFrame->getWidth();
+    int  h          = videoFrame->getHeight();
 
-    if(frame->getFormat()== OB_FORMAT_YUYV) {
-        LOG_DEBUG("frame->getFormat()== OB_FORMAT_YUYV");
-        convertType_=FORMAT_YUYV_TO_RGB;
-    }
-    LOG_DEBUG("frmae->getFormat={}, convertType={}", frame->getFormat(), convertType_);
-
-    switch(convertType_) {
-    case FORMAT_MJPG_TO_I420:
-    case FORMAT_MJPG_TO_NV21:
-    case FORMAT_MJPG_TO_NV12:
-        dataSize = w * h * 3 / 2;
-        break;
-    case FORMAT_MJPG_TO_BGRA:
-    case FORMAT_YUYV_TO_RGBA:
-    case FORMAT_YUYV_TO_BGRA:
-        dataSize = w * h * 4;
-        break;
-    case FORMAT_YUYV_TO_Y16:
-        dataSize = w * h * 2;
-        break;
-    case FORMAT_YUYV_TO_Y8:
-        dataSize = w * h;
-        break;
-    default:
-        break;
+    auto streamprofile = frame->getStreamProfile();
+    if(!currentStreamProfile_ || currentStreamProfile_.get() != streamprofile.get()) {
+        currentStreamProfile_ = streamprofile;
+        tarStreamProfile_     = streamprofile->clone();
+        if(FORMAT_CONVERT_MAP.find(convertType_) == FORMAT_CONVERT_MAP.end()) {
+            auto srcFormat = streamprofile->getFormat();
+            auto dstFormat = OB_FORMAT_RGB;
+            for(auto &item: FORMAT_CONVERT_MAP) {
+                if(item.second.first == srcFormat) {
+                    dstFormat = item.second.second;
+                    tarStreamProfile_->setFormat(dstFormat);
+                    break;
+                }
+            }
+        }
+        else {
+            tarStreamProfile_->setFormat(FORMAT_CONVERT_MAP.at(convertType_).second);
+        }
     }
 
-    auto tarFrame = FrameFactory::createFrame(frame->getType(), frame->getFormat(), dataSize);
+    auto tarFrame = FrameFactory::createFrameFromStreamProfile(tarStreamProfile_);
     if(tarFrame == nullptr) {
         LOG_ERROR_INTVL("Create frame by frame factory failed!");
         return nullptr;
-    }
-
-    auto videoStreamProfile = frame->getStreamProfile();
-    if(!currentStreamProfile_ || currentStreamProfile_.get() != videoStreamProfile.get()) {
-        currentStreamProfile_ = videoStreamProfile;
-        tarStreamProfile_     = videoStreamProfile->clone();
     }
 
     tarFrame->copyInfoFromOther(frame);

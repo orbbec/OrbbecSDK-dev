@@ -76,7 +76,7 @@ examples_dir=$project_dir/examples
 echo "Building examples..."
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release $examples_dir
+cmake -DCMAKE_BUILD_TYPE=Release -DOB_BUILD_LINUX=ON $examples_dir
 make -j4
 
 # copy the executable files to the project directory

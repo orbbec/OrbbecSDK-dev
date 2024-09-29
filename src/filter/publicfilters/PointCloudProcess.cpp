@@ -12,7 +12,7 @@ namespace libobsensor {
 PointCloudFilter::PointCloudFilter()
     : pointFormat_(OB_FORMAT_POINT),
       positionDataScale_(1.0f),
-      coordinateSystemType_(OB_LEFT_HAND_COORDINATE_SYSTEM),
+      coordinateSystemType_(OB_RIGHT_HAND_COORDINATE_SYSTEM),
       isColorDataNormalization_(false),
       tablesDataSize_(0),
       tablesData_(nullptr) {}
@@ -97,17 +97,18 @@ std::shared_ptr<Frame> PointCloudFilter::createDepthPointCloud(std::shared_ptr<c
     }
 
     auto frameSize = depthWidth * depthHeight * 2;
-    if(tablesData_ && tablesDataSize_ != frameSize){
+    if(tablesData_ && tablesDataSize_ != frameSize) {
         tablesData_.reset();
         tablesData_ = nullptr;
     }
 
     if(tablesData_ == nullptr) {
-        tablesDataSize_ = frameSize;
-        tablesData_     = std::shared_ptr<float>(new float[tablesDataSize_], std::default_delete<float[]>());
+        tablesDataSize_                   = frameSize;
+        tablesData_                       = std::shared_ptr<float>(new float[tablesDataSize_], std::default_delete<float[]>());
         OBCameraIntrinsic  depthIntrinsic = depthVideoStreamProfile->getIntrinsic();
         OBCameraDistortion depthDisto     = depthVideoStreamProfile->getDistortion();
-        if(!CoordinateUtil::transformationInitXYTables(depthIntrinsic, depthDisto, reinterpret_cast<float *>(tablesData_.get()), &tablesDataSize_, &xyTables_)) {
+        if(!CoordinateUtil::transformationInitXYTables(depthIntrinsic, depthDisto, reinterpret_cast<float *>(tablesData_.get()), &tablesDataSize_,
+                                                       &xyTables_)) {
             LOG_ERROR_INTVL("Init transformation coordinate tables failed!");
             tablesData_.reset();
             return nullptr;
@@ -219,21 +220,21 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
     }
 
     auto frameSize = dstWidth * dstHeight * 2;
-    if(tablesData_ && tablesDataSize_ != frameSize){
+    if(tablesData_ && tablesDataSize_ != frameSize) {
         tablesData_.reset();
         tablesData_ = nullptr;
     }
 
     if(tablesData_ == nullptr) {
         tablesDataSize_ = frameSize;
-        tablesData_         = std::shared_ptr<float>(new float[tablesDataSize_], std::default_delete<float[]>());
+        tablesData_     = std::shared_ptr<float>(new float[tablesDataSize_], std::default_delete<float[]>());
         if(distortionType == OBPointCloudDistortionType::OB_POINT_CLOUD_ZERO_DISTORTION_TYPE) {
             memset(&dstDistortion, 0, sizeof(OBCameraDistortion));
         }
 
         if(distortionType == OBPointCloudDistortionType::OB_POINT_CLOUD_ADD_DISTORTION_TYPE) {
-            if(!CoordinateUtil::transformationInitAddDistortionUVTables(dstIntrinsic, dstDistortion, reinterpret_cast<float *>(tablesData_.get()), &tablesDataSize_,
-                                                                        &xyTables_)) {
+            if(!CoordinateUtil::transformationInitAddDistortionUVTables(dstIntrinsic, dstDistortion, reinterpret_cast<float *>(tablesData_.get()),
+                                                                        &tablesDataSize_, &xyTables_)) {
                 LOG_ERROR_INTVL("Init add distortion transformation coordinate tables failed!");
                 return nullptr;
             }

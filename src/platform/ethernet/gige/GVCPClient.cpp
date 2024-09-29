@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 
 #if(defined(WIN32) || defined(_WIN32) || defined(WINCE))
 #define _WINSOCK_DEPRECATED_NO_WARNINGS disable
@@ -547,3 +550,4 @@ void GVCPClient::checkAndUpdateSockets() {
 }
 
 }  // namespace libobsensor
+

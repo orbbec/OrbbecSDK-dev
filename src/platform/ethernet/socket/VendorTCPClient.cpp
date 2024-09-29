@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "VendorTCPClient.hpp"
 #include "logger/Logger.hpp"
 #include "utils/Utils.hpp"
@@ -214,3 +217,4 @@ void VendorTCPClient::flush() {
 
 
 }  // namespace libobsensor
+

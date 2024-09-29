@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "FileUtils.hpp"
 
 #include <cstring>
@@ -231,3 +234,4 @@ std::string removeExtensionOfFileName(const std::string &fileName) {
 
 }  // namespace utils
 }  // namespace libobsensor
+

@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "NetDeviceEnumerator.hpp"
 #include "femtomega/FemtoMegaDeviceInfo.hpp"
 #include "gemini2/G2DeviceInfo.hpp"
@@ -166,3 +169,4 @@ std::shared_ptr<IDevice> NetDeviceEnumerator::createDevice(std::string address, 
 }
 
 }  // namespace libobsensor
+

@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #pragma once
 
 #include "ISourcePort.hpp"
@@ -281,3 +284,4 @@ bool     checkStatus(HpStatus stat, bool throwException = true);
 
 }  // namespace protocol
 }  // namespace libobsensor
+

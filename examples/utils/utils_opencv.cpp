@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "utils_opencv.hpp"
 #include "utils.hpp"
 #include "utils_types.h"

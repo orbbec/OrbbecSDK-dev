@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "G2Device.hpp"
 
 #include "DevicePids.hpp"
@@ -673,3 +676,4 @@ std::vector<std::shared_ptr<IFilter>> G2Device::createRecommendedPostProcessingF
 }
 
 }  // namespace libobsensor
+

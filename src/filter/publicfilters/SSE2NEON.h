@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #pragma once
 #ifdef __NEON__
 
@@ -9279,3 +9282,4 @@ FORCE_INLINE uint64_t _rdtsc(void)
 #endif
 
 #endif
+

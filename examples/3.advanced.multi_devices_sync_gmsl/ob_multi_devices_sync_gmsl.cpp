@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 /*
 Notes: ob_multi_devices_sync_gmsl.cpp for GMSL device
 on the nvidia arm64 xavier/orin platform ,this example demo sync multi gmsl devices.

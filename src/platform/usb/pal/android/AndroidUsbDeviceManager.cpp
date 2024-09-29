@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 #include "AndroidUsbDeviceManager.hpp"
@@ -376,3 +379,4 @@ extern "C" JNIEXPORT void JNICALL Java_com_orbbec_internal_DeviceWatcher_nRemove
 //        throw_error(env, "nRemoveUsbDevice", e.get_message());
 //    }
 //}
+

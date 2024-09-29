@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits>
@@ -980,3 +983,4 @@ bool ObV4lUvcDevicePort::pendForCtrlStatusEvent() const {
 }
 
 }  // namespace libobsensor
+

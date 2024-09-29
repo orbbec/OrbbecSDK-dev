@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #pragma once
 #include "DeviceBase.hpp"
 #include "IDeviceManager.hpp"
@@ -31,3 +34,4 @@ private:
 };
 
 }  // namespace libobsensor
+

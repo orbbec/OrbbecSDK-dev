@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "DeviceClockSynchronizer.hpp"
 #include "InternalTypes.hpp"
 
@@ -115,3 +118,4 @@ void DeviceClockSynchronizer::timerSyncWithHost() {
 }
 
 }  // namespace libobsensor
+

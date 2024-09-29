@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "UsbDeviceEnumerator.hpp"
 #include "utils/Utils.hpp"
 
@@ -254,3 +257,4 @@ void UsbDeviceEnumerator::setDeviceChangedCallback(DeviceChangedCallback callbac
 }
 
 }  // namespace libobsensor
+

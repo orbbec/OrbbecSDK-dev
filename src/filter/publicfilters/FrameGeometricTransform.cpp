@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "FrameGeometricTransform.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
@@ -628,3 +631,4 @@ OBExtrinsic FrameRotate::rotateOBExtrinsic(uint32_t rotateDegree) {
 }
 
 }  // namespace libobsensor
+

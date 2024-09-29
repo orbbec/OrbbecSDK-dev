@@ -1,3 +1,6 @@
+# Copyright (c) Orbbec Inc. All Rights Reserved.
+# Licensed under the MIT License.
+
 
 
 cmake_minimum_required(VERSION 3.5)
@@ -10,3 +13,4 @@ target_link_libraries(ob_multi_streams ob::OrbbecSDK ob::examples::utils)
 set_target_properties(ob_multi_streams PROPERTIES FOLDER "examples")
 
 install(TARGETS ob_multi_streams RUNTIME DESTINATION bin)
+

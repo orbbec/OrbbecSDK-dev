@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "G330DeviceInfo.hpp"
 #include "G330Device.hpp"
 #include "DevicePids.hpp"
@@ -74,3 +77,4 @@ std::vector<std::shared_ptr<IDeviceEnumInfo>> G330DeviceInfo::pickDevices(const 
 }
 
 }  // namespace libobsensor
+

@@ -1,3 +1,6 @@
+# Copyright (c) Orbbec Inc. All Rights Reserved.
+# Licensed under the MIT License.
+
 #!/bin/sh
 
 # Check if user is root/running with sudo

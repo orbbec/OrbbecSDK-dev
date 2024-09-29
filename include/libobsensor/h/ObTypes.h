@@ -1,4 +1,7 @@
-﻿// License: Apache 2.0. See LICENSE file in root directory.
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
+// License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec  Corporation. All Rights Reserved.
 
 /**
@@ -1750,3 +1753,4 @@ typedef void(ob_log_callback)(ob_log_severity severity, const char *message, voi
 #endif
 
 #pragma pack(pop)
+

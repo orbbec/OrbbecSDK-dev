@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2015 Intel Corporation. All Rights Reserved.
 
@@ -758,3 +761,4 @@ std::string winapi_error::last_error_string(DWORD lastError) {
 }
 
 }  // namespace libobsensor
+

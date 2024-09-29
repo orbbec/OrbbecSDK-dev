@@ -1,3 +1,6 @@
+# Copyright (c) Orbbec Inc. All Rights Reserved.
+# Licensed under the MIT License.
+
 #!/usr/bin/env bash
 
 CURRNET_DIR=$(pwd)
@@ -49,3 +52,4 @@ echo "Done building and compressing OrbbecSDK for $PLATFORM"
 echo "Done building OrbbecSDK for $PLATFORM"
 
 cd $CURRNET_DIR
+

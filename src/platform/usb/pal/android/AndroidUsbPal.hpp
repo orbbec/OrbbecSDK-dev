@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 
@@ -39,3 +42,4 @@ private:
 };
 
 }  // namespace libobsensor
+

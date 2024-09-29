@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 /*
   Copyright (c) 2009-2017 Dave Gamble and cJSON contributors
 
@@ -295,3 +298,4 @@ CJSON_PUBLIC(void) cJSON_free(void *object);
 #endif
 
 #endif
+

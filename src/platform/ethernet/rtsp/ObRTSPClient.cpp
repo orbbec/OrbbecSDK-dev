@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "ObRTSPClient.hpp"
 #include "exception/ObException.hpp"
 
@@ -359,3 +362,4 @@ void ObRTSPClient::streamStopEventHandler(void *clientData) {
 }
 
 }  // namespace libobsensor
+

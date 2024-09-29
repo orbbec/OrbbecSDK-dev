@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
 
@@ -72,3 +75,4 @@ const ObExtensionUnit OB_G330_XU_UNIT    = { 3, { 0xC9606CCB, 0x594C, 0x4D25, { 
 enum PowerState { kD0, kD3 };
 
 }  // namespace libobsensor
+

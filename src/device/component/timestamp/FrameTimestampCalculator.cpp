@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "FrameTimestampCalculator.hpp"
 #include "frame/Frame.hpp"
 #include "usb/uvc/UvcTypes.hpp"
@@ -164,3 +167,4 @@ void FrameTimestampCalculatorOverUvcSCR::calculate(std::shared_ptr<Frame> frame)
 void FrameTimestampCalculatorOverUvcSCR::clear() {}
 
 }  // namespace libobsensor
+

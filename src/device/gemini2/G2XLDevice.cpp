@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "G2XLDevice.hpp"
 
 #include "DevicePids.hpp"
@@ -1135,3 +1138,4 @@ void G2XLNetDevice::fetchDeviceInfo() {
 }
 
 }  // namespace libobsensor
+

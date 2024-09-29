@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "VendorPropertyAccessor.hpp"
 #include "exception/ObException.hpp"
 #include "protocol/Protocol.hpp"

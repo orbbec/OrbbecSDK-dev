@@ -1,3 +1,6 @@
+# Copyright (c) Orbbec Inc. All Rights Reserved.
+# Licensed under the MIT License.
+
 #!/usr/bin/env bash
 
 # Prompt the user to select architecture
@@ -40,3 +43,4 @@ if [ $? -eq 0 ]; then
 else
     echo "Docker image build failed"
 fi
+

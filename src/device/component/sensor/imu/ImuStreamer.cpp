@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "ImuStreamer.hpp"
 
 #include "frame/Frame.hpp"

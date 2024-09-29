@@ -45,7 +45,7 @@ int mkDirs(const char *dir) {
     int    error = 0;
 
 #ifdef WIN32
-    // 使用 snprintf 来确保字符串被安全地复制
+    // Use snprintf to ensure the string is copied safely
     snprintf(str, sizeof(str), "%s", dir);
     len = strlen(str);
     for(i = 0; i < len; i++) {
@@ -65,7 +65,7 @@ int mkDirs(const char *dir) {
     }
     return error;
 #else
-    // 使用 snprintf 来确保字符串被安全地复制
+    // Use snprintf to ensure the string is copied securely
     snprintf(str, sizeof(str), "%s", dir);
     len = strlen(str);
     umask(0000);

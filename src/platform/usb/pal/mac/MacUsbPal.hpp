@@ -47,7 +47,7 @@ int deviceRemovedCallback(libusb_context *ctx, libusb_device *device, libusb_hot
 class LibusbDeviceWatcher : public IDeviceWatcher {
 public:
     LibusbDeviceWatcher() {
-        // libusb_init(); // 创建MacUsbPal会初始化
+        // libusb_init(); // Creating MacUsbPal will initialize
     }
     ~LibusbDeviceWatcher() noexcept {
         TRY_EXECUTE(stop());

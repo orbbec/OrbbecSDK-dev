@@ -21,7 +21,7 @@ struct ObLogRecord {
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
-// 统计调用频率，然后输出日志
+// Count the call frequency and then output the log
 #define LOG_FREQ_CALC(level, duration, msg, ...)                                                                                           \
     do {                                                                                                                                   \
         static std::map<std::string, std::shared_ptr<ObLogRecord>> logIntvlRecordMap_;                                                     \

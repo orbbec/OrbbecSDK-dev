@@ -159,7 +159,7 @@ typedef struct {
 typedef struct {
     OBImuHeader     imuHeader;                        // imuHeader
     OBImuOriginData imuFrameData[IMU_FRAME_MAX_NUM];  // OBImuOriginData
-    uint32_t        reserved;                         // 保留
+    uint32_t        reserved;                         // Reserved
 } OBImuOrigMsg;
 
 void HidDevicePortGmsl::pollData() {

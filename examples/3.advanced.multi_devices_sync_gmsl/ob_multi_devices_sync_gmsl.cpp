@@ -156,7 +156,7 @@ int openSocSyncPwmTrigger(uint16_t fps) {
 int closeSocSyncPwmTrigger() {
     if(triggerFd >= 0) {
         close(triggerFd);
-        triggerFd = -1;  // 重置文件描述符
+        triggerFd = -1;  // Reset file descriptors
         std::cout << "close camSync success" << std::endl;
         return 0;
     }
@@ -442,7 +442,7 @@ void processFrame(std::shared_ptr<ob::FrameSet> frameSet, OBFrameType frameType,
 }
 
 void handleStreamError(const ob::Error &e) {
-    // 分离出来的错误处理逻辑
+    // Separate error handling logic
     std::cerr << "Function: " << e.getName() << "\nArgs: " << e.getArgs() << "\nMessage: " << e.getMessage() << "\nType: " << e.getExceptionType() << std::endl;
 }
 
@@ -606,7 +606,7 @@ OBMultiDeviceSyncMode stringToOBSyncMode(const std::string &modeString) {
     if(it != syncModeMap.end()) {
         return it->second;
     }
-    // 使用 stringstream 构建异常信息
+    // Constructing exception messages with stringstream
     std::stringstream ss;
     ss << "Unrecognized sync mode: " << modeString;
     throw std::invalid_argument(ss.str());

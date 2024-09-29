@@ -125,7 +125,7 @@ typedef struct _imu_origin_data_t {
 #pragma pack(push, 1)
 typedef struct {
     uint16_t magic;
-    uint16_t halfWordSize;  // 去除头部后剩余data的 bytesize/2 -> halfwordSize
+    uint16_t halfWordSize;  // After removing the header, the remaining data's byte size divided by 2 -> halfwordSize
     uint16_t opcode;
     uint16_t nId;
 } ProtocolHeader;
@@ -170,7 +170,7 @@ struct orbbec_device_info {
     uint16_t sub_num;
     uint32_t cam_num;
 };
-// video_type 的枚举
+// Enumeration of video_type
 enum orb_mux_pad {
     ORB_MUX_PAD_EXTERNAL,  // external
     ORB_MUX_PAD_DEPTH,

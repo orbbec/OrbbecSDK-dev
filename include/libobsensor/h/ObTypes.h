@@ -968,7 +968,7 @@ typedef struct {
 } OBEdgeNoiseRemovalFilterParams, ob_edge_noise_removal_filter_params;
 
 /**
- * @brief 去噪方式
+ * @brief Denoising method
  */
 typedef enum OB_DDO_NOISE_REMOVAL_TYPE {
     OB_NR_LUT     = 0,  // SPLIT

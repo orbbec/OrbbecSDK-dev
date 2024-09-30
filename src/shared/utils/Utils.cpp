@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "Utils.hpp"
 
 #ifdef _WINDOWS
@@ -41,7 +44,7 @@ void sleepUs(uint64_t usec) {
 bool checkJpgImageData(const uint8_t *data, size_t dataLen) {
     bool validImage = dataLen >= 2 && data[0] == 0xFF && data[1] == 0xD8;
     if(validImage) {
-        // 为了解决MJPG数据尾部（0xFF 0xD9）由于对齐等情况未按照标准MJPG排列导致的误判情况
+        // To resolve misjudgments caused by the MJPG data tail (0xFF 0xD9) not being arranged according to the standard MJPG format due to alignment and other issues
         size_t startIndex = dataLen - 1;
         size_t endIndex   = startIndex - 10;
         for(size_t index = startIndex; index > endIndex && index > 0; index--) {

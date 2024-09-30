@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 /*
 Notes: MultiDeviceSyncGmslSocTrigger for GMSL device
 on the nvidia arm64 xavier/orin platform ,this sample use nvidia platform soc pwm trigger to sync multi device.

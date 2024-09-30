@@ -1,3 +1,6 @@
+# Copyright (c) Orbbec Inc. All Rights Reserved.
+# Licensed under the MIT License.
+
 cmake_minimum_required(VERSION 3.5)
 
 target_sources(
@@ -21,3 +24,4 @@ target_sources(
     ${CMAKE_CURRENT_LIST_DIR}/G330FrameTimestampCalculator.hpp
     ${CMAKE_CURRENT_LIST_DIR}/G330FrameTimestampCalculator.cpp
 )
+

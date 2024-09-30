@@ -1,4 +1,6 @@
-// Copyright(c) 2020 Orbbec Corporation. All Rights Reserved.
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #pragma once
 #include <libobsensor/ObSensor.hpp>
 #include <opencv2/opencv.hpp>

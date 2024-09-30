@@ -1,3 +1,6 @@
+# Copyright (c) Orbbec Inc. All Rights Reserved.
+# Licensed under the MIT License.
+
 cmake_minimum_required(VERSION 3.5)
 
 project(OrbbecSDK VERSION 2.0.11 LANGUAGES CXX C)
@@ -72,3 +75,4 @@ endif()
 add_subdirectory(scripts)
 
 ob_print_summary()
+

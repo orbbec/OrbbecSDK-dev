@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "PointCloudProcess.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
@@ -298,3 +301,4 @@ PointCloudFilter::OBPointCloudDistortionType PointCloudFilter::getDistortionType
 }
 
 }  // namespace libobsensor
+

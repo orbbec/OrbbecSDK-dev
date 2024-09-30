@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "Context.hpp"
 #include "utils/Utils.hpp"
 #include "devicemanager/DeviceManager.hpp"
@@ -54,3 +57,4 @@ std::shared_ptr<FrameMemoryPool> Context::getFrameMemoryPool() const {
 }
 
 }  // namespace libobsensor
+

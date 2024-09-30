@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "FormatConverterProcess.hpp"
 #include "exception/ObException.hpp"
 #include "logger/LoggerInterval.hpp"
@@ -410,3 +413,4 @@ void FormatConverter::mjpegToBgra(uint8_t *src, uint32_t src_len, uint8_t *targe
 }
 
 }  // namespace libobsensor
+

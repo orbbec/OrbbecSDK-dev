@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "Protocol.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
@@ -420,3 +423,4 @@ ReadRawDataReq *initReadRawDataReq(uint8_t *dataBuf, uint32_t propertyId, uint32
 
 }  // namespace protocol
 }  // namespace libobsensor
+

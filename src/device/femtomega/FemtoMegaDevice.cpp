@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "FemtoMegaDevice.hpp"
 #include "Platform.hpp"
 #include "environment/EnvConfig.hpp"
@@ -869,3 +872,4 @@ void FemtoMegaNetDevice::fetchAllVideoStreamProfileList() {
     }
 }
 }  // namespace libobsensor
+

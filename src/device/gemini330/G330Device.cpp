@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "G330Device.hpp"
 
 #include "DevicePids.hpp"
@@ -1138,3 +1141,4 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     return {};
 }
 }  // namespace libobsensor
+

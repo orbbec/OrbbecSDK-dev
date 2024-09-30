@@ -1,3 +1,6 @@
+# Copyright (c) Orbbec Inc. All Rights Reserved.
+# Licensed under the MIT License.
+
 #!/usr/bin/env bash
 #
 # Copyright 2017 - 2018 Ternaris
@@ -77,3 +80,4 @@ fi
 
 echo 'ADE startup completed.'
 exec "$@"
+

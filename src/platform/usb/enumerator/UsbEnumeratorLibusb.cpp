@@ -1,5 +1,6 @@
-// License: Apache 2.0. See LICENSE file in root directory.
-// Copyright(c) 2020 Orbbec  Corporation. All Rights Reserved.
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #ifndef __ANDROID__
 
 #include "UsbEnumeratorLibusb.hpp"
@@ -224,7 +225,7 @@ std::vector<UsbInterfaceInfo> queryInterfaces(libusb_device *device, libusb_devi
                     info.infUrl = interface_path;
                     info.uid    = getDeviceUidByWin(interface_path);
                 }
-                else if(config->bNumInterfaces == 1) {  // 非复合设备
+                else if(config->bNumInterfaces == 1) {  // Non-composite equipment
                     auto dev_path = libusb_get_windows_path(device);
                     info.infUrl   = dev_path;
                     if(dev_path != nullptr) {

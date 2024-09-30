@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "G330FrameTimestampCalculator.hpp"
 #include "logger/LoggerInterval.hpp"
 #include "InternalTypes.hpp"
@@ -85,3 +88,4 @@ void G330FrameTimestampCalculatorBaseDeviceTime::clear() {
 }
 
 }  // namespace libobsensor
+

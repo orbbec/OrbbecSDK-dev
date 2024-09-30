@@ -1,4 +1,7 @@
-﻿#include <libobsensor/ObSensor.h>
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
+#include <libobsensor/ObSensor.h>
 
 #include "utils_c.h"
 #include "utils_types.h"
@@ -105,3 +108,4 @@ int main(void) {
 
     return 0;
 }
+

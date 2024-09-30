@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #pragma once
 #include <memory>
 #include <vector>
@@ -134,3 +137,4 @@ public:
     virtual void              stopAllStream()                                                                          = 0;
 };
 }  // namespace libobsensor
+

@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "FemtoBoltAlgParamManager.hpp"
 
 namespace libobsensor {
@@ -19,3 +22,4 @@ const std::vector<OBD2CProfile> &FemtoBoltAlgParamManager::getD2CProfileList() c
 }
 
 }  // namespace libobsensor
+

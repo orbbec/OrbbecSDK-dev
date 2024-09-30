@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
@@ -579,7 +582,7 @@ void writeBufferToFile(const char *buf, std::size_t size, const std::string &fil
 
     if(!file.is_open()) {
         // If the file fails to open, throw an exception or handle the error
-        throw std::runtime_error("无法打开文件: " + filename);
+        throw std::runtime_error("Unable to open the file: " + filename);
     }
 
     // Write the data in buf to the file

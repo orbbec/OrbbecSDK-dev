@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "FilterDecorator.hpp"
 #include "frame/FrameFactory.hpp"
 #include "exception/ObException.hpp"

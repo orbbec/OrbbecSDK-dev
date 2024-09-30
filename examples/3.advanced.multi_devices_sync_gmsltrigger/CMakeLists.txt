@@ -1,4 +1,5 @@
-
+# Copyright (c) Orbbec Inc. All Rights Reserved.
+# Licensed under the MIT License.
 
 cmake_minimum_required(VERSION 3.5)
 project(ob_multi_devices_sync_gmsltrigger)
@@ -11,3 +12,4 @@ target_link_libraries(${PROJECT_NAME} ob::OrbbecSDK ob::examples::utils)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "examples")
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+

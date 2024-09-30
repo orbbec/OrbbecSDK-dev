@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "FemtoBoltDevice.hpp"
 #include "Platform.hpp"
 #include "FemtoBoltPropertyAccessor.hpp"
@@ -418,3 +421,4 @@ void FemtoBoltDevice::initProperties() {
     registerComponent(OB_DEV_COMPONENT_PROPERTY_SERVER, propertyServer, true);
 }
 }  // namespace libobsensor
+

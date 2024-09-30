@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "Astra2Device.hpp"
 
 #include "DevicePids.hpp"
@@ -563,3 +566,4 @@ std::vector<std::shared_ptr<IFilter>> Astra2Device::createRecommendedPostProcess
 }
 
 }  // namespace libobsensor
+

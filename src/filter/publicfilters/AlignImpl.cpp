@@ -1,4 +1,7 @@
-﻿#include "AlignImpl.hpp"
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
+#include "AlignImpl.hpp"
 #include "logger/Logger.hpp"
 #include "exception/ObException.hpp"
 #include <fstream>
@@ -676,3 +679,4 @@ void AlignImpl::mapPixel(const int *map, const T *src_buffer, int src_width, int
 }
 
 }  // namespace libobsensor
+

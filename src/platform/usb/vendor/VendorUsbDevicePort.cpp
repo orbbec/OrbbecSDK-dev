@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "VendorUsbDevicePort.hpp"
 
 #include "logger/Logger.hpp"
@@ -59,3 +62,4 @@ std::string VendorUsbDevicePort::getUsbConnectType() {
 #endif
 
 }  // namespace libobsensor
+

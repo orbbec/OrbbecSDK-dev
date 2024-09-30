@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include <libobsensor/ObSensor.hpp>
 
 #include "utils.hpp"
@@ -849,3 +852,4 @@ void inputWatcher() {
         }
     }
 }
+

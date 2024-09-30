@@ -1,3 +1,6 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
 #include "Astra2DeviceInfo.hpp"
 #include "Astra2Device.hpp"
 #include "usb/UsbPortGroup.hpp"
@@ -53,3 +56,4 @@ std::vector<std::shared_ptr<IDeviceEnumInfo>> Astra2DeviceInfo::createDeviceInfo
 }
 
 }  // namespace libobsensor
+

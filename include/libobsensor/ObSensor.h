@@ -1,9 +1,6 @@
 // Copyright (c) Orbbec Inc. All Rights Reserved.
 // Licensed under the MIT License.
 
-/* License: Apache 2.0. See LICENSE file in root directory.
-    Copyright(c) 2020  Orbbec Corporation. All Rights Reserved. */
-
 /**
  * \file ObSensor.h
  * \brief This file serves as the C entrance for the OrbbecSDK library.

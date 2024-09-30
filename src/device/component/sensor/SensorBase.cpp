@@ -1,7 +1,6 @@
 // Copyright (c) Orbbec Inc. All Rights Reserved.
 // Licensed under the MIT License.
 
-
 #include "SensorBase.hpp"
 #include "utils/PublicTypeHelper.hpp"
 #include "frame/Frame.hpp"

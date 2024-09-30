@@ -1,9 +1,6 @@
 // Copyright (c) Orbbec Inc. All Rights Reserved.
 // Licensed under the MIT License.
 
-// License: Apache 2.0. See LICENSE file in root directory.
-// Copyright(c) 2015 Intel Corporation. All Rights Reserved.
-
 #if(_MSC_FULL_VER < 180031101)
 #error At least Visual Studio 2013 Update 4 is required to compile this backend
 #endif

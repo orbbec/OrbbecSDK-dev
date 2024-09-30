@@ -1,7 +1,6 @@
 // Copyright (c) Orbbec Inc. All Rights Reserved.
 // Licensed under the MIT License.
 
-
 #include "PrivFilterLoader.hpp"
 #include "PrivFilterCppWrapper.hpp"
 #include "FilterDecorator.hpp"

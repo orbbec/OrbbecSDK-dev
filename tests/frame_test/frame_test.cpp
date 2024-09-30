@@ -1,7 +1,6 @@
 // Copyright (c) Orbbec Inc. All Rights Reserved.
 // Licensed under the MIT License.
 
-
 extern "C" {
 #include <libobsensor/h/Frame.h>
 #include <libobsensor/h/Filter.h>

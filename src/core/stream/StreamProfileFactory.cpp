@@ -1,7 +1,6 @@
 // Copyright (c) Orbbec Inc. All Rights Reserved.
 // Licensed under the MIT License.
 
-
 #include "StreamProfileFactory.hpp"
 #include "StreamIntrinsicsManager.hpp"
 #include "StreamExtrinsicsManager.hpp"

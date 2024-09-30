@@ -1,7 +1,6 @@
 // Copyright (c) Orbbec Inc. All Rights Reserved.
 // Licensed under the MIT License.
 
-
 #include "DisparityBasedSensor.hpp"
 #include "stream/StreamProfileFactory.hpp"
 #include "frame/Frame.hpp"

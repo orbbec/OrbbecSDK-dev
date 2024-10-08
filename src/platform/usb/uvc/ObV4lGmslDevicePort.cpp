@@ -1185,13 +1185,13 @@ std::shared_ptr<const SourcePortInfo> ObV4lGmslDevicePort::getSourcePortInfo() c
     return portInfo_;
 }
 
-#define BASE_WAIT_RESPONSE_TIME_US 300
+#define BASE_WAIT_RESPONSE_TIME_MS 1
 uint32_t ObV4lGmslDevicePort::sendAndReceive(const uint8_t *send, uint32_t sendLen, uint8_t *recv, uint32_t exceptedRecvLen) {
     std::unique_lock<std::mutex> lk(mMultiThreadI2CMutex);
     if(!sendData(send, sendLen)) {
         return -1;
     }
-    utils::sleepUs(BASE_WAIT_RESPONSE_TIME_US);
+    utils::sleepMs(BASE_WAIT_RESPONSE_TIME_MS);
     if(!recvData(recv, &exceptedRecvLen)) {
         return -1;
     }

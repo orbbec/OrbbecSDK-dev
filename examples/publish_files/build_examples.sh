@@ -1,7 +1,7 @@
+#!/bin/bash
+
 # Copyright (c) Orbbec Inc. All Rights Reserved.
 # Licensed under the MIT License.
-
-#!/bin/bash
 
 echo "Checking if apt-get is workable ..."
 apt_workable=1

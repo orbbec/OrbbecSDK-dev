@@ -1,7 +1,7 @@
+#!/bin/bash
+
 # Copyright (c) Orbbec Inc. All Rights Reserved.
 # Licensed under the MIT License.
-
-#!/bin/bash
 
 # restore current directory
 current_dir=$(pwd)

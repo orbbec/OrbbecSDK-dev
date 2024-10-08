@@ -1,7 +1,7 @@
+#!/usr/bin/env bash
+
 # Copyright (c) Orbbec Inc. All Rights Reserved.
 # Licensed under the MIT License.
-
-#!/usr/bin/env bash
 
 CURRNET_DIR=$(pwd)
 

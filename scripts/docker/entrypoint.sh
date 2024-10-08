@@ -1,10 +1,7 @@
+#!/usr/bin/env bash
+
 # Copyright (c) Orbbec Inc. All Rights Reserved.
 # Licensed under the MIT License.
-
-#!/usr/bin/env bash
-#
-# Copyright 2017 - 2018 Ternaris
-# SPDX-License-Identifier: Apache 2.0
 
 set -e
 

@@ -1545,9 +1545,7 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
     control.p_u8 = dataRecvBuf.data();
     v4l2_ext_controls ext{ control.id & 0xffff0000, 1, 0, 0, 0, &control };
 
-    // the ioctl fails once when performing send and receive right after it
-    // it succeeds on the second time
-    const int MAX_TRIES       = 200;
+    const int MAX_TRIES       = 30;
     const int TRY_INTERVAL_MS = 10;
     int       tries           = 0;
     while(++tries < MAX_TRIES) {
@@ -1582,7 +1580,7 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
                 // std::to_string(pRecvDataBuf->header.len),
                 //           std::to_string(pRecvDataBuf->header.code), tries);
 
-                utils::sleepMs(TRY_INTERVAL_MS);
+                utils::sleepMs(TRY_INTERVAL_MS * (tries > 10 ? 10 : tries));
 
                 continue;
             }
@@ -1608,7 +1606,7 @@ bool ObV4lGmslDevicePort::getXuExt(uint32_t ctrl, uint8_t *data, uint32_t *len) 
                 std::memcpy(usbProtocolMsg.buf.data.resp.data, pRecvDataBuf->body.data, readRespDataSize);
             }
             else {
-                LOG_DEBUG("get read I2C dataSize=0 or dataSize error! readRespDataSize:{}", readRespDataSize);
+                LOG_TRACE("get read I2C dataSize=0 or dataSize error! readRespDataSize:{}", readRespDataSize);
             }
             // memcpy(usbProtocolMsg.buf.data.resp.data, pRecvDataBuf->body.data, readRespDataSize);
             // std::memcpy(usbProtocolMsg.buf.data.resp.data, pRecvDataBuf->body.data, readRespDataSize);

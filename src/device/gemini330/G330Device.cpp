@@ -111,13 +111,11 @@ void G330Device::init() {
         return factory;
     });
 
-    if (!isGmslDevice_) {
-        registerComponent(OB_DEV_COMPONENT_FIRMWARE_UPDATER, [this]() {
-            std::shared_ptr<FirmwareUpdater> firmwareUpdater;
-            TRY_EXECUTE({ firmwareUpdater = std::make_shared<FirmwareUpdater>(this); })
-            return firmwareUpdater;
-        });
-    }
+    registerComponent(OB_DEV_COMPONENT_FIRMWARE_UPDATER, [this]() {
+        std::shared_ptr<FirmwareUpdater> firmwareUpdater;
+        TRY_EXECUTE({ firmwareUpdater = std::make_shared<FirmwareUpdater>(this); })
+        return firmwareUpdater;
+    });
 
     registerComponent(OB_DEV_COMPONENT_COLOR_FRAME_METADATA_CONTAINER, [this]() {
         std::shared_ptr<FrameMetadataParserContainer> container;
@@ -1141,4 +1139,3 @@ std::vector<std::shared_ptr<IFilter>> G330Device::createRecommendedPostProcessin
     return {};
 }
 }  // namespace libobsensor
-

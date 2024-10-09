@@ -9,6 +9,7 @@
 #include "astra2/Astra2DeviceInfo.hpp"
 #include "femtobolt/FemtoBoltDeviceInfo.hpp"
 #include "femtomega/FemtoMegaDeviceInfo.hpp"
+#include "bootloader/BootDeviceInfo.hpp"
 
 namespace libobsensor {
 UsbDeviceEnumerator::UsbDeviceEnumerator(DeviceChangedCallback callback) : platform_(Platform::getInstance()) {
@@ -162,7 +163,7 @@ DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoL
     auto g2Devs = G2DeviceInfo::pickDevices(portInfoList);
     std::copy(g2Devs.begin(), g2Devs.end(), std::back_inserter(deviceInfoList));
 
-    auto a2Devs = Astra2DeviceInfo::createDeviceInfos(portInfoList);
+    auto a2Devs = Astra2DeviceInfo::pickDevices(portInfoList);
     std::copy(a2Devs.begin(), a2Devs.end(), std::back_inserter(deviceInfoList));
 
     auto femtoBoltDevs = FemtoBoltDeviceInfo::pickDevices(portInfoList);
@@ -170,6 +171,9 @@ DeviceEnumInfoList UsbDeviceEnumerator::usbDeviceInfoMatch(const SourcePortInfoL
 
     auto femtoMegaDevs = FemtoMegaDeviceInfo::pickDevices(portInfoList);
     std::copy(femtoMegaDevs.begin(), femtoMegaDevs.end(), std::back_inserter(deviceInfoList));
+
+    auto bootDevs = BootDeviceInfo::pickDevices(portInfoList);
+    std::copy(bootDevs.begin(), bootDevs.end(), std::back_inserter(deviceInfoList));
 
     return deviceInfoList;
 }

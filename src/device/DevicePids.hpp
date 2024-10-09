@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace libobsensor {
-const std::vector<uint16_t> BootPids = {
+const std::vector<uint16_t> BootDevPids = {
     0x0501,  // bootloader
     0x0300,  // openni bootloader
     0x0301,  // openni bootloader

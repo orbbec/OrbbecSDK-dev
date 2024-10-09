@@ -39,7 +39,7 @@ std::shared_ptr<IDevice> Astra2DeviceInfo::createDevice() const {
     return std::make_shared<Astra2Device>(shared_from_this());
 }
 
-std::vector<std::shared_ptr<IDeviceEnumInfo>> Astra2DeviceInfo::createDeviceInfos(const SourcePortInfoList infoList) {
+std::vector<std::shared_ptr<IDeviceEnumInfo>> Astra2DeviceInfo::pickDevices(const SourcePortInfoList infoList) {
     std::vector<std::shared_ptr<IDeviceEnumInfo>> Astra2DeviceInfos;
     auto                                          remainder = FilterUSBPortInfoByPid(infoList, Astra2DevPids);
     auto                                          groups    = utils::groupVector<std::shared_ptr<const SourcePortInfo>>(remainder, GroupUSBSourcePortByUrl);

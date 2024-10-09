@@ -85,8 +85,10 @@ DeviceEnumInfoList NetDeviceEnumerator::deviceInfoMatch(const SourcePortInfoList
     DeviceEnumInfoList deviceInfoList;
     auto               megaDevices = FemtoMegaDeviceInfo::pickNetDevices(infoList);
     deviceInfoList.insert(deviceInfoList.end(), megaDevices.begin(), megaDevices.end());
+
     auto g2Devices = G2DeviceInfo::pickNetDevices(infoList);
     deviceInfoList.insert(deviceInfoList.end(), g2Devices.begin(), g2Devices.end());
+
     return deviceInfoList;
 }
 

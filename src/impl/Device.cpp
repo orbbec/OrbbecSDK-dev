@@ -501,7 +501,7 @@ const char *ob_device_get_extension_info(const ob_device *device, const char *in
     }
     return extensionInfo.c_str();
 }
-HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device, info_key)
+HANDLE_EXCEPTIONS_AND_RETURN("", device, info_key)
 
 ob_camera_param_list *ob_device_get_calibration_camera_param_list(ob_device *device, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);

@@ -28,6 +28,7 @@ FirmwareUpdater::~FirmwareUpdater() noexcept {}
 void FirmwareUpdater::onDeviceFwUpdateCallback(ob_fw_update_state state, const char *message, uint8_t percent, void *userData) {
     FirmwareUpdater *updater = reinterpret_cast<FirmwareUpdater *>(userData);
     if(updater && updater->deviceFwUpdateCallback_) {
+        LOG_DEBUG("Firmware update callback: state={}, message={}, percent={}", state, message, percent);
         updater->deviceFwUpdateCallback_(state, message, percent);
     }
 }

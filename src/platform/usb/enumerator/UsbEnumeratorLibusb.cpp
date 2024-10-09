@@ -380,25 +380,28 @@ const std::vector<UsbInterfaceInfo> &UsbEnumeratorLibusb::queryUsbInterfaces() {
             continue;
         }
 
+        std::string serial;
         try {
-            auto serial = getStringDesc(handle, desc.iSerialNumber);
-            auto infs   = queryInterfaces(device, desc);
-            for(auto &inf: infs) {
-#ifdef WIN32
-                if(serial.empty()) {
-                    std::string toupperSNStr;
-                    if(findSN2Toupper(inf.url, toupperSNStr)) {
-                        serial = toupperSNStr;
-                    }
-                }
-#endif
-                inf.serial  = serial;
-                inf.infName = getStringDesc(handle, inf.infNameDescIndex);
-                tempInfoList.push_back(inf);
-            }
+            serial = getStringDesc(handle, desc.iSerialNumber);
         }
         catch(const std::exception &e) {
-            LOG_ERROR("Failed to query USB interfaces: {}", e.what());
+            LOG_ERROR("Failed to query USB device serial number: {}", e.what());
+            serial = "";
+        }
+
+        auto infs = queryInterfaces(device, desc);
+        for(auto &inf: infs) {
+#ifdef WIN32
+            if(serial.empty()) {
+                std::string toupperSNStr;
+                if(findSN2Toupper(inf.url, toupperSNStr)) {
+                    serial = toupperSNStr;
+                }
+            }
+#endif
+            inf.serial  = serial;
+            inf.infName = getStringDesc(handle, inf.infNameDescIndex);
+            tempInfoList.push_back(inf);
         }
 
         libusb_close(handle);

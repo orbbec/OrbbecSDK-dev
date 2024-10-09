@@ -36,8 +36,8 @@ check_ob_error(&error);
 enable the depth stream, and then start the pipeline.
 
 ```c
-// enable depth stream, set resolution to any, and format to Y16.
-ob_config_enable_video_stream(config, OB_STREAM_DEPTH, OB_WIDTH_ANY, OB_HEIGHT_ANY, OB_FPS_ANY, OB_FORMAT_Y16, &error);
+// enable depth stream with default stream profile.
+ob_config_enable_stream(config, OB_STREAM_DEPTH, &error);
 check_ob_error(&error);
 
 // Start Pipeline with the configured streams.

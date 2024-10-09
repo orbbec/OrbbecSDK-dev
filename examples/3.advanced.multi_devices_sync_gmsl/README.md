@@ -198,3 +198,55 @@ Please select input:
 2:Start hardware trigger  frame synchronization
 
 3.Close hardware trigger and exit program.
+
+## Configuration file parameter description
+
+config file :  ob_multi_devices_sync_gmsl_config.json
+
+```
+{    "version": "1.0.0",
+    "configTime": "2023/01/01",
+    "devices": [
+        {
+            "sn": "CP4H74D0003D",
+            "syncConfig": {
+                "syncMode": "OB_MULTI_DEVICE_SYNC_MODE_SECONDARY",
+                "depthDelayUs": 0,
+                "colorDelayUs": 0,
+                "trigger2ImageDelayUs": 0,
+                "triggerOutEnable": false,
+                "triggerOutDelayUs": 0,
+                "framesPerTrigger": 30
+            }
+        },
+        {
+            "sn": "GMSL00000005",
+            "syncConfig": {
+                "syncMode": "OB_MULTI_DEVICE_SYNC_MODE_SECONDARY",
+                "depthDelayUs": 0,
+                "colorDelayUs": 0,
+                "trigger2ImageDelayUs": 0,
+                "triggerOutEnable": false,
+                "triggerOutDelayUs": 0,
+                "framesPerTrigger": 30
+            }
+        }
+    ],
+    "hardwareTriggerFps": 3000
+}
+```
+
+
+**Key parameter description**
+
+"syncConfig": {
+                "syncMode": "OB_MULTI_DEVICE_SYNC_MODE_SECONDARY",   //set multi gmsl devices sync mode
+                "depthDelayUs": 0,
+                "colorDelayUs": 0,
+                "trigger2ImageDelayUs": 0,
+                "triggerOutEnable": false,	//current gmsl device don`t support.
+                "triggerOutDelayUs": 0,
+                "framesPerTrigger": 30	//set default software trigger 30 frames per  softwaretrigger.
+            }
+
+"hardwareTriggerFps": 3000  //set default hardware soc trigger source 30FPS

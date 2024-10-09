@@ -9,6 +9,7 @@ on the nvidia arm64 xavier/orin platform ,this example demo sync multi gmsl devi
 
 #include "utils.hpp"
 #include "utils_opencv.hpp"
+#include "utils/cJSON.h"
 
 #include <string>
 #include <vector>
@@ -28,18 +29,11 @@ on the nvidia arm64 xavier/orin platform ,this example demo sync multi gmsl devi
 #include <fcntl.h>
 #include <sstream>
 #include <cstdlib>
-#endif
-
-#include "utils/cJSON.h"
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-#else
 #include <strings.h>
 #endif
 
-#define KEY_ESC 27
 #define MAX_DEVICE_COUNT 9
-#define CONFIG_FILE "./syncconfig/MultiDeviceSyncConfigGmsl.json"
+#define CONFIG_FILE "./ob_multi_devices_sync_gmsl_config.json"
 #define DEVICE_PATH "/dev/camsync"
 
 const std::map<std::string, uint16_t> gemini_330_list = {
@@ -51,7 +45,7 @@ typedef struct DeviceConfigInfo_t {
     OBMultiDeviceSyncConfig syncConfig;
 } DeviceConfigInfo;
 
-typedef struct PipelineHolderr_t {
+typedef struct PipelineHolder_t {
     std::shared_ptr<ob::Pipeline> pipeline;
     OBSensorType                  sensorType;
     int                           deviceIndex;
@@ -97,7 +91,8 @@ bool checkDevicesWithDeviceConfigs(const std::vector<std::shared_ptr<ob::Device>
 std::shared_ptr<PipelineHolder> createPipelineHolder(std::shared_ptr<ob::Device> device, OBSensorType sensorType, int deviceIndex);
 
 ob::Context context;
-bool        IsGemini330Series(uint16_t pid) {
+
+bool IsGemini330Series(uint16_t pid) {
     bool find = false;
     for(auto it = gemini_330_list.begin(); it != gemini_330_list.end(); ++it) {
         if(it->second == pid) {
@@ -109,8 +104,9 @@ bool        IsGemini330Series(uint16_t pid) {
     return find;
 }
 
+
+int triggerFd = -1;
 int hardwareTriggerFps = 0;  // 0 means hardware trigger is disabled
-int triggerFd          = -1;
 typedef struct {
     uint8_t  mode;
     uint16_t fps;
@@ -251,6 +247,14 @@ int configMultiDeviceSync() {
         auto devList  = context.queryDeviceList();
         int  devCount = devList->deviceCount();
         for(int i = 0; i < devCount; i++) {
+
+            std::shared_ptr<ob::Device> device = devList->getDevice(i);
+            auto pid = device->getDeviceInfo()->getPid();
+            if(!IsGemini330Series(pid)){
+                std::cout << "Device pid: " << pid << " is not Gemini 330 series, skip" << std::endl;
+                continue;
+            }
+
             configDevList.push_back(devList->getDevice(i));
         }
 
@@ -304,16 +308,18 @@ void startDeviceStreams(const std::vector<std::shared_ptr<ob::Device>> &devices,
 
 // key press event processing
 void handleKeyPress(int key) {
-    ////Get the key value
+    //Get the key value
     if(key == 'S' || key == 's') {
         std::cout << "syncDevicesTime..." << std::endl;
         context.enableDeviceClockSync(3600000);  // Manual update synchronization
     }
     else if(key == 'T' || key == 't') {
         // software trigger
+        std::cout << "check software trigger mode" << std::endl;
         for(auto &dev: streamDevList) {
             auto multiDeviceSyncConfig = dev->getMultiDeviceSyncConfig();
             if(multiDeviceSyncConfig.syncMode == OB_MULTI_DEVICE_SYNC_MODE_SOFTWARE_TRIGGERING) {
+                std::cout << "software trigger..." << std::endl;
                 dev->triggerCapture();
             }
         }
@@ -348,28 +354,30 @@ int testMultiDeviceSync() {
             }
         }
 
-        if(primary_devices.empty()) {
-            std::cerr << "WARNING primary_devices is empty!!!" << std::endl;
-        }
-
         std::cout << "Secondary devices start..." << std::endl;
         startDeviceStreams(secondary_devices, 0);
 
         // Delay and wait for 5s to ensure that the initialization of the slave device is completed
-        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
-        std::cout << "Primary device start..." << std::endl;
-        startDeviceStreams(primary_devices, secondary_devices.size());
+        if(primary_devices.empty()) {
+            std::cerr << "WARNING primary_devices is empty!!!" << std::endl;
+        } else {
+            std::cout << "Primary device start..." << std::endl;
+            startDeviceStreams(primary_devices, secondary_devices.size());
+        }
 
         // Start the multi-device time synchronization function
         context.enableDeviceClockSync(60000);  // update and sync every minitor
 
         // Create a window for rendering and set the resolution of the window
         ob_smpl::CVWindow win("MultiDeviceSyncViewer", 1600, 900, ob_smpl::ARRANGE_GRID);
+
         // set key prompt
         win.setKeyPrompt("'S': syncDevicesTime, 'T': software triiger");
         // set the callback function for the window to handle key press events
-        win.setKeyPressedCallback([](int key) { handleKeyPress(key); });
+        win.setKeyPressedCallback([&](int key){ handleKeyPress(key); });
+
         win.setShowInfo(true);
         win.setShowSyncTimeInfo(true);
         while(win.run()) {
@@ -636,11 +644,7 @@ std::string OBSyncModeToString(const OBMultiDeviceSyncMode syncMode) {
 }
 
 int strcmp_nocase(const char *str0, const char *str1) {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
-    return _strcmpi(str0, str1);
-#else
     return strcasecmp(str0, str1);
-#endif
 }
 
 OBFrameType mapFrameType(OBSensorType sensorType) {

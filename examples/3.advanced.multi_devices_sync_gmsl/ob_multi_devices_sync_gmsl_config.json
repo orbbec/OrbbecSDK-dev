@@ -9,9 +9,9 @@
                 "depthDelayUs": 0,
                 "colorDelayUs": 0,
                 "trigger2ImageDelayUs": 0,
-                "triggerOutEnable": true,
+                "triggerOutEnable": false,
                 "triggerOutDelayUs": 0,
-                "framesPerTrigger": 1
+                "framesPerTrigger": 30
             }
         },
         {
@@ -21,9 +21,9 @@
                 "depthDelayUs": 0,
                 "colorDelayUs": 0,
                 "trigger2ImageDelayUs": 0,
-                "triggerOutEnable": true,
+                "triggerOutEnable": false,
                 "triggerOutDelayUs": 0,
-                "framesPerTrigger": 1
+                "framesPerTrigger": 30
             }
         }
     ],

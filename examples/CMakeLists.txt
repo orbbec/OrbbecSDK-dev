@@ -41,10 +41,10 @@ if(${OpenCV_FOUND})
     add_subdirectory(3.advanced.hdr)
     add_subdirectory(3.advanced.multi_devices)
 
-    # if(OB_BUILD_LINUX)
-    #     add_subdirectory(3.advanced.multi_devices_sync_gmsl)
-    #     add_subdirectory(3.advanced.multi_devices_sync_gmsltrigger)
-    # endif()
+    if(OB_BUILD_LINUX)
+        add_subdirectory(3.advanced.multi_devices_sync_gmsl)
+        add_subdirectory(3.advanced.multi_devices_sync_gmsltrigger)
+    endif()
 
 endif()
 

@@ -191,7 +191,7 @@ public:
             return -1;
         }
         auto     standardUvcMetadata = *(reinterpret_cast<const StandardUvcFramePayloadHeader *>(metadata));
-        uint32_t exposure            = (standardUvcMetadata.scrSourceClock[0] | ((standardUvcMetadata.scrSourceClock[1] & 0x07) << 8)) * 100;  // unit 100us
+        uint32_t exposure            = (standardUvcMetadata.scrSourceClock[0] | ((standardUvcMetadata.scrSourceClock[1] & 0x07) << 8));
 
         return static_cast<int64_t>(exposure);
     }
@@ -205,7 +205,7 @@ public:
             LOG_WARN_INTVL("Current metadata does not contain color actual frame rate!");
             return -1;
         }
-        auto exposure = G330ColorScrMetadataExposureParser::getValue(metadata, dataSize);
+        auto exposure = G330ColorScrMetadataExposureParser::getValue(metadata, dataSize) * 100;  // color exposure unit 100us
         auto fps      = static_cast<uint32_t>(1000000.f / exposure);
 
         auto colorSensor              = device_->getComponentT<VideoSensor>(OB_DEV_COMPONENT_COLOR_SENSOR);

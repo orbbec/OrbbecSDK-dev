@@ -284,16 +284,31 @@ public:
         auto exposure = G330DepthScrMetadataExposureParser::getValue(metadata, dataSize);
         auto fps      = static_cast<uint32_t>(1000000.f / exposure);
 
-        auto                  depthSensor = device_->getComponentT<VideoSensor>(OB_DEV_COMPONENT_DEPTH_SENSOR);
-        std::vector<uint32_t> currentStreamProfileFpsVector;
-        auto                  depthStreamProfileList   = depthSensor->getStreamProfileList();
-        auto                  depthActiveStreamProfile = depthSensor->getActivatedStreamProfile();
-        if(!depthActiveStreamProfile) {
+        static std::vector<DeviceComponentId> sensorComponentIds = { OB_DEV_COMPONENT_DEPTH_SENSOR, OB_DEV_COMPONENT_LEFT_IR_SENSOR,
+                                                                     OB_DEV_COMPONENT_RIGHT_IR_SENSOR };
+
+        StreamProfileList streamProfileList;
+        uint32_t          activatedStreamProfileFps = 0;
+        for(const auto &id: sensorComponentIds) {
+            auto sensor                   = device_->getComponentT<VideoSensor>(id);
+            auto currentStreamProfileList = sensor->getStreamProfileList();
+            auto activeStreamProfile      = sensor->getActivatedStreamProfile();
+            if(!activeStreamProfile) {
+                continue;
+            }
+            else {
+                streamProfileList         = currentStreamProfileList;
+                activatedStreamProfileFps = activeStreamProfile->as<VideoStreamProfile>()->getFps();
+                break;
+            }
+        }
+
+        if(activatedStreamProfileFps == 0) {
             return -1;
         }
-        auto depthCurrentStreamProfileFps = depthActiveStreamProfile->as<VideoStreamProfile>()->getFps();
 
-        for(const auto &profile: depthStreamProfileList) {
+        std::vector<uint32_t> currentStreamProfileFpsVector;
+        for(const auto &profile: streamProfileList) {
             auto videoStreamProfile = profile->as<VideoStreamProfile>();
             if(!videoStreamProfile) {
                 continue;
@@ -320,7 +335,7 @@ public:
             }
         }
 
-        return static_cast<int64_t>((std::min)(fps, depthCurrentStreamProfileFps));
+        return static_cast<int64_t>((std::min)(fps, activatedStreamProfileFps));
     }
 
 private:

@@ -11,5 +11,5 @@ target_link_libraries(${PROJECT_NAME} ob::OrbbecSDK ob::examples::utils)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "examples")
 
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/ob_multi_devices_sync_gmsl_config.json DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)

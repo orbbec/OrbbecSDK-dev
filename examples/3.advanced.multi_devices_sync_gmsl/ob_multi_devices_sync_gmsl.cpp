@@ -35,6 +35,9 @@ on the nvidia arm64 xavier/orin platform ,this example demo sync multi gmsl devi
 #define MAX_DEVICE_COUNT 9
 #define CONFIG_FILE "./ob_multi_devices_sync_gmsl_config.json"
 #define DEVICE_PATH "/dev/camsync"
+#define KEY_ESC 27
+
+static bool quitStreamPreview = false;
 
 const std::map<std::string, uint16_t> gemini_330_list = {
     { "gemini335", 0x0800 }, { "gemini335L", 0x0804 }, { "gemini336", 0x0803 }, { "gemini336L", 0x0807 }, { "gemini335Lg", 0x080B }
@@ -304,12 +307,17 @@ void startDeviceStreams(const std::vector<std::shared_ptr<ob::Device>> &devices,
         }
         startIndex++;
     }
+    quitStreamPreview = false;
 }
 
 // key press event processing
 void handleKeyPress(int key) {
     //Get the key value
-    if(key == 'S' || key == 's') {
+    if(key == KEY_ESC) {
+        quitStreamPreview = true;
+        std::cout << "press ESC quitStreamPreview" << std::endl;
+    }
+    else if(key == 'S' || key == 's') {
         std::cout << "syncDevicesTime..." << std::endl;
         context.enableDeviceClockSync(3600000);  // Manual update synchronization
     }
@@ -380,13 +388,15 @@ int testMultiDeviceSync() {
 
         win.setShowInfo(true);
         win.setShowSyncTimeInfo(true);
-        while(win.run()) {
+        while(win.run() && !quitStreamPreview) {
+            if(quitStreamPreview){
+                break;
+            }
             std::vector<std::pair<std::shared_ptr<ob::Frame>, std::shared_ptr<ob::Frame>>> framePairs;
             {
                 std::lock_guard<std::mutex> lock(frameMutex);
                 for(int i = 0; i < std::min(MAX_DEVICE_COUNT, (int)depthFrames.size()); i++) {
-                    if(depthFrames.find(i) != depthFrames.end() && depthFrames[i] != nullptr && colorFrames.find(i) != colorFrames.end()
-                       && colorFrames[i] != nullptr) {
+                    if(depthFrames[i] != nullptr && colorFrames[i] != nullptr) {
                         framePairs.emplace_back(depthFrames[i], colorFrames[i]);
                     }
                 }
@@ -403,12 +413,8 @@ int testMultiDeviceSync() {
             stopStream(holder);
         }
         pipelineHolderList.clear();
-
-        {
-            std::lock_guard<std::mutex> lock(frameMutex);
-            depthFrames.clear();
-            colorFrames.clear();
-        }
+        depthFrames.clear();
+        colorFrames.clear();      
 
         // Release resource
         streamDevList.clear();
@@ -438,6 +444,11 @@ std::shared_ptr<PipelineHolder> createPipelineHolder(std::shared_ptr<ob::Device>
 void processFrame(std::shared_ptr<ob::FrameSet> frameSet, OBFrameType frameType, int deviceIndex) {
     if(!frameSet) {
         std::cerr << "Invalid frameSet received." << std::endl;
+        return;
+    }
+
+    if(quitStreamPreview){
+        //std::cerr << "press ESC quit Stream ProcessFrame." << std::endl;
         return;
     }
 

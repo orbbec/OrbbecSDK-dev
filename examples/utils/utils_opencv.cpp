@@ -217,12 +217,12 @@ void CVWindow::setAlpha(float alpha) {
 void CVWindow::processFrames() {
     std::map<int, std::vector<std::shared_ptr<const ob::Frame>>> frameGroups;
     while(!closed_) {
+        if(closed_) {
+            break;
+        }
         {
             std::unique_lock<std::mutex> lk(srcFrameGroupsMtx_);
             srcFrameGroupsCv_.wait(lk);
-            if(closed_) {
-                break;
-            }
             frameGroups = srcFrameGroups_;
         }
 

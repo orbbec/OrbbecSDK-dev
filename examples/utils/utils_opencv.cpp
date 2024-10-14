@@ -129,6 +129,10 @@ void CVWindow::close() {
     srcFrameGroups_.clear();
 }
 
+void CVWindow::destroyWindow() {
+    cv::destroyWindow(name_);
+}
+
 void CVWindow::reset() {
     // close thread and clear cache
     close();

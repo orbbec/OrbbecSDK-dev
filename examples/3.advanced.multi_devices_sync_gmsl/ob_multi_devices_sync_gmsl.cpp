@@ -311,11 +311,17 @@ void startDeviceStreams(const std::vector<std::shared_ptr<ob::Device>> &devices,
 }
 
 // key press event processing
-void handleKeyPress(int key) {
+void handleKeyPress(ob_smpl::CVWindow &win, int key) {
     //Get the key value
     if(key == KEY_ESC) {
-        quitStreamPreview = true;
-        std::cout << "press ESC quitStreamPreview" << std::endl;
+        if(!quitStreamPreview){
+            quitStreamPreview = true;
+            win.setShowInfo(false);
+            win.setShowSyncTimeInfo(false);
+            std::cout << "press ESC quitStreamPreview" << std::endl;
+            win.close();
+            win.destroyWindow();
+        }
     }
     else if(key == 'S' || key == 's') {
         std::cout << "syncDevicesTime..." << std::endl;
@@ -384,7 +390,7 @@ int testMultiDeviceSync() {
         // set key prompt
         win.setKeyPrompt("'S': syncDevicesTime, 'T': software triiger");
         // set the callback function for the window to handle key press events
-        win.setKeyPressedCallback([&](int key){ handleKeyPress(key); });
+        win.setKeyPressedCallback([&](int key){ handleKeyPress(win, key); });
 
         win.setShowInfo(true);
         win.setShowSyncTimeInfo(true);
@@ -424,10 +430,9 @@ int testMultiDeviceSync() {
     }
     catch(ob::Error &e) {
         std::cerr << "function:" << e.getName() << "\nargs:" << e.getArgs() << "\nmessage:" << e.getMessage() << "\ntype:" << e.getExceptionType() << std::endl;
-        return -1;
-    }
-    catch(std::exception &e) {
-        std::cerr << "Standard Exception: " << e.what() << std::endl;
+        std::cout << "\nPress any key to exit.";
+        ob_smpl::waitForKeyPressed();
+        exit(EXIT_FAILURE);
         return -1;
     }
 }

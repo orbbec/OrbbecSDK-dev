@@ -33,6 +33,7 @@
 #include "utils/PublicTypeHelper.hpp"
 
 #include "FemtoMegaPropertyAccessor.hpp"
+#include "FemtoMegaFrameTimestampCalculator.hpp"
 
 #if defined(BUILD_NET_PAL)
 #include "ethernet/RTSPStreamPort.hpp"
@@ -438,10 +439,6 @@ void FemtoMegaNetDevice::init() {
         depthFrameTimeFreq_ = 1000000;
     }
 
-    if(getFirmwareVersionInt() >= 10300) {
-        colorFrameTimeFreq_ = 1000000;
-    }
-
     auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
@@ -606,7 +603,8 @@ void FemtoMegaNetDevice::initSensorList() {
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
 
                 if(getFirmwareVersionInt() >= 10300) {
-                    auto videoFrameTimestampCalculator_ = std::make_shared<FrameTimestampCalculatorDirectly>(this, depthFrameTimeFreq_);
+                    auto videoFrameTimestampCalculator_ =
+                        std::make_shared<FemtoMegaColorFrameTimestampCalculatorV20300>(this, deviceTimeFreq_, colorFrameTimeFreq_);
                     sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
                 }
                 else {

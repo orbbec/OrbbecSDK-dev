@@ -438,6 +438,10 @@ void FemtoMegaNetDevice::init() {
         depthFrameTimeFreq_ = 1000000;
     }
 
+    if(getFirmwareVersionInt() >= 10300) {
+        colorFrameTimeFreq_ = 1000000;
+    }
+
     auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
@@ -599,10 +603,16 @@ void FemtoMegaNetDevice::initSensorList() {
                     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_BGR, formatConverter });
                     formatFilterConfigs.push_back({ FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_BGRA, formatConverter });
                 }
-
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
-                auto videoFrameTimestampCalculator_ = std::make_shared<FrameTimestampCalculatorBaseDeviceTime>(this, deviceTimeFreq_, colorFrameTimeFreq_);
-                sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+
+                if(getFirmwareVersionInt() >= 10300) {
+                    auto videoFrameTimestampCalculator_ = std::make_shared<FrameTimestampCalculatorDirectly>(this, depthFrameTimeFreq_);
+                    sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+                }
+                else {
+                    auto videoFrameTimestampCalculator_ = std::make_shared<FrameTimestampCalculatorBaseDeviceTime>(this, deviceTimeFreq_, colorFrameTimeFreq_);
+                    sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
+                }
 
                 auto globalFrameTimestampCalculator = std::make_shared<GlobalTimestampCalculator>(this, deviceTimeFreq_, colorFrameTimeFreq_);
                 sensor->setGlobalTimestampCalculator(globalFrameTimestampCalculator);
@@ -872,4 +882,3 @@ void FemtoMegaNetDevice::fetchAllVideoStreamProfileList() {
     }
 }
 }  // namespace libobsensor
-

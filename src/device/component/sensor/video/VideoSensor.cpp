@@ -82,7 +82,17 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
 
     auto vsPort = std::dynamic_pointer_cast<IVideoStreamPort>(backend_);
     LOG_INFO("Start backend stream: {}", currentBackendStreamProfile_);
-    vsPort->startStream(currentBackendStreamProfile_, [this](std::shared_ptr<Frame> frame) { onBackendFrameCallback(frame); });
+    BEGIN_TRY_EXECUTE({
+        vsPort->startStream(currentBackendStreamProfile_, [this](std::shared_ptr<Frame> frame) {  //
+            onBackendFrameCallback(frame);
+        });
+    })
+    CATCH_EXCEPTION_AND_EXECUTE({
+        activatedStreamProfile_.reset();
+        frameCallback_ = nullptr;
+        updateStreamState(STREAM_STATE_START_FAILED);
+        throw;
+    })
 }
 
 void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {

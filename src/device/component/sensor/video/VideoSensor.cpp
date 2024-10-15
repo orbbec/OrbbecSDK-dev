@@ -88,6 +88,13 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
         });
     })
     CATCH_EXCEPTION_AND_EXECUTE({
+        {
+            auto owner    = getOwner();
+            auto strategy = owner->getComponentT<ISensorStreamStrategy>(OB_DEV_COMPONENT_SENSOR_STREAM_STRATEGY, false);
+            if(strategy) {
+                strategy->markStreamDeactivated(activatedStreamProfile_);
+            }
+        }
         activatedStreamProfile_.reset();
         frameCallback_ = nullptr;
         updateStreamState(STREAM_STATE_START_FAILED);

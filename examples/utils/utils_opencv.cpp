@@ -385,10 +385,11 @@ cv::Mat CVWindow::visualize(std::shared_ptr<const ob::Frame> frame) {
         } break;
         case OB_FORMAT_RGBA: {
             cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getData());
-            cv::cvtColor(rawMat, rstMat, cv::COLOR_RGBA2BGRA);
+            cv::cvtColor(rawMat, rstMat, cv::COLOR_RGBA2BGR);
         } break;
         case OB_FORMAT_BGRA: {
-            rstMat = cv::Mat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getData());
+            cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC4, videoFrame->getData());
+            cv::cvtColor(rawMat, rstMat, cv::COLOR_BGRA2BGR);
         } break;
         case OB_FORMAT_UYVY: {
             cv::Mat rawMat(videoFrame->getHeight(), videoFrame->getWidth(), CV_8UC2, videoFrame->getData());

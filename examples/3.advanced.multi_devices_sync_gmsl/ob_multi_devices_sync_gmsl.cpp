@@ -39,6 +39,8 @@ on the nvidia arm64 xavier/orin platform ,this example demo sync multi gmsl devi
 
 static bool quitStreamPreview = false;
 
+const std::string GMSL2_DEVICE_TAG= "GMSL2";
+
 const std::map<std::string, uint16_t> gemini_330_list = {
     { "gemini335", 0x0800 }, { "gemini335L", 0x0804 }, { "gemini336", 0x0803 }, { "gemini336L", 0x0807 }, { "gemini335Lg", 0x080B }
 };
@@ -250,11 +252,16 @@ int configMultiDeviceSync() {
         auto devList  = context.queryDeviceList();
         int  devCount = devList->deviceCount();
         for(int i = 0; i < devCount; i++) {
-
             std::shared_ptr<ob::Device> device = devList->getDevice(i);
             auto pid = device->getDeviceInfo()->getPid();
             if(!IsGemini330Series(pid)){
                 std::cout << "Device pid: " << pid << " is not Gemini 330 series, skip" << std::endl;
+                continue;
+            }
+            auto ConnectionType = device->getDeviceInfo()->getConnectionType();
+            std::cout << "Device ConnectionType: " << ConnectionType << std::endl;
+            if( ConnectionType != GMSL2_DEVICE_TAG) {
+                std::cout << "Device ConnectionType: " << ConnectionType << " is not GMSL2 devices, skip" << std::endl;
                 continue;
             }
 
@@ -320,7 +327,7 @@ void handleKeyPress(ob_smpl::CVWindow &win, int key) {
             win.setShowSyncTimeInfo(false);
             std::cout << "press ESC quitStreamPreview" << std::endl;
             win.close();
-            win.destroyWindow();
+            //win.destroyWindow();
         }
     }
     else if(key == 'S' || key == 's') {

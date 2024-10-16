@@ -60,7 +60,7 @@ void FemtoMegaUsbDevice::init() {
     auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
-    auto algParamManager = std::make_shared<TOFDeviceCommandAlgParamManager>(this);
+    auto algParamManager = std::make_shared<TOFDeviceCommonAlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
     static const std::vector<OBMultiDeviceSyncMode>          supportedSyncModes  = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
@@ -93,7 +93,7 @@ void FemtoMegaUsbDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor
     // // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<TOFDeviceCommandAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<TOFDeviceCommonAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 
@@ -442,7 +442,7 @@ void FemtoMegaNetDevice::init() {
     auto globalTimestampFilter = std::make_shared<GlobalTimestampFitter>(this);
     registerComponent(OB_DEV_COMPONENT_GLOBAL_TIMESTAMP_FILTER, globalTimestampFilter);
 
-    auto algParamManager = std::make_shared<TOFDeviceCommandAlgParamManager>(this);
+    auto algParamManager = std::make_shared<TOFDeviceCommonAlgParamManager>(this);
     registerComponent(OB_DEV_COMPONENT_ALG_PARAM_MANAGER, algParamManager);
 
     static const std::vector<OBMultiDeviceSyncMode>          supportedSyncModes  = { OB_MULTI_DEVICE_SYNC_MODE_FREE_RUN, OB_MULTI_DEVICE_SYNC_MODE_STANDALONE,
@@ -834,7 +834,7 @@ void FemtoMegaNetDevice::initSensorStreamProfile(std::shared_ptr<ISensor> sensor
     // bind params: extrinsics, intrinsics, etc.
     auto profiles = sensor->getStreamProfileList();
     {
-        auto algParamManager = getComponentT<TOFDeviceCommandAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
+        auto algParamManager = getComponentT<TOFDeviceCommonAlgParamManager>(OB_DEV_COMPONENT_ALG_PARAM_MANAGER);
         algParamManager->bindStreamProfileParams(profiles);
     }
 

@@ -9,7 +9,7 @@
 #include <mutex>
 #include <thread>
 
-bool enable_align_mode = 0;
+bool enable_align_mode = 1;
 
 // key press event processing
 void handleKeyPress(ob_smpl::CVWindow &win, std::shared_ptr<ob::Pipeline> pipe, int key, std::shared_ptr<ob::Config> config) {
@@ -80,9 +80,9 @@ std::shared_ptr<ob::Config> createHwD2CAlignConfig(std::shared_ptr<ob::Pipeline>
             if(checkIfSupportHWD2CAlign(pipe, colorProfile, depthProfile)) {
                 // If support, create a config for hardware depth-to-color alignment
                 auto hwD2CAlignConfig = std::make_shared<ob::Config>();
-                hwD2CAlignConfig->enableStream(colorProfile);  // enable color stream
-                hwD2CAlignConfig->enableStream(depthProfile);  // enable depth stream
-                // hwD2CAlignConfig->setAlignMode(ALIGN_D2C_HW_MODE);                                                // enable hardware depth-to-color alignment
+                hwD2CAlignConfig->enableStream(colorProfile);                                                     // enable color stream
+                hwD2CAlignConfig->enableStream(depthProfile);                                                     // enable depth stream
+                hwD2CAlignConfig->setAlignMode(ALIGN_D2C_HW_MODE);                                                // enable hardware depth-to-color alignment
                 hwD2CAlignConfig->setFrameAggregateOutputMode(OB_FRAME_AGGREGATE_OUTPUT_ALL_TYPE_FRAME_REQUIRE);  // output frameset with all types of frames
                 return hwD2CAlignConfig;
             }

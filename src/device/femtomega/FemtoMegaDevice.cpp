@@ -604,7 +604,7 @@ void FemtoMegaNetDevice::initSensorList() {
 
                 if(getFirmwareVersionInt() >= 10300) {
                     auto videoFrameTimestampCalculator_ =
-                        std::make_shared<FemtoMegaColorFrameTimestampCalculatorV20300>(this, deviceTimeFreq_, colorFrameTimeFreq_);
+                        std::make_shared<FemtoMegaColorFrameTimestampCalculatorV10300>(this, deviceTimeFreq_, colorFrameTimeFreq_);
                     sensor->setFrameTimestampCalculator(videoFrameTimestampCalculator_);
                 }
                 else {

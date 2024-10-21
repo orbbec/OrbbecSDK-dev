@@ -1,0 +1,31 @@
+// Copyright (c) Orbbec Inc. All Rights Reserved.
+// Licensed under the MIT License.
+
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// clang-format off
+#define OB_LIB_MAJOR_VERSION ${PROJECT_VERSION_MAJOR}
+#define OB_LIB_MINOR_VERSION ${PROJECT_VERSION_MINOR}
+#define OB_LIB_PATCH_VERSION ${PROJECT_VERSION_PATCH}
+
+#ifndef OB_LIB_STAGE_VERSION
+#define OB_LIB_STAGE_VERSION "open-source-beta"
+#endif
+
+#ifndef STRINGIFY
+#define STRINGIFY(arg) #arg
+#endif
+#ifndef VAR_ARG_STRING
+#define VAR_ARG_STRING(arg) STRINGIFY(arg)
+#endif
+
+#define OB_LIB_VERSION (((OB_LIB_MAJOR_VERSION)*10000) + ((OB_LIB_MINOR_VERSION)*100) + (OB_LIB_PATCH_VERSION))
+#define OB_LIB_VERSION_STR (VAR_ARG_STRING(OB_LIB_MAJOR_VERSION.OB_LIB_MINOR_VERSION.OB_LIB_PATCH_VERSION))
+// clang-format on
+#ifdef __cplusplus
+}
+#endif

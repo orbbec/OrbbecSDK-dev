@@ -167,22 +167,17 @@ std::vector<std::shared_ptr<const GyroStreamProfile>> matchGyroStreamProfile(con
 
 }  // namespace libobsensor
 
-OB_LOG_FORMATTER(libobsensor::StreamProfile)
 OB_LOG_FORMATTER(std::shared_ptr<libobsensor::StreamProfile>)
 OB_LOG_FORMATTER(std::shared_ptr<const libobsensor::StreamProfile>)
 
-OB_LOG_FORMATTER(libobsensor::VideoStreamProfile)
 OB_LOG_FORMATTER(std::shared_ptr<libobsensor::VideoStreamProfile>)
 OB_LOG_FORMATTER(std::shared_ptr<const libobsensor::VideoStreamProfile>)
 
-OB_LOG_FORMATTER(libobsensor::DisparityBasedStreamProfile)
 OB_LOG_FORMATTER(std::shared_ptr<libobsensor::DisparityBasedStreamProfile>)
 OB_LOG_FORMATTER(std::shared_ptr<const libobsensor::DisparityBasedStreamProfile>)
 
-OB_LOG_FORMATTER(libobsensor::AccelStreamProfile)
 OB_LOG_FORMATTER(std::shared_ptr<libobsensor::AccelStreamProfile>)
 OB_LOG_FORMATTER(std::shared_ptr<const libobsensor::AccelStreamProfile>)
 
-OB_LOG_FORMATTER(libobsensor::GyroStreamProfile)
 OB_LOG_FORMATTER(std::shared_ptr<libobsensor::GyroStreamProfile>)
 OB_LOG_FORMATTER(std::shared_ptr<const libobsensor::GyroStreamProfile>)

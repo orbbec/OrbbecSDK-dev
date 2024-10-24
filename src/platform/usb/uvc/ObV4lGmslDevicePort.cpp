@@ -1124,7 +1124,7 @@ void ObV4lGmslDevicePort::stopStream(std::shared_ptr<const StreamProfile> profil
             LOG_DEBUG("-deviceHandles devHandle->profile:{}, profile:{}, continue...", devHandle->profile, profile);
             continue;
         }
-        LOG_DEBUG("-deviceHandles- devHandle->isCapturing:{}, devHandle->profile:{}, profile:{}", devHandle->isCapturing, devHandle->profile, profile);
+        LOG_DEBUG("-deviceHandles- devHandle->isCapturing:{}, devHandle->profile:{}, profile:{}", devHandle->isCapturing.load(), devHandle->profile, profile);
 
         devHandle->isCapturing = false;
         // signal the capture loop to stop

@@ -447,6 +447,10 @@ typedef enum {
      */
     OB_PROP_DEVICE_REPOWER_BOOL = 202,
 
+    OB_PROP_FRAME_INTERLEAVE_CONFIG_INDEX_INT                   = 204,
+    OB_PROP_FRAME_INTERLEAVE_ENABLE_BOOL                        = 205,
+    OB_PROP_FRAME_INTERLEAVE_LASER_PATTERN_SYNC_DELAY_INT = 206,
+
     /**
      * @brief Baseline calibration parameters
      */

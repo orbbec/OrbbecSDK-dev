@@ -23,5 +23,8 @@ target_sources(
     ${CMAKE_CURRENT_LIST_DIR}/G330PropertyAccessors.cpp
     ${CMAKE_CURRENT_LIST_DIR}/G330FrameTimestampCalculator.hpp
     ${CMAKE_CURRENT_LIST_DIR}/G330FrameTimestampCalculator.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/G330FrameInterleaveManager.hpp  
+    ${CMAKE_CURRENT_LIST_DIR}/G330FrameInterleaveManager.cpp
+
 )
 

@@ -16,7 +16,7 @@ const std::map<OBStreamType, OBFrameType> streamTypeToFrameType = { { OB_STREAM_
                                                                     { OB_STREAM_IR_RIGHT, OB_FRAME_IR_RIGHT } };
 
 Align::Align()
-    : impl_(std::make_shared<AlignImpl>()),  //
+    : impl_(new AlignImpl()),  //
       alignToStreamType_(OB_STREAM_COLOR),
       addTargetDistortion_(true),
       gapFillCopy_(true),
@@ -24,7 +24,7 @@ Align::Align()
 
 Align::~Align() noexcept {
     reset();
-    impl_.reset();
+    delete impl_;
 }
 
 void Align::updateConfig(std::vector<std::string> &params) {

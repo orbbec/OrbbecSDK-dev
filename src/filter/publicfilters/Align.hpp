@@ -41,7 +41,7 @@ protected:
 private:
     std::recursive_mutex alignMutex_;
 
-    std::shared_ptr<AlignImpl> impl_;
+    AlignImpl                 *impl_;
     OBStreamType               alignToStreamType_;
     bool                       addTargetDistortion_;
     bool                       gapFillCopy_;

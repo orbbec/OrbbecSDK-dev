@@ -750,6 +750,18 @@ public:
     }
 
     /**
+     * @brief Check if the device supports the frame interleave feature.
+     *
+     * @return bool Returns true if the device supports the frame interleave feature.
+     */
+    bool isFrameInterleaveSupported() const {
+        ob_error *error = nullptr;
+        bool      ret   = ob_device_is_frame_interleave_supported(impl_, &error);
+        Error::handle(&error);
+        return ret;
+    }
+
+    /**
      * @brief Get current frame interleave name
      * @return const char* return the current frame interleave  name, it should be one of the frame interleave names returned by @ref
      * getAvailableFrameInterleaveList.
@@ -1450,4 +1462,3 @@ public:
 };
 
 }  // namespace ob
-

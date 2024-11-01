@@ -189,6 +189,12 @@ bool ob_device_preset_list_has_preset(const ob_device_preset_list *preset_list, 
 }
 HANDLE_EXCEPTIONS_AND_RETURN(false, preset_list, preset_name)
 
+bool ob_device_is_frame_interleave_supported(const ob_device *device, ob_error **error) BEGIN_API_CALL {
+    VALIDATE_NOT_NULL(device);
+    return device->device->isComponentExists(libobsensor::OB_DEV_COMPONENT_FRAME_INTERLEAVE_MANAGER);
+}
+HANDLE_EXCEPTIONS_AND_RETURN(false, device)
+
 void ob_device_load_frame_interleave(ob_device *device, const char *frame_interleave_name, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(device);
     VALIDATE_NOT_NULL(frame_interleave_name);

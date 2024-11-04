@@ -110,23 +110,23 @@ int main() try {
             continue;
         }
 
-        std::cout << "Please choose one of the following options:" << std::endl;
-        std::cout << "  [R / r]         - Reboot the device to apply the firmware update\n";
-        std::cout << "  [Q / q]         - Quit the program\n";
-        std::cout << "  [Any other key] - Perform another firmware update\n";
-        std::cout << "---------------------------------------------------------------------------\n";
-        std::cout << "Your input: ";
-        char input = ob_smpl::waitForKeyPressed();
-        std::cout << input << std::endl;
+        std::cout << "\n========== Firmware Update Menu ======================\n";
+        std::cout << "[R / r] - Reboot the device to apply the firmware update\n";
+        std::cout << "[Q / q] - Quit the program\n";
+        std::cout << "[Any other key] - Perform another firmware update\n";
+        std::cout << "=========================================================\n";
+        std::cout << "Enter your choice: ";
+        std::string input;
+        std::getline(std::cin, input);
 
-        if(input == 'R' || input == 'r') {
+        if(input == "R" || input == "r") {
             std::cout << "\nThe device is rebooting, please wait a moment..." << std::endl;
             rebootDone = false;
             // Reboot the device to apply the firmware update
             device->reboot();
             getDevice(context);
         }
-        else if(input == 'Q' || input == 'q') {
+        else if(input == "Q" || input == "q") {
             break;
         }
         else {

@@ -24,6 +24,7 @@ add_subdirectory(1.stream.imu)
 add_subdirectory(2.device.control)
 add_subdirectory(3.advanced.point_cloud)
 add_subdirectory(3.advanced.preset)
+add_subdirectory(3.advanced.device_firmware_update)
 
 # cpp examples with OpenCV Requirements
 if(${OpenCV_FOUND})

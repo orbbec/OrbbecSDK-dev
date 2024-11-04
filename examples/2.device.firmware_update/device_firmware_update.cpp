@@ -19,7 +19,7 @@ bool                                     firstCall   = true;
 std::vector<std::shared_ptr<ob::Device>> devices{};
 
 int main() try {
-    // Create a context and set the device changed callback function
+    // Create a context to access the connected devices
     std::shared_ptr<ob::Context> context = std::make_shared<ob::Context>();
 
     // Get connected devices from the context

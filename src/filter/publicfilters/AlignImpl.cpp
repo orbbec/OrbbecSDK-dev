@@ -655,7 +655,7 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
             break;
         case OB_FORMAT_BGRA:
         case OB_FORMAT_RGBA:
-            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint24_t));
+            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint32_t));
             mapPixel<uint32_t>(depth_xy, static_cast<const uint32_t *>(rgb_buffer), color_width, color_height, (uint32_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_MJPG:

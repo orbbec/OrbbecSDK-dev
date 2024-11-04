@@ -563,7 +563,7 @@ void Pipeline::checkHardwareD2CConfig() {
         auto d2cProfileList          = algParamManager->getD2CProfileList();
         depthFrameProcessor->setHardwareD2CProcessParams(colorVideoStreamProfile->getWidth(), colorVideoStreamProfile->getHeight(),
                                                          depthVideoStreamProfile->getWidth(), depthVideoStreamProfile->getHeight(), calibrationCameraParams,
-                                                         d2cProfileList);
+                                                         d2cProfileList, config_->getDepthScaleAfterAlignRequire());
         enableHardwareD2C(true);
     }
 }

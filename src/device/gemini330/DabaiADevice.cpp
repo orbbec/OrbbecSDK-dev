@@ -533,7 +533,8 @@ void DabaiADevice::initSensorList() {
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL, true);
 
             auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
-            auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrectorFilter);
+            auto imuCalculator  = std::make_shared<ImuCalculatorBMI088>();
+            auto imuStreamer    = std::make_shared<ImuStreamer>(this, dataStreamPort, imuCorrectorFilter, imuCalculator);
             return imuStreamer;
         });
 

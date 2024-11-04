@@ -12,10 +12,11 @@
 #include <memory>
 
 bool getFirmwarePath(std::string &firmwarePath);
+bool selectDevice(int &deviceIndex);
 void printDeviceList();
 
-bool firstCall = true;
-std::vector<std::shared_ptr<ob::Device>> devices;
+bool                                     firstCall   = true;
+std::vector<std::shared_ptr<ob::Device>> devices{};
 
 int main() try {
     // Create a context and set the device changed callback function
@@ -30,7 +31,7 @@ int main() try {
         return 0;
     }
 
-    for(int i = 0; i < deviceList->getCount(); ++i) {
+    for(uint32_t i = 0; i < deviceList->getCount(); ++i) {
         devices.push_back(deviceList->getDevice(i));
     }
     std::cout << "Devices found:" << std::endl;
@@ -42,7 +43,7 @@ int main() try {
             firstCall = !firstCall;
         }
         else {
-            std::cout << "\033[3F"; // Move cursor up 3 lines
+            std::cout << "\033[3F";  // Move cursor up 3 lines
         }
 
         std::cout << "\033[K";  // Clear the current line
@@ -79,37 +80,19 @@ int main() try {
     };
 
     while(true) {
-        firstCall = true;
-        std::string firmwarePath;
-        std::string input;
+        firstCall       = true;
         int deviceIndex = -1;
 
-        while (true) {
-            std::cout << "Please select a device to update the firmware, enter 'l' or 'L' to list devices:" << std::endl;
-            std::getline(std::cin, input);
-            if (input == "l" || input == "L") {
-                printDeviceList();
-                continue;
-            }
-
-            try {
-                deviceIndex = std::stoi(input); // exception
-                if (deviceIndex < 0 || deviceIndex >= static_cast<int>(devices.size())) {
-                    std::cout << "Invalid input, please enter a valid index number." << std::endl;
-                    continue;
-                }
-            }
-            catch(...) {
-                std::cout << "Invalid input, please enter a valid index number." << std::endl;
-                continue;
-            }
+        if(!selectDevice(deviceIndex)) {
+            break;
         }
 
+        std::string firmwarePath;
         if(!getFirmwarePath(firmwarePath)) {
-            continue;
+            break;
         }
-        std::cout << "Upgrading device firmware, please wait...\n\n";
 
+        std::cout << "Upgrading device firmware, please wait...\n\n";
         try {
             // Set async to false to synchronously block and wait for the device firmware upgrade to complete.
             devices[deviceIndex]->updateFirmware(firmwarePath.c_str(), firmwareUpdateCallback, false);
@@ -123,6 +106,7 @@ int main() try {
             break;
         }
 
+        std::string input;
         std::cout << "Enter 'Q' or 'q' to quit, or any other key to continue: ";
         std::getline(std::cin, input);
         if(input == "Q" || input == "q") {
@@ -139,33 +123,74 @@ catch(ob::Error &e) {
 
 bool getFirmwarePath(std::string &firmwarePath) {
     std::cout << "Please input the path of the firmware file (.bin) to be updated:" << std::endl;
-    std::cout << "Enter the path (or enter 'Q' or 'q' to quit): " << std::endl;
+    std::cout << "(Enter 'Q' or 'q' to quit): " << std::endl;
+    std::cout << "Path: ";
     std::string input;
-    std::getline(std::cin, firmwarePath);
+    std::getline(std::cin, input);
 
     if(input == "Q" || input == "q") {
         exit(EXIT_SUCCESS);
     }
 
+    // Remove leading and trailing whitespaces
+    input.erase(std::find_if(input.rbegin(), input.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), input.end());
+
     // Remove leading and trailing quotes
-    if (!input.empty() && input.front() == '\'' && input.back() == '\'') {
+    if(!input.empty() && input.front() == '\'' && input.back() == '\'') {
         input = input.substr(1, input.size() - 2);
     }
 
-    if (input.size() > 4 && input.substr(input.size() - 4) == ".bin") {
+    if(input.size() > 4 && input.substr(input.size() - 4) == ".bin") {
         firmwarePath = input;
-        std::cout << "Firmware file confirmed: " << firmwarePath << std::endl;
+        std::cout << "Firmware file confirmed: " << firmwarePath << std::endl << std::endl;
         return true;
-    } 
+    }
 
-    std::cout << "Invalid file format. Please provide a .bin file." << std::endl;
-    return false
+    std::cout << "Invalid file format. Please provide a .bin file." << std::endl << std::endl;
+    return getFirmwarePath(firmwarePath);
 }
 
 void printDeviceList() {
-    for (uint32_t i = 0; i < devices.size(); ++i) {
-        std::cout << "[" << i << "] " << "Device: " << device->getDeviceInfo()->getName();
-        std::cout << " serial number: " << device->getDeviceInfo()->getSerial();
-        std::cout << " firmware version: " << device->getDeviceInfo()->getFirmwareVersion() << std::endl;
+    std::cout << "--------------------------------------------------------------------------------\n";
+    for(uint32_t i = 0; i < devices.size(); ++i) {
+        std::cout << "[" << i << "] " << "Device: " << devices[i]->getDeviceInfo()->getName();
+        std::cout << " | SN: " << devices[i]->getDeviceInfo()->getSerialNumber();
+        std::cout << " | Firmware version: " << devices[i]->getDeviceInfo()->getFirmwareVersion() << std::endl;
     }
+    std::cout << "---------------------------------------------------------------------------------\n";
+}
+
+bool selectDevice(int &deviceIndex) {
+    std::string input;
+    while(true) {
+        std::cout << "Please select a device to update the firmware, enter 'l' to list devices, or enter 'q' to quit: " << std::endl;
+        std::cout << "Device index: ";
+        std::getline(std::cin, input);
+
+        if(input == "Q" || input == "q") {
+            return false;
+        }
+
+        if(input == "l" || input == "L") {
+            printDeviceList();
+            continue;
+        }
+
+        try {
+            deviceIndex = std::stoi(input);
+            if(deviceIndex < 0 || deviceIndex >= static_cast<int>(devices.size())) {
+                std::cout << "Invalid input, please enter a valid index number." << std::endl;
+                continue;
+            }
+            std::cout << std::endl;
+            break;
+        }
+        catch(...) {
+            std::cout << "Invalid input, please enter a valid index number." << std::endl;
+            continue;
+        }
+    }
+    return true;
 }

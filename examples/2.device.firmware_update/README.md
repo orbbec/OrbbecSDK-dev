@@ -17,7 +17,7 @@ Device is the device object, which can be used to obtain the device information,
     ```c++
         std::shared_ptr<ob::Context> context = std::make_shared<ob::Context>();
     ```
-2. List Connected Devices:
+2. List Connected Devices.
 
     ```c++
         std::shared_ptr<ob::DeviceList> deviceList = context->queryDeviceList();
@@ -25,7 +25,7 @@ Device is the device object, which can be used to obtain the device information,
             devices.push_back(deviceList->getDevice(i));
         }
     ```
-3. Define a Callback Function for Firmware Update Progress:
+3. Define a Callback Function for Firmware Update Progress.
 
     You can define a callback function to get the progress of the firmware update. The callback function will be called every time the device updates its progress.
 
@@ -94,4 +94,4 @@ Select the device for firmware update and input the path of the firmware file. T
 
 ### Result
 
-![image](../../docs/resource/coordinate_transform.jpg)
+![image](../../docs/resource/device_firmware_update.jpg)

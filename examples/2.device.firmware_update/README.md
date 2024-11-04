@@ -12,12 +12,12 @@ Device is the device object, which can be used to obtain the device information,
 
 ## code overview
 
-1. Initialize the SDK context, inorder to access the connected devices.
+1. Initialize the SDK Context: This is necessary to access the connected devices.
 
     ```c++
         std::shared_ptr<ob::Context> context = std::make_shared<ob::Context>();
     ```
-2. List the connected devices.
+2. List Connected Devices:
 
     ```c++
         std::shared_ptr<ob::DeviceList> deviceList = context->queryDeviceList();
@@ -25,7 +25,7 @@ Device is the device object, which can be used to obtain the device information,
             devices.push_back(deviceList->getDevice(i));
         }
     ```
-3. Callback function for firmware update progress
+3. Define a Callback Function for Firmware Update Progress:
 
     You can define a callback function to get the progress of the firmware update. The callback function will be called every time the device updates its progress.
 
@@ -72,7 +72,9 @@ Device is the device object, which can be used to obtain the device information,
         };
     ```
 
-4. After selecting a device, update its firmware.
+4. Update the Device Firmware.
+
+    After selecting a device, update its firmware by calling the updateFirmware function with the specified callback.
 
     ```c++
         devices[deviceIndex]->updateFirmware(firmwarePath.c_str(), firmwareUpdateCallback, false);
@@ -80,16 +82,15 @@ Device is the device object, which can be used to obtain the device information,
 
 ### Attention
 
-After the firmware update is completed, you need to restart the device manually to make the new firmware take effect. Or you can use the `reboot()` function to restart the device.
+After the firmware update completes, you need to restart the device manually to apply the new firmware. Alternatively, you can use the `reboot()` function to restart the device programmatically.
 
 ```c++
     device->reboot();
 ```
 
-## Sample output
+## Run Sample
 
-Select the device which you want to update the firmware. And input the path of the firmware file.
-SDK will start to update the firmware, and the progress will be displayed on the console.
+Select the device for firmware update and input the path of the firmware file. The SDK will start updating the firmware, and the progress will be displayed on the console.
 
 ### Result
 

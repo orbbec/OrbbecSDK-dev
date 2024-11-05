@@ -25,6 +25,7 @@ add_subdirectory(2.device.control)
 add_subdirectory(2.device.firmware_update)
 add_subdirectory(3.advanced.point_cloud)
 add_subdirectory(3.advanced.preset)
+add_subdirectory(4.misc.logger)
 
 # cpp examples with OpenCV Requirements
 if(${OpenCV_FOUND})

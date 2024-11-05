@@ -6,6 +6,7 @@
 #include <chrono>
 #include <thread>
 #include <iomanip>
+#include <atomic>
 
 std::thread inputWatchThread;
 std::atomic<bool> isRunning(true);

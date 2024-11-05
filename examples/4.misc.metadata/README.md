@@ -6,11 +6,11 @@ Use the SDK interface to get the frameSet, then get the frame from frameSet, pri
 
 ### Knowledge
 
-Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions
+Pipeline is a pipeline for processing data streams, providing multi-channel stream configuration, switching, frame aggregation, and frame synchronization functions.
 
-Frameset is a combination of different types of Frames
+Frameset is a combination of different types of Frames.
 
-Metadata is used to describe the various properties and states of a frame
+Metadata is used to describe the various properties and states of a frame.
 
 ## Code overview
 
@@ -25,44 +25,32 @@ Metadata is used to describe the various properties and states of a frame
     pipe.start();
     ```
 
-2. Get key input
+2. Get frameSet from pipeline.
 
     ```cpp
-    //get key input
-    inputWatchThread = std::thread(inputWatcher);
-    inputWatchThread.detach();
+    // Wait for frameSet from the pipeline, the default timeout is 1000ms.
+    auto frameSet   = pipe.waitForFrameset();
+    ```
 
-    void inputWatcher() {
-        char input = ob_smpl::waitForKeyPressed();
-        if(input == ESC_KEY) {
-            exit(EXIT_SUCCESS);
-        }
+3. Get frame from frameSet.
+
+    ```cpp
+    auto frameCount = frameSet->getCount();
+    for(uint32_t i = 0; i < frameCount; i++) {
+        // Get the frame from frameSet
+        auto frame = frameSet->getFrame(i);
     }
-    ```
-
-3. Get frameSet
-
-    ```cpp
-    // Wait for frameSet from the pipeline, the default timeout is 1000ms.
-    auto frameSet   = pipe.waitForFrameset();
-    ```
-
-4. Get frame from frameSet
-
-    ```cpp
-    // Wait for frameSet from the pipeline, the default timeout is 1000ms.
-    auto frameSet   = pipe.waitForFrameset();
    ```
 
-5. Get metadata from frame
+4. Check if the frame object contains metadata, then retrieve it.
 
     ```cpp
-    //get the metadata of the frame
+    // Get the metadata of the frame
     for(uint32_t j = 0; j < static_cast<uint32_t>(metadataCount); j++) {
-        // if the frame has the metadata, get the metadata value
+        // If the frame has the metadata, get the metadata value
         if(frame->hasMetadata(static_cast<OBFrameMetadataType>(j))) {
             std::cout << "metadata type: " << std::left << std::setw(50) << metadataTypeMap[j]
-                        << " metadata value: " << frame->getMetadataValue(static_cast<OBFrameMetadataType>(j)) << std::endl;
+                      << " metadata value: " << frame->getMetadataValue(static_cast<OBFrameMetadataType>(j)) << std::endl;
         }
     }
     ```
@@ -80,4 +68,4 @@ Press the Esc key in the window to exit the program.
 
 ### Result
 
-![image](/openorbbecsdkgroup/OpenOrbbecSDK/docs/resource/metadata.jpg)
+![image](../../docs/resource/metadata.jpg)

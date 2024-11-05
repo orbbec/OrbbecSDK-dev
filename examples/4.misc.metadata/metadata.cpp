@@ -1,4 +1,5 @@
 #include <libobsensor/ObSensor.hpp>
+#include <libobsensor/h/ObTypes.h>
 
 #include "utils.hpp"
 
@@ -6,45 +7,12 @@
 #include <thread>
 #include <iomanip>
 
-std::thread         inputWatchThread;
-void                inputWatcher();
-OBFrameMetadataType metadataType;
-auto                metadataCount = OBFrameMetadataType::OB_FRAME_METADATA_TYPE_COUNT;
+std::thread inputWatchThread;
+std::atomic<bool> isRunning(true);
+void        inputWatcher();
+const char *metadataTypeToString(OBFrameMetadataType type);
+const char *frameTypeToString(OBFrameType type);
 
-std::map<uint32_t, std::string> metadataTypeMap = {
-    { 0, "OB_FRAME_METADATA_TYPE_TIMESTAMP" },
-    { 1, "OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP" },
-    { 2, "OB_FRAME_METADATA_TYPE_FRAME_NUMBER" },
-    { 3, "OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE" },
-    { 4, "OB_FRAME_METADATA_TYPE_EXPOSURE" },
-    { 5, "OB_FRAME_METADATA_TYPE_GAIN" },
-    { 6, "OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE" },
-    { 7, "OB_FRAME_METADATA_TYPE_WHITE_BALANCE" },
-    { 8, "OB_FRAME_METADATA_TYPE_BRIGHTNESS" },
-    { 9, "OB_FRAME_METADATA_TYPE_CONTRAST" },
-    { 10, "OB_FRAME_METADATA_TYPE_SATURATION" },
-    { 11, "OB_FRAME_METADATA_TYPE_SHARPNESS" },
-    { 12, "OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION" },
-    { 13, "OB_FRAME_METADATA_TYPE_HUE" },
-    { 14, "OB_FRAME_METADATA_TYPE_GAMMA" },
-    { 15, "OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY" },
-    { 16, "OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION" },
-    { 17, "OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE" },
-    { 18, "OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE" },
-    { 19, "OB_FRAME_METADATA_TYPE_FRAME_RATE" },
-    { 20, "OB_FRAME_METADATA_TYPE_AE_ROI_LEFT" },
-    { 21, "OB_FRAME_METADATA_TYPE_AE_ROI_TOP" },
-    { 22, "OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT" },
-    { 23, "OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM" },
-    { 24, "OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY" },
-    { 25, "OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME" },
-    { 26, "OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE" },
-    { 27, "OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX" },
-    { 28, "OB_FRAME_METADATA_TYPE_LASER_POWER" },
-    { 29, "OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL" },
-    { 30, "OB_FRAME_METADATA_TYPE_LASER_STATUS" },
-    { 31, "OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA" },
-};
 int main() try {
     // Create a pipeline.
     ob::Pipeline pipe;
@@ -53,28 +21,29 @@ int main() try {
     // Modify the default configuration by the configuration file: "OrbbecSDKConfig.xml"
     pipe.start();
 
-    // get key input
+    // Get key input
     inputWatchThread = std::thread(inputWatcher);
     inputWatchThread.detach();
 
-    while(true) {
+    while(isRunning) {
         // Wait for frameSet from the pipeline, the default timeout is 1000ms.
         auto frameSet = pipe.waitForFrameset();
 
-        // get the count of frames in the frameSet
+        // Get the count of frames in the frameSet
         auto frameCount = frameSet->getCount();
 
         for(uint32_t i = 0; i < frameCount; i++) {
-            // get the frame from frameSet
+            // Get the frame from frameSet
             auto frame      = frameSet->getFrame(i);
             auto frameIndex = frame->index();
-            // get the metadata of the frame, and print the metadata every 30 frames
+            // Get the metadata of the frame, and print the metadata every 30 frames
             if(frameIndex % 30 == 0) {
                 std::cout << std::endl;
-                for(uint32_t j = 0; j < static_cast<uint32_t>(metadataCount); j++) {
-                    // if the frame has the metadata, get the metadata value
+                std::cout << "frame    type: " << frameTypeToString(frame->type()) << std::endl;
+                for(uint32_t j = 0; j < static_cast<uint32_t>(OB_FRAME_METADATA_TYPE_COUNT); j++) {
+                    // If the frame has the metadata, get the metadata value
                     if(frame->hasMetadata(static_cast<OBFrameMetadataType>(j))) {
-                        std::cout << "metadata type: " << std::left << std::setw(50) << metadataTypeMap[j]
+                        std::cout << "metadata type: " << std::left << std::setw(50) << metadataTypeToString(static_cast<OBFrameMetadataType>(j))
                                   << " metadata value: " << frame->getMetadataValue(static_cast<OBFrameMetadataType>(j)) << std::endl;
                     }
                 }
@@ -96,6 +65,100 @@ catch(ob::Error &e) {
 void inputWatcher() {
     char input = ob_smpl::waitForKeyPressed();
     if(input == ESC_KEY) {
-        exit(EXIT_SUCCESS);
+        isRunning = false;
+    }
+}
+
+const char *metadataTypeToString(OBFrameMetadataType type) {
+    switch(type) {
+    case OB_FRAME_METADATA_TYPE_TIMESTAMP:
+        return "OB_FRAME_METADATA_TYPE_TIMESTAMP";
+    case OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP:
+        return "OB_FRAME_METADATA_TYPE_SENSOR_TIMESTAMP";
+    case OB_FRAME_METADATA_TYPE_FRAME_NUMBER:
+        return "OB_FRAME_METADATA_TYPE_FRAME_NUMBER";
+    case OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE:
+        return "OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE";
+    case OB_FRAME_METADATA_TYPE_EXPOSURE:
+        return "OB_FRAME_METADATA_TYPE_EXPOSURE";
+    case OB_FRAME_METADATA_TYPE_GAIN:
+        return "OB_FRAME_METADATA_TYPE_GAIN";
+    case OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE:
+        return "OB_FRAME_METADATA_TYPE_AUTO_WHITE_BALANCE";
+    case OB_FRAME_METADATA_TYPE_WHITE_BALANCE:
+        return "OB_FRAME_METADATA_TYPE_WHITE_BALANCE";
+    case OB_FRAME_METADATA_TYPE_BRIGHTNESS:
+        return "OB_FRAME_METADATA_TYPE_BRIGHTNESS";
+    case OB_FRAME_METADATA_TYPE_CONTRAST:
+        return "OB_FRAME_METADATA_TYPE_CONTRAST";
+    case OB_FRAME_METADATA_TYPE_SATURATION:
+        return "OB_FRAME_METADATA_TYPE_SATURATION";
+    case OB_FRAME_METADATA_TYPE_SHARPNESS:
+        return "OB_FRAME_METADATA_TYPE_SHARPNESS";
+    case OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION:
+        return "OB_FRAME_METADATA_TYPE_BACKLIGHT_COMPENSATION";
+    case OB_FRAME_METADATA_TYPE_HUE:
+        return "OB_FRAME_METADATA_TYPE_HUE";
+    case OB_FRAME_METADATA_TYPE_GAMMA:
+        return "OB_FRAME_METADATA_TYPE_GAMMA";
+    case OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY:
+        return "OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY";
+    case OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION:
+        return "OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION";
+    case OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE:
+        return "OB_FRAME_METADATA_TYPE_MANUAL_WHITE_BALANCE";
+    case OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE:
+        return "OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE";
+    case OB_FRAME_METADATA_TYPE_FRAME_RATE:
+        return "OB_FRAME_METADATA_TYPE_FRAME_RATE";
+    case OB_FRAME_METADATA_TYPE_AE_ROI_LEFT:
+        return "OB_FRAME_METADATA_TYPE_AE_ROI_LEFT";
+    case OB_FRAME_METADATA_TYPE_AE_ROI_TOP:
+        return "OB_FRAME_METADATA_TYPE_AE_ROI_TOP";
+    case OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT:
+        return "OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT";
+    case OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM:
+        return "OB_FRAME_METADATA_TYPE_AE_ROI_BOTTOM";
+    case OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY:
+        return "OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY";
+    case OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME:
+        return "OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME";
+    case OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE:
+        return "OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE";
+    case OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX:
+        return "OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX";
+    case OB_FRAME_METADATA_TYPE_LASER_POWER:
+        return "OB_FRAME_METADATA_TYPE_LASER_POWER";
+    case OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL:
+        return "OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL";
+    case OB_FRAME_METADATA_TYPE_LASER_STATUS:
+        return "OB_FRAME_METADATA_TYPE_LASER_STATUS";
+    case OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA:
+        return "OB_FRAME_METADATA_TYPE_GPIO_INPUT_DATA";
+    default:
+        return "unknown metadata type";
+    }
+}
+
+const char *frameTypeToString(OBFrameType type) {
+    switch(type) {
+    case OB_FRAME_VIDEO:
+        return "OB_FRAME_VIDEO";
+    case OB_FRAME_IR:
+        return "OB_FRAME_IR";
+    case OB_FRAME_COLOR:
+        return "OB_FRAME_COLOR";
+    case OB_FRAME_DEPTH:
+        return "OB_FRAME_DEPTH";
+    case OB_FRAME_ACCEL:
+        return "OB_FRAME_ACCEL";
+    case OB_FRAME_GYRO:
+        return "OB_FRAME_GYRO";
+    case OB_FRAME_IR_LEFT:
+        return "OB_FRAME_IR_LEFT";
+    case OB_FRAME_IR_RIGHT:
+        return "OB_FRAME_IR_RIGHT";
+    default:
+        return "unknown frame type";
     }
 }

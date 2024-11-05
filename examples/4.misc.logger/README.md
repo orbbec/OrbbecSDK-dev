@@ -37,7 +37,12 @@ The default output path settings(Windows/Linux) is `${CWD}/Log/OrbbecSDK.log`, w
 
 ## Configuration via XML
 
-The log level can also be configured via XML. You can find the configuration file in the path `OrbbecSDK-dev/src/shared/environment/OrbbecSDKConfig.xml`. Then find the location of the Log node you will see the following.
+The log level can be configured via the XML file. After compiling and installing the project, you can find the configuration files `OrbbecSDKConfig.xml` and `OrbbecSDKConfig.md` in the following paths:
+
+- `shared` directory
+- `bin` directory
+
+You can locate the configuration file `OrbbecSDKConfig.xml` specifically at `OrbbecSDK_v2/src/shared/environment/OrbbecSDKConfig.xml`. Once you open it, find the <Log> node, where you’ll see a setting similar to the following:
 
 ```xml
     <Log>
@@ -63,9 +68,9 @@ The log level can also be configured via XML. You can find the configuration fil
 You can modify the value of the `MaxFileSize` node to control the maximum size of a single file log; by modifying the value of the `MaxFileNum` node, you can control the maximum number of logs generated.
 
 ## Run Sample
-If you are on Windows, you can switch to the directory `OrbbecSDK-dev/build/win_XX/bin` to find the `ob_logger.exe`.
+If you are on Windows, you can switch to the directory `OrbbecSDK_v2/build/win_XX/bin` to find the `ob_logger.exe`.
 
-If you are on linux, you can switch to the directory `OrbbecSDK-dev/build/linux_XX/bin` to find the `ob_logger`.
+If you are on linux, you can switch to the directory `OrbbecSDK_v2/build/linux_XX/bin` to find the `ob_logger`.
 
 ### Result
 ![result](/docs/resource/logger.jpg)

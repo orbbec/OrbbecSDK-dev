@@ -30,7 +30,7 @@ void printStreamProfile(std::shared_ptr<ob::StreamProfile> profile, uint32_t ind
     auto fps = videoProfile->getFps();
     std::cout << index << "."
               << "format: " << ob::TypeHelper::convertOBFormatTypeToString(formatName) << ", "
-              << "revolution: " << width << "*" << height << ", "
+              << "res: " << width << "*" << height << ", "
               << "fps: " << fps << std::endl;
 }
 

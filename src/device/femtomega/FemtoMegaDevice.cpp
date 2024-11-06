@@ -79,7 +79,7 @@ void FemtoMegaUsbDevice::init() {
     deviceSyncConfigurator->enableDepthDelaySupport(true);
     registerComponent(OB_DEV_COMPONENT_DEVICE_SYNC_CONFIGURATOR, deviceSyncConfigurator);
 
-    auto deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this);
+    auto deviceClockSynchronizer = std::make_shared<DeviceClockSynchronizer>(this, deviceTimeFreq_, deviceTimeFreq_);
     registerComponent(OB_DEV_COMPONENT_DEVICE_CLOCK_SYNCHRONIZER, deviceClockSynchronizer);
 }
 

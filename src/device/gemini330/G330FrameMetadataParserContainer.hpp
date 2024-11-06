@@ -106,6 +106,8 @@ public:
                        std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_POWER_LINE_FREQUENCY));
         registerParser(OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION,
                        std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION));
+        registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY,
+                       std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_LOW_LIGHT_COMPENSATION));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_LEFT));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_TOP, std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_TOP));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, std::make_shared<G330ColorMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT));
@@ -125,19 +127,27 @@ public:
         registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE, std::make_shared<G330DepthScrMetadataExposureParser>());
         registerParser(OB_FRAME_METADATA_TYPE_ACTUAL_FRAME_RATE, std::make_shared<G330DepthScrMetadataActualFrameRateParser>(device));
 
-        // registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY,
-        // std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY));
+        registerParser(OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_AUTO_EXPOSURE));
+        registerParser(OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_EXPOSURE_PRIORITY));
         registerParser(OB_FRAME_METADATA_TYPE_LASER_POWER,
-                       std::make_shared<G330DepthScrMetadataLaserPowerLevelParser>([](const int64_t &param) { return param * 60; }));
+                       std::make_shared<G330DepthScrMetadataLaserPowerLevelParser>([](const int64_t &param) { return param * 80; }));
         registerParser(OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL, std::make_shared<G330DepthScrMetadataLaserPowerLevelParser>());
         registerParser(OB_FRAME_METADATA_TYPE_LASER_STATUS, std::make_shared<G330DepthScrMetadataLaserStatusParser>());
-        registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX, std::make_shared<G330DepthScrMetadataHDRSequenceIDParser>());
-        registerParser(OB_FRAME_METADATA_TYPE_FRAME_NUMBER,
-                       std::make_shared<G330DepthScrMetadataHDRSequenceIDParser>());  // todo: remove this line after fix hdr merge issue
-        registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME));
-        registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE,
-                       std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE,
-                                                                 [](const int64_t &param) { return param == 0 ? 0 : 2; }));
+        {
+            auto propServer = device->getPropertyServer();
+            if(propServer->isPropertySupported(OB_STRUCT_DEPTH_HDR_CONFIG, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
+                registerParser(OB_FRAME_METADATA_TYPE_FRAME_NUMBER,
+                               std::make_shared<G330DepthScrMetadataHDRSequenceIDParser>());  // todo: remove this line after fix hdr merge issue
+                registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_INDEX, std::make_shared<G330DepthScrMetadataHDRSequenceIDParser>());
+
+                registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME,
+                               std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_NAME));
+                registerParser(OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE,
+                               std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_HDR_SEQUENCE_SIZE,
+                                                                         [](const int64_t &param) { return param == 0 ? 0 : 2; }));
+            }
+        }
+
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_LEFT, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_LEFT));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_TOP, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_TOP));
         registerParser(OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT, std::make_shared<G330DepthMetadataParser>(device, OB_FRAME_METADATA_TYPE_AE_ROI_RIGHT));

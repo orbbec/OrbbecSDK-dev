@@ -9,6 +9,8 @@ target_sources(
     ${CMAKE_CURRENT_LIST_DIR}/G330DeviceInfo.hpp
     ${CMAKE_CURRENT_LIST_DIR}/G330Device.cpp
     ${CMAKE_CURRENT_LIST_DIR}/G330Device.hpp
+    ${CMAKE_CURRENT_LIST_DIR}/DabaiADevice.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/DabaiADevice.hpp
     ${CMAKE_CURRENT_LIST_DIR}/G330MetadataTypes.hpp
     ${CMAKE_CURRENT_LIST_DIR}/G330MetadataParser.hpp
     ${CMAKE_CURRENT_LIST_DIR}/G330AlgParamManager.cpp

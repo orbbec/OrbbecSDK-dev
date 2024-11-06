@@ -79,8 +79,9 @@ const __m128i AlignImpl::ZERO       = _mm_setzero_si128();
 const __m128  AlignImpl::ZERO_F     = _mm_set_ps1(0.0);
 
 AlignImpl::AlignImpl() : initialized_(false) {
-    depth_unit_mm_ = 1.0;
-    r2_max_loc_    = 0.0;
+    depth_unit_mm_   = 1.0;
+    r2_max_loc_      = 0.0;
+    auto_down_scale_ = 1.0;
     memset(&depth_intric_, 0, sizeof(OBCameraIntrinsic));
     memset(&depth_disto_, 0, sizeof(OBCameraDistortion));
     memset(&rgb_intric_, 0, sizeof(OBCameraIntrinsic));
@@ -104,6 +105,7 @@ void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion de
     memcpy(&depth_disto_, &depth_disto, sizeof(OBCameraDistortion));
     memcpy(&rgb_intric_, &rgb_intrin, sizeof(OBCameraIntrinsic));
     memcpy(&rgb_disto_, &rgb_disto, sizeof(OBCameraDistortion));
+
     memcpy(&transform_, &extrin, sizeof(OBExtrinsic));
     add_target_distortion_ = add_target_distortion;
     // since undistorted depth (whether d2c or c2d) is necessory ...
@@ -134,6 +136,7 @@ void AlignImpl::initialize(OBCameraIntrinsic depth_intrin, OBCameraDistortion de
 
     prepareDepthResolution();
     initialized_ = true;
+    return;
 }
 
 void AlignImpl::reset() {
@@ -593,7 +596,7 @@ int AlignImpl::D2C(const uint16_t *depth_buffer, int depth_width, int depth_heig
         return -1;
     }
 
-    int pixnum = color_width * color_height;
+    int pixnum = rgb_intric_.width * rgb_intric_.height;
     if(out_depth) {
         // init to 1s (depth 0 may be used as other useful date)
         memset(out_depth, 0xff, pixnum * sizeof(uint16_t));
@@ -652,7 +655,7 @@ int AlignImpl::C2D(const uint16_t *depth_buffer, int depth_width, int depth_heig
             break;
         case OB_FORMAT_BGRA:
         case OB_FORMAT_RGBA:
-            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint24_t));
+            memset(out_rgb, 0, depth_width * depth_height * sizeof(uint32_t));
             mapPixel<uint32_t>(depth_xy, static_cast<const uint32_t *>(rgb_buffer), color_width, color_height, (uint32_t *)out_rgb, depth_width, depth_height);
             break;
         case OB_FORMAT_MJPG:

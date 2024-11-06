@@ -140,10 +140,12 @@ private:
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_y;
     std::unordered_map<std::pair<int, int>, float *, ResHashFunc, ResComp> rot_coeff_ht_z;
 
-    float              depth_unit_mm_;          // depth scale
-    bool               add_target_distortion_;  // distort align frame with target coefficent
-    bool               need_to_undistort_depth_;    // undistort depth is necessary
-    bool               gap_fill_copy_;          // filling cracks with copy
+    float              depth_unit_mm_;            // depth scale
+    bool               add_target_distortion_;    // distort align frame with target coefficent
+    bool               need_to_undistort_depth_;  // undistort depth is necessary
+    bool               gap_fill_copy_;            // filling cracks with copy
+    float              auto_down_scale_;          // depth resolution scale
+    float              resv[3];                   // reserved for alignment
     OBCameraIntrinsic  depth_intric_{};
     OBCameraIntrinsic  rgb_intric_{};
     OBCameraDistortion depth_disto_{};

@@ -44,7 +44,7 @@ public:
 private:
     ob_context           *impl_ = nullptr;
     DeviceChangedCallback deviceChangedCallback_;
-    static LogCallback    logCallback_;
+    // static LogCallback    logCallback_;
 
 public:
     /**
@@ -187,8 +187,8 @@ public:
      */
     static void setLoggerToCallback(OBLogSeverity severity, LogCallback callback) {
         ob_error *error       = nullptr;
-        Context::logCallback_ = callback;
-        ob_set_logger_to_callback(severity, &Context::logCallback, &Context::logCallback_, &error);
+        Context::getLogCallback() = callback;
+        ob_set_logger_to_callback(severity, &Context::logCallback, &Context::getLogCallback(), &error);
         Error::handle(&error);
     }
 
@@ -221,6 +221,12 @@ private:
         if(cb) {
             (*cb)(severity, logMsg);
         }
+    }
+
+    // Lazy initialization of the logcallback_. The purpose is to initialize logcallback_ in .hpp
+    static LogCallback& getLogCallback() {
+        static LogCallback logCallback_ = nullptr;
+        return logCallback_;
     }
 
 // for backward compatibility

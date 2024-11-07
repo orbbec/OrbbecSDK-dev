@@ -247,7 +247,8 @@ void Pipeline::onFrameCallback(std::shared_ptr<const Frame> frame) {
 }
 
 void Pipeline::outputFrame(std::shared_ptr<const Frame> frame) {
-    LOG_FREQ_CALC(DEBUG, 5000, "Pipeline streaming... frameset output rate={freq}fps", STREAM_STATE_STR(streamState_));
+    auto deviceInfo = device_->getInfo();
+    LOG_FREQ_CALC(DEBUG, 5000, "{}({}): Pipeline {}, frameset output rate={freq}fps", deviceInfo->name_, deviceInfo->deviceSn_, STREAM_STATE_STR(streamState_));
     if(streamState_ == STREAM_STATE_STREAMING) {
         if(pipelineCallback_ != nullptr) {
             pipelineCallback_(frame);
@@ -578,4 +579,3 @@ void Pipeline::enableHardwareD2C(bool enable) {
 }
 
 }  // namespace libobsensor
-

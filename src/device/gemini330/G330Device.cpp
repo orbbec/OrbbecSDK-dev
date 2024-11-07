@@ -6,7 +6,6 @@
 #include "DevicePids.hpp"
 #include "InternalTypes.hpp"
 
-#include "Platform.hpp"
 #include "utils/Utils.hpp"
 #include "environment/EnvConfig.hpp"
 #include "usb/uvc/UvcDevicePort.hpp"
@@ -131,43 +130,37 @@ void G330Device::init() {
 
     registerComponent(OB_DEV_COMPONENT_COLOR_FRAME_METADATA_CONTAINER, [this]() {
         std::shared_ptr<FrameMetadataParserContainer> container;
-        if(isGmslDevice_) {
-            // For GMSL2 device, color frame metadata is always parsed by G330ColorFrameMetadataParserContainer
-            container = std::make_shared<G330ColorFrameMetadataParserContainer>(this);
-            return container;
+#ifdef __linux__
+        auto sensorPortInfo = getSensorPortInfo(OB_SENSOR_COLOR);
+        if(sensorPortInfo->portType == SOURCE_PORT_USB_UVC && !isGmslDevice_) {
+            auto port    = getSourcePort(sensorPortInfo);
+            auto uvcPort = std::dynamic_pointer_cast<UvcDevicePort>(port);
+            auto backend = uvcPort->getBackendType();
+            if(backend == OB_UVC_BACKEND_TYPE_V4L2) {
+                container = std::make_shared<G330ColorFrameMetadataParserContainerByScr>(this, deviceTimeFreq_, frameTimeFreq_);
+                return container;
+            }
         }
-
-        auto        envConfig                = EnvConfig::getInstance();
-        std::string frameMetadataParsingPath = "";
-        envConfig->getStringValue("Device.FrameMetadataParsingPath", frameMetadataParsingPath);
-        if(frameMetadataParsingPath == "ExtensionHeader") {
-            container = std::make_shared<G330ColorFrameMetadataParserContainer>(this);
-        }
-        else {
-            // default parsing path from payload header
-            container = std::make_shared<G330ColorFrameMetadataParserContainerByScr>(this, deviceTimeFreq_, frameTimeFreq_);
-        }
+#endif
+        container = std::make_shared<G330ColorFrameMetadataParserContainer>(this);
         return container;
     });
 
     registerComponent(OB_DEV_COMPONENT_DEPTH_FRAME_METADATA_CONTAINER, [this]() {
         std::shared_ptr<FrameMetadataParserContainer> container;
-        if(isGmslDevice_) {
-            // For GMSL2 device, depth frame metadata is always parsed by G330DepthFrameMetadataParserContainer
-            container = std::make_shared<G330DepthFrameMetadataParserContainer>(this);
-            return container;
+#ifdef __linux__
+        auto sensorPortInfo = getSensorPortInfo(OB_SENSOR_DEPTH);
+        if(sensorPortInfo->portType == SOURCE_PORT_USB_UVC && !isGmslDevice_) {
+            auto port    = getSourcePort(sensorPortInfo);
+            auto uvcPort = std::dynamic_pointer_cast<UvcDevicePort>(port);
+            auto backend = uvcPort->getBackendType();
+            if(backend == OB_UVC_BACKEND_TYPE_V4L2) {
+                container = std::make_shared<G330DepthFrameMetadataParserContainerByScr>(this, deviceTimeFreq_, frameTimeFreq_);
+                return container;
+            }
         }
-
-        auto        envConfig                = EnvConfig::getInstance();
-        std::string frameMetadataParsingPath = "";
-        envConfig->getStringValue("Device.FrameMetadataParsingPath", frameMetadataParsingPath);
-        if(frameMetadataParsingPath == "ExtensionHeader") {
-            container = std::make_shared<G330DepthFrameMetadataParserContainer>(this);
-        }
-        else {
-            // default parsing path from payload header
-            container = std::make_shared<G330DepthFrameMetadataParserContainerByScr>(this, deviceTimeFreq_, frameTimeFreq_);
-        }
+#endif
+        container = std::make_shared<G330DepthFrameMetadataParserContainer>(this);
         return container;
     });
 }
@@ -286,7 +279,6 @@ void G330Device::initSensorList() {
         return factory;
     });
 
-    auto        platform           = Platform::getInstance();
     const auto &sourcePortInfoList = enumInfo_->getSourcePortInfoList();
     auto depthPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {
         return portInfo->portType == SOURCE_PORT_USB_UVC && std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->infIndex == INTERFACE_DEPTH;
@@ -297,9 +289,8 @@ void G330Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_DEPTH_SENSOR,
             [this, depthPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(depthPortInfo);
-                auto sensor   = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
+                auto port   = getSourcePort(depthPortInfo);
+                auto sensor = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
 
                 sensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
@@ -356,9 +347,8 @@ void G330Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_LEFT_IR_SENSOR,
             [this, depthPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(depthPortInfo);
-                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
+                auto port   = getSourcePort(depthPortInfo);
+                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },  //
@@ -405,9 +395,8 @@ void G330Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_RIGHT_IR_SENSOR,
             [this, depthPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(depthPortInfo);
-                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
+                auto port   = getSourcePort(depthPortInfo);
+                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },   //
@@ -455,8 +444,7 @@ void G330Device::initSensorList() {
 
         // the main property accessor is using the depth port(uvc xu)
         registerComponent(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR, [this, depthPortInfo]() {
-            auto platform      = Platform::getInstance();
-            auto port          = platform->getSourcePort(depthPortInfo);
+            auto port          = getSourcePort(depthPortInfo);
             auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
             uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);  // update xu unit to g330 xu unit
             auto accessor = std::make_shared<VendorPropertyAccessor>(this, port);
@@ -465,8 +453,7 @@ void G330Device::initSensorList() {
 
         // The device monitor is using the depth port(uvc xu)
         registerComponent(OB_DEV_COMPONENT_DEVICE_MONITOR, [this, depthPortInfo]() {
-            auto platform      = Platform::getInstance();
-            auto port          = platform->getSourcePort(depthPortInfo);
+            auto port          = getSourcePort(depthPortInfo);
             auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
             uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);  // update xu unit to g330 xu unit
             auto devMonitor = std::make_shared<DeviceMonitor>(this, port);
@@ -483,9 +470,8 @@ void G330Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_COLOR_SENSOR,
             [this, colorPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(colorPortInfo);
-                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
+                auto port   = getSourcePort(colorPortInfo);
+                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
@@ -540,8 +526,8 @@ void G330Device::initSensorList() {
 
         registerComponent(OB_DEV_COMPONENT_IMU_STREAMER, [this, imuPortInfo]() {
             // the gyro and accel are both on the same port and share the same filter
-            auto platform           = Platform::getInstance();
-            auto port               = platform->getSourcePort(imuPortInfo);
+
+            auto port               = getSourcePort(imuPortInfo);
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL, true);
 
             auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
@@ -552,8 +538,7 @@ void G330Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_ACCEL_SENSOR,
             [this, imuPortInfo]() {
-                auto platform             = Platform::getInstance();
-                auto port                 = platform->getSourcePort(imuPortInfo);
+                auto port                 = getSourcePort(imuPortInfo);
                 auto imuStreamer          = getComponentT<ImuStreamer>(OB_DEV_COMPONENT_IMU_STREAMER);
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<AccelSensor>(this, port, imuStreamerSharedPtr);
@@ -571,8 +556,7 @@ void G330Device::initSensorList() {
         registerComponent(
             OB_DEV_COMPONENT_GYRO_SENSOR,
             [this, imuPortInfo]() {
-                auto platform             = Platform::getInstance();
-                auto port                 = platform->getSourcePort(imuPortInfo);
+                auto port                 = getSourcePort(imuPortInfo);
                 auto imuStreamer          = getComponentT<ImuStreamer>(OB_DEV_COMPONENT_IMU_STREAMER);
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<GyroSensor>(this, port, imuStreamerSharedPtr);
@@ -601,7 +585,6 @@ void                 G330Device::initSensorListGMSL() {
         return factory;
     });
 
-    auto        platform           = Platform::getInstance();
     const auto &sourcePortInfoList = enumInfo_->getSourcePortInfoList();
     auto depthPortInfoIter = std::find_if(sourcePortInfoList.begin(), sourcePortInfoList.end(), [](const std::shared_ptr<const SourcePortInfo> &portInfo) {
         return portInfo->portType == SOURCE_PORT_USB_UVC && std::dynamic_pointer_cast<const USBSourcePortInfo>(portInfo)->infIndex == GMSL_INTERFACE_DEPTH;
@@ -611,9 +594,8 @@ void                 G330Device::initSensorListGMSL() {
         registerComponent(
             OB_DEV_COMPONENT_DEPTH_SENSOR,
             [this, depthPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(depthPortInfo);
-                auto sensor   = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
+                auto port   = getSourcePort(depthPortInfo);
+                auto sensor = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
 
                 sensor->updateFormatFilterConfig({ { FormatFilterPolicy::REMOVE, OB_FORMAT_Y8, OB_FORMAT_ANY, nullptr },
                                                    { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
@@ -673,8 +655,7 @@ void                 G330Device::initSensorListGMSL() {
 
         // the main property accessor is using the depth port(uvc xu)
         registerComponent(OB_DEV_COMPONENT_MAIN_PROPERTY_ACCESSOR, [this, depthPortInfo]() {
-            auto platform      = Platform::getInstance();
-            auto port          = platform->getSourcePort(depthPortInfo);
+            auto port          = getSourcePort(depthPortInfo);
             auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
             uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);  // update xu unit to g330 xu unit
             auto accessor = std::make_shared<VendorPropertyAccessor>(this, port);
@@ -685,8 +666,7 @@ void                 G330Device::initSensorListGMSL() {
 
         // The device monitor is using the depth port(uvc xu)
         registerComponent(OB_DEV_COMPONENT_DEVICE_MONITOR, [this, depthPortInfo]() {
-            auto platform      = Platform::getInstance();
-            auto port          = platform->getSourcePort(depthPortInfo);
+            auto port          = getSourcePort(depthPortInfo);
             auto uvcDevicePort = std::dynamic_pointer_cast<UvcDevicePort>(port);
             uvcDevicePort->updateXuUnit(OB_G330_XU_UNIT);  // update xu unit to g330 xu unit
             auto devMonitor = std::make_shared<DeviceMonitor>(this, port);
@@ -702,9 +682,8 @@ void                 G330Device::initSensorListGMSL() {
         registerComponent(
             OB_DEV_COMPONENT_LEFT_IR_SENSOR,
             [this, leftIrPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(leftIrPortInfo);
-                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
+                auto port   = getSourcePort(leftIrPortInfo);
+                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_LEFT, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },   //
@@ -762,9 +741,8 @@ void                 G330Device::initSensorListGMSL() {
         registerComponent(
             OB_DEV_COMPONENT_RIGHT_IR_SENSOR,
             [this, rightIrPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(rightIrPortInfo);
-                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
+                auto port   = getSourcePort(rightIrPortInfo);
+                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_IR_RIGHT, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = { { FormatFilterPolicy::REMOVE, OB_FORMAT_Z16, OB_FORMAT_ANY, nullptr },  //
                                                                         { FormatFilterPolicy::REMOVE, OB_FORMAT_MJPG, OB_FORMAT_ANY, nullptr },  //
@@ -820,9 +798,8 @@ void                 G330Device::initSensorListGMSL() {
         registerComponent(
             OB_DEV_COMPONENT_COLOR_SENSOR,
             [this, colorPortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(colorPortInfo);
-                auto sensor   = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
+                auto port   = getSourcePort(colorPortInfo);
+                auto sensor = std::make_shared<VideoSensor>(this, OB_SENSOR_COLOR, port);
 
                 std::vector<FormatFilterConfig> formatFilterConfigs = {
                     { FormatFilterPolicy::REMOVE, OB_FORMAT_NV12, OB_FORMAT_ANY, nullptr },
@@ -883,8 +860,8 @@ void                 G330Device::initSensorListGMSL() {
 
         registerComponent(OB_DEV_COMPONENT_IMU_STREAMER, [this, imuPortInfo]() {
             // the gyro and accel are both on the same port and share the same filter
-            auto platform           = Platform::getInstance();
-            auto port               = platform->getSourcePort(imuPortInfo);
+
+            auto port               = getSourcePort(imuPortInfo);
             auto imuCorrectorFilter = getSensorFrameFilter("IMUCorrector", OB_SENSOR_ACCEL, true);
 
             auto dataStreamPort = std::dynamic_pointer_cast<IDataStreamPort>(port);
@@ -895,8 +872,7 @@ void                 G330Device::initSensorListGMSL() {
         registerComponent(
             OB_DEV_COMPONENT_ACCEL_SENSOR,
             [this, imuPortInfo]() {
-                auto platform             = Platform::getInstance();
-                auto port                 = platform->getSourcePort(imuPortInfo);
+                auto port                 = getSourcePort(imuPortInfo);
                 auto imuStreamer          = getComponentT<ImuStreamer>(OB_DEV_COMPONENT_IMU_STREAMER);
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<AccelSensor>(this, port, imuStreamerSharedPtr);
@@ -913,8 +889,7 @@ void                 G330Device::initSensorListGMSL() {
         registerComponent(
             OB_DEV_COMPONENT_GYRO_SENSOR,
             [this, imuPortInfo]() {
-                auto platform             = Platform::getInstance();
-                auto port                 = platform->getSourcePort(imuPortInfo);
+                auto port                 = getSourcePort(imuPortInfo);
                 auto imuStreamer          = getComponentT<ImuStreamer>(OB_DEV_COMPONENT_IMU_STREAMER);
                 auto imuStreamerSharedPtr = imuStreamer.get();
                 auto sensor               = std::make_shared<GyroSensor>(this, port, imuStreamerSharedPtr);
@@ -946,12 +921,10 @@ void G330Device::initProperties() {
 
     auto sensors = getSensorTypeList();
     for(auto &sensor: sensors) {
-        auto  platform       = Platform::getInstance();
         auto &sourcePortInfo = getSensorPortInfo(sensor);
         if(sensor == OB_SENSOR_COLOR) {
-            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([&sourcePortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(sourcePortInfo);
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+                auto port     = getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });
@@ -971,9 +944,8 @@ void G330Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_COLOR_AUTO_EXPOSURE_PRIORITY_INT, "rw", "rw", uvcPropertyAccessor);
         }
         else if(sensor == OB_SENSOR_DEPTH) {
-            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([&sourcePortInfo]() {
-                auto platform = Platform::getInstance();
-                auto port     = platform->getSourcePort(sourcePortInfo);
+            auto uvcPropertyAccessor = std::make_shared<LazyPropertyAccessor>([this, &sourcePortInfo]() {
+                auto port     = getSourcePort(sourcePortInfo);
                 auto accessor = std::make_shared<UvcPropertyAccessor>(port);
                 return accessor;
             });

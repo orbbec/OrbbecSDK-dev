@@ -600,5 +600,10 @@ std::string ObLibuvcDevicePort::getUsbConnectType() {
 }
 #endif
 
-}  // namespace libobsensor
+#ifdef __linux__
+OBUvcBackendType ObLibuvcDevicePort::getBackendType() const {
+    return OB_UVC_BACKEND_TYPE_LIBUVC;
+}
+#endif
 
+}  // namespace libobsensor

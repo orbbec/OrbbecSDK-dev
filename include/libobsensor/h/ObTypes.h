@@ -1599,6 +1599,31 @@ typedef enum {
 } ob_frame_metadata_type,
     OBFrameMetadataType;
 
+/**
+ * @brief For Linux, there are two ways to access the UVC device, libuvc and v4l2. The backend type is used to select the backend to access the device.
+ *
+ */
+typedef enum {
+    /**
+     * @brief Auto detect system capabilities and device hint to select backend
+     *
+     */
+    OB_UVC_BACKEND_TYPE_AUTO,
+
+    /**
+     * @brief Use libuvc backend to access the UVC device
+     *
+     */
+    OB_UVC_BACKEND_TYPE_LIBUVC,
+
+    /**
+     * @brief Use v4l2 backend to access the UVC device
+     *
+     */
+    OB_UVC_BACKEND_TYPE_V4L2,
+} ob_uvc_backend_type,
+    OBUvcBackendType;
+
 // For compatibility
 #define OB_FRAME_METADATA_TYPE_LASER_POWER_MODE OB_FRAME_METADATA_TYPE_LASER_POWER_LEVEL
 #define OB_FRAME_METADATA_TYPE_EMITTER_MODE OB_FRAME_METADATA_TYPE_LASER_STATUS

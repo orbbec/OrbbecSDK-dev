@@ -9,6 +9,7 @@
 #include "property/InternalProperty.hpp"
 #include "firmwareupdater/FirmwareUpdater.hpp"
 #include "InternalTypes.hpp"
+#include "Platform.hpp"
 
 #include <json/json.h>
 
@@ -28,8 +29,14 @@ DeviceBase::DeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info) : enu
 
 void DeviceBase::fetchDeviceInfo() {
     auto propServer                   = getPropertyServer();
-    auto version                      = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
     deviceInfo_                       = std::make_shared<DeviceInfo>();
+    deviceInfo_->name_                = enumInfo_->getName();
+    deviceInfo_->pid_                 = enumInfo_->getPid();
+    deviceInfo_->vid_                 = enumInfo_->getVid();
+    deviceInfo_->uid_                 = enumInfo_->getUid();
+    deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
+
+    auto version                      = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
     deviceInfo_->name_                = version.deviceName;
     deviceInfo_->fwVersion_           = version.firmwareVersion;
     deviceInfo_->deviceSn_            = version.serialNumber;
@@ -37,10 +44,6 @@ void DeviceBase::fetchDeviceInfo() {
     deviceInfo_->hwVersion_           = version.hardwareVersion;
     deviceInfo_->type_                = static_cast<uint16_t>(version.deviceType);
     deviceInfo_->supportedSdkVersion_ = version.sdkVersion;
-    deviceInfo_->pid_                 = enumInfo_->getPid();
-    deviceInfo_->vid_                 = enumInfo_->getVid();
-    deviceInfo_->uid_                 = enumInfo_->getUid();
-    deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
 
     // remove the prefix "Orbbec " from the device name if contained
     if(deviceInfo_->name_.find("Orbbec ") == 0) {
@@ -409,6 +412,31 @@ int DeviceBase::getFirmwareVersionInt() {
         return 0;
     }
     return calFwVersion;
+}
+
+std::shared_ptr<ISourcePort> DeviceBase::getSourcePort(std::shared_ptr<const SourcePortInfo> sourcePortInfo) const {
+    auto platform = Platform::getInstance();
+#ifdef __linux__
+    if(sourcePortInfo->portType == SOURCE_PORT_USB_UVC && deviceInfo_->name_ != "GMSL2") {
+        auto        envConfig = EnvConfig::getInstance();
+        std::string key       = std::string("Device.") + utils::string::removeSpace(deviceInfo_->name_) + std::string(".LinuxUVCDefaultBackend");
+        auto        backend   = OB_UVC_BACKEND_TYPE_AUTO;
+        std::string backendStr;
+        if(envConfig->getStringValue(key, backendStr)) {
+            if(backendStr == "Auto") {
+                backend = OB_UVC_BACKEND_TYPE_AUTO;
+            }
+            else if(backendStr == "LibUVC") {
+                backend = OB_UVC_BACKEND_TYPE_LIBUVC;
+            }
+            else if(backendStr == "V4L2") {
+                backend = OB_UVC_BACKEND_TYPE_V4L2;
+            }
+        }
+        return platform->getUvcSourcePort(sourcePortInfo, backend);
+    }
+#endif
+    return platform->getSourcePort(sourcePortInfo);
 }
 
 void DeviceBase::updateFirmware(const std::vector<uint8_t> &firmware, DeviceFwUpdateCallback updateCallback, bool async) {

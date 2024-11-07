@@ -238,7 +238,7 @@ std::shared_ptr<VideoStreamProfile> Align::createAlignedProfile(std::shared_ptr<
         alignProfile->bindDistortion(toProfile->getDistortion());
         alignProfile->bindSameExtrinsicTo(toProfile);
 
-        if(!matchTargetRes_) {
+        if(!matchTargetRes_ && alignProfile->getType() == OB_STREAM_DEPTH) {
             // Not match to target resolution required, scale to match the source resolution but keep the aspect ratio same as the target.
 
             OBCameraIntrinsic intrin  = alignProfile->getIntrinsic();

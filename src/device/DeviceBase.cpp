@@ -26,16 +26,17 @@ const std::map<OBSensorType, DeviceComponentId> SensorTypeToComponentIdMap = {
     { OB_SENSOR_ACCEL, OB_DEV_COMPONENT_ACCEL_SENSOR },
 };
 
-DeviceBase::DeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info), ctx_(Context::getInstance()), isDeactivated_(false) {}
-
-void DeviceBase::fetchDeviceInfo() {
-    auto propServer                   = getPropertyServer();
+DeviceBase::DeviceBase(const std::shared_ptr<const IDeviceEnumInfo> &info) : enumInfo_(info), ctx_(Context::getInstance()), isDeactivated_(false) {
     deviceInfo_                       = std::make_shared<DeviceInfo>();
     deviceInfo_->name_                = enumInfo_->getName();
     deviceInfo_->pid_                 = enumInfo_->getPid();
     deviceInfo_->vid_                 = enumInfo_->getVid();
     deviceInfo_->uid_                 = enumInfo_->getUid();
     deviceInfo_->connectionType_      = enumInfo_->getConnectionType();
+}
+
+void DeviceBase::fetchDeviceInfo() {
+    auto propServer = getPropertyServer();
 
     auto version                      = propServer->getStructureDataT<OBVersionInfo>(OB_STRUCT_VERSION);
     deviceInfo_->name_                = version.deviceName;
@@ -444,7 +445,7 @@ int DeviceBase::getFirmwareVersionInt() {
 std::shared_ptr<ISourcePort> DeviceBase::getSourcePort(std::shared_ptr<const SourcePortInfo> sourcePortInfo) const {
     auto platform = Platform::getInstance();
 #ifdef __linux__
-    if(sourcePortInfo->portType == SOURCE_PORT_USB_UVC && deviceInfo_->name_ != "GMSL2") {
+    if(sourcePortInfo->portType == SOURCE_PORT_USB_UVC) {
         auto        envConfig = EnvConfig::getInstance();
         std::string key       = std::string("Device.") + utils::string::removeSpace(deviceInfo_->name_) + std::string(".LinuxUVCDefaultBackend");
         auto        backend   = OB_UVC_BACKEND_TYPE_AUTO;

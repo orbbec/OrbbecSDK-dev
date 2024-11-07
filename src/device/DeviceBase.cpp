@@ -8,6 +8,7 @@
 #include "exception/ObException.hpp"
 #include "property/InternalProperty.hpp"
 #include "firmwareupdater/FirmwareUpdater.hpp"
+#include "frameprocessor/FrameProcessor.hpp"
 #include "InternalTypes.hpp"
 #include "Platform.hpp"
 
@@ -332,6 +333,32 @@ std::vector<std::shared_ptr<IFilter>> DeviceBase::createRecommendedPostProcessin
 }
 
 std::shared_ptr<IFilter> DeviceBase::getSensorFrameFilter(const std::string &name, OBSensorType type, bool throwIfNotFound) {
+    // Initialize frameprocess to ensure the private filter is activated before retrieval.
+    DeviceComponentId frameProcessId = OB_DEV_COMPONENT_UNKNOWN;
+    switch(type) {
+    case OB_SENSOR_COLOR:
+        frameProcessId = OB_DEV_COMPONENT_COLOR_FRAME_PROCESSOR;
+        break;
+    case OB_SENSOR_DEPTH:
+        frameProcessId = OB_DEV_COMPONENT_DEPTH_FRAME_PROCESSOR;
+        break;
+    case OB_SENSOR_IR:
+        frameProcessId = OB_DEV_COMPONENT_IR_FRAME_PROCESSOR;
+        break;
+    case OB_SENSOR_IR_LEFT:
+        frameProcessId = OB_DEV_COMPONENT_LEFT_IR_FRAME_PROCESSOR;
+        break;
+    case OB_SENSOR_IR_RIGHT:
+        frameProcessId = OB_DEV_COMPONENT_RIGHT_IR_FRAME_PROCESSOR;
+        break;
+    default:
+        LOG_WARN("Init frameprocessor failed, Unsupported sensor type: {}", type);
+        break;
+    }
+    if (frameProcessId != OB_DEV_COMPONENT_UNKNOWN) {
+        getComponentT<FrameProcessor>(frameProcessId, false);
+    }
+    
     auto filterIter =
         std::find_if(sensorFrameFilters_.begin(), sensorFrameFilters_.end(), [name, type](const std::pair<OBSensorType, std::shared_ptr<IFilter>> &pair) {
             if(type == OB_SENSOR_ACCEL || type == OB_SENSOR_GYRO) {

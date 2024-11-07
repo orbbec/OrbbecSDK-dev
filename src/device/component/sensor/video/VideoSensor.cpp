@@ -108,6 +108,10 @@ void VideoSensor::start(std::shared_ptr<const StreamProfile> sp, FrameCallback c
 }
 
 void VideoSensor::onBackendFrameCallback(std::shared_ptr<Frame> frame) {
+    if(streamState_ != STREAM_STATE_STREAMING && streamState_ != STREAM_STATE_STARTING) {
+        return;
+    }
+
     auto deviceInfo = owner_->getInfo();
     LOG_FREQ_CALC(DEBUG, 5000, "{}({}): {} backend frame callback, frameRate={freq}fps", deviceInfo->name_, deviceInfo->deviceSn_, sensorType_);
 

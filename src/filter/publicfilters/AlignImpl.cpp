@@ -499,7 +499,11 @@ void AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, co
                            int *map) {
 
     int channel = (gap_fill_copy_ ? 1 : 2);
-    for(int i = 0; i < depth_intric_.width * depth_intric_.height; i += 8) {
+    int total_pixels = depth_intric_.width * depth_intric_.height;
+    int i;
+
+    // processing full chunks of 8 pixels
+    for(i = 0; i < total_pixels - 8; i += 8) {
         __m128i depth_i16 = _mm_loadu_si128((__m128i *)(depth_buffer + i));
         __m128i depth_i[] = { _mm_unpacklo_epi16(depth_i16, ZERO), _mm_unpackhi_epi16(depth_i16, ZERO) };
 
@@ -571,6 +575,40 @@ void AlignImpl::D2CWithSSE(const uint16_t *depth_buffer, uint16_t *out_depth, co
 
             transferDepth(x, y, z, 4, i + k * 4, out_depth, map);
         }
+    }
+
+    // processing remaining pixels
+    for (; i < total_pixels; ++i) {
+        uint16_t depth = depth_buffer[i];
+        if(depth < EPSILON) {
+            continue;
+        }
+        float pixelx_f[2], pixely_f[2], dst[2];
+        bool skip_this_pixel = true;
+        for(int fold = 0; fold < channel; fold++) {
+            float dst_x = depth * coeff_mat_x[i * channel + fold] + scaled_trans_[0];
+            float dst_y = depth * coeff_mat_y[i * channel + fold] + scaled_trans_[1];
+            dst[fold]   = depth * coeff_mat_z[i * channel + fold] + scaled_trans_[2];
+            float tx = float(dst_x / dst[fold]);
+            float ty = float(dst_y / dst[fold]);
+            if(add_target_distortion_) {
+                float pt_ud[2] = { tx, ty };
+                float pt_d[2]  = { 0 };
+                float r2_cur   = pt_ud[0] * pt_ud[0] + pt_ud[1] * pt_ud[1];
+                if((OB_DISTORTION_BROWN_CONRADY_K6 == rgb_disto_.model) && (r2_max_loc_ != 0) && (r2_cur > r2_max_loc_)) {
+                    continue;  // break;
+                }
+                addDistortion(rgb_disto_, pt_ud, pt_d);
+                tx = pt_d[0];
+                ty = pt_d[1];
+            }
+            pixelx_f[fold]     = tx * rgb_intric_.fx + rgb_intric_.cx;
+            pixely_f[fold]     = ty * rgb_intric_.fy + rgb_intric_.cy;
+            skip_this_pixel = false;
+        }
+
+        if(!skip_this_pixel)
+            transferDepth(pixelx_f, pixely_f, dst, 1, i, out_depth, map);
     }
 }
 

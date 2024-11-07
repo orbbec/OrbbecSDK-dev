@@ -231,25 +231,6 @@ void estimateFOV(OBCameraIntrinsic intrin, float *fovs) {
 std::shared_ptr<VideoStreamProfile> Align::createAlignedProfile(std::shared_ptr<const VideoStreamProfile> fromProfile,
                                                                 std::shared_ptr<const VideoStreamProfile> toProfile) {
     if(fromProfile_ != fromProfile || toProfile_ != toProfile) {
-        float ori_fov[2], to_fov[2];
-        estimateFOV(fromProfile->getIntrinsic(), ori_fov);
-        estimateFOV(toProfile->getIntrinsic(), to_fov);
-
-        float ori_pix_per_ang[2] = { fromProfile->getWidth() / ori_fov[0], fromProfile->getHeight() / ori_fov[1] },
-              to_pix_per_ang[2]  = { toProfile->getWidth() / to_fov[0], toProfile->getHeight() / to_fov[1] };
-
-        if(alignToStreamType_ == OBStreamType::OB_STREAM_DEPTH) {
-            gapFillCopy_ = true;
-        }
-        else {
-            if((ori_pix_per_ang[0] / to_pix_per_ang[0] > 0.5f) && (ori_pix_per_ang[1] / to_pix_per_ang[1] > 0.5f)) {
-                gapFillCopy_ = true;
-            }
-            else {
-                gapFillCopy_ = false;
-            }
-        }
-
         auto alignProfile = fromProfile->clone()->as<VideoStreamProfile>();
         alignProfile->setWidth(toProfile->getWidth());
         alignProfile->setHeight(toProfile->getHeight());
@@ -291,6 +272,26 @@ std::shared_ptr<VideoStreamProfile> Align::createAlignedProfile(std::shared_ptr<
         fromProfile_  = fromProfile;
         toProfile_    = toProfile;
         alignProfile_ = alignProfile;
+
+        float ori_fov[2], to_fov[2];
+        estimateFOV(fromProfile->getIntrinsic(), ori_fov);
+        estimateFOV(toProfile->getIntrinsic(), to_fov);
+
+        float ori_pix_per_ang[2] = { fromProfile->getWidth() / ori_fov[0], fromProfile->getHeight() / ori_fov[1] },
+              to_pix_per_ang[2]  = { toProfile->getWidth() / to_fov[0], toProfile->getHeight() / to_fov[1] };
+
+        if(alignToStreamType_ == OBStreamType::OB_STREAM_DEPTH) {
+            gapFillCopy_ = true;
+        }
+        else {
+            if((ori_pix_per_ang[0] / to_pix_per_ang[0] > 0.5f) && (ori_pix_per_ang[1] / to_pix_per_ang[1] > 0.5f)) {
+                gapFillCopy_ = true;
+            }
+            else {
+                gapFillCopy_ = false;
+            }
+        }
+
     }
 
     return alignProfile_;

@@ -48,7 +48,7 @@ void Align::updateConfig(std::vector<std::string> &params) {
 }
 
 const std::string &Align::getConfigSchema() const {
-    // csv format: name��type�� min��max��step��default��description
+    // csv format: name, type, min, max, step, default, description
     static const std::string schema = "AlignType, integer, 1, 7, 1, 2, align to the type of data stream\n"
                                       "TargetDistortion, boolean, 0, 1, 1, 1, add distortion of the target stream\n"
                                       "GapFillCopy, boolean, 0, 1, 1, 0, enable gap fill\n"

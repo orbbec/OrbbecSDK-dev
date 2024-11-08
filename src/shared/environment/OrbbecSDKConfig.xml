@@ -1057,7 +1057,7 @@
         <Gemini335>
             <!-- Default backend for Linux UVC devices. If the LinuxUVCBackend is set to "Auto,"
             this item will determine the device's speciality. Optional values: V4L2, LibUVC -->
-            <LinuxUVCDefaultBackend>V4L2</LinuxUVCDefaultBackend>
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
 
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
@@ -1131,7 +1131,7 @@
         <Gemini335L>
             <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
             will determine the device's speciality. Optional values: V4L2, LibUVC -->
-            <LinuxUVCDefaultBackend>V4L2</LinuxUVCDefaultBackend>
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
 
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
@@ -1205,7 +1205,7 @@
         <Gemini335Lg>
             <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
             will determine the device's speciality. Optional values: V4L2, LibUVC -->
-            <LinuxUVCDefaultBackend>V4L2</LinuxUVCDefaultBackend>
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
 
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
@@ -1274,7 +1274,7 @@
         <Gemini336>
             <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
             will determine the device's speciality. Optional values: V4L2, LibUVC -->
-            <LinuxUVCDefaultBackend>V4L2</LinuxUVCDefaultBackend>
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
 
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
@@ -1348,7 +1348,7 @@
         <Gemini336L>
             <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
             will determine the device's speciality. Optional values: V4L2, LibUVC -->
-            <LinuxUVCDefaultBackend>V4L2</LinuxUVCDefaultBackend>
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
 
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
@@ -1423,7 +1423,7 @@
         <DaBaiA>
             <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
             will determine the device's speciality. Optional values: V4L2, LibUVC -->
-            <LinuxUVCDefaultBackend>V4L2</LinuxUVCDefaultBackend>
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
 
             <!--Whether
             to enable heartbeat by default-->
@@ -1515,7 +1515,7 @@
         <DaBaiAL>
             <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
             will determine the device's speciality. Optional values: V4L2, LibUVC -->
-            <LinuxUVCDefaultBackend>V4L2</LinuxUVCDefaultBackend>
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
 
             <!--Whether
             to enable heartbeat by default-->

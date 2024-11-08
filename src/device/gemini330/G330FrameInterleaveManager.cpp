@@ -96,10 +96,6 @@ void G330FrameInterleaveManager::loadFrameInterleave(const std::string &frameInt
     }
 }
 
-const std::string &G330FrameInterleaveManager::getCurrentFrameInterleaveName() const {
-    return currentFrameInterleave_;
-}
-
 const std::vector<std::string> &G330FrameInterleaveManager::getAvailableFrameInterleaveList() const {
     return availableFrameInterleaves_;
 }

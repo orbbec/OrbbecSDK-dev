@@ -219,13 +219,6 @@ ob_device_frame_interleave_list *ob_device_get_available_frame_interleave_list(o
 }
 HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)
 
-const char *ob_device_get_current_frame_interleave_name(const ob_device *device, ob_error **error) BEGIN_API_CALL {
-    VALIDATE_NOT_NULL(device);
-    auto frameInterleaveMgr = device->device->getComponentT<libobsensor::IFrameInterleaveManager>(libobsensor::OB_DEV_COMPONENT_FRAME_INTERLEAVE_MANAGER);
-    return frameInterleaveMgr->getCurrentFrameInterleaveName().c_str();
-}
-HANDLE_EXCEPTIONS_AND_RETURN(nullptr, device)
-
 void ob_delete_frame_interleave_list(ob_device_frame_interleave_list *frame_interleave_list, ob_error **error) BEGIN_API_CALL {
     VALIDATE_NOT_NULL(frame_interleave_list);
     delete frame_interleave_list;

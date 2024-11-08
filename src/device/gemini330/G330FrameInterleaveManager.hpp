@@ -24,7 +24,6 @@ public:
     ~G330FrameInterleaveManager() override = default;
 
     void                            loadFrameInterleave(const std::string &frameInterleaveName) override;
-    const std::string              &getCurrentFrameInterleaveName() const override;
     const std::vector<std::string> &getAvailableFrameInterleaveList() const override;
 
 private:

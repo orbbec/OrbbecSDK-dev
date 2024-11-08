@@ -9,7 +9,6 @@ public:
     virtual ~IFrameInterleaveManager() = default;
 
     virtual void               loadFrameInterleave(const std::string &frameInterleaveName) = 0;
-    virtual const std::string &getCurrentFrameInterleaveName() const                       = 0;
 
     virtual const std::vector<std::string> &getAvailableFrameInterleaveList() const = 0;
 };

@@ -415,22 +415,24 @@ public:
         }
 
         auto propertyServer = device->getPropertyServer();
-        propertyServer->registerAccessCallback(propertyId_,
-                                               [this, type](uint32_t propertyId, const uint8_t *data, size_t dataSize, PropertyOperationType operationType) {
-                                                   utils::unusedVar(dataSize);
-                                                   utils::unusedVar(operationType);
-                                                   if(propertyId != static_cast<uint32_t>(propertyId_)) {
-                                                       return;
-                                                   }
-                                                   auto propertyServer = device_->getPropertyServer();
-                                                   auto propertyItem   = propertyServer->getPropertyItem(propertyId_, PROP_ACCESS_USER);
-                                                   if(propertyItem.type == OB_STRUCT_PROPERTY) {
-                                                       data_ = parseStructurePropertyValue(type, propertyId, data);
-                                                   }
-                                                   else {
-                                                       data_ = parsePropertyValue(propertyId, data);
-                                                   }
-                                               });
+        if(propertyServer->isPropertySupported(propertyId_, PROP_OP_READ, PROP_ACCESS_INTERNAL)) {
+            propertyServer->registerAccessCallback(
+                propertyId_, [this, type](uint32_t propertyId, const uint8_t *data, size_t dataSize, PropertyOperationType operationType) {
+                    utils::unusedVar(dataSize);
+                    utils::unusedVar(operationType);
+                    if(propertyId != static_cast<uint32_t>(propertyId_)) {
+                        return;
+                    }
+                    auto propertyServer = device_->getPropertyServer();
+                    auto propertyItem   = propertyServer->getPropertyItem(propertyId_, PROP_ACCESS_USER);
+                    if(propertyItem.type == OB_STRUCT_PROPERTY) {
+                        data_ = parseStructurePropertyValue(type, propertyId, data);
+                    }
+                    else {
+                        data_ = parsePropertyValue(propertyId, data);
+                    }
+                });
+        }
     }
 
     virtual ~G330MetadataParserBase() = default;

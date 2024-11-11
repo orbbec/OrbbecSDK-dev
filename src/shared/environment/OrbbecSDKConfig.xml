@@ -83,14 +83,15 @@
         <!-- Whether to enumerate network devices, bool type, true-enable, false-disable (default) -->
         <EnumerateNetDevice>false</EnumerateNetDevice>
 
-        <!-- UVC Backend select on Linux; optional values: Auto, V4L2, LibUVC; Auto is the default
-        value -->
-        <LinuxUVCBackend>LibUVC</LinuxUVCBackend>
-
-        <!-- Frame metadata parsing path; optinal values: PayloadHeader, ExtensionHeader-->
-        <FrameMetadataParsingPath>PayloadHeader</FrameMetadataParsingPath>
+        <!-- Global UVC Backend select on Linux; optional values: Auto, V4L2, LibUVC; The default
+        setting is "Auto," which will automatically select the appropriate option based on the
+        system's capabilities and the device's speciality. -->
+        <LinuxUVCBackend>Auto</LinuxUVCBackend>
 
         <FemtoMega>
+            <!-- For Femto-Mega devices, it must be set to V4L2, LibUVC is not supported -->
+            <LinuxUVCDefaultBackend>V4L2</LinuxUVCDefaultBackend>
+
             <Depth>
                 <!-- The width of the default resolution, int type -->
                 <Width>640</Width>
@@ -239,6 +240,10 @@
         </FemtoMegai>
 
         <FemtoBolt>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <Depth>
                 <!-- The width of the default resolution, int type -->
                 <Width>640</Width>
@@ -314,20 +319,12 @@
 
         <!-- Gemini2 config -->
         <Gemini2>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
-            <!-- Whether to enable firmware upgrade foolproof by default, only internal version
-            supports -->
-            <FirmwareUpgradeFoolproof>1</FirmwareUpgradeFoolproof>
-            <!--  Depth Filter Params -->
-            <!--
-            <DepthFilterDDOConfig>./Gemini2_v1.0.json</DepthFilterDDOConfig>
-			 -->
-
-            <!-- TODO lumiaozi It is cumbersome to consider the recommended configuration in
-            different camera depth modes -->
-            <!-- TODO lumiaozi have to consider the uncorresponding resolutions in different camera
-            depth modes -->
             <Depth>
                 <!-- Number of retries for open stream failures, 0 means no retries -->
                 <StreamFailedRetry>0</StreamFailedRetry>
@@ -496,6 +493,10 @@
 
         <!-- Gemini2L config -->
         <Gemini2L>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaulHeartBeat>0</DefaulHeartBeat>
 
@@ -666,6 +667,10 @@
 
         <!-- Astra2 config -->
         <Astra2>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaulHeartBeat>0</DefaulHeartBeat>
 
@@ -774,6 +779,10 @@
 
         <!--  Gemini2XL config -->
         <Gemini2XL>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaulHeartBeat>0</DefaulHeartBeat>
 
@@ -1046,6 +1055,10 @@
 
         <!-- Gemini2R config -->
         <Gemini335>
+            <!-- Default backend for Linux UVC devices. If the LinuxUVCBackend is set to "Auto,"
+            this item will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
             <!-- Whether to enable firmware upgrade foolproof by default, only internal version
@@ -1116,6 +1129,10 @@
 
         <!-- Gemini2RL config -->
         <Gemini335L>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
             <!-- Whether to enable firmware upgrade foolproof by default, only internal version
@@ -1186,6 +1203,10 @@
 
         <!-- Gemini335Lg config -->
         <Gemini335Lg>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
             <!-- Whether to enable firmware upgrade foolproof by default, only internal version
@@ -1251,6 +1272,10 @@
 
         <!-- Gemini 336 config -->
         <Gemini336>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
             <!-- Whether to enable firmware upgrade foolproof by default, only internal version
@@ -1321,6 +1346,10 @@
 
         <!-- Gemini 336L config -->
         <Gemini336L>
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
             <!-- Whether to enable heartbeat by default -->
             <DefaultHeartBeat>0</DefaultHeartBeat>
             <!-- Whether to enable firmware upgrade foolproof by default, only internal version
@@ -1389,129 +1418,185 @@
             </RightIR>
         </Gemini336L>
 
-        <!--DaBaiA config-->
+        <!--DaBaiA
+        config-->
         <DaBaiA>
-            <!--Whether to enable heartbeat by default-->
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
+            <!--Whether
+            to enable heartbeat by default-->
             <DefaultHeartBeat>0</DefaultHeartBeat>
-            <!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
+            <!--Whether
+            to enable firmware upgrade foolproof by default, only internal version supports-->
             <FirmwareUpgradeFoolproof>1</FirmwareUpgradeFoolproof>
 
             <!-- Depth Filter Params -->
             <!-- <DepthFilterDDOConfig>./Gemini2_v1.0.json</DepthFilterDDOConfig> -->
             <Depth>
-                <!--Number of retries for open stream failures, 0 means no retries-->
+                <!--Number
+                of retries for open stream failures, 0 means no retries-->
                 <StreamFailedRetry>0</StreamFailedRetry>
-                <!--Open flow waits for the timeout period of the first frame of data, after which the open flow will fail-->
+                <!--Open
+                flow waits for the timeout period of the first frame of data, after which the open
+                flow will fail-->
                 <MaxStartStreamDelayMs>5000</MaxStartStreamDelayMs>
-                <!--The number of data stream restarts due to abnormal interruption, 0 means no restart-->
+                <!--The
+                number of data stream restarts due to abnormal interruption, 0 means no restart-->
                 <StreamInterruptedRestart>0</StreamInterruptedRestart>
-                <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
+                <!--The
+                maximum frame interval time, if this value is exceeded, it will be judged that the
+                stream is interrupted-->
                 <MaxFrameIntervalMs>2000</MaxFrameIntervalMs>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>640</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>480</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y16</Format>
             </Depth>
             <Color>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>1280</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>720</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>MJPG</Format>
             </Color>
             <IR>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>640</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>480</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
             <IR_LEFT>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>640</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>480</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR_LEFT>
             <IR_RIGHT>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>640</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>480</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR_RIGHT>
         </DaBaiA>
 
-        <!--DaBaiA config-->
+        <!--DaBaiA
+        config-->
         <DaBaiAL>
-            <!--Whether to enable heartbeat by default-->
+            <!-- The default Linux UVC backend. If the LinuxUVCBackend is set to "Auto," this item
+            will determine the device's speciality. Optional values: V4L2, LibUVC -->
+            <LinuxUVCDefaultBackend>LibUVC</LinuxUVCDefaultBackend>
+
+            <!--Whether
+            to enable heartbeat by default-->
             <DefaultHeartBeat>0</DefaultHeartBeat>
-            <!--Whether to enable firmware upgrade foolproof by default, only internal version supports-->
+            <!--Whether
+            to enable firmware upgrade foolproof by default, only internal version supports-->
             <FirmwareUpgradeFoolproof>1</FirmwareUpgradeFoolproof>
 
             <!-- Depth Filter Params -->
             <!-- <DepthFilterDDOConfig>./Gemini2_v1.0.json</DepthFilterDDOConfig> -->
             <Depth>
-                <!--Number of retries for open stream failures, 0 means no retries-->
+                <!--Number
+                of retries for open stream failures, 0 means no retries-->
                 <StreamFailedRetry>0</StreamFailedRetry>
-                <!--Open flow waits for the timeout period of the first frame of data, after which the open flow will fail-->
+                <!--Open
+                flow waits for the timeout period of the first frame of data, after which the open
+                flow will fail-->
                 <MaxStartStreamDelayMs>5000</MaxStartStreamDelayMs>
-                <!--The number of data stream restarts due to abnormal interruption, 0 means no restart-->
+                <!--The
+                number of data stream restarts due to abnormal interruption, 0 means no restart-->
                 <StreamInterruptedRestart>0</StreamInterruptedRestart>
-                <!--The maximum frame interval time, if this value is exceeded, it will be judged that the stream is interrupted-->
+                <!--The
+                maximum frame interval time, if this value is exceeded, it will be judged that the
+                stream is interrupted-->
                 <MaxFrameIntervalMs>2000</MaxFrameIntervalMs>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>640</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>480</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y16</Format>
             </Depth>
             <Color>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>1280</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>720</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>MJPG</Format>
             </Color>
             <IR>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>640</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>480</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR>
             <IR_LEFT>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>640</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>480</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR_LEFT>
             <IR_RIGHT>
-                <!--The resolution width is enabled by default, int type-->
+                <!--The
+                resolution width is enabled by default, int type-->
                 <Width>640</Width>
-                <!--High resolution is enabled by default, int type-->
+                <!--High
+                resolution is enabled by default, int type-->
                 <Height>480</Height>
-                <!--The frame rate of the resolution enabled by default, int type-->
+                <!--The
+                frame rate of the resolution enabled by default, int type-->
                 <FPS>30</FPS>
                 <Format>Y8</Format>
             </IR_RIGHT>

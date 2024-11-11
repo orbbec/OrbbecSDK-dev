@@ -51,7 +51,7 @@ void printGyroProfile(std::shared_ptr<ob::StreamProfile> profile, uint32_t index
     // Get the rate of gyro.
     auto gyroRate = gyroProfile->getSampleRate();
     std::cout << index << "."
-              << "gyro rate: " << gyroRate << std::endl;
+              << "gyro rate: " << ob::TypeHelper::convertOBIMUSampleRateTypeToString(gyroRate) << std::endl;
 }
 
 // Enumerate stream profiles.

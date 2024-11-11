@@ -22,6 +22,11 @@ int main() try {
     // Create a context to access the connected devices
     std::shared_ptr<ob::Context> context = std::make_shared<ob::Context>();
 
+#if defined(__linux__)
+    // On Linux, it is recommended to use the libuvc backend for device access as v4l2 is not always reliable on some systems for firmware update.
+    context->setUvcBackendType(OB_UVC_BACKEND_TYPE_LIBUVC);
+#endif
+
     // Get connected devices from the context
     std::shared_ptr<ob::DeviceList> deviceList = context->queryDeviceList();
     if(deviceList->getCount() == 0) {

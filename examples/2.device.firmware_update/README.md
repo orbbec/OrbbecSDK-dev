@@ -4,6 +4,9 @@
 
 This sample demonstrates how to use the SDK to update the firmware of a connected device. It includes functions to list connected devices, select a device, and update its firmware.
 
+> Note: This sample are not suiltable for Femto Mega, Femto Mega i, and Femto Bolt devices.
+> For these devices, please refer to the this repo:[https://github.com/orbbec/OrbbecFirmware](https://github.com/orbbec/OrbbecFirmware)
+
 ### Knowledge
 
 Context is the environment context, the first object created during initialization, which can be used to perform some settings, including but not limited to device status change callbacks, log level settings, etc. Context can access multiple Devices.
@@ -82,11 +85,19 @@ Device is the device object, which can be used to obtain the device information,
 
 ### Attention
 
-After the firmware update completes, you need to restart the device manually to apply the new firmware. Alternatively, you can use the `reboot()` function to restart the device programmatically.
+1. After the firmware update completes, you need to restart the device manually to apply the new firmware. Alternatively, you can use the `reboot()` function to restart the device programmatically.
 
-```c++
-    device->reboot();
-```
+    ```c++
+        device->reboot();
+    ```
+
+2. Don't plug out the device during the firmware update process.
+
+3. For linux users, it is recommended to use the `LibUVC` as the backend as the `V4L2` backend may cause some issues on some systems. Switch backend before create device like this:
+
+    ```c++
+        context->setUvcBackendType(OB_UVC_BACKEND_TYPE_LIBUVC);
+    ```
 
 ## Run Sample
 

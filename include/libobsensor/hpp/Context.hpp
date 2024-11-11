@@ -145,7 +145,22 @@ public:
     }
 
     /**
-     * @brief Set the level of the global log, which affects both the log level output to the console, output to the file and output the user defined callback.
+     * @brief For linux, there are two ways to enable the UVC backend: libuvc and libusb. This function is used to set the backend type.
+     * @brief It is effective when the new device is created.
+     *
+     * @attention This interface is only available for Linux.
+     *
+     * @param[in] backend_type The backend type to be used.
+     */
+    void setUvcBackendType(OBUvcBackendType type) const {
+        ob_error *error = nullptr;
+        ob_set_uvc_backend_type(impl_, type, &error);
+        Error::handle(&error);
+    }
+
+    /**
+     * @brief Set the level of the global log, which affects both the log level output to the console, output to the file and output the user defined
+     * callback.
      *
      * @param severity The log output level.
      */

@@ -44,7 +44,7 @@ G330DeviceInfo::G330DeviceInfo(const SourcePortInfoList groupedInfoList) {
 G330DeviceInfo::~G330DeviceInfo() noexcept {}
 
 std::shared_ptr<IDevice> G330DeviceInfo::createDevice() const {
-    if(std::find(DaBaiDevPids.begin(), DaBaiDevPids.end(), pid_) != DaBaiDevPids.end()) {
+    if(std::find(DaBaiADevPids.begin(), DaBaiADevPids.end(), pid_) != DaBaiADevPids.end()) {
         return std::make_shared<DabaiADevice>(shared_from_this());
     }
 

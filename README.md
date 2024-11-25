@@ -1,8 +1,7 @@
 # Open Source Orbbec SDK
 
-## ⚠️ Important Notice
-
-**Welcome to Orbbec's latest open-source Orbbec SDK! Before you begin using this version of the SDK, it's crucial to check the [device support list](#12-supported-devices) to verify that your device is supported to ensure compatibility**.
+> [!IMPORTANT]
+> Welcome to Orbbec's latest open-source Orbbec SDK! Before you begin using this version of the SDK, it's crucial to check the [device support list](#12-supported-devices) to verify that your device is supported to ensure compatibility**.
 
 ## 1. Introduction
 

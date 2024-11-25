@@ -51,12 +51,11 @@ public:
     // colorResolution = colorScale * depthResolution
     static void transformationDepthToRGBDPointCloud(OBXYTables *xyTables, const void *depthImageData, const void *colorImageData, void *pointCloudData,
                                                     float positionDataScale = 1.0f, OBCoordinateSystemType type = OB_RIGHT_HAND_COORDINATE_SYSTEM,
-                                                    bool colorDataNormalization = false, float colorScale = 1.0f);
+                                                    bool colorDataNormalization = false, uint32_t colorWidth = 0, uint32_t colorHeight = 0);
 
     // colorResolution = colorScale * depthResolution
     static void transformationDepthToRGBDPointCloudByUVTables(const OBCameraIntrinsic rgbIntrinsic, OBXYTables *uvTables, const void *depthImageData,
                                                               const void *colorImageData, void *pointCloudData, float positionDataScale = 1.0f,
-                                                              OBCoordinateSystemType type = OB_RIGHT_HAND_COORDINATE_SYSTEM,
-                                                              bool colorDataNormalization = false, float colorScale = 1.0f);
+                                                              OBCoordinateSystemType type = OB_RIGHT_HAND_COORDINATE_SYSTEM, bool colorDataNormalization = false);
 };
 }  // namespace libobsensor

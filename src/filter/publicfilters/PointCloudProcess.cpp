@@ -251,16 +251,13 @@ std::shared_ptr<Frame> PointCloudFilter::createRGBDPointCloud(std::shared_ptr<co
         }
     }
 
-	float scale_x = 1.f * colorVideoFrame->getWidth() / dstWidth;
-    float scale_y = 1.f * colorVideoFrame->getHeight() / dstHeight;
-    float scale   = scale_x > scale_y ? scale_x : scale_y;
     if(distortionType == OBPointCloudDistortionType::OB_POINT_CLOUD_ADD_DISTORTION_TYPE) {
         CoordinateUtil::transformationDepthToRGBDPointCloudByUVTables(dstIntrinsic, &xyTables_, depthFrame->getData(), colorData, (void *)pointFrame->getData(),
-                                                                      positionDataScale_, coordinateSystemType_, isColorDataNormalization_, scale);
+                                                                      positionDataScale_, coordinateSystemType_, isColorDataNormalization_);
     }
     else {
         CoordinateUtil::transformationDepthToRGBDPointCloud(&xyTables_, depthFrame->getData(), colorData, (void *)pointFrame->getData(), positionDataScale_,
-                                                            coordinateSystemType_, isColorDataNormalization_, scale);
+                                                            coordinateSystemType_, isColorDataNormalization_, colorVideoFrame->getWidth(), colorVideoFrame->getHeight());
     }
 
     float depthValueScale = depthVideoFrame->as<DepthFrame>()->getValueScale();

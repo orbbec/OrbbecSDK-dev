@@ -216,8 +216,8 @@ void setDepthUnit() {
 
 void setDepthSoftFilter() {
     try {
-        if(device->isPropertySupported(OB_PROP_DEPTH_SOFT_FILTER_BOOL, OB_PERMISSION_WRITE)) {
-            device->setBoolProperty(OB_PROP_DEPTH_SOFT_FILTER_BOOL, true);
+        if(device->isPropertySupported(OB_PROP_DEPTH_NOISE_REMOVAL_FILTER_BOOL, OB_PERMISSION_WRITE)) {
+            device->setBoolProperty(OB_PROP_DEPTH_NOISE_REMOVAL_FILTER_BOOL, true);
             std::cout << "turn on depth soft filter" << std::endl;
         }
     }
@@ -274,6 +274,9 @@ void startStream() {
 }
 std::shared_ptr<ob::FrameSet> fileterAlign(std::shared_ptr<ob::FrameSet> frameset) {
     auto newFrame    = align->process(frameset);
+    if (!newFrame) {
+        return nullptr;
+    }
     auto newFrameSet = newFrame->as<ob::FrameSet>();
     return newFrameSet;
 }

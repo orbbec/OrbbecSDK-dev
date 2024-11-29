@@ -128,13 +128,16 @@ std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<const
 
     // create device
     auto device = info->createDevice();
-    device->activateDeviceAccessor();
 
     // add to createdDevices_
     {
         std::unique_lock<std::mutex> lock(createdDevicesMutex_);
         createdDevices_.insert({ info->getUid(), device });
     }
+
+    // activate device accessor
+    device->activateDeviceAccessor();
+
     auto devInfo = device->getInfo();
     LOG_INFO("Device created successfully! Name: {0}, PID: 0x{1:04x}, SN/ID: {2} FW: {3}", devInfo->name_, devInfo->pid_, devInfo->deviceSn_,
              devInfo->fwVersion_);

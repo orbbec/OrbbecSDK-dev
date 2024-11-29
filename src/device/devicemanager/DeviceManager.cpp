@@ -85,7 +85,7 @@ std::shared_ptr<IDevice> DeviceManager::createNetDevice(std::string address, uin
     if(!deviceInfo) {
         throw libobsensor::invalid_value_exception("Failed to query Net Device, address=" + address + ", port=" + std::to_string(port));
     }
-    auto device     = createDevice(deviceInfo);
+    auto device = createDevice(deviceInfo);
 
     {
         std::unique_lock<std::mutex> lock(customConnectedDevicesMutex_);
@@ -128,6 +128,7 @@ std::shared_ptr<IDevice> DeviceManager::createDevice(const std::shared_ptr<const
 
     // create device
     auto device = info->createDevice();
+    device->activateDeviceAccessor();
 
     // add to createdDevices_
     {

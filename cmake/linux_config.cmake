@@ -44,7 +44,7 @@ endif()
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine OUTPUT_VARIABLE MACHINE)
 
 if(OB_BUILD_LINUX_ARM64)
-    if(${MACHINE} MATCHES "aarch64-linux-gnu")
+    if(${MACHINE} MATCHES "aarch64-([a-zA-Z0-9]+-)?linux-gnu")
         add_definitions(-DOS_ARM)
         add_definitions(-DOS_ARM64)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wl,--allow-shlib-undefined -mstrict-align -ftree-vectorize")

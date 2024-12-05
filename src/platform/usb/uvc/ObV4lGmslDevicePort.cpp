@@ -394,7 +394,8 @@ void foreachProfileGmsl(std::vector<std::shared_ptr<V4lDeviceHandleGmsl>>       
                                 // LOG_DEBUG("-devHandle->fd:{0}, -format:{1}, width:{2}, heigh:{3}, fps:{4}, mStreamType:{5}, fdPnum:{6}", devHandle->fd,
                                 // format, width, height, fps, mStreamType, fdPnum );
                                 // auto profile = std::make_shared<VideoStreamProfile>(OB_STREAM_VIDEO, format, width, height, fps);
-                                auto profile = std::make_shared<VideoStreamProfile>(std::shared_ptr<LazySensor>(), mStreamType, format, width, height, fps);
+                                auto profile = std::make_shared<VideoStreamProfile>(std::shared_ptr<LazySensor>(), static_cast<OBStreamType>(mStreamType),
+                                                                                    format, width, height, fps);
                                 if(fourcc != 0) {
                                     quit = func(devHandle, profile);
                                 }

@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string>
 #include <memory>
+#include <algorithm>
 
 bool getFirmwarePath(std::string &firmwarePath);
 bool selectDevice(int &deviceIndex);

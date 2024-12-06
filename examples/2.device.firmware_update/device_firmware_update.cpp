@@ -10,6 +10,7 @@
 #include <string>
 #include <memory>
 #include <algorithm>
+#include <cctype>
 
 bool getFirmwarePath(std::string &firmwarePath);
 bool selectDevice(int &deviceIndex);

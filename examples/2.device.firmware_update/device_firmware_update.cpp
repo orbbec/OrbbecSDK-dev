@@ -4,7 +4,6 @@
 #include <libobsensor/ObSensor.hpp>
 
 #include "utils.hpp"
-#include "utils_opencv.hpp"
 
 #include <iostream>
 #include <fstream>

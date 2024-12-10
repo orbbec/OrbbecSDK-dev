@@ -21,6 +21,7 @@
 #define glXGetCurrentDisplay wglGetCurrentDisplay
 #define glXMakeCurrent wglMakeCurrent
 #endif
+#endif
 
 namespace libobsensor {
 

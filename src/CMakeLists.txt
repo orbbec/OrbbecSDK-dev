@@ -39,6 +39,17 @@ if(UNIX)
     target_link_libraries(OrbbecSDK PRIVATE Threads::Threads)
 endif()
 
+find_package(OpenGL REQUIRED)
+
+if(OPENGL_FOUND)
+    include_directories(${OPENGL_INCLUDE_DIR})
+    message("OpenGL include directory: ${OPENGL_INCLUDE_DIR}")
+    target_link_libraries(OrbbecSDK PRIVATE ${OPENGL_gl_LIBRARY})
+    add_definitions(-DOPENGL_FOUND)
+else()
+    message("OpenGL not found")
+endif()
+
 add_library(ob::OrbbecSDK ALIAS OrbbecSDK)
 ob_source_group(ob::OrbbecSDK)
 
@@ -61,4 +72,3 @@ if(OB_IS_MAIN_PROJECT)
 
     install(EXPORT OrbbecSDKConfig NAMESPACE ob:: DESTINATION lib)
 endif()
-

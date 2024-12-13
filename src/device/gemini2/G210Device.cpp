@@ -145,9 +145,9 @@ void G210Device::initSensorList() {
                 auto port   = getSourcePort(depthPortInfo);
                 auto sensor = std::make_shared<DisparityBasedSensor>(this, OB_SENSOR_DEPTH, port);
 
-                std::vector<FormatFilterConfig> formatFilterConfigs = {
-                    { FormatFilterPolicy::REPLACE, OB_FORMAT_MJPG, OB_FORMAT_RLE, nullptr },
-                };
+                auto                            formatConverter     = getSensorFrameFilter("FrameUnpacker", OB_SENSOR_DEPTH, false);
+                std::vector<FormatFilterConfig> formatFilterConfigs = { { FormatFilterPolicy::REPLACE, OB_FORMAT_MJPG, OB_FORMAT_RLE, nullptr },
+                                                                        { FormatFilterPolicy::ADD, OB_FORMAT_MJPG, OB_FORMAT_Y16, formatConverter } };
 
                 sensor->updateFormatFilterConfig(formatFilterConfigs);
 

@@ -284,14 +284,14 @@ std::shared_ptr<Frame> FrameMirror::process(std::shared_ptr<const Frame> frame) 
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
-    if(frame->is<FrameSet>()) {
-        return outFrame;
-    }
-
     if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV && frame->getFormat() != OB_FORMAT_RGB
        && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameMirror unsupported to process this format: {}", frame->getFormat());
+        return std::const_pointer_cast<Frame>(frame);
+    }
+
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
+    if(frame->is<FrameSet>()) {
         return outFrame;
     }
 
@@ -399,14 +399,14 @@ std::shared_ptr<Frame> FrameFlip::process(std::shared_ptr<const Frame> frame) {
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
-    if(frame->is<FrameSet>()) {
-        return outFrame;
-    }
-
     if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV && frame->getFormat() != OB_FORMAT_BGR
        && frame->getFormat() != OB_FORMAT_RGB && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameFlip unsupported to process this format:{}", frame->getFormat());
+        return std::const_pointer_cast<Frame>(frame);
+    }
+
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
+    if(frame->is<FrameSet>()) {
         return outFrame;
     }
 
@@ -509,20 +509,21 @@ std::shared_ptr<Frame> FrameRotate::process(std::shared_ptr<const Frame> frame) 
         return nullptr;
     }
 
-    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
     if(frame->is<FrameSet>()) {
-        return outFrame;
+        return std::const_pointer_cast<Frame>(frame);
     }
 
     if(rotateDegree_ == 0) {
-        return outFrame;
+        return std::const_pointer_cast<Frame>(frame);
     }
 
     if(frame->getFormat() != OB_FORMAT_Y16 && frame->getFormat() != OB_FORMAT_Y8 && frame->getFormat() != OB_FORMAT_YUYV && frame->getFormat() != OB_FORMAT_RGB
        && frame->getFormat() != OB_FORMAT_BGR && frame->getFormat() != OB_FORMAT_RGBA && frame->getFormat() != OB_FORMAT_BGRA) {
         LOG_WARN_INTVL("FrameRotate unsupported to process this format: {}", frame->getFormat());
-        return outFrame;
+        return std::const_pointer_cast<Frame>(frame);
     }
+
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
 
     std::lock_guard<std::mutex> rotateLock(mtx_);
     bool                        isSupportRotate = true;

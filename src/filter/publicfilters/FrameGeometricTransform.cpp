@@ -290,11 +290,12 @@ std::shared_ptr<Frame> FrameMirror::process(std::shared_ptr<const Frame> frame) 
         return std::const_pointer_cast<Frame>(frame);
     }
 
-    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
     if(frame->is<FrameSet>()) {
+        auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
         return outFrame;
     }
 
+    auto outFrame        = FrameFactory::createFrameFromOtherFrame(frame);
     auto videoFrame      = frame->as<VideoFrame>();
     bool isMirrorSupport = true;
     switch(frame->getFormat()) {
@@ -405,10 +406,12 @@ std::shared_ptr<Frame> FrameFlip::process(std::shared_ptr<const Frame> frame) {
         return std::const_pointer_cast<Frame>(frame);
     }
 
-    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
     if(frame->is<FrameSet>()) {
+        auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
         return outFrame;
     }
+
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
 
     bool isSupportFlip = true;
     auto videoFrame    = frame->as<VideoFrame>();
@@ -510,7 +513,8 @@ std::shared_ptr<Frame> FrameRotate::process(std::shared_ptr<const Frame> frame) 
     }
 
     if(frame->is<FrameSet>()) {
-        return std::const_pointer_cast<Frame>(frame);
+        auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
+        return outFrame;
     }
 
     if(rotateDegree_ == 0) {
@@ -523,7 +527,7 @@ std::shared_ptr<Frame> FrameRotate::process(std::shared_ptr<const Frame> frame) 
         return std::const_pointer_cast<Frame>(frame);
     }
 
-    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame, true);
+    auto outFrame = FrameFactory::createFrameFromOtherFrame(frame);
 
     std::lock_guard<std::mutex> rotateLock(mtx_);
     bool                        isSupportRotate = true;
@@ -632,4 +636,3 @@ OBExtrinsic FrameRotate::rotateOBExtrinsic(uint32_t rotateDegree) {
 }
 
 }  // namespace libobsensor
-

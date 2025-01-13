@@ -963,7 +963,7 @@ void G330Device::initProperties() {
                 return accessor.get();
             });
 
-            propertyServer->registerProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, "rw", "rw", d2dPropertyAccessor); // using d2d property accessor
+            propertyServer->registerProperty(OB_PROP_DISP_SEARCH_OFFSET_INT, "rw", "rw", d2dPropertyAccessor);  // using d2d property accessor
             propertyServer->registerProperty(OB_STRUCT_DISP_OFFSET_CONFIG, "rw", "rw", vendorPropertyAccessor);
 
             propertyServer->registerProperty(OB_PROP_DEPTH_AUTO_EXPOSURE_BOOL, "rw", "rw", vendorPropertyAccessor);
@@ -1029,6 +1029,7 @@ void G330Device::initProperties() {
             propertyServer->registerProperty(OB_PROP_STOP_IR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_COLOR_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
             propertyServer->registerProperty(OB_PROP_STOP_DEPTH_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
+            propertyServer->registerProperty(OB_PROP_STOP_IR_RIGHT_STREAM_BOOL, "rw", "rw", vendorPropertyAccessor);
 
             if(isGmslDevice_) {
                 propertyServer->registerProperty(OB_PROP_DEVICE_REPOWER_BOOL, "w", "w", vendorPropertyAccessor);

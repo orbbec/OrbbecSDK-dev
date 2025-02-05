@@ -39,7 +39,7 @@ Context::Context(const std::string &configFilePath) {
         LOG_DEBUG("Context created! Library version: v{}, config file path: {}", OB_LIB_VERSION_STR, configFilePath);
     }
 #ifdef OB_BUILD_WITH_EXTENSIONS_COMMIT_HASH
-    printExtensionsCommitHash();
+    logExtensionsCommitHashes();
 #endif
 }
 
@@ -67,7 +67,7 @@ std::shared_ptr<Platform> Context::getPlatform() const {
 #ifdef OB_BUILD_WITH_EXTENSIONS_COMMIT_HASH
 typedef const char *(*pfunc_ob_get_commit_hash)();
 
-void Context::printExtensionsCommitHash() {
+void Context::logExtensionsCommitHashes() {
     std::unordered_map<std::string, std::pair<std::string, std::string>> extensionsMap = {
         { "frameprocessor", { "/frameprocessor/", "ob_frame_processor" } },
         { "privfilter", { "/filters/", "ob_priv_filter" } },
@@ -83,14 +83,14 @@ void Context::printExtensionsCommitHash() {
 
             if(dylib_ && ob_get_commit_hash) {
                 const char *commitHash = ob_get_commit_hash();
-                LOG_WARN(" - Successfully retrieved commit hash for library '{}' (commit: {})", libInfo.first, commitHash);
+                LOG_DEBUG(" - Successfully retrieved commit hash for library '{}' (commit: {})", libInfo.first, commitHash);
             }
             else {
-                LOG_WARN(" - Failed to retrieve commit hash for library '{}'", libInfo.first);
+                LOG_DEBUG(" - Failed to retrieve commit hash for library '{}'", libInfo.first);
             }
         }
         catch(...) {
-            LOG_WARN(" - Failed to retrieve commit hash for library '{}', exception occurred", libInfo.first);
+            LOG_DEBUG(" - Failed to retrieve commit hash for library '{}', exception occurred", libInfo.first);
         }
     }
 }

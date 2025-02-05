@@ -36,7 +36,7 @@ public:
 
 private:
 #ifdef OB_BUILD_WITH_EXTENSIONS_COMMIT_HASH
-    void printExtensionsCommitHash();
+    void logExtensionsCommitHashes();
 #endif
     std::shared_ptr<EnvConfig>               envConfig_;
     std::shared_ptr<Logger>                  logger_;

@@ -238,21 +238,21 @@ typedef enum {
  * @brief Enumeration value describing the firmware upgrade status
  */
 typedef enum {
-    STAT_VERIFY_SUCCESS = 5,  /**< Image file verifify success */
-    STAT_FILE_TRANSFER  = 4,  /**< file transfer */
-    STAT_DONE           = 3,  /**< update completed */
-    STAT_IN_PROGRESS    = 2,  /**< upgrade in process */
-    STAT_START          = 1,  /**< start the upgrade */
-    STAT_VERIFY_IMAGE   = 0,  /**< Image file verification */
-    ERR_VERIFY          = -1, /**< Verification failed */
-    ERR_PROGRAM         = -2, /**< Program execution failed */
-    ERR_ERASE           = -3, /**< Flash parameter failed */
-    ERR_FLASH_TYPE      = -4, /**< Flash type error */
-    ERR_IMAGE_SIZE      = -5, /**< Image file size error */
-    ERR_OTHER           = -6, /**< other errors */
-    ERR_DDR             = -7, /**< DDR access error */
+    STAT_VERIFY_SUCCESS = 5,   /**< Image file verifify success */
+    STAT_FILE_TRANSFER  = 4,   /**< file transfer */
+    STAT_DONE           = 3,   /**< update completed */
+    STAT_IN_PROGRESS    = 2,   /**< upgrade in process */
+    STAT_START          = 1,   /**< start the upgrade */
+    STAT_VERIFY_IMAGE   = 0,   /**< Image file verification */
+    ERR_VERIFY          = -1,  /**< Verification failed */
+    ERR_PROGRAM         = -2,  /**< Program execution failed */
+    ERR_ERASE           = -3,  /**< Flash parameter failed */
+    ERR_FLASH_TYPE      = -4,  /**< Flash type error */
+    ERR_IMAGE_SIZE      = -5,  /**< Image file size error */
+    ERR_OTHER           = -6,  /**< other errors */
+    ERR_DDR             = -7,  /**< DDR access error */
     ERR_TIMEOUT         = -8,  /**< timeout error */
-    ERR_MISMATCH        = -9, /**< Mismatch firmware error */
+    ERR_MISMATCH        = -9,  /**< Mismatch firmware error */
     ERR_UNSUPPORT_DEV   = -10, /**< Unsupported device error */
 } OBUpgradeState,
     OBFwUpdateState, ob_upgrade_state, ob_fw_update_state;
@@ -927,6 +927,16 @@ typedef struct {
     uint16_t deviceId;
 
 } OBDeviceSyncConfig, ob_device_sync_config, OB_DEVICE_SYNC_CONFIG;
+
+/**
+ * @brief Preset tag
+ */
+typedef enum {
+    OB_DEVICE_DEPTH_WORK_MODE = 0,
+    OB_CUSTOM_DEPTH_WORK_MODE = 1,
+} OBDepthWorkModeTag,
+    ob_depth_work_mode_tag;
+
 /**
  * @brief Depth work mode
  */
@@ -940,6 +950,11 @@ typedef struct {
      * @brief Name of work mode
      */
     char name[32];
+    /**
+     * @brief Preset tag
+     */
+    OBDepthWorkModeTag tag;
+
 } OBDepthWorkMode, ob_depth_work_mode;
 
 /**
@@ -1426,11 +1441,11 @@ typedef struct {
 /**
  * @brief Disparity offset interleaving configuration
  */
-typedef struct{
-  uint8_t enable;
-  uint8_t offset0;
-  uint8_t offset1;
-  uint8_t reserved;
+typedef struct {
+    uint8_t enable;
+    uint8_t offset0;
+    uint8_t offset1;
+    uint8_t reserved;
 } OBDispOffsetConfig, ob_disp_offset_config;
 
 /**

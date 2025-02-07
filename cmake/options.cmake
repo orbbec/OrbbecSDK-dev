@@ -6,6 +6,7 @@ option(OB_BUILD_EXAMPLES "Build SDK examples" ON)
 option(OB_BUILD_TESTS "Build tests" OFF)
 option(OB_BUILD_TOOLS "Build tools" ON)
 option(OB_BUILD_DOCS "Build api document and install doc" ON)
+option(OB_BUILD_PCL "Build Point Cloud Library examples" ON)
 
 # information options
 option(OB_BUILD_WITH_EXTENSIONS_COMMIT_HASH "Build with extensions commit hash" ON)

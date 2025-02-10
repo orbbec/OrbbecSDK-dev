@@ -4,37 +4,10 @@
 #include <libobsensor/ObSensor.hpp>
 
 #include "utils.hpp"
-#include "utils_opencv.hpp"
+#include "../common/cvhelper.hpp"
 
 #include <memory>
-
-// Helper function to convert depth frame to colorized image
-cv::Mat colorizeDepth(std::shared_ptr<ob::frame> depthFrame) {
-    cv::Mat rstMat;
-    cv::Mat cvtMat;
-
-    const uint32_t width  = depthFrame->as<ob::VideoFrame>()->getWidth();
-    const uint32_t height = depthFrame->as<ob::VideoFrame>()->getHeight();
-    // depth frame pixel value multiply scale to get distance in millimeter
-    const float scale = depthFrame->as<ob::DepthFrame>()->getValueScale();
-
-    // Get raw depth data from depth frame
-    cv::Mat rawMat = cv::Mat(depthFrame->getHeight(), depthFrame->getWidth(), CV_16UC1, depthFrame->getData());
-
-    // normalization to 0-255. 0.032f is 256/8000, to limit the range of depth to 8000mm
-    rawMat.convertTo(cvtMat, CV_32F, scale * 0.032f);
-
-    // apply gamma correction to enhance the contrast for near objects
-    cv::pow(cvtMat, 0.6f, cvtMat);
-
-    //  convert to 8-bit
-    cvtMat.convertTo(cvtMat, CV_8UC1, 10);  // multiplier 10 is to normalize to 0-255 (nearly) after applying gamma correction
-
-    // apply colormap
-    cv::applyColorMap(cvtMat, rstMat, cv::COLORMAP_JET);
-
-    return rstMat;
-}
+#include <iostream>
 
 int main(void) try {
     // Configure which streams to enable or disable for the Pipeline by creating a Config
@@ -51,9 +24,9 @@ int main(void) try {
         auto depthFrame = frames->getFrame(OB_FRAME_DEPTH);
 
         // Color mapping the depth data in order to visualize it intuitively
-        cv::Mat colorMat = colorizeDepth(depthFrame);
+        cv::Mat depthVisualized = CvHelper::colorizeDepth(depthFrame);
 
-        cv::imshow("Display Depth Image", colorMat);
+        cv::imshow("ImageShow", depthVisualized);
         int key = cv::waitKey(1);
         if(key == 27 || key == 'q' || key == 'Q') {
             break;

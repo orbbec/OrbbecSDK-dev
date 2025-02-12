@@ -235,7 +235,7 @@ static bool selectDevice(std::shared_ptr<ob::Device>& device) {
 
         try {
             uint32_t index = std::stoi(input);
-            if(index < 0 || index >= static_cast<uint32_t>(devices.size())) {
+            if(index >= static_cast<uint32_t>(devices.size())) {
                 std::cout << "Invalid input, please enter a valid index number." << std::endl;
                 continue;
             }

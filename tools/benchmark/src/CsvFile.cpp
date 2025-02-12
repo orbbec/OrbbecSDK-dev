@@ -33,6 +33,11 @@ void CSVFile::writeSystemInfos(const std::vector<SystemInfo> &systemInfos) {
     }
 }
 
+void CSVFile::writeAverageSystemInfo(float cpuUsage, float memoryUsage) {
+    csvFile_ << cpuUsage << "," << memoryUsage << "\n";
+    csvFile_.flush();
+}
+
 void CSVFile::writeTitle(const std::string &title) {
     csvFile_ << title << "\n";
     csvFile_.flush();

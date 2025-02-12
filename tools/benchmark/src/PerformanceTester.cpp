@@ -71,6 +71,7 @@ void PerformanceTester::writeSystemInfosToFile(const std::string &configName, co
     }
     file.close();
 
-    summary_.writeTitle(configName);
-    summary_.writeSystemInfo("Total", totalCpuUsage / totalCnt, totalMemoryUsage / totalCnt);
+    summary_.writeTitle(std::string("Config: " + configName + " | Total average"));
+    summary_.writeTitle("Average Cpu Usage(%), Average Memory Usage(MB)");
+    summary_.writeAverageSystemInfo(totalCpuUsage / totalCnt, totalMemoryUsage / totalCnt);
 }

@@ -1,2 +1,2 @@
 add_subdirectory(imshow)
-add_subdirectory(grabcuts)
+# add_subdirectory(grabcuts)

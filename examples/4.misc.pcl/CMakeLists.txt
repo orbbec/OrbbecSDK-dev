@@ -1,5 +1,5 @@
 if(OB_BUILD_PCL)
-    # todo: require PCL, should check if PCL is installed, and if not, download and build it
+    message(STATUS "- Building PCL examples")
     add_subdirectory(pcl)
     add_subdirectory(pcl_color)
 endif()

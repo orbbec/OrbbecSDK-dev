@@ -6,7 +6,7 @@
 #include "../src/DeviceResource.hpp"
 
 // The start time of each Config, default is 5 minutes
-#define RECONDING_TIME_SECONDS 10 // 5 minutes
+#define RECONDING_TIME_SECONDS 60 * 5  // 5 minutes
 
 std::vector<std::function<std::string(std::shared_ptr<DeviceResource>&)>> updateConfigHandlers_ = {
     // depth, color, ir

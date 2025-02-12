@@ -98,4 +98,4 @@ Press the q or Q key in the window to exit the program.
 
 ### Result
 
-![image](../../docs/resource/pcl_color.jpg)
+![image](../../../docs/resource/pcl_color.jpg)

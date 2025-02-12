@@ -144,7 +144,12 @@ float SystemInfosManager::getCpuUsage() {
     std::ostringstream command;
     command << "top -bn1 | grep '" << processName << "' | awk '{print $9}'";
 
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.str().c_str(), "r"), pclose);
+    auto deleter = [](FILE *file) {
+        if(file) {
+            pclose(file);
+        }
+    };
+    std::unique_ptr<FILE, decltype(deleter)> pipe(popen(command.str().c_str(), "r"), deleter);
     if(!pipe) {
         std::cerr << "Failed to run command" << std::endl;
         return -1.0f;
@@ -163,7 +168,12 @@ float SystemInfosManager::getMemoryUsage() {
     std::ostringstream command;
     command << "top -b -n 1 | grep '" << processName << "' | awk '{print $6}'";
 
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.str().c_str(), "r"), pclose);
+    auto deleter = [](FILE *file) {
+        if(file) {
+            pclose(file);
+        }
+    };
+    std::unique_ptr<FILE, decltype(deleter)> pipe(popen(command.str().c_str(), "r"), deleter);
     if(!pipe) {
         std::cerr << "Failed to run command" << std::endl;
         return -1.0f;

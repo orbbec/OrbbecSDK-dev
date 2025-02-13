@@ -58,8 +58,6 @@ float SystemInfosManager::getCpuUsage() {
     static int64_t last_time        = 0;
     static int64_t last_system_time = 0;
 
-    auto pid = GetCurrentProcessId();
-
     FILETIME now;
     FILETIME creation_time;
     FILETIME exit_time;
@@ -77,9 +75,8 @@ float SystemInfosManager::getCpuUsage() {
 
     float cpu_ratio = 0.0;
 
-    // get process hanlde by pid
-    HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     // use GetCurrentProcess() can get current process and no need to close handle
+    HANDLE process = GetCurrentProcess();
 
     // get now time
     GetSystemTimeAsFileTime(&now);
@@ -105,8 +102,6 @@ float SystemInfosManager::getCpuUsage() {
 
     system_time_delta = system_time - last_system_time;
     time_delta        = time - last_time;
-
-    CloseHandle(process);
 
     if(time_delta == 0) {
         printf("GetCpuUsageRatio time_delta is 0, error\n");

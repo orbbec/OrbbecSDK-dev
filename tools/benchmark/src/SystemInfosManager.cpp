@@ -138,11 +138,12 @@ float SystemInfosManager::getMemoryUsage() {
 }
 
 #elif defined(__linux__)
-const std::string processName = "ob_benchmark";
 
 float SystemInfosManager::getCpuUsage() {
+    auto               pid = getpid();
     std::ostringstream command;
-    command << "top -bn1 | grep '" << processName << "' | awk '{print $9}'";
+
+    command << "top -bn1 -p " << pid << "| grep " << pid << " | awk '{print $9}'";
 
     auto deleter = [](FILE *file) {
         if(file) {
@@ -165,32 +166,29 @@ float SystemInfosManager::getCpuUsage() {
 }
 
 float SystemInfosManager::getMemoryUsage() {
-    std::ostringstream command;
-    command << "top -b -n 1 | grep '" << processName << "' | awk '{print $6}'";
+    std::ifstream status_file("/proc/self/status");
+    if(!status_file.is_open()) {
+        std::cerr << "Error opening status file" << std::endl;
+        return -1;
+    }
 
-    auto deleter = [](FILE *file) {
-        if(file) {
-            pclose(file);
+    std::string line;
+    int64_t     rss = -1;
+    while(std::getline(status_file, line)) {
+        std::istringstream line_stream(line);
+        std::string        key;
+        line_stream >> key;
+
+        if(key == "VmRSS:") {
+            line_stream >> rss;
+            break;
         }
-    };
-    std::unique_ptr<FILE, decltype(deleter)> pipe(popen(command.str().c_str(), "r"), deleter);
-    if(!pipe) {
-        std::cerr << "Failed to run command" << std::endl;
-        return -1.0f;
     }
 
-    char        buffer[128];
-    std::string result;
-    while(fgets(buffer, sizeof(buffer), pipe.get()) != nullptr) {
-        result += buffer;
+    if(rss == -1) {
+        std::cerr << "VmRSS field not found" << std::endl;
     }
-
-    std::stringstream ss(result);
-    long              memoryUsageKb;
-    ss >> memoryUsageKb;
-
-    float memoryUsageMb = static_cast<float>(memoryUsageKb) / 1024.0f;
-    return memoryUsageMb;
+    return rss / 1024.0f;  // to MB
 }
 #endif
 
@@ -204,7 +202,8 @@ void SystemInfosManager::monitoringLoop() {
         float       memUsage    = getMemoryUsage();
         std::string currentTime = getCurrentTimeHMS();
 
-        std::cout << "CPU usage: " << cpuUsage << "% | Memory usage: " << memUsage << "MB" << std::endl;
+        std::cout << "CPU usage: " << std::fixed << std::setprecision(2) << cpuUsage << "% | Memory usage: " << memUsage << "MB" << std::endl;
+        std::cout.unsetf(std::ios::fixed);
 
         data_.emplace_back(currentTime, cpuUsage, memUsage);
 

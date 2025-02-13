@@ -1,4 +1,4 @@
-# C++ Sample: 4.misc.pcl
+# C++ Sample: 5.wrapper.pcl_color
 
 ## Overview
 
@@ -77,7 +77,7 @@ Use OrbbecSDK to acquire point cloud data and convert the acquired point cloud d
 
         pcl::io::loadPCDFile("./output.pcd", *cloudView);  // Load .pcd File
 
-        boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("Captured Frame"));
+        std::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("Captured Frame"));
 
         // Set background of viewer to black
         viewer->setBackgroundColor(0, 0, 0);

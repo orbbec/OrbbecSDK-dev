@@ -49,7 +49,7 @@ void loadPCDFile() {
 
     pcl::io::loadPCDFile("./output.pcd", *cloudView);  // Load .pcd File
 
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("Captured Frame"));
+    std::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("RGB Cloud"));
 
     // Set background of viewer to black
     viewer->setBackgroundColor(0, 0, 0);
@@ -83,16 +83,19 @@ int main(void) try {
     pipeline->start(config);
 
     // Drop several frames for auto-exposure
-    for(int i = 0; i < 30; ++i) {
+    for(int i = 0; i < 10; ++i) {
         auto lost = pipeline->waitForFrames();
     }
 
     // Wait for frames to arrive
+    std::cout << "Waiting for frames..." << std::endl;
     auto frameset   = pipeline->waitForFrames();
+    std::cout << "Frames arrive!" << std::endl << std::endl;
     auto colorFrame = frameset->getFrame(OB_FRAME_COLOR);
 
     pipeline->stop();
 
+    std::cout << "Wait for PointCloud Filter to generate PointCloud Frame..." << std::endl;
     // Create a point cloud Filter, which will be used to generate pointcloud frame from depth and color frames.
     auto pointCloudFilter = std::make_shared<ob::PointCloudFilter>();
     // Create a align filter, which will be used to align depth frame to color frame.
@@ -106,7 +109,9 @@ int main(void) try {
     auto result = pointCloudFilter->process(aliggnFrameset);
 
     auto pclPoints = frameToPCL(result, colorFrame);
+    std::cout << "PointCloud Filter generated PointCloud Frame!" << std::endl << std::endl;
 
+    std::cout << "It may cost some times to save and load the point cloud, please wait..." << std::endl;
     // Save generated point cloud to .pcd file
     pcl::io::savePCDFileASCII("./output.pcd", *pclPoints);
 
@@ -114,9 +119,9 @@ int main(void) try {
     loadPCDFile();
 
     // 3D Point Cloud Visualization using PCLVisualizer
-    // pcl::visualization::PCLVisualizer vis2("Color Point Cloud");
-    // vis2.addPointCloud(pclPoints);
-    // vis2.spin();
+    //pcl::visualization::PCLVisualizer vis2("Color Point Cloud");
+    //vis2.addPointCloud(pclPoints);
+    //vis2.spin();
 
     exit(EXIT_SUCCESS);
 }

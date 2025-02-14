@@ -9,6 +9,7 @@ option(OB_BUILD_DOCS "Build api document and install doc" ON)
 
 # information options
 option(OB_BUILD_WITH_EXTENSIONS_COMMIT_HASH "Build with extensions commit hash" ON)
+option(OB_BUILD_SOVERSION "Build with so version" ON)
 
 # platform options
 option(OB_BUILD_ANDROID "Build Android " OFF)

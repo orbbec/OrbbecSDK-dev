@@ -29,6 +29,7 @@ add_subdirectory(3.advanced.point_cloud)
 add_subdirectory(3.advanced.preset)
 add_subdirectory(4.misc.logger)
 add_subdirectory(4.misc.metadata)
+add_subdirectory(5.wrapper.pcl)
 
 # cpp examples with OpenCV Requirements
 if(${OpenCV_FOUND})

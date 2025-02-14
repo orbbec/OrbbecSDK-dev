@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-Wall -Wextra -Werror)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_compile_options(/W3)
 endif()

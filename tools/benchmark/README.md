@@ -1,6 +1,6 @@
 # Benchmark Tool
 
-This tool is used to measure the performance of the OpenOrbbec SDK. It can be used to measure the frame rate of the camera, the latency of the camera, and the processing time of the SDK.
+This tool is used to measure the performance of the OrbbecSDK_v2. It can be used to measure the frame rate of the camera, the latency of the camera, and the processing time of the SDK.
 
 ## Building the Benchmark Tool
 ### Step 1: Clone the repository
@@ -19,22 +19,26 @@ You can build the SDK by following the instructions in the [build guide](docs/tu
 
 
 ## Usage
-The current benchmark tool runs four test cases by default for the following streams: depth, color, left IR, and right IR streams, D2C, depth point cloud, and color point cloud. Each test case runs for five minutes.
+The current benchmark tool runs four test cases by default for the following streams: depth, color, left IR, and right IR streams, D2C, depth point cloud, and color point cloud. Each test case runs for **five minutes**.
 
 After the benchmark tool finishes, a `summary.csv` file will be generated in the same directory as the executable. This file contains the average results of the four test cases, which will look something like this:
 ```csv
-Enable depth, color, ir
-Total,50.8289,75.1598
-Enable software d2c
-Total,92.7933,96.3372
-Enable point cloud
-Total,143.296,150.566
-Enable rgb point cloud
-Total,140.631,217.887
+Config: Enable depth, color, ir | Total average
+Average Cpu Usage(%), Average Memory Usage(MB)
+34.1462,55.9516
+Config: Enable software d2c | Total average
+Average Cpu Usage(%), Average Memory Usage(MB)
+63.2846,69.4766
+Config: Enable point cloud | Total average
+Average Cpu Usage(%), Average Memory Usage(MB)
+90.7615,96.832
+Config: Enable rgb point cloud | Total average
+Average Cpu Usage(%), Average Memory Usage(MB)
+115.731,128.32
 ```
 
 ## Modifying Test Cases
-If you would like to modify the test cases, follow these steps:
+If you wish to modify the test time for each group of test cases, follow these steps:
 1. Locate the `config/PerformanceConfig.hpp` file in the benchmark project.
 2. Modify the `RECONDING_TIME_SECONDS` value, for example:
 ```cpp
@@ -67,7 +71,7 @@ After modifying the test case, recompile the benchmark project and run the bench
 
 ## Test Filtering Effects
 If you would like to test the effect of certain filters, follow these steps to modify the benchmark code.
-Example: Enable Spatial Filtering
+Example: Enable `Spatial Filtering`
 1. Add a `spatial_filter_` member variable in `src/DeviceResource.hpp`:
 ```cpp
 class DeviceResource {
@@ -122,6 +126,6 @@ void DeviceResource::startStream(std::shared_ptr<ob::Config> config) {
 ```
 
 ## Note
-1. The current benchmark tool only supports `G330` devices (this does not mean that other devices cannot run, but testing on devices other than G330 may cause some issues).
-2. The benchmark tool includes two methods: `enableSwNoiseRemoveFilter` and `enableHwNoiseRemoveFilter`. The Orbbec SDK internally enables a software filter for noise removal by default. You can call `enableSwNoiseRemoveFilter` to enable or disable software noise removal. If you're using the latest firmware (1.4.1 firmware or later), hardware noise removal is supported, yout can disable the software filter by calling `enableHwNoiseRemoveFilter(false)`. Disabling the software filter and enabling hardware noise removal can improve the performance of the camera.
+1. This benchmark is designed for testing the **G330** series cameras. If you are using a different camera, it may cause some issues (e.g., non-G330 devices do not support hardware noiseremoval). You can modify the code in this project according to your needs..
+2. The benchmark tool includes two methods: `enableSwNoiseRemoveFilter` and `enableHwNoiseRemoveFilter`. For G330 devices, the OrbbecSDK internally enables a software filter for noise removal by default. You can call `enableSwNoiseRemoveFilter` to enable or disable software noise removal. If you're using the latest firmware (1.4.1 firmware or later), hardware noise removal is supported, yout can disable the software filter by calling `enableHwNoiseRemoveFilter(false)`. Disabling the software filter and enabling hardware noise removal can improve the performance of the camera.
 

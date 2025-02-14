@@ -48,7 +48,7 @@ if(${OpenCV_FOUND})
     add_subdirectory(3.advanced.hdr)
     add_subdirectory(3.advanced.laser_interleave)
     add_subdirectory(3.advanced.multi_devices)
-    add_subdirectory(4.misc.opencv)
+    add_subdirectory(5.wrapper.opencv)
 
     if(OB_BUILD_LINUX)
         add_subdirectory(3.advanced.multi_devices_sync_gmsl)

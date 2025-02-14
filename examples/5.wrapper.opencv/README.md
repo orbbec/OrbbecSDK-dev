@@ -4,4 +4,4 @@ The examples in this folder are intended to enhance the existing SDK samples by 
 
 ## Project Structure
 
-- **`imshow`**: This example shows how to use OpenCV's `imshow` function to display the camera feed in a window.
+- [imshow](./imshow/README.md): This example shows how to use OpenCV's `imshow` function to display the camera feed in a window.

@@ -73,7 +73,7 @@ if(OB_IS_MAIN_PROJECT)
     install(EXPORT OrbbecSDKConfig NAMESPACE ob:: DESTINATION lib)
 endif()
 
-if(OB_BUILD_SOVESION)
+if(OB_BUILD_SOVERSION)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION 2
